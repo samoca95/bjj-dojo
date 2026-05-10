@@ -6,6 +6,10 @@ export const SESSION_TYPE_ICONS_UPDATED_EVENT = 'bjj-dojo:session-type-icons-upd
 
 export type SessionTypeIconsMap = Record<SessionType, string>
 
+function coerceIcon(value: unknown, fallback: string) {
+  return typeof value === 'string' && value.trim() ? value : fallback
+}
+
 export function getSessionTypeIcons(): SessionTypeIconsMap {
   if (typeof window === 'undefined') return SESSION_TYPE_ICONS
   try {
@@ -13,20 +17,11 @@ export function getSessionTypeIcons(): SessionTypeIconsMap {
     if (!raw) return SESSION_TYPE_ICONS
     const parsed = JSON.parse(raw) as Partial<Record<SessionType, unknown>>
     return {
-      GI: typeof parsed.GI === 'string' && parsed.GI.trim() ? parsed.GI : SESSION_TYPE_ICONS.GI,
-      NOGI: typeof parsed.NOGI === 'string' && parsed.NOGI.trim() ? parsed.NOGI : SESSION_TYPE_ICONS.NOGI,
-      OPEN_MAT:
-        typeof parsed.OPEN_MAT === 'string' && parsed.OPEN_MAT.trim()
-          ? parsed.OPEN_MAT
-          : SESSION_TYPE_ICONS.OPEN_MAT,
-      COMPETITION:
-        typeof parsed.COMPETITION === 'string' && parsed.COMPETITION.trim()
-          ? parsed.COMPETITION
-          : SESSION_TYPE_ICONS.COMPETITION,
-      DRILLING:
-        typeof parsed.DRILLING === 'string' && parsed.DRILLING.trim()
-          ? parsed.DRILLING
-          : SESSION_TYPE_ICONS.DRILLING,
+      GI: coerceIcon(parsed.GI, SESSION_TYPE_ICONS.GI),
+      NOGI: coerceIcon(parsed.NOGI, SESSION_TYPE_ICONS.NOGI),
+      OPEN_MAT: coerceIcon(parsed.OPEN_MAT, SESSION_TYPE_ICONS.OPEN_MAT),
+      COMPETITION: coerceIcon(parsed.COMPETITION, SESSION_TYPE_ICONS.COMPETITION),
+      DRILLING: coerceIcon(parsed.DRILLING, SESSION_TYPE_ICONS.DRILLING),
     }
   } catch {
     return SESSION_TYPE_ICONS

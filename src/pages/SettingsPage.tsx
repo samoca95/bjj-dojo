@@ -34,7 +34,7 @@ export default function SettingsPage() {
 
       <div className="px-4 pb-6 space-y-4">
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <div className="text-xs text-gold font-semibold tracking-widest">SESSION TYPE ICONS</div>
+          <h2 className="text-xs text-gold font-semibold tracking-widest">SESSION TYPE ICONS</h2>
           <div className="space-y-2">
             {SESSION_TYPES.map(sessionType => (
               <button

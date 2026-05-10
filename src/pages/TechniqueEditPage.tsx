@@ -138,19 +138,22 @@ export default function TechniqueEditPage() {
     setNewConnectionType('FOLLOW_UP')
   }
 
-  const removeConnection = (index: number) => {
-    setConnections(prev => prev.filter((_, i) => i !== index))
+  const removeConnection = (targetId: number) => {
+    setConnections(prev => prev.filter(item => item.toTechniqueId !== targetId))
   }
 
-  const updateConnectionType = (index: number, type: ConnectionType) => {
-    setConnections(prev => prev.map((item, i) => (i === index ? { ...item, connectionType: type } : item)))
+  const updateConnectionType = (targetId: number, type: ConnectionType) => {
+    setConnections(prev => prev.map(item => (item.toTechniqueId === targetId ? { ...item, connectionType: type } : item)))
   }
 
-  const updateConnectionTarget = (index: number, targetId: number) => {
+  const updateConnectionTarget = (previousTargetId: number, targetId: number) => {
     if (!id || targetId === Number(id)) return
-    const isDuplicate = connections.some((c, i) => i !== index && c.toTechniqueId === targetId)
+    // Exclude the row currently being edited (previousTargetId) from duplicate detection.
+    const isDuplicate = connections.some(c => c.toTechniqueId !== previousTargetId && c.toTechniqueId === targetId)
     if (isDuplicate) return
-    setConnections(prev => prev.map((item, i) => (i === index ? { ...item, toTechniqueId: targetId } : item)))
+    setConnections(prev =>
+      prev.map(item => (item.toTechniqueId === previousTargetId ? { ...item, toTechniqueId: targetId } : item)),
+    )
   }
 
   const connectionOptions = allTechniques.filter(t => !id || t.id !== Number(id))
@@ -294,12 +297,12 @@ export default function TechniqueEditPage() {
                   No connections yet.
                 </div>
               )}
-              {connections.map((connection, index) => (
-                <div key={`${connection.toTechniqueId}-${index}`} className="bg-zinc-900 rounded-xl px-3 py-2.5 space-y-2">
+              {connections.map(connection => (
+                <div key={connection.toTechniqueId} className="bg-zinc-900 rounded-xl px-3 py-2.5 space-y-2">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <select
                       value={connection.toTechniqueId}
-                      onChange={e => updateConnectionTarget(index, Number(e.target.value))}
+                      onChange={e => updateConnectionTarget(connection.toTechniqueId, Number(e.target.value))}
                       className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
                     >
                       {connectionOptions.map(t => (
@@ -308,7 +311,7 @@ export default function TechniqueEditPage() {
                     </select>
                     <select
                       value={connection.connectionType}
-                      onChange={e => updateConnectionType(index, e.target.value as ConnectionType)}
+                      onChange={e => updateConnectionType(connection.toTechniqueId, e.target.value as ConnectionType)}
                       className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
                     >
                       {CONNECTION_TYPES.map(type => (
@@ -321,7 +324,7 @@ export default function TechniqueEditPage() {
                       {techniqueNameById.get(connection.toTechniqueId) ?? 'Unknown technique'}
                     </span>
                     <button
-                      onClick={() => removeConnection(index)}
+                      onClick={() => removeConnection(connection.toTechniqueId)}
                       className="text-zinc-500 active:text-zinc-200 text-xs font-semibold"
                     >
                       Remove
