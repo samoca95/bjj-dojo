@@ -7,4 +7,3 @@ export const DEFAULT_CATEGORY_ICONS: Record<number, string> = {
   6: 'lifebuoy',
   7: 'crown',
 }
-
