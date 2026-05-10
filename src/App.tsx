@@ -9,6 +9,7 @@ import TechniqueDetailPage from './pages/TechniqueDetailPage'
 import TechniqueEditPage from './pages/TechniqueEditPage'
 import ClubsPage from './pages/ClubsPage'
 import CategoriesPage from './pages/CategoriesPage'
+import SettingsPage from './pages/SettingsPage'
 
 const router = createHashRouter([
   {
@@ -25,6 +26,7 @@ const router = createHashRouter([
       { path: '/techniques/:id', element: <TechniqueDetailPage /> },
       { path: '/techniques/:id/edit', element: <TechniqueEditPage /> },
       { path: '/categories', element: <CategoriesPage /> },
+      { path: '/settings', element: <SettingsPage /> },
     ],
   },
 ])

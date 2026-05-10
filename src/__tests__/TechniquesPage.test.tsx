@@ -48,7 +48,6 @@ function renderPage() {
         <Route path="/techniques" element={<TechniquesPage />} />
         <Route path="/techniques/new/edit" element={<div data-testid="new-technique-page" />} />
         <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
-        <Route path="/categories" element={<div data-testid="categories-page" />} />
       </Routes>
     </MemoryRouter>,
   )
@@ -67,12 +66,6 @@ describe('TechniquesPage — structure', () => {
     setupMocks()
     renderPage()
     expect(screen.getByText('Techniques')).toBeInTheDocument()
-  })
-
-  it('renders a Categories link', () => {
-    setupMocks()
-    renderPage()
-    expect(screen.getByText('Categories')).toBeInTheDocument()
   })
 
   it('renders technique rows', () => {
@@ -127,13 +120,5 @@ describe('TechniquesPage — search and filter', () => {
     // Category names appear in both chips and technique rows — check at least one chip exists
     expect(screen.getAllByText('Guards').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Submissions').length).toBeGreaterThan(0)
-  })
-
-  it('navigates to Categories when link is clicked', async () => {
-    setupMocks()
-    const user = userEvent.setup()
-    renderPage()
-    await user.click(screen.getByText('Categories'))
-    expect(screen.getByTestId('categories-page')).toBeInTheDocument()
   })
 })

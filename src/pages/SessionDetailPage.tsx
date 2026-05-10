@@ -7,9 +7,10 @@ import {
 } from 'lucide-react'
 import { db } from '../db/database'
 import type { Session, SessionTap, Technique } from '../types'
-import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS, SESSION_TYPE_ICONS } from '../types'
+import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 import { CategoryIcon } from '../components/CategoryIcon'
+import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT } from '../utils/sessionTypeIcons'
 
 function formatDate(epoch: number) {
   return new Date(epoch).toLocaleDateString(undefined, {
@@ -30,6 +31,7 @@ export default function SessionDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [session, setSession] = useState<Session | null>(null)
+  const [sessionTypeIcons, setSessionTypeIcons] = useState(getSessionTypeIcons())
   const club = useLiveQuery(
     () => session?.clubId ? db.clubs.get(session.clubId) : undefined,
     [session?.clubId],
@@ -38,6 +40,12 @@ export default function SessionDetailPage() {
   useEffect(() => {
     if (id) db.sessions.get(Number(id)).then(s => setSession(s ?? null))
   }, [id])
+
+  useEffect(() => {
+    const sync = () => setSessionTypeIcons(getSessionTypeIcons())
+    window.addEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
+    return () => window.removeEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
+  }, [])
 
   const techniques = useLiveQuery(async () => {
     if (!id) return []
@@ -93,7 +101,7 @@ export default function SessionDetailPage() {
       <div className="px-4 space-y-4 pb-6">
         {/* Type badge with icon */}
         <div className={`inline-flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-lg ${SESSION_TYPE_COLORS[session.sessionType]}`}>
-          <CategoryIcon value={SESSION_TYPE_ICONS[session.sessionType]} size={16} className="text-current" />
+          <CategoryIcon value={sessionTypeIcons[session.sessionType]} size={16} className="text-current" />
           {SESSION_TYPE_LABELS[session.sessionType]}
         </div>
 

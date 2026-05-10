@@ -60,14 +60,8 @@ export default function TechniquesPage() {
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm z-10">
-        <div className="px-6 pt-12 pb-3 flex items-center justify-between">
+        <div className="px-6 pt-12 pb-3">
           <h1 className="text-2xl font-bold text-zinc-100">Techniques</h1>
-          <button
-            onClick={() => navigate('/categories')}
-            className="text-sm text-gold font-semibold active:text-gold-light"
-          >
-            Categories
-          </button>
         </div>
 
         {/* Search */}

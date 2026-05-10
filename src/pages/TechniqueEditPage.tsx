@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, Plus, X } from 'lucide-react'
 import { db } from '../db/database'
-import type { Category, Difficulty, Technique } from '../types'
+import type { Category, ConnectionType, Difficulty, Technique, TechniqueConnection } from '../types'
+import { CONNECTION_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 
 const inputCls =
@@ -18,6 +19,8 @@ const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   ELITE: 'Elite',
 }
 
+const CONNECTION_TYPES = Object.keys(CONNECTION_LABELS) as ConnectionType[]
+
 export default function TechniqueEditPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
@@ -30,16 +33,24 @@ export default function TechniqueEditPage() {
   const [categoryId, setCategoryId] = useState<number>(1)
   const [cues, setCues] = useState<string[]>([])
   const [newCue, setNewCue] = useState('')
+  const [connections, setConnections] = useState<TechniqueConnection[]>([])
+  const [newConnectionType, setNewConnectionType] = useState<ConnectionType>('FOLLOW_UP')
+  const [newConnectionTargetId, setNewConnectionTargetId] = useState<number | null>(null)
 
   const categories = useLiveQuery(
     () => db.categories.orderBy('name').toArray(),
     [],
     [] as Category[],
   )
+  const allTechniques = useLiveQuery(
+    () => db.techniques.orderBy('name').toArray(),
+    [],
+    [] as Technique[],
+  )
 
   useEffect(() => {
     if (isNew || !id) return
-    db.techniques.get(Number(id)).then(t => {
+    db.techniques.get(Number(id)).then(async t => {
       if (!t) return
       setName(t.name)
       setDescription(t.description)
@@ -47,6 +58,11 @@ export default function TechniqueEditPage() {
       setDifficulty(t.difficulty)
       setCategoryId(t.categoryId)
       setCues(t.cues ?? [])
+      const techniqueConnections = await db.techniqueConnections
+        .where('fromTechniqueId')
+        .equals(Number(id))
+        .toArray()
+      setConnections(techniqueConnections)
     })
   }, [id, isNew])
 
@@ -76,6 +92,16 @@ export default function TechniqueEditPage() {
         categoryId,
         cues,
       })
+      await db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete()
+      if (connections.length > 0) {
+        await db.techniqueConnections.bulkAdd(
+          connections.map(connection => ({
+            fromTechniqueId: Number(id),
+            toTechniqueId: connection.toTechniqueId,
+            connectionType: connection.connectionType,
+          })),
+        )
+      }
       navigate(`/techniques/${id}`)
     }
   }
@@ -99,6 +125,36 @@ export default function TechniqueEditPage() {
   const removeCue = (i: number) => {
     setCues(prev => prev.filter((_, idx) => idx !== i))
   }
+
+  const addConnection = () => {
+    if (!id || isNew || !newConnectionTargetId || newConnectionTargetId === Number(id)) return
+    const exists = connections.some(c => c.toTechniqueId === newConnectionTargetId)
+    if (exists) return
+    setConnections(prev => [
+      ...prev,
+      { fromTechniqueId: Number(id), toTechniqueId: newConnectionTargetId, connectionType: newConnectionType },
+    ])
+    setNewConnectionTargetId(null)
+    setNewConnectionType('FOLLOW_UP')
+  }
+
+  const removeConnection = (index: number) => {
+    setConnections(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const updateConnectionType = (index: number, type: ConnectionType) => {
+    setConnections(prev => prev.map((item, i) => (i === index ? { ...item, connectionType: type } : item)))
+  }
+
+  const updateConnectionTarget = (index: number, targetId: number) => {
+    if (!id || targetId === Number(id)) return
+    const isDuplicate = connections.some((c, i) => i !== index && c.toTechniqueId === targetId)
+    if (isDuplicate) return
+    setConnections(prev => prev.map((item, i) => (i === index ? { ...item, toTechniqueId: targetId } : item)))
+  }
+
+  const connectionOptions = allTechniques.filter(t => !id || t.id !== Number(id))
+  const techniqueNameById = new Map(allTechniques.map(t => [t.id, t.name]))
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -228,6 +284,86 @@ export default function TechniqueEditPage() {
             </div>
           </div>
         </div>
+
+        {!isNew && (
+          <div>
+            <label className="text-xs text-gold font-semibold tracking-wide">TECHNIQUE CONNECTIONS</label>
+            <div className="space-y-2 mt-2">
+              {connections.length === 0 && (
+                <div className="bg-zinc-900 rounded-xl px-3 py-2.5 text-sm text-zinc-500">
+                  No connections yet.
+                </div>
+              )}
+              {connections.map((connection, index) => (
+                <div key={`${connection.toTechniqueId}-${index}`} className="bg-zinc-900 rounded-xl px-3 py-2.5 space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <select
+                      value={connection.toTechniqueId}
+                      onChange={e => updateConnectionTarget(index, Number(e.target.value))}
+                      className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
+                    >
+                      {connectionOptions.map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={connection.connectionType}
+                      onChange={e => updateConnectionType(index, e.target.value as ConnectionType)}
+                      className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
+                    >
+                      {CONNECTION_TYPES.map(type => (
+                        <option key={type} value={type}>{CONNECTION_LABELS[type]}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-zinc-500 truncate">
+                      {techniqueNameById.get(connection.toTechniqueId) ?? 'Unknown technique'}
+                    </span>
+                    <button
+                      onClick={() => removeConnection(index)}
+                      className="text-zinc-500 active:text-zinc-200 text-xs font-semibold"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <div className="bg-zinc-900 rounded-xl px-3 py-2.5 space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <select
+                    value={newConnectionTargetId ?? ''}
+                    onChange={e => setNewConnectionTargetId(e.target.value ? Number(e.target.value) : null)}
+                    className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
+                  >
+                    <option value="">Select connected technique…</option>
+                    {connectionOptions
+                      .filter(t => !connections.some(c => c.toTechniqueId === t.id))
+                      .map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                  </select>
+                  <select
+                    value={newConnectionType}
+                    onChange={e => setNewConnectionType(e.target.value as ConnectionType)}
+                    className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
+                  >
+                    {CONNECTION_TYPES.map(type => (
+                      <option key={type} value={type}>{CONNECTION_LABELS[type]}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  onClick={addConnection}
+                  disabled={!newConnectionTargetId}
+                  className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm font-semibold text-gold active:bg-zinc-700 disabled:opacity-40"
+                >
+                  Add Connection
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete */}
         {!isNew && (

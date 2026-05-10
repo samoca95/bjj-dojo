@@ -168,8 +168,6 @@ export default function AddEditSessionPage() {
         },
       ])
       setSelectedIds(prev => new Set([...prev, technique.id]))
-      // Close after each tap selection so the user sees it was registered
-      setShowPicker(false)
     }
   }
 
@@ -252,7 +250,7 @@ export default function AddEditSessionPage() {
             <div className="flex items-center justify-between">
               <label className="text-xs text-gold font-semibold tracking-wide">CLUB</label>
               <button
-                onClick={() => navigate('/clubs')}
+                onClick={() => navigate('/settings')}
                 className="text-xs text-gold font-semibold tracking-wide active:text-gold-light"
               >
                 Manage
@@ -260,7 +258,7 @@ export default function AddEditSessionPage() {
             </div>
             {clubs?.length === 0 ? (
               <button
-                onClick={() => navigate('/clubs')}
+                onClick={() => navigate('/settings')}
                 className="mt-2 w-full bg-zinc-800 rounded-xl px-4 py-3 text-sm text-left text-zinc-400 active:bg-zinc-700 transition-colors"
               >
                 Add your first club
@@ -456,7 +454,11 @@ export default function AddEditSessionPage() {
                 onClick={() => { setShowPicker(false); setShowCreateTechnique(false) }}
                 className="text-gold font-semibold active:text-gold-light"
               >
-                {pickerMode === 'techniques' ? `Done (${selectedIds.size})` : 'Close'}
+                {pickerMode === 'techniques'
+                  ? `Done (${selectedIds.size})`
+                  : pickerMode === 'tap-given'
+                  ? `Done (${givenTaps.length})`
+                  : `Done (${receivedTaps.length})`}
               </button>
             </div>
 

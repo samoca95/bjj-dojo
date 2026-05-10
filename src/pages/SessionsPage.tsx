@@ -1,17 +1,29 @@
+import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { CalendarDays, Plus, Zap } from 'lucide-react'
 import { db } from '../db/database'
 import type { Club, Session } from '../types'
-import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS, SESSION_TYPE_ICONS } from '../types'
+import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 import { CategoryIcon } from '../components/CategoryIcon'
+import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT } from '../utils/sessionTypeIcons'
 
 function formatDate(epoch: number) {
   return new Date(epoch).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function SessionCard({ session, clubName, onClick }: { session: Session; clubName?: string; onClick: () => void }) {
+function SessionCard({
+  session,
+  clubName,
+  onClick,
+  icon,
+}: {
+  session: Session
+  clubName?: string
+  onClick: () => void
+  icon: string
+}) {
   const tapData = useLiveQuery(async () => {
     if (!session.id) return { given: 0, received: 0 }
     const taps = await db.sessionTaps.where('sessionId').equals(session.id).toArray()
@@ -38,7 +50,7 @@ function SessionCard({ session, clubName, onClick }: { session: Session; clubNam
     >
       {/* Session type icon column */}
       <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center ${SESSION_TYPE_COLORS[session.sessionType].replace('text-', 'text-').replace('bg-', 'bg-')}`}>
-        <CategoryIcon value={SESSION_TYPE_ICONS[session.sessionType]} size={20} className="text-current" />
+        <CategoryIcon value={icon} size={20} className="text-current" />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -74,6 +86,7 @@ function SessionCard({ session, clubName, onClick }: { session: Session; clubNam
 
 export default function SessionsPage() {
   const navigate = useNavigate()
+  const [sessionTypeIcons, setSessionTypeIcons] = useState(getSessionTypeIcons())
   const sessions = useLiveQuery(
     () => db.sessions.orderBy('date').reverse().toArray(),
     [],
@@ -82,18 +95,16 @@ export default function SessionsPage() {
   const clubs = useLiveQuery(() => db.clubs.toArray(), [], [] as Club[])
   const clubMap = new Map(clubs?.map(c => [c.id, c.name]))
 
+  useEffect(() => {
+    const sync = () => setSessionTypeIcons(getSessionTypeIcons())
+    window.addEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
+    return () => window.removeEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
+  }, [])
+
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-6 pt-12 pb-4 z-10">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-zinc-100">Sessions</h1>
-          <button
-            onClick={() => navigate('/clubs')}
-            className="text-sm text-gold font-semibold active:text-gold-light"
-          >
-            Clubs
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold text-zinc-100">Sessions</h1>
       </div>
 
       <div className="px-4 pb-4">
@@ -111,6 +122,7 @@ export default function SessionsPage() {
                 <SessionCard
                   key={s.id}
                   session={s}
+                  icon={sessionTypeIcons[s.sessionType]}
                   clubName={s.clubId !== null && s.clubId !== undefined ? clubMap.get(s.clubId) : undefined}
                   onClick={() => navigate(`/sessions/${s.id}`)}
                 />
