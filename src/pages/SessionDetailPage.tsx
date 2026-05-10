@@ -41,6 +41,44 @@ export default function SessionDetailPage() {
     return db.techniques.where('id').anyOf(ids).sortBy('name')
   }, [id], [] as Technique[])
 
+  const submissions = useLiveQuery(async () => {
+    if (!id) {
+      return {
+        given: [] as { technique?: Technique; count: number }[],
+        received: [] as { technique?: Technique; count: number }[],
+        totalGiven: 0,
+        totalReceived: 0,
+      }
+    }
+    const rows = await db.sessionSubmissions.where('sessionId').equals(Number(id)).toArray()
+    if (rows.length === 0) {
+      return {
+        given: [] as { technique?: Technique; count: number }[],
+        received: [] as { technique?: Technique; count: number }[],
+        totalGiven: 0,
+        totalReceived: 0,
+      }
+    }
+    const techniqueIds = rows.map(r => r.techniqueId)
+    const techniqueList = await db.techniques.where('id').anyOf(techniqueIds).toArray()
+    const techniqueMap = new Map(techniqueList.map(t => [t.id, t]))
+    const mapped = rows.map(r => ({ ...r, technique: techniqueMap.get(r.techniqueId) }))
+    const given = mapped
+      .filter(r => r.outcome === 'GIVEN')
+      .map(r => ({ technique: r.technique, count: r.count }))
+    const received = mapped
+      .filter(r => r.outcome === 'RECEIVED')
+      .map(r => ({ technique: r.technique, count: r.count }))
+    const totalGiven = given.reduce((sum, r) => sum + r.count, 0)
+    const totalReceived = received.reduce((sum, r) => sum + r.count, 0)
+    return { given, received, totalGiven, totalReceived }
+  }, [id], {
+    given: [] as { technique?: Technique; count: number }[],
+    received: [] as { technique?: Technique; count: number }[],
+    totalGiven: 0,
+    totalReceived: 0,
+  })
+
   if (!session) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
@@ -51,6 +89,7 @@ export default function SessionDetailPage() {
     if (!window.confirm('Delete this session? This cannot be undone.')) return
     db.sessions.delete(session.id!)
     db.sessionTechniques.where('sessionId').equals(session.id!).delete()
+    db.sessionSubmissions.where('sessionId').equals(session.id!).delete()
     navigate('/sessions')
   }
 
@@ -85,26 +124,13 @@ export default function SessionDetailPage() {
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-3">
           <InfoCard label="Duration" value={`${session.durationMinutes} min`} />
-          <InfoCard label="Taps Given" value={String(session.tapsGiven)} />
-          <InfoCard label="Taps Received" value={String(session.tapsReceived)} />
+          <InfoCard label="Submissions Landed" value={String(submissions?.totalGiven ?? 0)} />
+          <InfoCard label="Submissions Received" value={String(submissions?.totalReceived ?? 0)} />
           <div className="bg-zinc-900 rounded-xl p-4">
             <div className="text-xs text-gold mb-2">Energy</div>
             <EnergyDots level={session.energyLevel} />
           </div>
         </div>
-
-        {session.location && (
-          <div className="bg-zinc-900 rounded-xl p-4 flex gap-3 items-start">
-            <svg className="w-4 h-4 text-gold mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <div>
-              <div className="text-xs text-zinc-500 mb-0.5">Location</div>
-              <div className="text-sm text-zinc-100">{session.location}</div>
-            </div>
-          </div>
-        )}
 
         {club && (
           <div className="bg-zinc-900 rounded-xl p-4 flex gap-3 items-start">
@@ -117,6 +143,39 @@ export default function SessionDetailPage() {
             </div>
           </div>
         )}
+
+        {/* Submissions */}
+        <div>
+          <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">SUBMISSIONS</h2>
+          {(submissions?.given.length ?? 0) === 0 && (submissions?.received.length ?? 0) === 0 ? (
+            <p className="text-sm text-zinc-500">No submissions logged for this session.</p>
+          ) : (
+            <div className="space-y-3">
+              {submissions?.given.length ? (
+                <div className="bg-zinc-900 rounded-xl p-4 space-y-2">
+                  <div className="text-xs text-zinc-500 mb-1">Submissions Landed</div>
+                  {submissions.given.map((entry, index) => (
+                    <div key={`given-${index}`} className="flex items-center justify-between text-sm text-zinc-100">
+                      <span>{entry.technique?.name ?? 'Unknown technique'}</span>
+                      <span className="text-zinc-400">×{entry.count}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+              {submissions?.received.length ? (
+                <div className="bg-zinc-900 rounded-xl p-4 space-y-2">
+                  <div className="text-xs text-zinc-500 mb-1">Submissions Received</div>
+                  {submissions.received.map((entry, index) => (
+                    <div key={`received-${index}`} className="flex items-center justify-between text-sm text-zinc-100">
+                      <span>{entry.technique?.name ?? 'Unknown technique'}</span>
+                      <span className="text-zinc-400">×{entry.count}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
 
         {session.partners && (
           <div className="bg-zinc-900 rounded-xl p-4 flex gap-3 items-start">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/database'
@@ -20,6 +21,12 @@ function fromDateInput(s: string): number {
 
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
+const selectCls =
+  'flex-1 bg-zinc-800 rounded-xl px-3 py-2.5 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold'
+const countCls =
+  'w-20 bg-zinc-800 rounded-xl px-3 py-2.5 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold text-center'
+
+type SubmissionDraft = { techniqueId: number; count: string }
 
 export default function AddEditSessionPage() {
   const navigate = useNavigate()
@@ -30,13 +37,12 @@ export default function AddEditSessionPage() {
   const [duration, setDuration] = useState('60')
   const [sessionType, setSessionType] = useState<SessionType>('GI')
   const [clubId, setClubId] = useState<number | null>(null)
-  const [location, setLocation] = useState('')
   const [partners, setPartners] = useState('')
   const [notes, setNotes] = useState('')
   const [energy, setEnergy] = useState(3)
-  const [tapsGiven, setTapsGiven] = useState('0')
-  const [tapsReceived, setTapsReceived] = useState('0')
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [submissionsGiven, setSubmissionsGiven] = useState<SubmissionDraft[]>([])
+  const [submissionsReceived, setSubmissionsReceived] = useState<SubmissionDraft[]>([])
   const [showPicker, setShowPicker] = useState(false)
   const [pickerSearch, setPickerSearch] = useState('')
 
@@ -59,14 +65,26 @@ export default function AddEditSessionPage() {
       setDuration(String(s.durationMinutes))
       setSessionType(s.sessionType)
       setClubId(s.clubId ?? null)
-      setLocation(s.location)
       setPartners(s.partners)
       setNotes(s.notes)
       setEnergy(s.energyLevel)
-      setTapsGiven(String(s.tapsGiven))
-      setTapsReceived(String(s.tapsReceived))
       const sts = await db.sessionTechniques.where('sessionId').equals(Number(id)).toArray()
-      setSelectedIds(new Set(sts.map(st => st.techniqueId)))
+      const submissions = await db.sessionSubmissions.where('sessionId').equals(Number(id)).toArray()
+      const combinedIds = new Set([
+        ...sts.map(st => st.techniqueId),
+        ...submissions.map(st => st.techniqueId),
+      ])
+      setSelectedIds(combinedIds)
+      setSubmissionsGiven(
+        submissions
+          .filter(st => st.outcome === 'GIVEN')
+          .map(st => ({ techniqueId: st.techniqueId, count: String(st.count) })),
+      )
+      setSubmissionsReceived(
+        submissions
+          .filter(st => st.outcome === 'RECEIVED')
+          .map(st => ({ techniqueId: st.techniqueId, count: String(st.count) })),
+      )
     })
   }, [id, isEdit])
 
@@ -76,31 +94,56 @@ export default function AddEditSessionPage() {
       durationMinutes: parseInt(duration) || 60,
       sessionType,
       clubId,
-      location: location.trim(),
       partners: partners.trim(),
       notes: notes.trim(),
       energyLevel: energy,
-      tapsGiven: parseInt(tapsGiven) || 0,
-      tapsReceived: parseInt(tapsReceived) || 0,
     }
+    const normalizedSubmissions = [
+      ...submissionsGiven.map(entry => ({
+        techniqueId: entry.techniqueId,
+        count: parseInt(entry.count) || 0,
+        outcome: 'GIVEN' as const,
+      })),
+      ...submissionsReceived.map(entry => ({
+        techniqueId: entry.techniqueId,
+        count: parseInt(entry.count) || 0,
+        outcome: 'RECEIVED' as const,
+      })),
+    ].filter(entry => entry.techniqueId && entry.count > 0)
     let sid: number
     if (isEdit && id) {
       session.id = Number(id)
       await db.sessions.put(session)
       await db.sessionTechniques.where('sessionId').equals(Number(id)).delete()
+      await db.sessionSubmissions.where('sessionId').equals(Number(id)).delete()
       sid = Number(id)
     } else {
       sid = (await db.sessions.add(session)) as number
     }
+    const techniqueIds = new Set([
+      ...selectedIds,
+      ...normalizedSubmissions.map(entry => entry.techniqueId),
+    ])
     await db.sessionTechniques.bulkAdd(
-      [...selectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
+      [...techniqueIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
     )
+    if (normalizedSubmissions.length > 0) {
+      await db.sessionSubmissions.bulkAdd(
+        normalizedSubmissions.map(entry => ({ ...entry, sessionId: sid })),
+      )
+    }
     navigate(isEdit ? `/sessions/${sid}` : '/sessions')
   }
 
   const filteredTechniques = allTechniques?.filter(t =>
     pickerSearch === '' || t.name.toLowerCase().includes(pickerSearch.toLowerCase()),
   )
+  const defaultTechniqueId = allTechniques?.[0]?.id
+
+  const addSubmissionEntry = (updater: Dispatch<SetStateAction<SubmissionDraft[]>>) => {
+    if (!defaultTechniqueId) return
+    updater(prev => [...prev, { techniqueId: defaultTechniqueId, count: '1' }])
+  }
 
   return (
     <>
@@ -205,18 +248,6 @@ export default function AddEditSessionPage() {
             />
           </div>
 
-          {/* Location */}
-          <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">LOCATION</label>
-            <input
-              type="text"
-              value={location}
-              onChange={e => setLocation(e.target.value)}
-              placeholder="e.g. Main Dojo, Competition"
-              className={`${inputCls} mt-2`}
-            />
-          </div>
-
           {/* Partners */}
           <div>
             <label className="text-xs text-gold font-semibold tracking-wide">TRAINING PARTNERS</label>
@@ -250,33 +281,133 @@ export default function AddEditSessionPage() {
             </div>
           </div>
 
-          {/* Taps */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gold font-semibold tracking-wide">TAPS GIVEN</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={tapsGiven}
-                onChange={e => setTapsGiven(e.target.value)}
-                className={`${inputCls} mt-2`}
-              />
+          {/* Submissions given */}
+          <div>
+            <label className="text-xs text-gold font-semibold tracking-wide">SUBMISSIONS LANDED</label>
+            <div className="mt-2 space-y-2">
+              {submissionsGiven.length === 0 ? (
+                <p className="text-sm text-zinc-500">No submissions recorded.</p>
+              ) : (
+                submissionsGiven.map((entry, index) => (
+                  <div key={`given-${index}`} className="flex gap-2 items-center">
+                    <select
+                      value={entry.techniqueId}
+                      onChange={e => {
+                        const techniqueId = Number(e.target.value)
+                        setSubmissionsGiven(prev => prev.map((item, idx) =>
+                          idx === index ? { ...item, techniqueId } : item,
+                        ))
+                      }}
+                      className={selectCls}
+                    >
+                      {(allTechniques ?? []).map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      value={entry.count}
+                      onChange={e => {
+                        const count = e.target.value
+                        setSubmissionsGiven(prev => prev.map((item, idx) =>
+                          idx === index ? { ...item, count } : item,
+                        ))
+                      }}
+                      className={countCls}
+                    />
+                    <button
+                      onClick={() => setSubmissionsGiven(prev => prev.filter((_, idx) => idx !== index))}
+                      className="w-9 h-9 rounded-lg bg-zinc-800 text-zinc-400 active:bg-zinc-700"
+                      aria-label="Remove submission"
+                    >
+                      <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
-            <div>
-              <label className="text-xs text-gold font-semibold tracking-wide">TAPS RECEIVED</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={tapsReceived}
-                onChange={e => setTapsReceived(e.target.value)}
-                className={`${inputCls} mt-2`}
-              />
+            <button
+              onClick={() => addSubmissionEntry(setSubmissionsGiven)}
+              disabled={!defaultTechniqueId}
+              className="mt-3 w-full bg-zinc-800 text-zinc-200 font-semibold py-2.5 rounded-xl active:bg-zinc-700 disabled:opacity-50"
+            >
+              Add submission
+            </button>
+          </div>
+
+          {/* Submissions received */}
+          <div>
+            <label className="text-xs text-gold font-semibold tracking-wide">SUBMISSIONS RECEIVED</label>
+            <div className="mt-2 space-y-2">
+              {submissionsReceived.length === 0 ? (
+                <p className="text-sm text-zinc-500">No submissions recorded.</p>
+              ) : (
+                submissionsReceived.map((entry, index) => (
+                  <div key={`received-${index}`} className="flex gap-2 items-center">
+                    <select
+                      value={entry.techniqueId}
+                      onChange={e => {
+                        const techniqueId = Number(e.target.value)
+                        setSubmissionsReceived(prev => prev.map((item, idx) =>
+                          idx === index ? { ...item, techniqueId } : item,
+                        ))
+                      }}
+                      className={selectCls}
+                    >
+                      {(allTechniques ?? []).map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      value={entry.count}
+                      onChange={e => {
+                        const count = e.target.value
+                        setSubmissionsReceived(prev => prev.map((item, idx) =>
+                          idx === index ? { ...item, count } : item,
+                        ))
+                      }}
+                      className={countCls}
+                    />
+                    <button
+                      onClick={() => setSubmissionsReceived(prev => prev.filter((_, idx) => idx !== index))}
+                      className="w-9 h-9 rounded-lg bg-zinc-800 text-zinc-400 active:bg-zinc-700"
+                      aria-label="Remove submission"
+                    >
+                      <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
+            <button
+              onClick={() => addSubmissionEntry(setSubmissionsReceived)}
+              disabled={!defaultTechniqueId}
+              className="mt-3 w-full bg-zinc-800 text-zinc-200 font-semibold py-2.5 rounded-xl active:bg-zinc-700 disabled:opacity-50"
+            >
+              Add submission
+            </button>
           </div>
 
           {/* Techniques */}
           <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">TECHNIQUES PRACTICED</label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-gold font-semibold tracking-wide">TECHNIQUES PRACTICED</label>
+              <button
+                onClick={() => navigate('/techniques')}
+                className="text-xs text-gold font-semibold tracking-wide active:text-gold-light"
+              >
+                Add more
+              </button>
+            </div>
             <button
               onClick={() => setShowPicker(true)}
               className="mt-2 w-full bg-zinc-800 rounded-xl px-4 py-3 text-sm text-left active:bg-zinc-700 transition-colors"

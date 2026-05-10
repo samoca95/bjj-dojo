@@ -23,7 +23,6 @@ function SessionCard({ session, clubName, onClick }: { session: Session; clubNam
         <div className="flex items-center gap-3 mt-1">
           <span className="text-xs text-zinc-400">{session.durationMinutes} min</span>
           {clubName && <span className="text-xs text-zinc-500 truncate">{clubName}</span>}
-          {session.location && <span className="text-xs text-zinc-500 truncate">{session.location}</span>}
         </div>
         {session.notes && (
           <p className="text-xs text-zinc-500 mt-1 truncate">{session.notes}</p>

@@ -17,9 +17,14 @@ export default function HomePage() {
 
   const sessionCount = useLiveQuery(() => db.sessions.count(), [], 0)
   const sessions = useLiveQuery(() => db.sessions.toArray(), [], [])
+  const submissions = useLiveQuery(() => db.sessionSubmissions.toArray(), [], [])
   const totalMinutes = sessions?.reduce((s, r) => s + r.durationMinutes, 0) ?? 0
-  const tapsGiven = sessions?.reduce((s, r) => s + r.tapsGiven, 0) ?? 0
-  const tapsReceived = sessions?.reduce((s, r) => s + r.tapsReceived, 0) ?? 0
+  const tapsGiven = submissions
+    ?.filter(s => s.outcome === 'GIVEN')
+    .reduce((sum, s) => sum + s.count, 0) ?? 0
+  const tapsReceived = submissions
+    ?.filter(s => s.outcome === 'RECEIVED')
+    .reduce((sum, s) => sum + s.count, 0) ?? 0
 
   const hours = Math.floor(totalMinutes / 60)
   const mins = totalMinutes % 60
@@ -40,8 +45,8 @@ export default function HomePage() {
           <div className="grid grid-cols-2 gap-3">
             <StatCard label="Sessions" value={String(sessionCount ?? 0)} />
             <StatCard label="Mat Time" value={totalMinutes > 0 ? timeLabel : '0m'} />
-            <StatCard label="Taps Given" value={String(tapsGiven)} />
-            <StatCard label="Taps Received" value={String(tapsReceived)} />
+            <StatCard label="Submissions Landed" value={String(tapsGiven)} />
+            <StatCard label="Submissions Received" value={String(tapsReceived)} />
           </div>
         </section>
 

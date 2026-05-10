@@ -13,6 +13,7 @@ export interface Technique {
   id: number
   name: string
   description: string
+  cues: string[]
   categoryId: number
   youtubeUrl: string
   difficulty: Difficulty
@@ -31,12 +32,19 @@ export interface Session {
   durationMinutes: number
   sessionType: SessionType
   clubId?: number | null
-  location: string
   partners: string
   notes: string
   energyLevel: number
-  tapsGiven: number
-  tapsReceived: number
+}
+
+export type SubmissionOutcome = 'GIVEN' | 'RECEIVED'
+
+export interface SessionSubmission {
+  id?: number
+  sessionId: number
+  techniqueId: number
+  outcome: SubmissionOutcome
+  count: number
 }
 
 export interface Club {
