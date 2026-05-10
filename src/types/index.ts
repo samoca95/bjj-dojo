@@ -63,6 +63,14 @@ export const SESSION_TYPE_LABELS: Record<SessionType, string> = {
   DRILLING: 'Drilling',
 }
 
+export const SESSION_TYPE_ICONS: Record<SessionType, string> = {
+  GI: 'shirt',
+  NOGI: 'dumbbell',
+  OPEN_MAT: 'users',
+  COMPETITION: 'trophy',
+  DRILLING: 'rotate-ccw',
+}
+
 export const SESSION_TYPE_COLORS: Record<SessionType, string> = {
   GI: 'bg-blue-900/40 text-blue-300',
   NOGI: 'bg-green-900/40 text-green-300',

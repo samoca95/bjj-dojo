@@ -195,8 +195,8 @@ describe('AddEditSessionPage — tap tracking', () => {
     const user = userEvent.setup()
     renderPage()
     await user.click(screen.getByText('Given'))
+    // Picker auto-closes after tap selection — no need to click Close
     await user.click(screen.getByText('Armbar'))
-    await user.click(screen.getByText('Close'))
     expect(screen.getByText(/Given \(1\)/)).toBeInTheDocument()
     const container = screen.getByText(/Given \(1\)/).closest('div')!
     expect(within(container.parentElement!).getByText('Armbar')).toBeInTheDocument()
@@ -206,8 +206,8 @@ describe('AddEditSessionPage — tap tracking', () => {
     const user = userEvent.setup()
     renderPage()
     await user.click(screen.getByText('Received'))
+    // Picker auto-closes after tap selection
     await user.click(screen.getByText('Triangle Choke'))
-    await user.click(screen.getByText('Close'))
     expect(screen.getByText(/Received \(1\)/)).toBeInTheDocument()
   })
 
@@ -215,8 +215,8 @@ describe('AddEditSessionPage — tap tracking', () => {
     const user = userEvent.setup()
     renderPage()
     await user.click(screen.getByText('Given'))
+    // Picker auto-closes after tap selection
     await user.click(screen.getByText('Armbar'))
-    await user.click(screen.getByText('Close'))
     expect(screen.getByText(/Given \(1\)/)).toBeInTheDocument()
 
     // The X button is the only button inside the Armbar tap row

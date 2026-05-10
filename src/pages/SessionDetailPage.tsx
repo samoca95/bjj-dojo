@@ -7,8 +7,9 @@ import {
 } from 'lucide-react'
 import { db } from '../db/database'
 import type { Session, SessionTap, Technique } from '../types'
-import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
+import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS, SESSION_TYPE_ICONS } from '../types'
 import EnergyDots from '../components/EnergyDots'
+import { CategoryIcon } from '../components/CategoryIcon'
 
 function formatDate(epoch: number) {
   return new Date(epoch).toLocaleDateString(undefined, {
@@ -90,10 +91,11 @@ export default function SessionDetailPage() {
       </div>
 
       <div className="px-4 space-y-4 pb-6">
-        {/* Type badge */}
-        <span className={`inline-block text-sm font-bold px-3 py-1 rounded-lg ${SESSION_TYPE_COLORS[session.sessionType]}`}>
+        {/* Type badge with icon */}
+        <div className={`inline-flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-lg ${SESSION_TYPE_COLORS[session.sessionType]}`}>
+          <CategoryIcon value={SESSION_TYPE_ICONS[session.sessionType]} size={16} className="text-current" />
           {SESSION_TYPE_LABELS[session.sessionType]}
-        </span>
+        </div>
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-3">
@@ -114,10 +116,39 @@ export default function SessionDetailPage() {
           </div>
         )}
 
-        {/* Taps */}
+        {/* Techniques Practiced — before taps */}
+        <div>
+          <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">TECHNIQUES PRACTICED</h2>
+          {techniques?.length === 0 ? (
+            <p className="text-sm text-zinc-500">No techniques logged for this session.</p>
+          ) : (
+            <div className="space-y-2">
+              {techniques?.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => navigate(`/techniques/${t.id}`)}
+                  className="w-full bg-zinc-900 rounded-xl px-4 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
+                >
+                  <Zap size={16} className="text-gold shrink-0" strokeWidth={2} />
+                  <span className="flex-1 text-sm text-zinc-100">{t.name}</span>
+                  <ChevronRight size={16} className="text-zinc-600" strokeWidth={2} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Taps / Submissions — after techniques */}
         {(givenTaps.length > 0 || receivedTaps.length > 0) && (
           <div className="bg-zinc-900 rounded-xl p-4 space-y-3">
-            <div className="text-xs text-gold">Taps / Submissions</div>
+            <div className="flex items-center gap-2">
+              <div className="text-xs text-gold">Taps / Submissions</div>
+              <span className="text-xs text-zinc-500">
+                {givenTaps.length > 0 && `${givenTaps.length} given`}
+                {givenTaps.length > 0 && receivedTaps.length > 0 && ' · '}
+                {receivedTaps.length > 0 && `${receivedTaps.length} received`}
+              </span>
+            </div>
             {givenTaps.length > 0 && (
               <div>
                 <div className="text-xs text-zinc-500 mb-1.5">Given ({givenTaps.length})</div>
@@ -157,28 +188,6 @@ export default function SessionDetailPage() {
             <p className="text-sm text-zinc-100 whitespace-pre-wrap">{session.notes}</p>
           </div>
         )}
-
-        {/* Techniques */}
-        <div>
-          <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">TECHNIQUES PRACTICED</h2>
-          {techniques?.length === 0 ? (
-            <p className="text-sm text-zinc-500">No techniques logged for this session.</p>
-          ) : (
-            <div className="space-y-2">
-              {techniques?.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => navigate(`/techniques/${t.id}`)}
-                  className="w-full bg-zinc-900 rounded-xl px-4 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
-                >
-                  <Zap size={16} className="text-gold shrink-0" strokeWidth={2} />
-                  <span className="flex-1 text-sm text-zinc-100">{t.name}</span>
-                  <ChevronRight size={16} className="text-zinc-600" strokeWidth={2} />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   )

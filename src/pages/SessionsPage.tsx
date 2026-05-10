@@ -1,31 +1,69 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, Plus } from 'lucide-react'
+import { CalendarDays, Plus, Zap } from 'lucide-react'
 import { db } from '../db/database'
 import type { Club, Session } from '../types'
-import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
+import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS, SESSION_TYPE_ICONS } from '../types'
 import EnergyDots from '../components/EnergyDots'
+import { CategoryIcon } from '../components/CategoryIcon'
 
 function formatDate(epoch: number) {
   return new Date(epoch).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function SessionCard({ session, clubName, onClick }: { session: Session; clubName?: string; onClick: () => void }) {
+  const tapData = useLiveQuery(async () => {
+    if (!session.id) return { given: 0, received: 0 }
+    const taps = await db.sessionTaps.where('sessionId').equals(session.id).toArray()
+    return {
+      given: taps.filter(t => t.type === 'given').length,
+      received: taps.filter(t => t.type === 'received').length,
+    }
+  }, [session.id], { given: 0, received: 0 })
+
+  const techniques = useLiveQuery(async () => {
+    if (!session.id) return [] as string[]
+    const sts = await db.sessionTechniques.where('sessionId').equals(session.id).toArray()
+    if (sts.length === 0) return []
+    const techs = await db.techniques.where('id').anyOf(sts.map(s => s.techniqueId)).toArray()
+    return techs.map(t => t.name)
+  }, [session.id], [] as string[])
+
+  const totalTaps = (tapData?.given ?? 0) + (tapData?.received ?? 0)
+
   return (
     <button
       onClick={onClick}
       className="w-full bg-zinc-900 rounded-2xl p-4 flex gap-3 items-start text-left active:bg-zinc-800 transition-colors"
     >
-      <span className={`text-xs font-bold px-2 py-1 rounded-lg shrink-0 mt-0.5 ${SESSION_TYPE_COLORS[session.sessionType]}`}>
-        {SESSION_TYPE_LABELS[session.sessionType]}
-      </span>
+      {/* Session type icon column */}
+      <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center ${SESSION_TYPE_COLORS[session.sessionType].replace('text-', 'text-').replace('bg-', 'bg-')}`}>
+        <CategoryIcon value={SESSION_TYPE_ICONS[session.sessionType]} size={20} className="text-current" />
+      </div>
+
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-zinc-100 text-sm">{formatDate(session.date)}</div>
-        <div className="flex items-center gap-3 mt-1">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-zinc-100 text-sm">{formatDate(session.date)}</span>
+          <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${SESSION_TYPE_COLORS[session.sessionType]}`}>
+            {SESSION_TYPE_LABELS[session.sessionType]}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 mt-0.5">
           <span className="text-xs text-zinc-400">{session.durationMinutes} min</span>
           {clubName && <span className="text-xs text-zinc-500 truncate">{clubName}</span>}
+          {totalTaps > 0 && (
+            <span className="flex items-center gap-0.5 text-xs text-zinc-500">
+              <Zap size={10} className="text-zinc-500" />
+              {totalTaps}
+            </span>
+          )}
         </div>
-        {session.notes && (
+        {techniques && techniques.length > 0 && (
+          <p className="text-xs text-zinc-500 mt-1 truncate">
+            {techniques.join(' · ')}
+          </p>
+        )}
+        {session.notes && !techniques?.length && (
           <p className="text-xs text-zinc-500 mt-1 truncate">{session.notes}</p>
         )}
       </div>
