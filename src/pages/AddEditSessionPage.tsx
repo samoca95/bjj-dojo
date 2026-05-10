@@ -168,8 +168,6 @@ export default function AddEditSessionPage() {
         },
       ])
       setSelectedIds(prev => new Set([...prev, technique.id]))
-      // Close after each tap selection so the user sees it was registered
-      setShowPicker(false)
     }
   }
 
@@ -200,6 +198,7 @@ export default function AddEditSessionPage() {
 
   const givenTaps = taps.filter(t => t.type === 'given')
   const receivedTaps = taps.filter(t => t.type === 'received')
+  const energyProgress = ((energy - 1) / 4) * 100
 
   return (
     <>
@@ -252,7 +251,7 @@ export default function AddEditSessionPage() {
             <div className="flex items-center justify-between">
               <label className="text-xs text-gold font-semibold tracking-wide">CLUB</label>
               <button
-                onClick={() => navigate('/clubs')}
+                onClick={() => navigate('/settings')}
                 className="text-xs text-gold font-semibold tracking-wide active:text-gold-light"
               >
                 Manage
@@ -260,7 +259,7 @@ export default function AddEditSessionPage() {
             </div>
             {clubs?.length === 0 ? (
               <button
-                onClick={() => navigate('/clubs')}
+                onClick={() => navigate('/settings')}
                 className="mt-2 w-full bg-zinc-800 rounded-xl px-4 py-3 text-sm text-left text-zinc-400 active:bg-zinc-700 transition-colors"
               >
                 Add your first club
@@ -343,9 +342,9 @@ export default function AddEditSessionPage() {
                 max={5}
                 value={energy}
                 onChange={e => setEnergy(Number(e.target.value))}
-                className="w-full h-2 rounded-full appearance-none cursor-pointer accent-gold bg-zinc-700"
+                className="energy-slider w-full h-2.5 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #d4a017 0%, #d4a017 ${(energy - 1) * 25}%, #3f3f46 ${(energy - 1) * 25}%, #3f3f46 100%)`,
+                  background: `linear-gradient(to right, var(--energy-teal) 0%, var(--energy-teal) ${energyProgress}%, #3f3f46 ${energyProgress}%, #3f3f46 100%)`,
                 }}
               />
               <div className="flex justify-between mt-1">
@@ -456,7 +455,11 @@ export default function AddEditSessionPage() {
                 onClick={() => { setShowPicker(false); setShowCreateTechnique(false) }}
                 className="text-gold font-semibold active:text-gold-light"
               >
-                {pickerMode === 'techniques' ? `Done (${selectedIds.size})` : 'Close'}
+                {pickerMode === 'techniques'
+                  ? `Done (${selectedIds.size})`
+                  : pickerMode === 'tap-given'
+                  ? `Done (${givenTaps.length})`
+                  : `Done (${receivedTaps.length})`}
               </button>
             </div>
 

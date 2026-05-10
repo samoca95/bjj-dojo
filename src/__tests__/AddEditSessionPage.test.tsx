@@ -219,8 +219,9 @@ describe('AddEditSessionPage — tap tracking', () => {
     await user.click(screen.getByText('Armbar'))
     expect(screen.getByText(/Given \(1\)/)).toBeInTheDocument()
 
-    // The X button is the only button inside the Armbar tap row
-    const tapRow = screen.getByText('Armbar').closest('div')!
+    // Scope to the Given section because the picker stays open and also shows technique rows.
+    const givenSection = screen.getByText(/Given \(1\)/).parentElement!
+    const tapRow = within(givenSection).getByText('Armbar').closest('div')!
     await user.click(within(tapRow).getByRole('button'))
     expect(screen.queryByText(/Given \(1\)/)).toBeNull()
   })

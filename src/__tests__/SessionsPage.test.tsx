@@ -26,7 +26,6 @@ function renderSessionsPage() {
       <Routes>
         <Route path="/sessions" element={<SessionsPage />} />
         <Route path="/sessions/new" element={<div data-testid="new-session-page" />} />
-        <Route path="/clubs" element={<div data-testid="clubs-page" />} />
       </Routes>
     </MemoryRouter>,
   )
@@ -91,13 +90,5 @@ describe('SessionsPage', () => {
     expect(fab).not.toBeNull()
     await user.click(fab)
     expect(screen.getByTestId('new-session-page')).toBeInTheDocument()
-  })
-
-  it('Clubs link navigates to /clubs', async () => {
-    setupEmptyMocks()
-    const user = userEvent.setup()
-    renderSessionsPage()
-    await user.click(screen.getByText('Clubs'))
-    expect(screen.getByTestId('clubs-page')).toBeInTheDocument()
   })
 })

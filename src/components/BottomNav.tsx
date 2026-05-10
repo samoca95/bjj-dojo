@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom'
-import { House, CalendarDays, BookOpen } from 'lucide-react'
+import { House, CalendarDays, BookOpen, Settings } from 'lucide-react'
 
 const tabs = [
   { to: '/', label: 'Home', Icon: House, end: true },
   { to: '/sessions', label: 'Sessions', Icon: CalendarDays, end: false },
   { to: '/techniques', label: 'Techniques', Icon: BookOpen, end: false },
+  { to: '/settings', label: 'Settings', Icon: Settings, end: false },
 ]
 
 export default function BottomNav() {

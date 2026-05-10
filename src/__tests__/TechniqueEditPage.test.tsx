@@ -16,7 +16,10 @@ const mocks = vi.hoisted(() => ({
   del: vi.fn(),
   last: vi.fn().mockResolvedValue({ id: 1000 }),
   connWhere: vi.fn(() => ({
-    equals: vi.fn(() => ({ delete: vi.fn().mockResolvedValue(0) })),
+    equals: vi.fn(() => ({
+      delete: vi.fn().mockResolvedValue(0),
+      toArray: vi.fn().mockResolvedValue([]),
+    })),
   })),
 }))
 
@@ -31,6 +34,7 @@ vi.mock('../db/database', () => ({
     },
     techniqueConnections: {
       where: mocks.connWhere,
+      bulkAdd: vi.fn(),
     },
     categories: {
       orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
@@ -89,7 +93,10 @@ beforeEach(() => {
   mocks.add.mockResolvedValue(1001)
   mocks.last.mockResolvedValue({ id: 1000 })
   mocks.connWhere.mockReturnValue({
-    equals: vi.fn(() => ({ delete: vi.fn().mockResolvedValue(0) })),
+    equals: vi.fn(() => ({
+      delete: vi.fn().mockResolvedValue(0),
+      toArray: vi.fn().mockResolvedValue([]),
+    })),
   })
 })
 

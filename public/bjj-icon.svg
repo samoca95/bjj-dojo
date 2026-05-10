@@ -1,36 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- App background -->
-  <rect width="512" height="512" rx="96" fill="#0a0a0a"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#17181d" />
+      <stop offset="100%" stop-color="#101116" />
+    </linearGradient>
+    <linearGradient id="belt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#19e0ad" />
+      <stop offset="100%" stop-color="#10c696" />
+    </linearGradient>
+  </defs>
 
-  <!--
-    Black belt design evoking the kanji 工 (craft/work).
-    A tied BJJ black belt viewed from above creates two horizontal
-    bands with a central vertical knot — the same structure as 工.
-  -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)" />
 
-  <!-- Top horizontal belt band -->
-  <rect x="60" y="174" width="392" height="60" rx="14" fill="#d4a017"/>
-  <!-- Bottom horizontal belt band -->
-  <rect x="60" y="278" width="392" height="60" rx="14" fill="#d4a017"/>
-  <!-- Central vertical knot connecting both bands -->
-  <rect x="226" y="148" width="60" height="216" rx="12" fill="#d4a017"/>
+  <path fill="url(#belt)" d="M72 196h132c11 0 20-9 20-20v-7c0-11 9-20 20-20h24c11 0 20 9 20 20v7c0 11 9 20 20 20h132v56H72z" />
+  <path fill="url(#belt)" d="M66 274h190l-170 97a28 28 0 0 1-38-10l-16-27z" />
+  <path fill="url(#belt)" d="M446 274H256l170 97a28 28 0 0 0 38-10l16-27z" />
 
-  <!-- Cutouts to shape the 工 negative space -->
-  <!-- Left gap top band -->
-  <rect x="68" y="182" width="150" height="44" rx="6" fill="#0a0a0a"/>
-  <!-- Right gap top band -->
-  <rect x="294" y="182" width="150" height="44" rx="6" fill="#0a0a0a"/>
-  <!-- Left gap bottom band -->
-  <rect x="68" y="286" width="150" height="44" rx="6" fill="#0a0a0a"/>
-  <!-- Right gap bottom band -->
-  <rect x="294" y="286" width="150" height="44" rx="6" fill="#0a0a0a"/>
+  <rect x="214" y="242" width="84" height="24" rx="12" fill="#17d6a8" />
+  <rect x="206" y="274" width="100" height="22" rx="11" fill="#13c79a" />
 
-  <!-- Belt stripe detail on the knot (traditional rank stripe) -->
-  <rect x="226" y="246" width="60" height="20" rx="4" fill="#0a0a0a" opacity="0.55"/>
-
-  <!-- Subtle side panels that give depth to the belt ends -->
-  <rect x="60" y="182" width="18" height="44" rx="4" fill="#b88a12" opacity="0.7"/>
-  <rect x="434" y="182" width="18" height="44" rx="4" fill="#b88a12" opacity="0.7"/>
-  <rect x="60" y="286" width="18" height="44" rx="4" fill="#b88a12" opacity="0.7"/>
-  <rect x="434" y="286" width="18" height="44" rx="4" fill="#b88a12" opacity="0.7"/>
+  <rect x="98" y="301" width="36" height="10" rx="5" transform="rotate(-30 98 301)" fill="#fff" opacity="0.9" />
+  <rect x="116" y="311" width="36" height="10" rx="5" transform="rotate(-30 116 311)" fill="#fff" opacity="0.9" />
 </svg>
