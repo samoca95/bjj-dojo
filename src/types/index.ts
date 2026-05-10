@@ -1,6 +1,7 @@
 export type Difficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'ELITE'
 export type SessionType = 'GI' | 'NOGI' | 'OPEN_MAT' | 'COMPETITION' | 'DRILLING'
 export type ConnectionType = 'FOLLOW_UP' | 'COUNTER' | 'SETUP' | 'TRANSITION'
+export type TapType = 'given' | 'received'
 
 export interface Category {
   id: number
@@ -13,6 +14,7 @@ export interface Technique {
   id: number
   name: string
   description: string
+  cues?: string[]
   categoryId: number
   youtubeUrl: string
   difficulty: Difficulty
@@ -31,12 +33,8 @@ export interface Session {
   durationMinutes: number
   sessionType: SessionType
   clubId?: number | null
-  location: string
-  partners: string
   notes: string
   energyLevel: number
-  tapsGiven: number
-  tapsReceived: number
 }
 
 export interface Club {
@@ -48,6 +46,13 @@ export interface Club {
 export interface SessionTechnique {
   sessionId: number
   techniqueId: number
+}
+
+export interface SessionTap {
+  id?: number
+  sessionId: number
+  techniqueId: number
+  type: TapType
 }
 
 export const SESSION_TYPE_LABELS: Record<SessionType, string> = {

@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
+import { CalendarDays, BookOpen, ChevronRight } from 'lucide-react'
 import { db } from '../db/database'
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -18,8 +19,14 @@ export default function HomePage() {
   const sessionCount = useLiveQuery(() => db.sessions.count(), [], 0)
   const sessions = useLiveQuery(() => db.sessions.toArray(), [], [])
   const totalMinutes = sessions?.reduce((s, r) => s + r.durationMinutes, 0) ?? 0
-  const tapsGiven = sessions?.reduce((s, r) => s + r.tapsGiven, 0) ?? 0
-  const tapsReceived = sessions?.reduce((s, r) => s + r.tapsReceived, 0) ?? 0
+
+  const tapCounts = useLiveQuery(async () => {
+    const taps = await db.sessionTaps.toArray()
+    return {
+      given: taps.filter(t => t.type === 'given').length,
+      received: taps.filter(t => t.type === 'received').length,
+    }
+  }, [], { given: 0, received: 0 })
 
   const hours = Math.floor(totalMinutes / 60)
   const mins = totalMinutes % 60
@@ -40,8 +47,8 @@ export default function HomePage() {
           <div className="grid grid-cols-2 gap-3">
             <StatCard label="Sessions" value={String(sessionCount ?? 0)} />
             <StatCard label="Mat Time" value={totalMinutes > 0 ? timeLabel : '0m'} />
-            <StatCard label="Taps Given" value={String(tapsGiven)} />
-            <StatCard label="Taps Received" value={String(tapsReceived)} />
+            <StatCard label="Taps Given" value={String(tapCounts?.given ?? 0)} />
+            <StatCard label="Taps Received" value={String(tapCounts?.received ?? 0)} />
           </div>
         </section>
 
@@ -54,18 +61,13 @@ export default function HomePage() {
               className="w-full bg-zinc-900 rounded-2xl p-5 flex items-center gap-4 text-left active:bg-zinc-800 transition-colors"
             >
               <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
-                <svg className="w-7 h-7 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <path d="M16 2v4M8 2v4M3 10h18" />
-                </svg>
+                <CalendarDays size={28} className="text-gold" strokeWidth={2} />
               </div>
               <div className="flex-1">
                 <div className="font-semibold text-zinc-100">Training Sessions</div>
                 <div className="text-sm text-zinc-400">Log and review your mat time</div>
               </div>
-              <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight size={20} className="text-zinc-600" strokeWidth={2} />
             </button>
 
             <button
@@ -73,18 +75,13 @@ export default function HomePage() {
               className="w-full bg-zinc-900 rounded-2xl p-5 flex items-center gap-4 text-left active:bg-zinc-800 transition-colors"
             >
               <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
-                <svg className="w-7 h-7 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round"
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
+                <BookOpen size={28} className="text-gold" strokeWidth={2} />
               </div>
               <div className="flex-1">
                 <div className="font-semibold text-zinc-100">Technique Library</div>
                 <div className="text-sm text-zinc-400">60+ techniques with YouTube refs</div>
               </div>
-              <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight size={20} className="text-zinc-600" strokeWidth={2} />
             </button>
           </div>
         </section>

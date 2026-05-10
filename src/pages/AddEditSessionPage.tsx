@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
+import {
+  ChevronLeft, Plus, Check, X, Zap,
+} from 'lucide-react'
 import { db } from '../db/database'
-import type { Club, Session, SessionType, Technique } from '../types'
+import type { Category, Club, Session, SessionType, Technique, TapType } from '../types'
 import { SESSION_TYPE_LABELS } from '../types'
 
 function toDateInput(epoch: number) {
@@ -21,6 +24,12 @@ function fromDateInput(s: string): number {
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
 
+const DURATION_PRESETS = [60, 75, 90, 120]
+
+type LocalTap = { uid: string; techniqueId: number; techniqueName: string; type: TapType }
+
+type PickerMode = 'techniques' | 'tap-given' | 'tap-received'
+
 export default function AddEditSessionPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
@@ -28,17 +37,22 @@ export default function AddEditSessionPage() {
 
   const [date, setDate] = useState(toDateInput(Date.now()))
   const [duration, setDuration] = useState('60')
+  const [customDuration, setCustomDuration] = useState(false)
   const [sessionType, setSessionType] = useState<SessionType>('GI')
   const [clubId, setClubId] = useState<number | null>(null)
-  const [location, setLocation] = useState('')
-  const [partners, setPartners] = useState('')
   const [notes, setNotes] = useState('')
   const [energy, setEnergy] = useState(3)
-  const [tapsGiven, setTapsGiven] = useState('0')
-  const [tapsReceived, setTapsReceived] = useState('0')
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [taps, setTaps] = useState<LocalTap[]>([])
+
   const [showPicker, setShowPicker] = useState(false)
+  const [pickerMode, setPickerMode] = useState<PickerMode>('techniques')
   const [pickerSearch, setPickerSearch] = useState('')
+
+  // Inline custom technique creation
+  const [showCreateTechnique, setShowCreateTechnique] = useState(false)
+  const [newTechName, setNewTechName] = useState('')
+  const [newTechCatId, setNewTechCatId] = useState<number>(1)
 
   const allTechniques = useLiveQuery(
     () => db.techniques.orderBy('name').toArray(),
@@ -50,23 +64,42 @@ export default function AddEditSessionPage() {
     [],
     [] as Club[],
   )
+  const categories = useLiveQuery(
+    () => db.categories.orderBy('name').toArray(),
+    [],
+    [] as Category[],
+  )
 
   useEffect(() => {
     if (!isEdit || !id) return
     db.sessions.get(Number(id)).then(async s => {
       if (!s) return
       setDate(toDateInput(s.date))
-      setDuration(String(s.durationMinutes))
+      const dur = String(s.durationMinutes)
+      if (DURATION_PRESETS.includes(s.durationMinutes)) {
+        setDuration(dur)
+        setCustomDuration(false)
+      } else {
+        setDuration(dur)
+        setCustomDuration(true)
+      }
       setSessionType(s.sessionType)
       setClubId(s.clubId ?? null)
-      setLocation(s.location)
-      setPartners(s.partners)
       setNotes(s.notes)
       setEnergy(s.energyLevel)
-      setTapsGiven(String(s.tapsGiven))
-      setTapsReceived(String(s.tapsReceived))
       const sts = await db.sessionTechniques.where('sessionId').equals(Number(id)).toArray()
       setSelectedIds(new Set(sts.map(st => st.techniqueId)))
+
+      const storedTaps = await db.sessionTaps.where('sessionId').equals(Number(id)).toArray()
+      const techIds = [...new Set(storedTaps.map(t => t.techniqueId))]
+      const techs = await db.techniques.where('id').anyOf(techIds).toArray()
+      const techMap = new Map(techs.map(t => [t.id, t.name]))
+      setTaps(storedTaps.map((t, i) => ({
+        uid: `existing-${i}`,
+        techniqueId: t.techniqueId,
+        techniqueName: techMap.get(t.techniqueId) ?? 'Unknown',
+        type: t.type,
+      })))
     })
   }, [id, isEdit])
 
@@ -76,24 +109,29 @@ export default function AddEditSessionPage() {
       durationMinutes: parseInt(duration) || 60,
       sessionType,
       clubId,
-      location: location.trim(),
-      partners: partners.trim(),
       notes: notes.trim(),
       energyLevel: energy,
-      tapsGiven: parseInt(tapsGiven) || 0,
-      tapsReceived: parseInt(tapsReceived) || 0,
     }
     let sid: number
     if (isEdit && id) {
       session.id = Number(id)
       await db.sessions.put(session)
       await db.sessionTechniques.where('sessionId').equals(Number(id)).delete()
+      await db.sessionTaps.where('sessionId').equals(Number(id)).delete()
       sid = Number(id)
     } else {
       sid = (await db.sessions.add(session)) as number
     }
+
+    // Merge tap techniques into practiced set
+    const allSelectedIds = new Set(selectedIds)
+    taps.forEach(t => allSelectedIds.add(t.techniqueId))
+
     await db.sessionTechniques.bulkAdd(
-      [...selectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
+      [...allSelectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
+    )
+    await db.sessionTaps.bulkAdd(
+      taps.map(t => ({ sessionId: sid, techniqueId: t.techniqueId, type: t.type })),
     )
     navigate(isEdit ? `/sessions/${sid}` : '/sessions')
   }
@@ -102,15 +140,71 @@ export default function AddEditSessionPage() {
     pickerSearch === '' || t.name.toLowerCase().includes(pickerSearch.toLowerCase()),
   )
 
+  const openPicker = (mode: PickerMode) => {
+    setPickerMode(mode)
+    setPickerSearch('')
+    setShowCreateTechnique(false)
+    setNewTechName('')
+    setShowPicker(true)
+  }
+
+  const handlePickerSelect = (technique: Technique) => {
+    if (pickerMode === 'techniques') {
+      setSelectedIds(prev => {
+        const next = new Set(prev)
+        next.has(technique.id) ? next.delete(technique.id) : next.add(technique.id)
+        return next
+      })
+    } else {
+      const tapType: TapType = pickerMode === 'tap-given' ? 'given' : 'received'
+      setTaps(prev => [
+        ...prev,
+        {
+          uid: `${Date.now()}-${Math.random()}`,
+          techniqueId: technique.id,
+          techniqueName: technique.name,
+          type: tapType,
+        },
+      ])
+      setSelectedIds(prev => new Set([...prev, technique.id]))
+    }
+  }
+
+  const handleCreateTechnique = async () => {
+    const name = newTechName.trim()
+    if (!name) return
+    const maxId = await db.techniques.orderBy('id').last()
+    const newId = (maxId?.id ?? 1000) + 1
+    const newTech: Technique = {
+      id: newId,
+      name,
+      description: '',
+      cues: [],
+      categoryId: newTechCatId,
+      youtubeUrl: '',
+      difficulty: 'BEGINNER',
+      isCustom: true,
+    }
+    await db.techniques.add(newTech)
+    handlePickerSelect(newTech)
+    setNewTechName('')
+    setShowCreateTechnique(false)
+  }
+
+  const removeTap = (uid: string) => {
+    setTaps(prev => prev.filter(t => t.uid !== uid))
+  }
+
+  const givenTaps = taps.filter(t => t.type === 'given')
+  const receivedTaps = taps.filter(t => t.type === 'received')
+
   return (
     <>
       <div className="min-h-full bg-zinc-950">
         {/* Header */}
         <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 z-10 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft size={24} strokeWidth={2} />
           </button>
           <h1 className="flex-1 font-bold text-zinc-100">{isEdit ? 'Edit Session' : 'Log Session'}</h1>
           <button onClick={handleSave} className="text-gold font-bold text-sm active:text-gold-light px-2">
@@ -195,38 +289,40 @@ export default function AddEditSessionPage() {
 
           {/* Duration */}
           <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">DURATION (minutes)</label>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={duration}
-              onChange={e => setDuration(e.target.value)}
-              className={`${inputCls} mt-2`}
-            />
-          </div>
-
-          {/* Location */}
-          <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">LOCATION</label>
-            <input
-              type="text"
-              value={location}
-              onChange={e => setLocation(e.target.value)}
-              placeholder="e.g. Main Dojo, Competition"
-              className={`${inputCls} mt-2`}
-            />
-          </div>
-
-          {/* Partners */}
-          <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">TRAINING PARTNERS</label>
-            <input
-              type="text"
-              value={partners}
-              onChange={e => setPartners(e.target.value)}
-              placeholder="e.g. John, Sarah"
-              className={`${inputCls} mt-2`}
-            />
+            <label className="text-xs text-gold font-semibold tracking-wide">DURATION</label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {DURATION_PRESETS.map(d => (
+                <button
+                  key={d}
+                  onClick={() => { setDuration(String(d)); setCustomDuration(false) }}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    !customDuration && duration === String(d)
+                      ? 'bg-gold text-black'
+                      : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
+                  }`}
+                >
+                  {d}m
+                </button>
+              ))}
+              <button
+                onClick={() => setCustomDuration(true)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  customDuration ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
+                }`}
+              >
+                Custom
+              </button>
+            </div>
+            {customDuration && (
+              <input
+                type="number"
+                inputMode="numeric"
+                value={duration}
+                onChange={e => setDuration(e.target.value)}
+                placeholder="Minutes"
+                className={`${inputCls} mt-2`}
+              />
+            )}
           </div>
 
           {/* Energy */}
@@ -251,34 +347,65 @@ export default function AddEditSessionPage() {
           </div>
 
           {/* Taps */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gold font-semibold tracking-wide">TAPS GIVEN</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={tapsGiven}
-                onChange={e => setTapsGiven(e.target.value)}
-                className={`${inputCls} mt-2`}
-              />
+          <div>
+            <label className="text-xs text-gold font-semibold tracking-wide">TAPS / SUBMISSIONS</label>
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => openPicker('tap-given')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 active:bg-zinc-700"
+              >
+                <Plus size={14} />
+                Given
+              </button>
+              <button
+                onClick={() => openPicker('tap-received')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 active:bg-zinc-700"
+              >
+                <Plus size={14} />
+                Received
+              </button>
             </div>
-            <div>
-              <label className="text-xs text-gold font-semibold tracking-wide">TAPS RECEIVED</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={tapsReceived}
-                onChange={e => setTapsReceived(e.target.value)}
-                className={`${inputCls} mt-2`}
-              />
-            </div>
+
+            {givenTaps.length > 0 && (
+              <div className="mt-3">
+                <div className="text-xs text-zinc-500 mb-1.5">Given ({givenTaps.length})</div>
+                <div className="space-y-1.5">
+                  {givenTaps.map(t => (
+                    <div key={t.uid} className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2">
+                      <Zap size={13} className="text-gold shrink-0" />
+                      <span className="flex-1 text-sm text-zinc-100">{t.techniqueName}</span>
+                      <button onClick={() => removeTap(t.uid)} className="text-zinc-600 active:text-zinc-300">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {receivedTaps.length > 0 && (
+              <div className="mt-3">
+                <div className="text-xs text-zinc-500 mb-1.5">Received ({receivedTaps.length})</div>
+                <div className="space-y-1.5">
+                  {receivedTaps.map(t => (
+                    <div key={t.uid} className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2">
+                      <Zap size={13} className="text-red-400 shrink-0" />
+                      <span className="flex-1 text-sm text-zinc-100">{t.techniqueName}</span>
+                      <button onClick={() => removeTap(t.uid)} className="text-zinc-600 active:text-zinc-300">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Techniques */}
           <div>
             <label className="text-xs text-gold font-semibold tracking-wide">TECHNIQUES PRACTICED</label>
             <button
-              onClick={() => setShowPicker(true)}
+              onClick={() => openPicker('techniques')}
               className="mt-2 w-full bg-zinc-800 rounded-xl px-4 py-3 text-sm text-left active:bg-zinc-700 transition-colors"
             >
               {selectedIds.size === 0 ? (
@@ -306,13 +433,23 @@ export default function AddEditSessionPage() {
       {/* Technique Picker Modal */}
       {showPicker && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-end">
-          <div className="bg-zinc-900 w-full rounded-t-3xl max-h-[80vh] flex flex-col">
+          <div className="bg-zinc-900 w-full rounded-t-3xl max-h-[85vh] flex flex-col">
             <div className="px-4 pt-4 pb-3 flex items-center gap-3 border-b border-zinc-800">
-              <h2 className="flex-1 font-bold text-zinc-100">Select Techniques</h2>
-              <button onClick={() => setShowPicker(false)} className="text-gold font-semibold active:text-gold-light">
-                Done ({selectedIds.size})
+              <h2 className="flex-1 font-bold text-zinc-100">
+                {pickerMode === 'techniques'
+                  ? 'Select Techniques'
+                  : pickerMode === 'tap-given'
+                  ? 'Select Technique — Tap Given'
+                  : 'Select Technique — Tap Received'}
+              </h2>
+              <button
+                onClick={() => { setShowPicker(false); setShowCreateTechnique(false) }}
+                className="text-gold font-semibold active:text-gold-light"
+              >
+                {pickerMode === 'techniques' ? `Done (${selectedIds.size})` : 'Close'}
               </button>
             </div>
+
             <div className="px-4 py-3 border-b border-zinc-800">
               <input
                 type="text"
@@ -322,31 +459,80 @@ export default function AddEditSessionPage() {
                 className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
               />
             </div>
+
             <div className="overflow-y-auto flex-1">
-              {filteredTechniques?.map(t => (
+              {/* Create new technique */}
+              {!showCreateTechnique ? (
                 <button
-                  key={t.id}
-                  onClick={() => {
-                    setSelectedIds(prev => {
-                      const next = new Set(prev)
-                      next.has(t.id) ? next.delete(t.id) : next.add(t.id)
-                      return next
-                    })
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
+                  onClick={() => setShowCreateTechnique(true)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800 active:bg-zinc-800 text-left text-gold"
                 >
-                  <div className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
-                    selectedIds.has(t.id) ? 'bg-gold border-gold' : 'border-zinc-600'
-                  }`}>
-                    {selectedIds.has(t.id) && (
-                      <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className="text-sm text-zinc-100">{t.name}</span>
+                  <Plus size={16} className="shrink-0" />
+                  <span className="text-sm font-medium">Add new technique…</span>
                 </button>
-              ))}
+              ) : (
+                <div className="px-4 py-3 border-b border-zinc-800 space-y-3 bg-zinc-950/40">
+                  <div className="text-xs text-gold font-semibold">NEW TECHNIQUE</div>
+                  <input
+                    type="text"
+                    value={newTechName}
+                    onChange={e => setNewTechName(e.target.value)}
+                    placeholder="Technique name"
+                    autoFocus
+                    className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    {categories?.map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => setNewTechCatId(c.id)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                          newTechCatId === c.id ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+                        }`}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCreateTechnique}
+                      disabled={!newTechName.trim()}
+                      className="flex-1 bg-gold text-black font-semibold py-2 rounded-xl text-sm disabled:opacity-40"
+                    >
+                      Add
+                    </button>
+                    <button
+                      onClick={() => { setShowCreateTechnique(false); setNewTechName('') }}
+                      className="flex-1 bg-zinc-800 text-zinc-300 font-semibold py-2 rounded-xl text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {filteredTechniques?.map(t => {
+                const isSelected = selectedIds.has(t.id)
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => handlePickerSelect(t)}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
+                  >
+                    {pickerMode === 'techniques' ? (
+                      <div className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
+                        isSelected ? 'bg-gold border-gold' : 'border-zinc-600'
+                      }`}>
+                        {isSelected && <Check size={11} className="text-black" strokeWidth={3} />}
+                      </div>
+                    ) : (
+                      <div className="w-5 h-5 rounded border-2 border-zinc-600 shrink-0" />
+                    )}
+                    <span className="text-sm text-zinc-100">{t.name}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
