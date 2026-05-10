@@ -31,7 +31,7 @@ export default function IconPickerModal({
           <h2 className="flex-1 font-bold text-zinc-100">{title}</h2>
           <button
             onClick={() => { onSelect(''); onClose() }}
-            className="text-xs text-zinc-400 hover:text-zinc-200"
+            className="text-xs text-zinc-400 active:text-zinc-200"
           >
             Clear
           </button>
