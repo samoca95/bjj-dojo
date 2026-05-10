@@ -76,7 +76,7 @@ export default function SessionsPage() {
                 <SessionCard
                   key={s.id}
                   session={s}
-                  clubName={s.clubId != null ? clubMap.get(s.clubId) : undefined}
+                  clubName={s.clubId !== null && s.clubId !== undefined ? clubMap.get(s.clubId) : undefined}
                   onClick={() => navigate(`/sessions/${s.id}`)}
                 />
               ))}

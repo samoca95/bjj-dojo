@@ -41,7 +41,8 @@ export default function ClubsPage() {
 
   const handleDelete = async (club: Club) => {
     if (!club.id) return
-    if (!window.confirm(`Delete ${club.name}? Sessions will keep their data but will no longer be associated with this club.`)) return
+    const message = `Delete ${club.name}?\nSessions will keep their data but will no longer be associated with this club.`
+    if (!window.confirm(message)) return
     await db.sessions.where('clubId').equals(club.id).modify({ clubId: null })
     await db.clubs.delete(club.id)
   }
