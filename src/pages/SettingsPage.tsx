@@ -6,6 +6,7 @@ import { SESSION_TYPE_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import IconPickerModal from '../components/IconPickerModal'
 import { getSessionTypeIcons, saveSessionTypeIcons, type SessionTypeIconsMap } from '../utils/sessionTypeIcons'
+import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 
 const SESSION_TYPES = Object.keys(SESSION_TYPE_LABELS) as SessionType[]
 
@@ -13,6 +14,7 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const [sessionTypeIcons, setSessionTypeIcons] = useState<SessionTypeIconsMap>(getSessionTypeIcons())
   const [activeSessionType, setActiveSessionType] = useState<SessionType | null>(null)
+  const [theme, setTheme] = useState<AppTheme>(getAppTheme())
 
   useEffect(() => {
     setSessionTypeIcons(getSessionTypeIcons())
@@ -33,6 +35,28 @@ export default function SettingsPage() {
       </div>
 
       <div className="px-4 pb-6 space-y-4">
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">THEME MODE</h2>
+          <div className="grid grid-cols-2 gap-2">
+            {(['black', 'light'] as const).map(mode => (
+              <button
+                key={mode}
+                onClick={() => {
+                  setTheme(mode)
+                  setAppTheme(mode)
+                }}
+                className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+                  theme === mode
+                    ? 'bg-gold text-black'
+                    : 'bg-zinc-800 text-zinc-200 active:bg-zinc-700'
+                }`}
+              >
+                {mode === 'black' ? 'Black' : 'Light'}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
           <h2 className="text-xs text-gold font-semibold tracking-widest">SESSION TYPE ICONS</h2>
           <div className="space-y-2">

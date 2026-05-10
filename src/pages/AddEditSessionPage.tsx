@@ -341,9 +341,9 @@ export default function AddEditSessionPage() {
                 max={5}
                 value={energy}
                 onChange={e => setEnergy(Number(e.target.value))}
-                className="w-full h-2 rounded-full appearance-none cursor-pointer accent-gold bg-zinc-700"
+                className="energy-slider w-full h-2.5 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #d4a017 0%, #d4a017 ${(energy - 1) * 25}%, #3f3f46 ${(energy - 1) * 25}%, #3f3f46 100%)`,
+                  background: `linear-gradient(to right, #10d3a2 0%, #10d3a2 ${(energy - 1) * 25}%, #d4a017 ${(energy - 1) * 25}%, #d4a017 ${energy * 20}%, #3f3f46 ${energy * 20}%, #3f3f46 100%)`,
                 }}
               />
               <div className="flex justify-between mt-1">
