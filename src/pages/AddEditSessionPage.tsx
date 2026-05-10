@@ -198,6 +198,7 @@ export default function AddEditSessionPage() {
 
   const givenTaps = taps.filter(t => t.type === 'given')
   const receivedTaps = taps.filter(t => t.type === 'received')
+  const energyProgress = ((energy - 1) / 4) * 100
 
   return (
     <>
@@ -343,7 +344,7 @@ export default function AddEditSessionPage() {
                 onChange={e => setEnergy(Number(e.target.value))}
                 className="energy-slider w-full h-2.5 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #10d3a2 0%, #10d3a2 ${(energy - 1) * 25}%, #d4a017 ${(energy - 1) * 25}%, #d4a017 ${energy * 20}%, #3f3f46 ${energy * 20}%, #3f3f46 100%)`,
+                  background: `linear-gradient(to right, var(--energy-teal) 0%, var(--energy-teal) ${energyProgress}%, #3f3f46 ${energyProgress}%, #3f3f46 100%)`,
                 }}
               />
               <div className="flex justify-between mt-1">

@@ -114,7 +114,7 @@ export default function SettingsPage() {
           onSelect={value => {
             const next = {
               ...sessionTypeIcons,
-              [activeSessionType]: value.trim(),
+              [activeSessionType]: value,
             } as SessionTypeIconsMap
             setSessionTypeIcons(next)
             saveSessionTypeIcons(next)

@@ -127,7 +127,9 @@ export default function TechniqueEditPage() {
   }
 
   const addConnection = () => {
-    if (!id || isNew || !newConnectionTargetId || newConnectionTargetId === Number(id)) return
+    if (!id || isNew) return
+    if (!newConnectionTargetId) return
+    if (newConnectionTargetId === Number(id)) return
     const exists = connections.some(c => c.toTechniqueId === newConnectionTargetId)
     if (exists) return
     setConnections(prev => [
@@ -148,7 +150,7 @@ export default function TechniqueEditPage() {
 
   const updateConnectionTarget = (previousTargetId: number, targetId: number) => {
     if (!id || targetId === Number(id)) return
-    // Exclude the row currently being edited (previousTargetId) from duplicate detection.
+    // Exclude the current row so editing its target/type doesn't trigger a false duplicate.
     const isDuplicate = connections.some(c => c.toTechniqueId !== previousTargetId && c.toTechniqueId === targetId)
     if (isDuplicate) return
     setConnections(prev =>
