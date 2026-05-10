@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { Category, Technique, TechniqueConnection, Session, SessionTechnique, Club } from '../types'
+import type { Category, Technique, TechniqueConnection, Session, SessionTechnique, SessionTap, Club } from '../types'
 import { prefilledCategories, prefilledTechniques, prefilledConnections } from './prefilled'
 
 export class BJJDatabase extends Dexie {
@@ -8,6 +8,7 @@ export class BJJDatabase extends Dexie {
   techniqueConnections!: Table<TechniqueConnection, [number, number]>
   sessions!: Table<Session, number>
   sessionTechniques!: Table<SessionTechnique, [number, number]>
+  sessionTaps!: Table<SessionTap, number>
   clubs!: Table<Club, number>
 
   constructor() {
@@ -26,6 +27,22 @@ export class BJJDatabase extends Dexie {
       sessions: '++id, date, clubId',
       sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
       clubs: '++id, sortOrder, name',
+    })
+    this.version(3).stores({
+      categories: 'id, name',
+      techniques: 'id, categoryId, name',
+      techniqueConnections: '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+      sessions: '++id, date, clubId',
+      sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
+      sessionTaps: '++id, sessionId, techniqueId',
+      clubs: '++id, sortOrder, name',
+    }).upgrade(async tx => {
+      // Update prefilled techniques to include cues
+      const existing = await tx.table('techniques').where('isCustom').equals(0).toArray()
+      const updates = prefilledTechniques.filter(pt =>
+        existing.some((e: Technique) => e.id === pt.id),
+      )
+      if (updates.length > 0) await tx.table('techniques').bulkPut(updates)
     })
   }
 }

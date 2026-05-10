@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
+import {
+  ChevronLeft, Pencil, Trash2, ChevronRight,
+  Zap, Building2,
+} from 'lucide-react'
 import { db } from '../db/database'
-import type { Session, Technique } from '../types'
+import type { Session, SessionTap, Technique } from '../types'
 import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 
@@ -41,6 +45,18 @@ export default function SessionDetailPage() {
     return db.techniques.where('id').anyOf(ids).sortBy('name')
   }, [id], [] as Technique[])
 
+  const sessionTaps = useLiveQuery(async () => {
+    if (!id) return []
+    return db.sessionTaps.where('sessionId').equals(Number(id)).toArray()
+  }, [id], [] as SessionTap[])
+
+  const tapTechniqueMap = useLiveQuery(async () => {
+    if (!sessionTaps || sessionTaps.length === 0) return new Map<number, string>()
+    const ids = [...new Set(sessionTaps.map(t => t.techniqueId))]
+    const techs = await db.techniques.where('id').anyOf(ids).toArray()
+    return new Map(techs.map(t => [t.id, t.name]))
+  }, [sessionTaps], new Map<number, string>())
+
   if (!session) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
@@ -51,28 +67,26 @@ export default function SessionDetailPage() {
     if (!window.confirm('Delete this session? This cannot be undone.')) return
     db.sessions.delete(session.id!)
     db.sessionTechniques.where('sessionId').equals(session.id!).delete()
+    db.sessionTaps.where('sessionId').equals(session.id!).delete()
     navigate('/sessions')
   }
+
+  const givenTaps = sessionTaps?.filter(t => t.type === 'given') ?? []
+  const receivedTaps = sessionTaps?.filter(t => t.type === 'received') ?? []
 
   return (
     <div className="min-h-full bg-zinc-950">
       {/* Header */}
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 z-10 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <h1 className="flex-1 font-bold text-zinc-100 truncate">{formatDate(session.date)}</h1>
         <button onClick={() => navigate(`/sessions/${session.id}/edit`)} className="p-2 text-gold active:text-gold-light">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
+          <Pencil size={20} strokeWidth={2} />
         </button>
         <button onClick={handleDelete} className="p-2 text-red-500 active:text-red-400">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
+          <Trash2 size={20} strokeWidth={2} />
         </button>
       </div>
 
@@ -85,32 +99,15 @@ export default function SessionDetailPage() {
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-3">
           <InfoCard label="Duration" value={`${session.durationMinutes} min`} />
-          <InfoCard label="Taps Given" value={String(session.tapsGiven)} />
-          <InfoCard label="Taps Received" value={String(session.tapsReceived)} />
           <div className="bg-zinc-900 rounded-xl p-4">
             <div className="text-xs text-gold mb-2">Energy</div>
             <EnergyDots level={session.energyLevel} />
           </div>
         </div>
 
-        {session.location && (
-          <div className="bg-zinc-900 rounded-xl p-4 flex gap-3 items-start">
-            <svg className="w-4 h-4 text-gold mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <div>
-              <div className="text-xs text-zinc-500 mb-0.5">Location</div>
-              <div className="text-sm text-zinc-100">{session.location}</div>
-            </div>
-          </div>
-        )}
-
         {club && (
           <div className="bg-zinc-900 rounded-xl p-4 flex gap-3 items-start">
-            <svg className="w-4 h-4 text-gold mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 20h8m-6 0V8a2 2 0 0 1 4 0v12m-6-8h8" />
-            </svg>
+            <Building2 size={16} className="text-gold mt-0.5 shrink-0" strokeWidth={2} />
             <div>
               <div className="text-xs text-zinc-500 mb-0.5">Club</div>
               <div className="text-sm text-zinc-100">{club.name}</div>
@@ -118,15 +115,40 @@ export default function SessionDetailPage() {
           </div>
         )}
 
-        {session.partners && (
-          <div className="bg-zinc-900 rounded-xl p-4 flex gap-3 items-start">
-            <svg className="w-4 h-4 text-gold mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <div>
-              <div className="text-xs text-zinc-500 mb-0.5">Partners</div>
-              <div className="text-sm text-zinc-100">{session.partners}</div>
-            </div>
+        {/* Taps */}
+        {(givenTaps.length > 0 || receivedTaps.length > 0) && (
+          <div className="bg-zinc-900 rounded-xl p-4 space-y-3">
+            <div className="text-xs text-gold">Taps / Submissions</div>
+            {givenTaps.length > 0 && (
+              <div>
+                <div className="text-xs text-zinc-500 mb-1.5">Given ({givenTaps.length})</div>
+                <div className="space-y-1.5">
+                  {givenTaps.map((t, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-zinc-800 rounded-lg px-3 py-2">
+                      <Zap size={13} className="text-gold shrink-0" strokeWidth={2} />
+                      <span className="text-sm text-zinc-100">
+                        {tapTechniqueMap?.get(t.techniqueId) ?? 'Unknown'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {receivedTaps.length > 0 && (
+              <div>
+                <div className="text-xs text-zinc-500 mb-1.5">Received ({receivedTaps.length})</div>
+                <div className="space-y-1.5">
+                  {receivedTaps.map((t, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-zinc-800 rounded-lg px-3 py-2">
+                      <Zap size={13} className="text-red-400 shrink-0" strokeWidth={2} />
+                      <span className="text-sm text-zinc-100">
+                        {tapTechniqueMap?.get(t.techniqueId) ?? 'Unknown'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -150,13 +172,9 @@ export default function SessionDetailPage() {
                   onClick={() => navigate(`/techniques/${t.id}`)}
                   className="w-full bg-zinc-900 rounded-xl px-4 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
                 >
-                  <svg className="w-4 h-4 text-gold shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+                  <Zap size={16} className="text-gold shrink-0" strokeWidth={2} />
                   <span className="flex-1 text-sm text-zinc-100">{t.name}</span>
-                  <svg className="w-4 h-4 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
+                  <ChevronRight size={16} className="text-zinc-600" strokeWidth={2} />
                 </button>
               ))}
             </div>

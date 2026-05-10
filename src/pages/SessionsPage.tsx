@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
+import { CalendarDays, Plus } from 'lucide-react'
 import { db } from '../db/database'
 import type { Club, Session } from '../types'
 import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
@@ -23,7 +24,6 @@ function SessionCard({ session, clubName, onClick }: { session: Session; clubNam
         <div className="flex items-center gap-3 mt-1">
           <span className="text-xs text-zinc-400">{session.durationMinutes} min</span>
           {clubName && <span className="text-xs text-zinc-500 truncate">{clubName}</span>}
-          {session.location && <span className="text-xs text-zinc-500 truncate">{session.location}</span>}
         </div>
         {session.notes && (
           <p className="text-xs text-zinc-500 mt-1 truncate">{session.notes}</p>
@@ -62,10 +62,7 @@ export default function SessionsPage() {
         {sessions?.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center">
-              <svg className="w-8 h-8 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <path d="M16 2v4M8 2v4M3 10h18" />
-              </svg>
+              <CalendarDays size={32} className="text-zinc-600" strokeWidth={2} />
             </div>
             <p className="text-zinc-400 font-medium">No sessions yet</p>
             <p className="text-zinc-600 text-sm">Tap + to log your first training</p>
@@ -89,9 +86,7 @@ export default function SessionsPage() {
         onClick={() => navigate('/sessions/new')}
         className="fixed bottom-20 right-4 w-14 h-14 bg-gold rounded-full flex items-center justify-center shadow-lg shadow-gold/30 active:bg-gold-light transition-colors z-40"
       >
-        <svg className="w-7 h-7 text-black" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-        </svg>
+        <Plus size={28} className="text-black" strokeWidth={2.5} />
       </button>
     </div>
   )

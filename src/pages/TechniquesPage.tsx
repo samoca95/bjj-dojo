@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
+import { Search, X, ChevronRight } from 'lucide-react'
 import { db } from '../db/database'
 import type { Category, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
@@ -25,9 +26,7 @@ function TechniqueRow({ technique, categoryName, categoryIcon, onClick }: {
         </div>
         <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{technique.description}</p>
       </div>
-      <svg className="w-5 h-5 text-zinc-600 shrink-0 mt-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-      </svg>
+      <ChevronRight size={20} className="text-zinc-600 shrink-0 mt-1" strokeWidth={2} />
     </button>
   )
 }
@@ -74,9 +73,7 @@ export default function TechniquesPage() {
         {/* Search */}
         <div className="px-4 pb-3">
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="m21 21-4.35-4.35" />
-            </svg>
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" strokeWidth={2} />
             <input
               type="text"
               value={search}
@@ -86,9 +83,7 @@ export default function TechniquesPage() {
             />
             {search && (
               <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 active:text-zinc-300">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X size={16} strokeWidth={2} />
               </button>
             )}
           </div>

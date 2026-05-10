@@ -1,108 +1,28 @@
-import type { ReactNode } from 'react'
+import type { LucideProps } from 'lucide-react'
+import {
+  Shield, ArrowLeftRight, RefreshCw, Target, ArrowDown,
+  LifeBuoy, Crown, Zap, Flame, Star,
+} from 'lucide-react'
+import type { FC } from 'react'
 import { DEFAULT_CATEGORY_ICONS } from '../constants/categoryDefaults'
 
 export type CategoryIconOption = {
   id: string
   label: string
-  paths: ReactNode
+  Icon: FC<LucideProps>
 }
 
 export const CATEGORY_ICON_OPTIONS: CategoryIconOption[] = [
-  {
-    id: 'shield',
-    label: 'Shield',
-    paths: <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l7 4v5c0 5-3.5 9.5-7 10-3.5-.5-7-5-7-10V7l7-4z" />,
-  },
-  {
-    id: 'arrows-swap',
-    label: 'Swap',
-    paths: (
-      <>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10l-3-3m3 3l-3 3" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17 17H7l3 3m-3-3l3-3" />
-      </>
-    ),
-  },
-  {
-    id: 'repeat',
-    label: 'Repeat',
-    paths: (
-      <>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v6h6" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20 20v-6h-6" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 10a7 7 0 0 1 12-3" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 14a7 7 0 0 1-12 3" />
-      </>
-    ),
-  },
-  {
-    id: 'target',
-    label: 'Target',
-    paths: (
-      <>
-        <circle cx="12" cy="12" r="8" />
-        <circle cx="12" cy="12" r="2" />
-      </>
-    ),
-  },
-  {
-    id: 'arrow-down',
-    label: 'Arrow Down',
-    paths: (
-      <>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v14" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 14l4 4 4-4" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 20h14" />
-      </>
-    ),
-  },
-  {
-    id: 'lifebuoy',
-    label: 'Lifebuoy',
-    paths: (
-      <>
-        <circle cx="12" cy="12" r="8" />
-        <circle cx="12" cy="12" r="3" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l3 3M18 6l-3 3M6 18l3-3M18 18l-3-3" />
-      </>
-    ),
-  },
-  {
-    id: 'crown',
-    label: 'Crown',
-    paths: (
-      <>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 8l4 4 4-6 4 6 4-4v10H4z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 18h16" />
-      </>
-    ),
-  },
-  {
-    id: 'bolt',
-    label: 'Bolt',
-    paths: <path strokeLinecap="round" strokeLinejoin="round" d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />,
-  },
-  {
-    id: 'flame',
-    label: 'Flame',
-    paths: (
-      <>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3s4 4 4 7a4 4 0 0 1-8 0c0-3 4-7 4-7z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 14a4 4 0 0 0 8 0c0-1.5-1-3-2.5-4" />
-      </>
-    ),
-  },
-  {
-    id: 'star',
-    label: 'Star',
-    paths: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 3l2.5 5 5.5.8-4 3.9 1 5.6-5-2.7-5 2.7 1-5.6-4-3.9 5.5-.8z"
-      />
-    ),
-  },
+  { id: 'shield',      label: 'Shield',      Icon: Shield },
+  { id: 'arrows-swap', label: 'Swap',         Icon: ArrowLeftRight },
+  { id: 'repeat',      label: 'Repeat',       Icon: RefreshCw },
+  { id: 'target',      label: 'Target',       Icon: Target },
+  { id: 'arrow-down',  label: 'Arrow Down',   Icon: ArrowDown },
+  { id: 'lifebuoy',    label: 'Life Ring',    Icon: LifeBuoy },
+  { id: 'crown',       label: 'Crown',        Icon: Crown },
+  { id: 'bolt',        label: 'Bolt',         Icon: Zap },
+  { id: 'flame',       label: 'Flame',        Icon: Flame },
+  { id: 'star',        label: 'Star',         Icon: Star },
 ]
 
 const ICON_MAP = Object.fromEntries(CATEGORY_ICON_OPTIONS.map(icon => [icon.id, icon]))
@@ -132,26 +52,13 @@ export function CategoryIcon({
 }) {
   const resolved = resolveCategoryIcon(value, fallbackId)
   if (!resolved) return null
-  const icon = ICON_MAP[resolved]
-  if (!icon) {
+  const option = ICON_MAP[resolved]
+  if (!option) {
     return (
       <span className={className} style={{ fontSize: size, lineHeight: 1 }}>
         {resolved}
       </span>
     )
   }
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      className={className}
-      aria-hidden="true"
-    >
-      {icon.paths}
-    </svg>
-  )
+  return <option.Icon size={size} className={className} strokeWidth={2} />
 }

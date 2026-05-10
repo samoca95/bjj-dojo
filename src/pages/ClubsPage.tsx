@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react'
 import { db } from '../db/database'
 import type { Club } from '../types'
 
@@ -65,9 +66,7 @@ export default function ClubsPage() {
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 z-10 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <h1 className="flex-1 font-bold text-zinc-100">Clubs</h1>
       </div>
@@ -129,21 +128,17 @@ export default function ClubsPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleMove(index, -1)}
-                          className="w-9 h-9 rounded-lg bg-zinc-800 text-zinc-400 active:bg-zinc-700"
+                          className="w-9 h-9 rounded-lg bg-zinc-800 text-zinc-400 active:bg-zinc-700 flex items-center justify-center"
                           aria-label="Move up"
                         >
-                          <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                          </svg>
+                          <ChevronUp size={16} strokeWidth={2} />
                         </button>
                         <button
                           onClick={() => handleMove(index, 1)}
-                          className="w-9 h-9 rounded-lg bg-zinc-800 text-zinc-400 active:bg-zinc-700"
+                          className="w-9 h-9 rounded-lg bg-zinc-800 text-zinc-400 active:bg-zinc-700 flex items-center justify-center"
                           aria-label="Move down"
                         >
-                          <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                          </svg>
+                          <ChevronDown size={16} strokeWidth={2} />
                         </button>
                       </div>
                     </div>
