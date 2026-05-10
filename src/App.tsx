@@ -6,6 +6,8 @@ import SessionDetailPage from './pages/SessionDetailPage'
 import AddEditSessionPage from './pages/AddEditSessionPage'
 import TechniquesPage from './pages/TechniquesPage'
 import TechniqueDetailPage from './pages/TechniqueDetailPage'
+import ClubsPage from './pages/ClubsPage'
+import CategoriesPage from './pages/CategoriesPage'
 
 const router = createHashRouter([
   {
@@ -16,7 +18,9 @@ const router = createHashRouter([
       { path: '/sessions/new', element: <AddEditSessionPage /> },
       { path: '/sessions/:id', element: <SessionDetailPage /> },
       { path: '/sessions/:id/edit', element: <AddEditSessionPage /> },
+      { path: '/clubs', element: <ClubsPage /> },
       { path: '/techniques', element: <TechniquesPage /> },
+      { path: '/categories', element: <CategoriesPage /> },
       { path: '/techniques/:id', element: <TechniqueDetailPage /> },
     ],
   },

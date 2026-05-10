@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom'
 import { db } from '../db/database'
 import type { Category, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
+import { CategoryIcon } from '../components/CategoryIcon'
 
-function TechniqueRow({ technique, categoryName, onClick }: {
-  technique: Technique; categoryName: string; onClick: () => void
+function TechniqueRow({ technique, categoryName, categoryIcon, onClick }: {
+  technique: Technique; categoryName: string; categoryIcon?: string; onClick: () => void
 }) {
   return (
     <button
@@ -18,7 +19,10 @@ function TechniqueRow({ technique, categoryName, onClick }: {
           <span className="font-semibold text-zinc-100 text-sm">{technique.name}</span>
           <DifficultyBadge difficulty={technique.difficulty} />
         </div>
-        <div className="text-xs text-gold mt-0.5">{categoryName}</div>
+        <div className="text-xs text-gold mt-0.5 flex items-center gap-1.5">
+          <CategoryIcon value={categoryIcon} fallbackId={technique.categoryId} size={14} className="text-gold" />
+          <span>{categoryName}</span>
+        </div>
         <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{technique.description}</p>
       </div>
       <svg className="w-5 h-5 text-zinc-600 shrink-0 mt-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -52,12 +56,19 @@ export default function TechniquesPage() {
   )
 
   const catMap = new Map(categories?.map(c => [c.id, c.name]))
+  const catIconMap = new Map(categories?.map(c => [c.id, c.icon]))
 
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm z-10">
-        <div className="px-6 pt-12 pb-3">
+        <div className="px-6 pt-12 pb-3 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-zinc-100">Techniques</h1>
+          <button
+            onClick={() => navigate('/categories')}
+            className="text-sm text-gold font-semibold active:text-gold-light"
+          >
+            Categories
+          </button>
         </div>
 
         {/* Search */}
@@ -97,10 +108,11 @@ export default function TechniquesPage() {
             <button
               key={c.id}
               onClick={() => { setCategoryId(c.id); setSearch('') }}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${
                 categoryId === c.id ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
               }`}
             >
+              <CategoryIcon value={c.icon} fallbackId={c.id} size={14} className={categoryId === c.id ? 'text-black' : 'text-zinc-300'} />
               {c.name}
             </button>
           ))}
@@ -117,6 +129,7 @@ export default function TechniquesPage() {
             key={t.id}
             technique={t}
             categoryName={catMap.get(t.categoryId) ?? ''}
+            categoryIcon={catIconMap.get(t.categoryId)}
             onClick={() => navigate(`/techniques/${t.id}`)}
           />
         ))}
