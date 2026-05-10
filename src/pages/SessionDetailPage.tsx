@@ -25,6 +25,10 @@ export default function SessionDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [session, setSession] = useState<Session | null>(null)
+  const club = useLiveQuery(
+    () => session?.clubId ? db.clubs.get(session.clubId) : undefined,
+    [session?.clubId],
+  )
 
   useEffect(() => {
     if (id) db.sessions.get(Number(id)).then(s => setSession(s ?? null))
@@ -98,6 +102,18 @@ export default function SessionDetailPage() {
             <div>
               <div className="text-xs text-zinc-500 mb-0.5">Location</div>
               <div className="text-sm text-zinc-100">{session.location}</div>
+            </div>
+          </div>
+        )}
+
+        {club && (
+          <div className="bg-zinc-900 rounded-xl p-4 flex gap-3 items-start">
+            <svg className="w-4 h-4 text-gold mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 20h8m-6 0V8a2 2 0 0 1 4 0v12m-6-8h8" />
+            </svg>
+            <div>
+              <div className="text-xs text-zinc-500 mb-0.5">Club</div>
+              <div className="text-sm text-zinc-100">{club.name}</div>
             </div>
           </div>
         )}

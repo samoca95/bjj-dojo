@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/database'
-import type { Session, SessionType, Technique } from '../types'
+import type { Club, Session, SessionType, Technique } from '../types'
 import { SESSION_TYPE_LABELS } from '../types'
 
 function toDateInput(epoch: number) {
@@ -29,6 +29,7 @@ export default function AddEditSessionPage() {
   const [date, setDate] = useState(toDateInput(Date.now()))
   const [duration, setDuration] = useState('60')
   const [sessionType, setSessionType] = useState<SessionType>('GI')
+  const [clubId, setClubId] = useState<number | null>(null)
   const [location, setLocation] = useState('')
   const [partners, setPartners] = useState('')
   const [notes, setNotes] = useState('')
@@ -44,6 +45,11 @@ export default function AddEditSessionPage() {
     [],
     [] as Technique[],
   )
+  const clubs = useLiveQuery(
+    () => db.clubs.orderBy('sortOrder').toArray(),
+    [],
+    [] as Club[],
+  )
 
   useEffect(() => {
     if (!isEdit || !id) return
@@ -52,6 +58,7 @@ export default function AddEditSessionPage() {
       setDate(toDateInput(s.date))
       setDuration(String(s.durationMinutes))
       setSessionType(s.sessionType)
+      setClubId(s.clubId ?? null)
       setLocation(s.location)
       setPartners(s.partners)
       setNotes(s.notes)
@@ -68,6 +75,7 @@ export default function AddEditSessionPage() {
       date: fromDateInput(date),
       durationMinutes: parseInt(duration) || 60,
       sessionType,
+      clubId,
       location: location.trim(),
       partners: partners.trim(),
       notes: notes.trim(),
@@ -129,6 +137,49 @@ export default function AddEditSessionPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Club */}
+          <div>
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-gold font-semibold tracking-wide">CLUB</label>
+              <button
+                onClick={() => navigate('/clubs')}
+                className="text-xs text-gold font-semibold tracking-wide active:text-gold-light"
+              >
+                Manage
+              </button>
+            </div>
+            {clubs?.length === 0 ? (
+              <button
+                onClick={() => navigate('/clubs')}
+                className="mt-2 w-full bg-zinc-800 rounded-xl px-4 py-3 text-sm text-left text-zinc-400 active:bg-zinc-700 transition-colors"
+              >
+                Add your first club
+              </button>
+            ) : (
+              <div className="flex flex-wrap gap-2 mt-2">
+                <button
+                  onClick={() => setClubId(null)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    clubId === null ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
+                  }`}
+                >
+                  None
+                </button>
+                {clubs?.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => setClubId(c.id ?? null)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      clubId === c.id ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
+                    }`}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Date */}

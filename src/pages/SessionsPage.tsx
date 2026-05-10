@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../db/database'
-import type { Session } from '../types'
+import type { Club, Session } from '../types'
 import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 
@@ -9,7 +9,7 @@ function formatDate(epoch: number) {
   return new Date(epoch).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function SessionCard({ session, onClick }: { session: Session; onClick: () => void }) {
+function SessionCard({ session, clubName, onClick }: { session: Session; clubName?: string; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -22,6 +22,7 @@ function SessionCard({ session, onClick }: { session: Session; onClick: () => vo
         <div className="font-semibold text-zinc-100 text-sm">{formatDate(session.date)}</div>
         <div className="flex items-center gap-3 mt-1">
           <span className="text-xs text-zinc-400">{session.durationMinutes} min</span>
+          {clubName && <span className="text-xs text-zinc-500 truncate">{clubName}</span>}
           {session.location && <span className="text-xs text-zinc-500 truncate">{session.location}</span>}
         </div>
         {session.notes && (
@@ -40,11 +41,21 @@ export default function SessionsPage() {
     [],
     [],
   )
+  const clubs = useLiveQuery(() => db.clubs.toArray(), [], [] as Club[])
+  const clubMap = new Map(clubs?.map(c => [c.id, c.name]))
 
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-6 pt-12 pb-4 z-10">
-        <h1 className="text-2xl font-bold text-zinc-100">Sessions</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-zinc-100">Sessions</h1>
+          <button
+            onClick={() => navigate('/clubs')}
+            className="text-sm text-gold font-semibold active:text-gold-light"
+          >
+            Clubs
+          </button>
+        </div>
       </div>
 
       <div className="px-4 pb-4">
@@ -60,11 +71,16 @@ export default function SessionsPage() {
             <p className="text-zinc-600 text-sm">Tap + to log your first training</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {sessions?.map(s => (
-              <SessionCard key={s.id} session={s} onClick={() => navigate(`/sessions/${s.id}`)} />
-            ))}
-          </div>
+            <div className="space-y-3">
+              {sessions?.map(s => (
+                <SessionCard
+                  key={s.id}
+                  session={s}
+                  clubName={clubMap.get(s.clubId ?? -1)}
+                  onClick={() => navigate(`/sessions/${s.id}`)}
+                />
+              ))}
+            </div>
         )}
       </div>
 

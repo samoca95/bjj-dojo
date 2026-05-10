@@ -1,13 +1,13 @@
 import type { Category, Technique, TechniqueConnection } from '../types'
 
 export const prefilledCategories: Category[] = [
-  { id: 1, name: 'Guards', description: 'Positions on your back controlling the opponent' },
-  { id: 2, name: 'Guard Passing', description: 'Techniques to bypass the opponent\'s guard' },
-  { id: 3, name: 'Sweeps', description: 'Reversals from bottom position to top' },
-  { id: 4, name: 'Submissions', description: 'Finishing techniques — chokes and joint locks' },
-  { id: 5, name: 'Takedowns & Throws', description: 'Taking the fight to the ground' },
-  { id: 6, name: 'Escapes', description: 'Recovering from bad positions' },
-  { id: 7, name: 'Positions', description: 'Dominant control positions' },
+  { id: 1, name: 'Guards', description: 'Positions on your back controlling the opponent', icon: 'shield' },
+  { id: 2, name: 'Guard Passing', description: 'Techniques to bypass the opponent\'s guard', icon: 'arrows-swap' },
+  { id: 3, name: 'Sweeps', description: 'Reversals from bottom position to top', icon: 'repeat' },
+  { id: 4, name: 'Submissions', description: 'Finishing techniques — chokes and joint locks', icon: 'target' },
+  { id: 5, name: 'Takedowns & Throws', description: 'Taking the fight to the ground', icon: 'arrow-down' },
+  { id: 6, name: 'Escapes', description: 'Recovering from bad positions', icon: 'lifebuoy' },
+  { id: 7, name: 'Positions', description: 'Dominant control positions', icon: 'crown' },
 ]
 
 export const prefilledTechniques: Technique[] = [

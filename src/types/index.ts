@@ -6,6 +6,7 @@ export interface Category {
   id: number
   name: string
   description: string
+  icon?: string
 }
 
 export interface Technique {
@@ -29,12 +30,19 @@ export interface Session {
   date: number
   durationMinutes: number
   sessionType: SessionType
+  clubId?: number | null
   location: string
   partners: string
   notes: string
   energyLevel: number
   tapsGiven: number
   tapsReceived: number
+}
+
+export interface Club {
+  id?: number
+  name: string
+  sortOrder: number
 }
 
 export interface SessionTechnique {
