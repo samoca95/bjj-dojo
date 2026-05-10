@@ -13,11 +13,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -252,7 +255,7 @@ fun AddEditSessionScreen(
                 onClick = { showTechniquePicker = true },
                 modifier = Modifier.fillMaxWidth(),
                 border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(DojoGold.copy(alpha = 0.5f))
+                    brush = SolidColor(DojoGold.copy(alpha = 0.5f))
                 )
             ) {
                 Icon(Icons.Filled.Add, contentDescription = null, tint = DojoGold)
@@ -287,7 +290,7 @@ private fun SectionLabel(text: String) {
         text = text,
         style = MaterialTheme.typography.labelSmall,
         color = DojoGold,
-        letterSpacing = androidx.compose.ui.unit.TextUnit(1f, androidx.compose.ui.unit.TextUnitType.Sp)
+        letterSpacing = 1.sp
     )
 }
 

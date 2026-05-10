@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -130,7 +132,7 @@ fun TechniqueDetailScreen(
                             t.description,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
-                            lineHeight = androidx.compose.ui.unit.TextUnit(22f, androidx.compose.ui.unit.TextUnitType.Sp)
+                            lineHeight = 22.sp
                         )
                     }
                 }
@@ -163,7 +165,7 @@ fun TechniqueDetailScreen(
                         "TECHNIQUE CONNECTIONS",
                         style = MaterialTheme.typography.labelSmall,
                         color = DojoGold,
-                        letterSpacing = androidx.compose.ui.unit.TextUnit(1.5f, androidx.compose.ui.unit.TextUnitType.Sp)
+                        letterSpacing = 1.5.sp
                     )
                 }
             }
@@ -204,7 +206,7 @@ fun TechniqueDetailScreen(
 @Composable
 private fun ConnectionSection(
     title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     techniques: List<Technique>,
     connections: List<TechniqueConnection>,
     fromId: Long? = null,
