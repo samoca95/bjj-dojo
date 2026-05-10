@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronLeft, ChevronRight, ArrowRight, ArrowLeft } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Pencil } from 'lucide-react'
 import { db } from '../db/database'
 import type { Technique } from '../types'
 import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
@@ -69,6 +69,9 @@ export default function TechniqueDetailPage() {
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <h1 className="flex-1 font-bold text-zinc-100 truncate">{technique.name}</h1>
+        <button onClick={() => navigate(`/techniques/${numId}/edit`)} className="p-2 text-gold active:text-gold-light">
+          <Pencil size={20} strokeWidth={2} />
+        </button>
       </div>
 
       <div className="px-4 space-y-4 pb-8">

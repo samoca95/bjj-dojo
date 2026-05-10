@@ -1,0 +1,204 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import SessionDetailPage from '../pages/SessionDetailPage'
+
+vi.mock('dexie-react-hooks', () => ({
+  useLiveQuery: vi.fn(),
+}))
+
+const mocks = vi.hoisted(() => ({
+  get: vi.fn(),
+  sessionTechsWhere: vi.fn(() => ({
+    equals: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]), delete: vi.fn() })),
+  })),
+  tapsWhere: vi.fn(() => ({
+    equals: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]), delete: vi.fn() })),
+  })),
+  techsWhere: vi.fn(() => ({
+    anyOf: vi.fn(() => ({
+      sortBy: vi.fn().mockResolvedValue([]),
+      toArray: vi.fn().mockResolvedValue([]),
+    })),
+  })),
+  sessionsDelete: vi.fn(),
+}))
+
+vi.mock('../db/database', () => ({
+  db: {
+    sessions: { get: mocks.get, delete: mocks.sessionsDelete },
+    clubs: { get: vi.fn() },
+    sessionTechniques: { where: mocks.sessionTechsWhere },
+    sessionTaps: { where: mocks.tapsWhere },
+    techniques: { where: mocks.techsWhere },
+  },
+}))
+
+import { useLiveQuery } from 'dexie-react-hooks'
+const mockUseLiveQuery = vi.mocked(useLiveQuery)
+
+const mockSession = {
+  id: 1,
+  date: new Date('2025-03-10').getTime(),
+  durationMinutes: 90,
+  sessionType: 'GI' as const,
+  clubId: null,
+  notes: 'Great session',
+  energyLevel: 4,
+}
+
+const mockTechniques = [
+  { id: 401, name: 'Armbar', categoryId: 4, difficulty: 'BEGINNER' as const, isCustom: false, description: '', cues: [], youtubeUrl: '' },
+]
+
+import type { TapType } from '../types'
+const mockGivenTap = { id: 1, sessionId: 1, techniqueId: 401, type: 'given' as TapType }
+const mockReceivedTap = { id: 2, sessionId: 1, techniqueId: 401, type: 'received' as TapType }
+
+function setupMocks(overrides?: {
+  techniques?: typeof mockTechniques
+  taps?: (typeof mockGivenTap)[]
+  club?: { id: number; name: string } | undefined
+}) {
+  const techniques = overrides?.techniques ?? []
+  const taps = overrides?.taps ?? []
+  const club = overrides?.club ?? undefined
+
+  mocks.get.mockResolvedValue(mockSession)
+
+  // SessionDetailPage calls useLiveQuery 3 times per render:
+  // 0 (mod 3): club query
+  // 1 (mod 3): techniques query
+  // 2 (mod 3): tapData query
+  let call = 0
+  mockUseLiveQuery.mockImplementation(() => {
+    const c = call++
+    if (c % 3 === 0) return club
+    if (c % 3 === 1) return techniques
+    return { taps, techMap: new Map([[401, 'Armbar']]) }
+  })
+}
+
+function renderPage() {
+  return render(
+    <MemoryRouter initialEntries={['/sessions/1']}>
+      <Routes>
+        <Route path="/sessions/:id" element={<SessionDetailPage />} />
+        <Route path="/sessions/:id/edit" element={<div data-testid="edit-page" />} />
+        <Route path="/sessions" element={<div data-testid="sessions-list" />} />
+        <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  mocks.sessionTechsWhere.mockReturnValue({
+    equals: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]), delete: vi.fn() })),
+  })
+  mocks.tapsWhere.mockReturnValue({
+    equals: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]), delete: vi.fn() })),
+  })
+  mocks.techsWhere.mockReturnValue({
+    anyOf: vi.fn(() => ({
+      sortBy: vi.fn().mockResolvedValue([]),
+      toArray: vi.fn().mockResolvedValue([]),
+    })),
+  })
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
+describe('SessionDetailPage — structure', () => {
+  it('renders session type badge with label', async () => {
+    setupMocks()
+    renderPage()
+    await waitFor(() => expect(screen.getByText('Gi')).toBeInTheDocument())
+  })
+
+  it('renders duration info card', async () => {
+    setupMocks()
+    renderPage()
+    await waitFor(() => expect(screen.getByText('90 min')).toBeInTheDocument())
+  })
+
+  it('renders notes when present', async () => {
+    setupMocks()
+    renderPage()
+    await waitFor(() => expect(screen.getByText('Great session')).toBeInTheDocument())
+  })
+
+  it('shows TECHNIQUES PRACTICED section', async () => {
+    setupMocks()
+    renderPage()
+    await waitFor(() => expect(screen.getByText('TECHNIQUES PRACTICED')).toBeInTheDocument())
+  })
+
+  it('shows "No techniques logged" when none', async () => {
+    setupMocks({ techniques: [] })
+    renderPage()
+    await waitFor(() => expect(screen.getByText('No techniques logged for this session.')).toBeInTheDocument())
+  })
+
+  it('shows technique names when techniques are present', async () => {
+    setupMocks({ techniques: mockTechniques })
+    renderPage()
+    await waitFor(() => expect(screen.getByText('Armbar')).toBeInTheDocument())
+  })
+})
+
+describe('SessionDetailPage — order: techniques before taps', () => {
+  it('TECHNIQUES PRACTICED appears before Taps / Submissions in the DOM', async () => {
+    setupMocks({ techniques: mockTechniques, taps: [mockGivenTap] })
+    renderPage()
+    await waitFor(() => {
+      const techSection = screen.getByText('TECHNIQUES PRACTICED')
+      const tapSection = screen.getByText('Taps / Submissions')
+      // DOCUMENT_POSITION_FOLLOWING (4) means tapSection comes after techSection
+      expect(techSection.compareDocumentPosition(tapSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+  })
+})
+
+describe('SessionDetailPage — taps', () => {
+  it('shows given tap count', async () => {
+    setupMocks({ taps: [mockGivenTap] })
+    renderPage()
+    await waitFor(() => expect(screen.getByText(/1 given/)).toBeInTheDocument())
+  })
+
+  it('shows received tap count', async () => {
+    setupMocks({ taps: [mockReceivedTap] })
+    renderPage()
+    await waitFor(() => expect(screen.getByText(/1 received/)).toBeInTheDocument())
+  })
+
+  it('does not show taps section when empty', async () => {
+    setupMocks({ taps: [] })
+    renderPage()
+    await waitFor(() => expect(screen.queryByText('Taps / Submissions')).toBeNull())
+  })
+})
+
+describe('SessionDetailPage — navigation', () => {
+  it('renders edit icon button', async () => {
+    setupMocks()
+    renderPage()
+    await waitFor(() => expect(screen.getByText('Gi')).toBeInTheDocument())
+    const editBtn = document.querySelector('button svg.lucide-pencil')?.closest('button') as HTMLElement
+    expect(editBtn).not.toBeNull()
+  })
+
+  it('navigates to technique detail on row click', async () => {
+    setupMocks({ techniques: mockTechniques })
+    const user = userEvent.setup()
+    renderPage()
+    await waitFor(() => expect(screen.getByText('Armbar')).toBeInTheDocument())
+    await user.click(screen.getByText('Armbar'))
+    expect(screen.getByTestId('technique-detail')).toBeInTheDocument()
+  })
+})

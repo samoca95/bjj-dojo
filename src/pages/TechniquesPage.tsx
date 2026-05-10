@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { Search, X, ChevronRight } from 'lucide-react'
+import { Search, X, ChevronRight, Plus } from 'lucide-react'
 import { db } from '../db/database'
 import type { Category, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
@@ -118,7 +118,7 @@ export default function TechniquesPage() {
         </div>
       </div>
 
-      <div className="px-4 pb-4 space-y-3">
+      <div className="px-4 pb-24 space-y-3">
         {techniques?.map((t: Technique) => (
           <TechniqueRow
             key={t.id}
@@ -129,6 +129,14 @@ export default function TechniquesPage() {
           />
         ))}
       </div>
+
+      {/* FAB */}
+      <button
+        onClick={() => navigate('/techniques/new/edit')}
+        className="fixed bottom-20 right-4 w-14 h-14 bg-gold rounded-full flex items-center justify-center shadow-lg shadow-gold/30 active:bg-gold-light transition-colors z-40"
+      >
+        <Plus size={28} className="text-black" strokeWidth={2.5} />
+      </button>
     </div>
   )
 }

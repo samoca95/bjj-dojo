@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CATEGORY_ICON_OPTIONS, CategoryIcon, EMOJI_SUGGESTIONS } from './CategoryIcon'
+import { CATEGORY_ICON_OPTIONS, CategoryIcon, EMOJI_SUGGESTIONS, SUGGESTED_ICON_IDS } from './CategoryIcon'
 
 export default function IconPickerModal({
   title,
@@ -16,13 +16,21 @@ export default function IconPickerModal({
   const [search, setSearch] = useState('')
   const [emojiInput, setEmojiInput] = useState('')
 
+  const suggestedIcons = useMemo(
+    () => CATEGORY_ICON_OPTIONS.filter(icon => SUGGESTED_ICON_IDS.includes(icon.id)),
+    [],
+  )
+
   const filteredIcons = useMemo(() => {
     const query = search.trim().toLowerCase()
-    if (!query) return CATEGORY_ICON_OPTIONS
-    return CATEGORY_ICON_OPTIONS.filter(icon =>
-      icon.label.toLowerCase().includes(query) || icon.id.toLowerCase().includes(query),
+    const all = CATEGORY_ICON_OPTIONS.filter(icon => !SUGGESTED_ICON_IDS.includes(icon.id))
+    if (!query) return all
+    return CATEGORY_ICON_OPTIONS.filter(
+      icon => icon.label.toLowerCase().includes(query) || icon.id.toLowerCase().includes(query),
     )
   }, [search])
+
+  const showSuggested = tab === 'icons' && search.trim() === ''
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-end">
@@ -61,24 +69,48 @@ export default function IconPickerModal({
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search icons…"
+                placeholder="Search all icons…"
                 className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
               />
             </div>
-            <div className="px-4 pb-4 overflow-y-auto">
-              <div className="grid grid-cols-4 gap-3">
-                {filteredIcons.map(icon => (
-                  <button
-                    key={icon.id}
-                    onClick={() => { onSelect(icon.id); onClose() }}
-                    className={`rounded-2xl border px-3 py-3 flex flex-col items-center gap-2 transition-colors ${
-                      value === icon.id ? 'border-gold bg-gold/10' : 'border-zinc-800 bg-zinc-950/40'
-                    }`}
-                  >
-                    <CategoryIcon value={icon.id} size={22} className="text-gold" />
-                    <span className="text-[11px] text-zinc-300">{icon.label}</span>
-                  </button>
-                ))}
+            <div className="px-4 pb-4 overflow-y-auto space-y-5">
+              {showSuggested && (
+                <div>
+                  <div className="text-xs text-zinc-500 font-semibold mb-2">Suggested</div>
+                  <div className="grid grid-cols-5 gap-2">
+                    {suggestedIcons.map(icon => (
+                      <button
+                        key={icon.id}
+                        onClick={() => { onSelect(icon.id); onClose() }}
+                        className={`rounded-2xl border px-2 py-3 flex flex-col items-center gap-2 transition-colors ${
+                          value === icon.id ? 'border-gold bg-gold/10' : 'border-zinc-800 bg-zinc-950/40'
+                        }`}
+                      >
+                        <CategoryIcon value={icon.id} size={22} className="text-gold" />
+                        <span className="text-[10px] text-zinc-300 truncate w-full text-center">{icon.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                {showSuggested && (
+                  <div className="text-xs text-zinc-500 font-semibold mb-2">All Icons</div>
+                )}
+                <div className="grid grid-cols-5 gap-2">
+                  {filteredIcons.map(icon => (
+                    <button
+                      key={icon.id}
+                      onClick={() => { onSelect(icon.id); onClose() }}
+                      className={`rounded-2xl border px-2 py-3 flex flex-col items-center gap-2 transition-colors ${
+                        value === icon.id ? 'border-gold bg-gold/10' : 'border-zinc-800 bg-zinc-950/40'
+                      }`}
+                    >
+                      <CategoryIcon value={icon.id} size={22} className="text-gold" />
+                      <span className="text-[10px] text-zinc-300 truncate w-full text-center">{icon.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </>
