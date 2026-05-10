@@ -45,17 +45,14 @@ export default function SessionDetailPage() {
     return db.techniques.where('id').anyOf(ids).sortBy('name')
   }, [id], [] as Technique[])
 
-  const sessionTaps = useLiveQuery(async () => {
-    if (!id) return []
-    return db.sessionTaps.where('sessionId').equals(Number(id)).toArray()
-  }, [id], [] as SessionTap[])
-
-  const tapTechniqueMap = useLiveQuery(async () => {
-    if (!sessionTaps || sessionTaps.length === 0) return new Map<number, string>()
-    const ids = [...new Set(sessionTaps.map(t => t.techniqueId))]
+  const tapData = useLiveQuery(async () => {
+    if (!id) return { taps: [] as SessionTap[], techMap: new Map<number, string>() }
+    const taps = await db.sessionTaps.where('sessionId').equals(Number(id)).toArray()
+    if (taps.length === 0) return { taps: [], techMap: new Map<number, string>() }
+    const ids = [...new Set(taps.map(t => t.techniqueId))]
     const techs = await db.techniques.where('id').anyOf(ids).toArray()
-    return new Map(techs.map(t => [t.id, t.name]))
-  }, [sessionTaps], new Map<number, string>())
+    return { taps, techMap: new Map(techs.map(t => [t.id, t.name])) }
+  }, [id], { taps: [] as SessionTap[], techMap: new Map<number, string>() })
 
   if (!session) return (
     <div className="flex items-center justify-center min-h-screen">
@@ -71,8 +68,10 @@ export default function SessionDetailPage() {
     navigate('/sessions')
   }
 
-  const givenTaps = sessionTaps?.filter(t => t.type === 'given') ?? []
-  const receivedTaps = sessionTaps?.filter(t => t.type === 'received') ?? []
+  const sessionTaps = tapData?.taps ?? []
+  const tapTechniqueMap = tapData?.techMap ?? new Map<number, string>()
+  const givenTaps = sessionTaps.filter(t => t.type === 'given')
+  const receivedTaps = sessionTaps.filter(t => t.type === 'received')
 
   return (
     <div className="min-h-full bg-zinc-950">

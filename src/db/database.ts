@@ -11,8 +11,8 @@ export class BJJDatabase extends Dexie {
   sessionTaps!: Table<SessionTap, number>
   clubs!: Table<Club, number>
 
-  constructor() {
-    super('bjj-dojo')
+  constructor(name = 'bjj-dojo') {
+    super(name)
     this.version(1).stores({
       categories: 'id, name',
       techniques: 'id, categoryId, name',
@@ -37,20 +37,25 @@ export class BJJDatabase extends Dexie {
       sessionTaps: '++id, sessionId, techniqueId',
       clubs: '++id, sortOrder, name',
     }).upgrade(async tx => {
-      // Update prefilled techniques to include cues
-      const existing = await tx.table('techniques').where('isCustom').equals(0).toArray()
-      const updates = prefilledTechniques.filter(pt =>
-        existing.some((e: Technique) => e.id === pt.id),
-      )
+      // Backfill cues onto existing prefilled techniques.
+      // Use toArray() + JS filter — isCustom is not an indexed field.
+      const all = await tx.table('techniques').toArray() as Technique[]
+      const prefilled = all.filter(e => e.isCustom === false)
+      const byId = new Map(prefilledTechniques.map(t => [t.id, t]))
+      const updates = prefilled
+        .filter(e => byId.has(e.id))
+        .map(e => ({ ...e, ...byId.get(e.id)! }))
       if (updates.length > 0) await tx.table('techniques').bulkPut(updates)
+    })
+
+    // Populate on first creation — registered here so every instance gets it
+    // (including isolated test instances).
+    this.on('populate', async () => {
+      await this.categories.bulkAdd(prefilledCategories)
+      await this.techniques.bulkAdd(prefilledTechniques)
+      await this.techniqueConnections.bulkAdd(prefilledConnections)
     })
   }
 }
 
 export const db = new BJJDatabase()
-
-db.on('populate', async () => {
-  await db.categories.bulkAdd(prefilledCategories)
-  await db.techniques.bulkAdd(prefilledTechniques)
-  await db.techniqueConnections.bulkAdd(prefilledConnections)
-})
