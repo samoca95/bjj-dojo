@@ -1,32 +1,33 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Pencil } from 'lucide-react'
-import type { SessionType } from '../types'
-import { SESSION_TYPE_LABELS } from '../types'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { CategoryIcon } from '../components/CategoryIcon'
-import IconPickerModal from '../components/IconPickerModal'
-import { getSessionTypeIcons, saveSessionTypeIcons, type SessionTypeIconsMap } from '../utils/sessionTypeIcons'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n } from '../i18n'
 import { exportDatabaseBackup, importDatabaseBackup, resetPrefilledTechniques } from '../db/database'
 import { telemetry } from '../utils/telemetry'
-
-const SESSION_TYPES = Object.keys(SESSION_TYPE_LABELS) as SessionType[]
+import { getGoalMatTime, setGoalMatTime, DEFAULT_WEEKLY_GOAL_MINUTES } from '../utils/goalMatTime'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
   const { language, setLanguage, t, locale } = useI18n()
-  const [sessionTypeIcons, setSessionTypeIcons] = useState<SessionTypeIconsMap>(getSessionTypeIcons())
-  const [activeSessionType, setActiveSessionType] = useState<SessionType | null>(null)
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
-  const [typeIconsOpen, setTypeIconsOpen] = useState(false)
   const [telemetryCount, setTelemetryCount] = useState(0)
+  const [goalInput, setGoalInput] = useState(String(getGoalMatTime()))
   const importRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setSessionTypeIcons(getSessionTypeIcons())
     setTelemetryCount(telemetry.read().length)
   }, [])
+
+  const handleGoalSave = () => {
+    const n = Number(goalInput)
+    if (n > 0 && Number.isFinite(n)) {
+      setGoalMatTime(Math.round(n))
+    } else {
+      setGoalInput(String(getGoalMatTime()))
+    }
+  }
 
   const handleExportBackup = async () => {
     const backup = await exportDatabaseBackup()
@@ -51,13 +52,6 @@ export default function SettingsPage() {
       window.alert(language === 'es' ? 'No se pudo importar el respaldo.' : 'Could not import backup.')
     }
   }
-
-  const pickerTitle = useMemo(() => {
-    if (!activeSessionType) return ''
-    return language === 'es'
-      ? `Icono para ${SESSION_TYPE_LABELS[activeSessionType]}`
-      : `Icon for ${SESSION_TYPE_LABELS[activeSessionType]}`
-  }, [activeSessionType, language])
 
   const handleResetPrefilled = async () => {
     const message = language === 'es'
@@ -132,38 +126,20 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <button
-            onClick={() => setTypeIconsOpen(prev => !prev)}
-            className="w-full flex items-center gap-3 text-left"
-          >
-            <h2 className="flex-1 text-xs text-gold font-semibold tracking-widest">{t('SESSION TYPE ICONS')}</h2>
-            {typeIconsOpen ? (
-              <ChevronUp size={15} className="text-zinc-500 shrink-0" strokeWidth={2} />
-            ) : (
-              <ChevronDown size={15} className="text-zinc-500 shrink-0" strokeWidth={2} />
-            )}
-          </button>
-          {typeIconsOpen && (
-            <div className="space-y-2">
-              {SESSION_TYPES.map(sessionType => (
-                <button
-                  key={sessionType}
-                  onClick={() => setActiveSessionType(sessionType)}
-                  className="w-full rounded-xl bg-zinc-800 px-3 py-2.5 text-left flex items-center gap-3 active:bg-zinc-700"
-                >
-                  <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center shrink-0">
-                    <CategoryIcon value={sessionTypeIcons[sessionType]} size={18} className="text-gold" />
-                  </div>
-                  <span className="flex-1 text-sm text-zinc-100">{SESSION_TYPE_LABELS[sessionType]}</span>
-                  <Pencil size={15} className="text-zinc-500 shrink-0" strokeWidth={2} />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
         <div className="bg-zinc-900 rounded-2xl p-2">
+          <button
+            onClick={() => navigate('/session-type-icons')}
+            className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
+          >
+            <div className="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+              <CategoryIcon value="swords" size={18} className="text-gold" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-zinc-100">{t('SESSION TYPE ICONS')}</div>
+              <div className="text-xs text-zinc-500">{t('Customize icons for each session type')}</div>
+            </div>
+            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+          </button>
           <button
             onClick={() => navigate('/categories')}
             className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
@@ -190,6 +166,36 @@ export default function SettingsPage() {
             </div>
             <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
           </button>
+        </div>
+
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">
+            {language === 'es' ? 'META SEMANAL DE TATAMI' : 'WEEKLY MAT TIME GOAL'}
+          </h2>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              inputMode="numeric"
+              value={goalInput}
+              onChange={e => setGoalInput(e.target.value)}
+              onBlur={handleGoalSave}
+              min={1}
+              max={10080}
+              className="flex-1 bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
+            />
+            <span className="text-sm text-zinc-400">{t('min')}</span>
+            <button
+              onClick={handleGoalSave}
+              className="rounded-xl bg-gold text-black text-sm font-semibold px-4 py-2.5 active:bg-gold-light"
+            >
+              {t('Save')}
+            </button>
+          </div>
+          <p className="text-xs text-zinc-500">
+            {language === 'es'
+              ? `Predeterminado: ${DEFAULT_WEEKLY_GOAL_MINUTES} min`
+              : `Default: ${DEFAULT_WEEKLY_GOAL_MINUTES} min`}
+          </p>
         </div>
 
         <div className="bg-zinc-900 rounded-2xl p-4">
@@ -264,22 +270,6 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
-
-      {activeSessionType && (
-        <IconPickerModal
-          title={pickerTitle}
-          value={sessionTypeIcons[activeSessionType]}
-          onClose={() => setActiveSessionType(null)}
-          onSelect={value => {
-            const next = {
-              ...sessionTypeIcons,
-              [activeSessionType]: value,
-            } as SessionTypeIconsMap
-            setSessionTypeIcons(next)
-            saveSessionTypeIcons(next)
-          }}
-        />
-      )}
     </div>
   )
 }

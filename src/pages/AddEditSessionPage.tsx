@@ -9,7 +9,7 @@ import type { Category, Club, Session, SessionType, Technique, TapType } from '.
 import { SESSION_TYPE_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, sessionTypeLabel } from '../i18n'
-import { techniqueMatchesQuery } from '../utils/fuzzySearch'
+import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 import { normalizeDateInput, normalizeDuration, normalizeSessionNotes, normalizeTechniquePayload, toSafeDateEpoch, VALIDATION_LIMITS } from '../utils/validation'
 import { runWithTelemetry } from '../utils/telemetry'
 
@@ -156,7 +156,13 @@ export default function AddEditSessionPage() {
     }
   }
 
-  const filteredTechniques = allTechniques?.filter(t => techniqueMatchesQuery(t, pickerSearch))
+  const filteredTechniques = (() => {
+    const results = allTechniques?.filter(t => techniqueMatchesQuery(t, pickerSearch)) ?? []
+    if (pickerSearch.trim()) {
+      return [...results].sort((a, b) => techniqueScore(b, pickerSearch) - techniqueScore(a, pickerSearch))
+    }
+    return results
+  })()
 
   const openPicker = (mode: PickerMode) => {
     setPickerMode(mode)

@@ -7,7 +7,7 @@ import type { Category, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n } from '../i18n'
-import { techniqueMatchesQuery } from '../utils/fuzzySearch'
+import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 
 function TechniqueRow({ technique, categoryName, categoryIcon, onClick }: {
   technique: Technique; categoryName: string; categoryIcon?: string; onClick: () => void
@@ -49,12 +49,16 @@ export default function TechniquesPage() {
         ? db.techniques.where('categoryId').equals(categoryId)
         : db.techniques.toCollection()
       const results = await q.sortBy('name')
-      return results.filter(t => {
+      const filtered = results.filter(t => {
         if (search.trim() && !techniqueMatchesQuery(t, search)) return false
         if (favoritesOnly && !t.isFavorite) return false
         if (tagFilter && !(t.tags ?? []).includes(tagFilter)) return false
         return true
       })
+      if (search.trim()) {
+        filtered.sort((a, b) => techniqueScore(b, search) - techniqueScore(a, search))
+      }
+      return filtered
     },
     [search, categoryId, favoritesOnly, tagFilter],
     [] as Technique[],

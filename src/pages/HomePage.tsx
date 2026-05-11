@@ -4,8 +4,24 @@ import { CalendarDays, BookOpen, ChevronRight } from 'lucide-react'
 import { db } from '../db/database'
 import { useI18n } from '../i18n'
 import TrendSparkline from '../components/TrendSparkline'
+import { getGoalMatTime } from '../utils/goalMatTime'
 
-const WEEKLY_GOAL_MINUTES = 180
+const DAY_MS = 24 * 60 * 60 * 1000
+
+function startOfDay(epoch: number): number {
+  const day = new Date(epoch)
+  day.setHours(0, 0, 0, 0)
+  return day.getTime()
+}
+
+function startOfWeek(epoch: number): number {
+  const day = new Date(epoch)
+  day.setHours(0, 0, 0, 0)
+  const dayOfWeek = day.getDay()
+  const offset = (dayOfWeek + 6) % 7 // Monday = 0
+  day.setDate(day.getDate() - offset)
+  return day.getTime()
+}
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -20,6 +36,11 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 export default function HomePage() {
   const navigate = useNavigate()
   const { t, language } = useI18n()
+  const todayStart = startOfDay(Date.now())
+  const weekStart = todayStart - 6 * DAY_MS
+  const currentWeekStart = startOfWeek(Date.now())
+  const previousWeekStart = currentWeekStart - 7 * DAY_MS
+  const weeklyGoalMinutes = getGoalMatTime()
 
   const sessionCount = useLiveQuery(() => db.sessions.count(), [], 0)
   const sessions = useLiveQuery(() => db.sessions.toArray(), [], [])
@@ -38,7 +59,7 @@ export default function HomePage() {
     [],
   )
   const recentSessions = useLiveQuery(
-    () => db.sessions.orderBy('date').reverse().limit(12).toArray(),
+    () => db.sessions.orderBy('date').reverse().limit(10).toArray(),
     [],
     [],
   )
@@ -51,44 +72,38 @@ export default function HomePage() {
     }
     return counts
   }, [], new Map<number, number>())
-  const drillPlan = useLiveQuery(async () => {
-    const plan = await db.drillPlans.orderBy('createdAt').first()
-    if (!plan || plan.techniqueIds.length === 0) return null
-    const techniques = await db.techniques.where('id').anyOf(plan.techniqueIds).toArray()
-    return { ...plan, techniques }
-  }, [], null)
-
   const hours = Math.floor(totalMinutes / 60)
   const mins = totalMinutes % 60
   const timeLabel = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`
   const weeklyMinutes = weeklySessions.reduce((sum, session) => sum + session.durationMinutes, 0)
-  const weeklyGoalPct = Math.min(100, Math.round((weeklyMinutes / WEEKLY_GOAL_MINUTES) * 100))
+  const weeklyGoalPct = Math.min(100, Math.round((weeklyMinutes / weeklyGoalMinutes) * 100))
 
   const sortedAsc = [...recentSessions].sort((a, b) => a.date - b.date)
-  const minuteTrend = sortedAsc.map(session => session.durationMinutes)
-  const tapTrend = sortedAsc.map(session => tapCountsBySessionId.get(session.id ?? -1) ?? 0)
+  const tapTrend = sortedAsc.map((_, index) => {
+    const start = Math.max(0, index - 4)
+    const window = sortedAsc.slice(start, index + 1)
+    const sum = window.reduce((acc, session) => acc + (tapCountsBySessionId.get(session.id ?? -1) ?? 0), 0)
+    return Number((sum / window.length).toFixed(2))
+  })
 
-  const dayStarts = Array.from(
+  const weekStarts = Array.from(
     new Set((sessions ?? []).map(session => {
-      const day = new Date(session.date)
-      day.setHours(0, 0, 0, 0)
-      return day.getTime()
+      return startOfWeek(session.date)
     })),
   ).sort((a, b) => b - a)
 
-  let streak = 0
-  if (dayStarts.length > 0) {
-    const yesterday = startOfToday.getTime() - 24 * 60 * 60 * 1000
-    const firstDay = dayStarts[0]
-    if (firstDay === startOfToday.getTime() || firstDay === yesterday) {
-      for (let index = 0; index < dayStarts.length; index += 1) {
+  let trainingWeekStreak = 0
+  if (weekStarts.length > 0) {
+    const firstWeek = weekStarts[0]
+    if (firstWeek === currentWeekStart || firstWeek === previousWeekStart) {
+      for (let index = 0; index < weekStarts.length; index += 1) {
         if (index === 0) {
-          streak += 1
+          trainingWeekStreak += 1
           continue
         }
-        const expectedNext = dayStarts[index - 1] - 24 * 60 * 60 * 1000
-        if (dayStarts[index] !== expectedNext) break
-        streak += 1
+        const expectedNext = weekStarts[index - 1] - 7 * DAY_MS
+        if (weekStarts[index] !== expectedNext) break
+        trainingWeekStreak += 1
       }
     }
   }
@@ -118,40 +133,24 @@ export default function HomePage() {
             {t('TRENDING')}
           </h2>
           <div className="bg-zinc-900 rounded-2xl p-4">
-            <div className="text-xs text-zinc-500 mb-2">{t('Mat Time')} (last 12 sessions)</div>
-            <TrendSparkline values={minuteTrend} color="#d4a017" />
-          </div>
-          <div className="bg-zinc-900 rounded-2xl p-4">
-            <div className="text-xs text-zinc-500 mb-2">{t('Taps Given')} (avg)</div>
+            <div className="text-xs text-zinc-500 mb-2">
+              {language === 'es' ? 'Taps dados (promedio móvil de 5, últimas 10)' : 'Taps Given (rolling avg 5, last 10)'}
+            </div>
             <TrendSparkline values={tapTrend} color="#60a5fa" />
           </div>
           <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-zinc-100 font-semibold">{language === 'es' ? 'Meta semanal' : 'Weekly goal'}</span>
-              <span className="text-xs text-zinc-400">{weeklyMinutes}/{WEEKLY_GOAL_MINUTES} min</span>
+              <span className="text-xs text-zinc-400">{weeklyMinutes}/{weeklyGoalMinutes} min</span>
             </div>
             <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
               <div className="h-full bg-gold" style={{ width: `${weeklyGoalPct}%` }} />
             </div>
             <div className="text-xs text-zinc-500">
-              {language === 'es' ? 'Racha de días entrenados:' : 'Training-day streak:'} {streak}
+              {language === 'es' ? 'Racha de semanas entrenadas:' : 'Training-week streak:'} {trainingWeekStreak}
             </div>
           </div>
         </section>
-
-        {drillPlan && (
-          <section>
-            <h2 className="text-xs font-semibold tracking-widest text-gold mb-3 px-1">
-              {language === 'es' ? 'PLAN DE DRILLS' : 'DRILL PLAN'}
-            </h2>
-            <div className="bg-zinc-900 rounded-2xl p-4 space-y-1.5">
-              <div className="text-sm text-zinc-100 font-semibold">{drillPlan.name}</div>
-              {(drillPlan.techniques ?? []).slice(0, 4).map(technique => (
-                <div key={technique.id} className="text-xs text-zinc-400">• {technique.name}</div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Quick access */}
         <section>
@@ -190,6 +189,3 @@ export default function HomePage() {
     </div>
   )
 }
-  const startOfToday = new Date()
-  startOfToday.setHours(0, 0, 0, 0)
-  const weekStart = startOfToday.getTime() - 6 * 24 * 60 * 60 * 1000

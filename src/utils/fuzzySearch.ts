@@ -34,3 +34,26 @@ export function techniqueMatchesQuery(technique: Technique, query: string): bool
   const combined = `${technique.name} ${technique.description}`
   return fuzzyMatch(combined, query)
 }
+
+/**
+ * Returns a sort score for the technique against the query.
+ * Higher score = closer match = should appear earlier in results.
+ * Strict/exact matches in name rank highest; description-only matches rank lowest.
+ */
+export function techniqueScore(technique: Technique, query: string): number {
+  if (!query.trim()) return 0
+  const normName = normalize(technique.name)
+  const normQuery = normalize(query)
+
+  if (normName === normQuery) return 100
+  if (normName.startsWith(normQuery)) return 90
+  if (normName.includes(normQuery)) return 70
+  if (isSubsequence(normName, normQuery)) return 50
+
+  // Multi-token: check if every token strictly matches the name
+  const tokens = normQuery.split(/\s+/).filter(Boolean)
+  if (tokens.length > 1 && tokens.every(token => normName.includes(token))) return 60
+
+  // Match only found in description
+  return 10
+}
