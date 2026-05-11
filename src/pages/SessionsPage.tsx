@@ -223,7 +223,7 @@ export default function SessionsPage() {
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-zinc-500">From</label>
+              <label className="text-xs text-zinc-500">{language === 'es' ? 'Desde' : 'From'}</label>
               <input
                 type="date"
                 value={fromDate}
@@ -232,7 +232,7 @@ export default function SessionsPage() {
               />
             </div>
             <div>
-              <label className="text-xs text-zinc-500">To</label>
+              <label className="text-xs text-zinc-500">{language === 'es' ? 'Hasta' : 'To'}</label>
               <input
                 type="date"
                 value={toDate}
@@ -247,7 +247,7 @@ export default function SessionsPage() {
               onClick={() => setFilterSessionType('ALL')}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold ${filterSessionType === 'ALL' ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
             >
-              All types
+              {language === 'es' ? 'Todos los tipos' : 'All types'}
             </button>
             {(Object.keys(SESSION_TYPE_LABELS) as SessionType[]).map(type => (
               <button
@@ -265,7 +265,7 @@ export default function SessionsPage() {
               onClick={() => setFilterClubId('ALL')}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold ${filterClubId === 'ALL' ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
             >
-              All clubs
+              {language === 'es' ? 'Todas las academias' : 'All clubs'}
             </button>
             {(clubs ?? []).map(club => (
               <button
@@ -281,7 +281,7 @@ export default function SessionsPage() {
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-semibold tracking-widest text-gold">WEEKLY GOAL</h2>
+            <h2 className="text-xs font-semibold tracking-widest text-gold">{language === 'es' ? 'META SEMANAL' : 'WEEKLY GOAL'}</h2>
             <span className="text-xs text-zinc-400">{weeklyMinutes}/{weeklyGoal} min</span>
           </div>
           <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
@@ -304,16 +304,24 @@ export default function SessionsPage() {
               }}
               className="px-3 py-2 rounded-lg bg-zinc-800 text-zinc-100 text-sm font-semibold"
             >
-              Save goal
+              {language === 'es' ? 'Guardar meta' : 'Save goal'}
             </button>
           </div>
-          <p className="text-xs text-zinc-500">Current streak: {streak} day{streak === 1 ? '' : 's'}</p>
+          <p className="text-xs text-zinc-500">
+            {language === 'es'
+              ? `Racha actual: ${streak} día${streak === 1 ? '' : 's'}`
+              : `Current streak: ${streak} day${streak === 1 ? '' : 's'}`}
+          </p>
         </div>
 
         <div className="bg-zinc-900 rounded-2xl p-4">
-          <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">TREND (LAST 8 SESSIONS)</h2>
+          <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">
+            {language === 'es' ? 'TENDENCIA (ÚLTIMAS 8 SESIONES)' : 'TREND (LAST 8 SESSIONS)'}
+          </h2>
           {trendData.length === 0 ? (
-            <p className="text-xs text-zinc-500">No session data in the selected range.</p>
+            <p className="text-xs text-zinc-500">
+              {language === 'es' ? 'No hay sesiones en el rango seleccionado.' : 'No session data in the selected range.'}
+            </p>
           ) : (
             <div className="flex items-end gap-2 h-24">
               {trendData.map(s => (

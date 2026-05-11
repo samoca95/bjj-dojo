@@ -118,6 +118,8 @@ export default function TechniquesPage() {
   const [planMode, setPlanMode] = useState(false)
   const [planName, setPlanName] = useState('')
   const [planSelection, setPlanSelection] = useState<Set<number>>(new Set())
+  const [tagEditorTechniqueId, setTagEditorTechniqueId] = useState<number | null>(null)
+  const [tagInput, setTagInput] = useState('')
 
   const [favoriteIds, setFavoriteIds] = useState<number[]>(() => safeRead<number[]>(FAVORITES_KEY, []))
   const [tagsByTechnique, setTagsByTechnique] = useState<Record<string, string[]>>(() => safeRead<Record<string, string[]>>(TAGS_KEY, {}))
@@ -155,9 +157,8 @@ export default function TechniquesPage() {
     safeWrite(FAVORITES_KEY, next)
   }
 
-  const addTag = (techniqueId: number) => {
-    const response = window.prompt(language === 'es' ? 'Nueva etiqueta (sin #)' : 'New tag (without #)')
-    const tag = response?.trim().toLowerCase()
+  const addTag = (techniqueId: number, value: string) => {
+    const tag = value.trim().toLowerCase()
     if (!tag) return
     const key = String(techniqueId)
     const existing = tagsByTechnique[key] ?? []
@@ -168,6 +169,8 @@ export default function TechniquesPage() {
     }
     setTagsByTechnique(next)
     safeWrite(TAGS_KEY, next)
+    setTagInput('')
+    setTagEditorTechniqueId(null)
   }
 
   const togglePlanSelection = (techniqueId: number) => {
@@ -231,7 +234,7 @@ export default function TechniquesPage() {
             onClick={() => setFavoritesOnly(prev => !prev)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold ${favoritesOnly ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
           >
-            Favorites
+            {language === 'es' ? 'Favoritas' : 'Favorites'}
           </button>
           <button
             onClick={() => {
@@ -240,9 +243,35 @@ export default function TechniquesPage() {
             }}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 ${planMode ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
           >
-            <ListChecks size={12} /> Drill plan mode
+            <ListChecks size={12} /> {language === 'es' ? 'Modo plan de drills' : 'Drill plan mode'}
           </button>
         </div>
+
+        {tagEditorTechniqueId !== null && (
+          <div className="px-4 pb-3 space-y-2">
+            <input
+              value={tagInput}
+              onChange={e => setTagInput(e.target.value)}
+              placeholder={language === 'es' ? 'Nueva etiqueta (sin #)' : 'New tag (without #)'}
+              className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => addTag(tagEditorTechniqueId, tagInput)}
+                disabled={!tagInput.trim()}
+                className="flex-1 rounded-xl bg-gold text-black text-sm font-semibold py-2.5 disabled:opacity-50"
+              >
+                {language === 'es' ? 'Guardar etiqueta' : 'Save tag'}
+              </button>
+              <button
+                onClick={() => { setTagEditorTechniqueId(null); setTagInput('') }}
+                className="flex-1 rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5"
+              >
+                {t('Cancel')}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-none">
           <button
@@ -272,7 +301,7 @@ export default function TechniquesPage() {
             <input
               value={planName}
               onChange={e => setPlanName(e.target.value)}
-              placeholder="Plan name"
+              placeholder={language === 'es' ? 'Nombre del plan' : 'Plan name'}
               className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100"
             />
             <button
@@ -280,7 +309,7 @@ export default function TechniquesPage() {
               disabled={!planName.trim() || planSelection.size === 0}
               className="w-full rounded-xl bg-gold text-black text-sm font-semibold py-2.5 disabled:opacity-50"
             >
-              Save drill plan ({planSelection.size})
+              {language === 'es' ? 'Guardar plan de drills' : 'Save drill plan'} ({planSelection.size})
             </button>
           </div>
         )}
@@ -294,7 +323,7 @@ export default function TechniquesPage() {
                   onClick={() => deleteDrillPlan(plan.id)}
                   className="text-xs text-zinc-500"
                 >
-                  Delete
+                  {t('Delete')}
                 </button>
               </div>
             ))}
@@ -323,7 +352,10 @@ export default function TechniquesPage() {
             favorite={favoriteIds.includes(technique.id)}
             tags={tagsByTechnique[String(technique.id)] ?? []}
             onToggleFavorite={() => toggleFavorite(technique.id)}
-            onAddTag={() => addTag(technique.id)}
+            onAddTag={() => {
+              setTagEditorTechniqueId(technique.id)
+              setTagInput('')
+            }}
             planMode={planMode}
             selected={planSelection.has(technique.id)}
             onClick={() => {

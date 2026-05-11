@@ -62,7 +62,8 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `bjj-dojo-backup-${new Date().toISOString().slice(0, 10)}.json`
+      const datePart = new Date().toLocaleDateString(locale).replace(/[^\dA-Za-z-]/g, '-')
+      link.download = `bjj-dojo-backup-${datePart}.json`
       link.click()
       URL.revokeObjectURL(url)
       logEvent('settings.backup.export', 'Backup exported', { size: blob.size })
