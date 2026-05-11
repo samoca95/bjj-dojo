@@ -7,6 +7,8 @@ import type { Category, ConnectionType, Difficulty, Technique, TechniqueConnecti
 import { CONNECTION_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel, difficultyLabel } from '../i18n'
+import { isValidYoutubeUrl, normalizeTechniquePayload, VALIDATION_LIMITS } from '../utils/validation'
+import { runWithTelemetry } from '../utils/telemetry'
 
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
@@ -38,6 +40,8 @@ export default function TechniqueEditPage() {
   const [connections, setConnections] = useState<TechniqueConnection[]>([])
   const [newConnectionType, setNewConnectionType] = useState<ConnectionType>('FOLLOW_UP')
   const [newConnectionTargetId, setNewConnectionTargetId] = useState<number | null>(null)
+  const [tagsInput, setTagsInput] = useState('')
+  const [isFavorite, setIsFavorite] = useState(false)
 
   const categories = useLiveQuery(
     () => db.categories.orderBy('name').toArray(),
@@ -60,6 +64,8 @@ export default function TechniqueEditPage() {
       setDifficulty(t.difficulty)
       setCategoryId(t.categoryId)
       setCues(t.cues ?? [])
+      setTagsInput((t.tags ?? []).join(', '))
+      setIsFavorite(Boolean(t.isFavorite))
       const techniqueConnections = await db.techniqueConnections
         .where('fromTechniqueId')
         .equals(Number(id))
@@ -69,49 +75,64 @@ export default function TechniqueEditPage() {
   }, [id, isNew])
 
   const handleSave = async () => {
-    if (!name.trim()) return
+    const payload = normalizeTechniquePayload({
+      name,
+      description,
+      cues,
+      youtubeUrl,
+      tags: tagsInput.split(','),
+    })
+    if (!payload.name) return
+    if (!isValidYoutubeUrl(payload.youtubeUrl)) {
+      window.alert(language === 'es' ? 'URL de YouTube inválida.' : 'Invalid YouTube URL.')
+      return
+    }
     if (isNew) {
       const maxId = await db.techniques.orderBy('id').last()
       const newId = (maxId?.id ?? 1000) + 1
       const technique: Technique = {
         id: newId,
-        name: name.trim(),
-        description: description.trim(),
-        youtubeUrl: youtubeUrl.trim(),
+        name: payload.name,
+        description: payload.description,
+        youtubeUrl: payload.youtubeUrl,
         difficulty,
         categoryId,
-        cues,
+        cues: payload.cues,
+        tags: payload.tags,
+        isFavorite,
         isCustom: true,
       }
-      await db.techniques.add(technique)
+      await runWithTelemetry('technique.save_failed', () => db.techniques.add(technique))
       if (connections.length > 0) {
-        await db.techniqueConnections.bulkAdd(
+        await runWithTelemetry('technique.connection_save_failed', () => db.techniqueConnections.bulkAdd(
           connections.map(connection => ({
             fromTechniqueId: newId,
             toTechniqueId: connection.toTechniqueId,
             connectionType: connection.connectionType,
           })),
-        )
+        ))
       }
       navigate(`/techniques/${newId}`)
     } else {
-      await db.techniques.update(Number(id), {
-        name: name.trim(),
-        description: description.trim(),
-        youtubeUrl: youtubeUrl.trim(),
+      await runWithTelemetry('technique.update_failed', () => db.techniques.update(Number(id), {
+        name: payload.name,
+        description: payload.description,
+        youtubeUrl: payload.youtubeUrl,
         difficulty,
         categoryId,
-        cues,
-      })
-      await db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete()
+        cues: payload.cues,
+        tags: payload.tags,
+        isFavorite,
+      }))
+      await runWithTelemetry('technique.connection_clear_failed', () => db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete())
       if (connections.length > 0) {
-        await db.techniqueConnections.bulkAdd(
+        await runWithTelemetry('technique.connection_save_failed', () => db.techniqueConnections.bulkAdd(
           connections.map(connection => ({
             fromTechniqueId: Number(id),
             toTechniqueId: connection.toTechniqueId,
             connectionType: connection.connectionType,
           })),
-        )
+        ))
       }
       navigate(`/techniques/${id}`)
     }
@@ -197,7 +218,8 @@ export default function TechniqueEditPage() {
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-             placeholder={t('Technique name')}
+              placeholder={t('Technique name')}
+            maxLength={VALIDATION_LIMITS.NAME_MAX_LENGTH}
             className={`${inputCls} mt-2`}
           />
         </div>
@@ -250,7 +272,8 @@ export default function TechniqueEditPage() {
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
-             placeholder={language === 'es' ? 'Describe esta técnica…' : 'Describe this technique…'}
+              placeholder={language === 'es' ? 'Describe esta técnica…' : 'Describe this technique…'}
+            maxLength={VALIDATION_LIMITS.DESCRIPTION_MAX_LENGTH}
             rows={4}
             className={`${inputCls} mt-2 resize-none`}
           />
@@ -267,6 +290,25 @@ export default function TechniqueEditPage() {
             placeholder="https://youtube.com/watch?v=…"
             className={`${inputCls} mt-2`}
           />
+        </div>
+
+        <div>
+          <label className="text-xs text-gold font-semibold tracking-wide">{language === 'es' ? 'TAGS' : 'TAGS'}</label>
+          <input
+            type="text"
+            value={tagsInput}
+            onChange={e => setTagsInput(e.target.value)}
+            placeholder={language === 'es' ? 'ej: guardia, sweep, sumisión' : 'e.g. guard, sweep, submission'}
+            className={`${inputCls} mt-2`}
+          />
+          <label className="mt-2 inline-flex items-center gap-2 text-sm text-zinc-300">
+            <input
+              type="checkbox"
+              checked={isFavorite}
+              onChange={e => setIsFavorite(e.target.checked)}
+            />
+            {language === 'es' ? 'Marcar como favorita' : 'Mark as favorite'}
+          </label>
         </div>
 
         {/* Coaching cues */}
@@ -286,11 +328,12 @@ export default function TechniqueEditPage() {
               <input
                 type="text"
                 value={newCue}
-                onChange={e => setNewCue(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addCue()}
-                 placeholder={language === 'es' ? 'Añadir clave técnica…' : 'Add a coaching cue…'}
-                className="flex-1 bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
-              />
+                 onChange={e => setNewCue(e.target.value)}
+                 onKeyDown={e => e.key === 'Enter' && addCue()}
+                  placeholder={language === 'es' ? 'Añadir clave técnica…' : 'Add a coaching cue…'}
+                maxLength={VALIDATION_LIMITS.CUE_MAX_LENGTH}
+                 className="flex-1 bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
+               />
               <button
                 onClick={addCue}
                 disabled={!newCue.trim()}

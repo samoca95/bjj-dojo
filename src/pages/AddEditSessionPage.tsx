@@ -10,6 +10,8 @@ import { SESSION_TYPE_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, sessionTypeLabel } from '../i18n'
 import { techniqueMatchesQuery } from '../utils/fuzzySearch'
+import { normalizeDateInput, normalizeDuration, normalizeSessionNotes, normalizeTechniquePayload, toSafeDateEpoch, VALIDATION_LIMITS } from '../utils/validation'
+import { runWithTelemetry } from '../utils/telemetry'
 
 function toDateInput(epoch: number) {
   const d = new Date(epoch)
@@ -17,11 +19,6 @@ function toDateInput(epoch: number) {
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
-}
-
-function fromDateInput(s: string): number {
-  const [y, m, d] = s.split('-').map(Number)
-  return new Date(y, m - 1, d).getTime()
 }
 
 const inputCls =
@@ -117,32 +114,46 @@ export default function AddEditSessionPage() {
   }, [clubs, isEdit, clubId])
 
   const handleSave = async () => {
+    const safeDate = normalizeDateInput(date)
+    const safeDuration = normalizeDuration(duration)
+    const safeNotes = normalizeSessionNotes(notes)
     const session: Session = {
-      date: fromDateInput(date),
-      durationMinutes: parseInt(duration) || 60,
+      date: toSafeDateEpoch(safeDate),
+      durationMinutes: safeDuration,
       sessionType,
       clubId,
-      notes: notes.trim(),
+      notes: safeNotes,
       energyLevel: energy,
     }
     let sid: number
-    if (isEdit && id) {
-      session.id = Number(id)
-      await db.sessions.put(session)
-      await db.sessionTechniques.where('sessionId').equals(Number(id)).delete()
-      await db.sessionTaps.where('sessionId').equals(Number(id)).delete()
-      sid = Number(id)
-    } else {
-      sid = (await db.sessions.add(session)) as number
-    }
+    try {
+      sid = await runWithTelemetry('session.save_failed', async () => {
+        if (isEdit && id) {
+          session.id = Number(id)
+          await db.sessions.put(session)
+          await db.sessionTechniques.where('sessionId').equals(Number(id)).delete()
+          await db.sessionTaps.where('sessionId').equals(Number(id)).delete()
+          return Number(id)
+        }
+        return (await db.sessions.add(session)) as number
+      })
 
-    await db.sessionTechniques.bulkAdd(
-      [...selectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
-    )
-    await db.sessionTaps.bulkAdd(
-      taps.map(t => ({ sessionId: sid, techniqueId: t.techniqueId, type: t.type })),
-    )
-    navigate(isEdit ? `/sessions/${sid}` : '/sessions')
+      await runWithTelemetry('session.links_save_failed', async () => {
+        if (selectedIds.size > 0) {
+          await db.sessionTechniques.bulkAdd(
+            [...selectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
+          )
+        }
+        if (taps.length > 0) {
+          await db.sessionTaps.bulkAdd(
+            taps.map(t => ({ sessionId: sid, techniqueId: t.techniqueId, type: t.type })),
+          )
+        }
+      })
+      navigate(isEdit ? `/sessions/${sid}` : '/sessions')
+    } catch {
+      window.alert(language === 'es' ? 'No se pudo guardar la sesión.' : 'Could not save session.')
+    }
   }
 
   const filteredTechniques = allTechniques?.filter(t => techniqueMatchesQuery(t, pickerSearch))
@@ -177,7 +188,14 @@ export default function AddEditSessionPage() {
   }
 
   const handleCreateTechnique = async () => {
-    const name = newTechName.trim()
+    const payload = normalizeTechniquePayload({
+      name: newTechName,
+      description: '',
+      cues: [],
+      youtubeUrl: '',
+      tags: [],
+    })
+    const name = payload.name
     if (!name) return
     const maxId = await db.techniques.orderBy('id').last()
     const newId = (maxId?.id ?? 1000) + 1
@@ -187,11 +205,13 @@ export default function AddEditSessionPage() {
       description: '',
       cues: [],
       categoryId: newTechCatId,
-      youtubeUrl: '',
+      youtubeUrl: payload.youtubeUrl,
       difficulty: 'BEGINNER',
       isCustom: true,
+      tags: [],
+      isFavorite: false,
     }
-    await db.techniques.add(newTech)
+    await runWithTelemetry('technique.quick_create_failed', () => db.techniques.add(newTech))
     handlePickerSelect(newTech)
     setNewTechName('')
     setShowCreateTechnique(false)
@@ -327,7 +347,9 @@ export default function AddEditSessionPage() {
                 inputMode="numeric"
                 value={duration}
                 onChange={e => setDuration(e.target.value)}
-                 placeholder={t('Minutes')}
+                  placeholder={t('Minutes')}
+                min={1}
+                max={1440}
                 className={`${inputCls} mt-2`}
               />
             )}
@@ -442,7 +464,8 @@ export default function AddEditSessionPage() {
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
-               placeholder={t('What did you work on? Any insights?')}
+                placeholder={t('What did you work on? Any insights?')}
+              maxLength={VALIDATION_LIMITS.NOTE_MAX_LENGTH}
               rows={4}
               className={`${inputCls} mt-2 resize-none`}
             />
@@ -502,6 +525,7 @@ export default function AddEditSessionPage() {
                     value={newTechName}
                     onChange={e => setNewTechName(e.target.value)}
                     placeholder={t('Technique name')}
+                    maxLength={VALIDATION_LIMITS.NAME_MAX_LENGTH}
                     autoFocus
                     className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
                   />

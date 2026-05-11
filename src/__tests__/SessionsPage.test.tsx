@@ -31,10 +31,10 @@ function renderSessionsPage() {
   )
 }
 
-// SessionsPage calls useLiveQuery twice per render: sessions, clubs
+// SessionsPage calls useLiveQuery three times per render: sessions, clubs, meta
 const mockSession = {
   id: 1,
-  date: new Date('2025-01-15').getTime(),
+  date: Date.now(),
   durationMinutes: 90,
   sessionType: 'GI' as const,
   clubId: null,
@@ -43,13 +43,26 @@ const mockSession = {
 }
 
 function setupEmptyMocks() {
+  const responses = [
+    [],
+    [],
+    { techniqueNamesBySessionId: new Map(), tapStatsBySessionId: new Map() },
+  ]
   let call = 0
-  mockUseLiveQuery.mockImplementation(() => (call++ % 2 === 0 ? [] : []))
+  mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
 }
 
 function setupSessionMocks() {
+  const responses = [
+    [mockSession],
+    [],
+    {
+      techniqueNamesBySessionId: new Map([[1, []]]),
+      tapStatsBySessionId: new Map([[1, { given: 0, received: 0 }]]),
+    },
+  ]
   let call = 0
-  mockUseLiveQuery.mockImplementation(() => (call++ % 2 === 0 ? [mockSession] : []))
+  mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
 }
 
 beforeEach(() => {

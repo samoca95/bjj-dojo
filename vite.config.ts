@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['bjj-icon.svg'],
+      includeAssets: ['bjj-icon.svg', 'offline.html'],
       manifest: {
         name: 'BJJ Dojo',
         short_name: 'BJJ Dojo',
@@ -29,7 +29,10 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cacheId: 'bjj-dojo-v1',
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,svg,ico,woff2}'],
+        navigateFallback: 'offline.html',
       },
     }),
   ],

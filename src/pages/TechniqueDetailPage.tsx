@@ -1,12 +1,13 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Pencil } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Pencil, Star } from 'lucide-react'
 import { db } from '../db/database'
 import type { Technique } from '../types'
 import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel } from '../i18n'
+import { runWithTelemetry } from '../utils/telemetry'
 
 function ConnectedTechniqueRow({
   technique, badge, badgeCls, onClick,
@@ -55,6 +56,21 @@ export default function TechniqueDetailPage() {
     })))
   }, [numId], [])
 
+  const recommendations = useLiveQuery(async () => {
+    const edges = await db.techniqueConnections.where('fromTechniqueId').equals(numId).toArray()
+    if (edges.length === 0) return []
+    const targets = await db.techniques.where('id').anyOf(edges.map(edge => edge.toTechniqueId)).toArray()
+    const sessionTechniques = await db.sessionTechniques.where('techniqueId').anyOf(targets.map(target => target.id)).toArray()
+    const usage = new Map<number, number>()
+    for (const item of sessionTechniques) {
+      usage.set(item.techniqueId, (usage.get(item.techniqueId) ?? 0) + 1)
+    }
+    return targets
+      .map(target => ({ technique: target, usage: usage.get(target.id) ?? 0 }))
+      .sort((a, b) => b.usage - a.usage)
+      .slice(0, 3)
+  }, [numId], [])
+
   if (!technique) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
@@ -62,6 +78,20 @@ export default function TechniqueDetailPage() {
   )
 
   const cues = technique.cues ?? []
+
+  const addToDrillPlan = async () => {
+    const existing = await db.drillPlans.orderBy('createdAt').first()
+    if (!existing) {
+      await runWithTelemetry('drill_plan.create_failed', () => db.drillPlans.add({
+        name: language === 'es' ? 'Plan principal' : 'Main plan',
+        techniqueIds: [technique.id],
+        createdAt: Date.now(),
+      }))
+      return
+    }
+    const nextTechniqueIds = Array.from(new Set([...existing.techniqueIds, technique.id]))
+    await runWithTelemetry('drill_plan.update_failed', () => db.drillPlans.update(existing.id!, { techniqueIds: nextTechniqueIds }))
+  }
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -87,6 +117,12 @@ export default function TechniqueDetailPage() {
               </span>
             )}
             <DifficultyBadge difficulty={technique.difficulty} />
+            {technique.isFavorite && (
+              <span className="text-xs font-semibold px-2 py-1 rounded bg-amber-900/40 text-amber-300 flex items-center gap-1">
+                <Star size={12} fill="currentColor" />
+                {language === 'es' ? 'Favorita' : 'Favorite'}
+              </span>
+            )}
             {(sessionCount ?? 0) > 0 && (
               <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-900/40 text-blue-300">
                  {language === 'es' ? 'Practicada' : 'Practiced'} {sessionCount}×
@@ -94,6 +130,19 @@ export default function TechniqueDetailPage() {
             )}
           </div>
           <p className="text-sm text-zinc-300 leading-relaxed">{technique.description}</p>
+          {(technique.tags?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {(technique.tags ?? []).map(tag => (
+                <span key={tag} className="text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-300">#{tag}</span>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => void addToDrillPlan()}
+            className="mt-4 rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold px-3 py-2 active:bg-zinc-700"
+          >
+            {language === 'es' ? 'Añadir al plan de drills' : 'Add to drill plan'}
+          </button>
         </div>
 
         {/* Coaching cues */}
@@ -173,6 +222,27 @@ export default function TechniqueDetailPage() {
                   />
                 ) : null,
               )}
+            </div>
+          </div>
+        )}
+
+        {(recommendations?.length ?? 0) > 0 && (
+          <div className="bg-zinc-900 rounded-2xl p-4">
+            <div className="text-xs font-semibold tracking-widest text-gold mb-3">
+              {language === 'es' ? 'SIGUIENTES RECOMENDADAS' : 'RECOMMENDED NEXT'}
+            </div>
+            <div className="space-y-2">
+              {recommendations?.map(item => (
+                <button
+                  key={item.technique.id}
+                  onClick={() => navigate(`/techniques/${item.technique.id}`)}
+                  className="w-full bg-zinc-950 rounded-xl px-3 py-2.5 flex items-center gap-2 text-left active:bg-zinc-800"
+                >
+                  <span className="flex-1 text-sm text-zinc-100">{item.technique.name}</span>
+                  <span className="text-xs text-zinc-500">{item.usage}×</span>
+                  <ChevronRight size={15} className="text-zinc-600" />
+                </button>
+              ))}
             </div>
           </div>
         )}

@@ -15,6 +15,8 @@ export interface Technique {
   name: string
   description: string
   cues?: string[]
+  tags?: string[]
+  isFavorite?: boolean
   categoryId: number
   youtubeUrl: string
   difficulty: Difficulty
@@ -53,6 +55,13 @@ export interface SessionTap {
   sessionId: number
   techniqueId: number
   type: TapType
+}
+
+export interface DrillPlan {
+  id?: number
+  name: string
+  techniqueIds: number[]
+  createdAt: number
 }
 
 export const SESSION_TYPE_LABELS: Record<SessionType, string> = {

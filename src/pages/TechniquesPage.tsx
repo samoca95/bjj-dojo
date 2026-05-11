@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { Search, X, ChevronRight, Plus } from 'lucide-react'
+import { Search, X, ChevronRight, Plus, Star } from 'lucide-react'
 import { db } from '../db/database'
 import type { Category, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
@@ -38,6 +38,8 @@ export default function TechniquesPage() {
   const { t, language } = useI18n()
   const [search, setSearch] = useState('')
   const [categoryId, setCategoryId] = useState<number | null>(null)
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
+  const [tagFilter, setTagFilter] = useState<string | null>(null)
 
   const categories = useLiveQuery(() => db.categories.orderBy('name').toArray(), [], [] as Category[])
 
@@ -47,17 +49,20 @@ export default function TechniquesPage() {
         ? db.techniques.where('categoryId').equals(categoryId)
         : db.techniques.toCollection()
       const results = await q.sortBy('name')
-      if (search.trim()) {
-        return results.filter(t => techniqueMatchesQuery(t, search))
-      }
-      return results
+      return results.filter(t => {
+        if (search.trim() && !techniqueMatchesQuery(t, search)) return false
+        if (favoritesOnly && !t.isFavorite) return false
+        if (tagFilter && !(t.tags ?? []).includes(tagFilter)) return false
+        return true
+      })
     },
-    [search, categoryId],
+    [search, categoryId, favoritesOnly, tagFilter],
     [] as Technique[],
   )
 
   const catMap = new Map(categories?.map(c => [c.id, c.name]))
   const catIconMap = new Map(categories?.map(c => [c.id, c.icon]))
+  const allTags = Array.from(new Set((techniques ?? []).flatMap(t => t.tags ?? []))).slice(0, 8)
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -88,7 +93,7 @@ export default function TechniquesPage() {
         {/* Category chips */}
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-none">
           <button
-            onClick={() => { setCategoryId(null); setSearch('') }}
+            onClick={() => { setCategoryId(null); setSearch(''); setFavoritesOnly(false); setTagFilter(null) }}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
               categoryId === null ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
             }`}
@@ -105,6 +110,26 @@ export default function TechniquesPage() {
             >
               <CategoryIcon value={c.icon} fallbackId={c.id} size={14} className={categoryId === c.id ? 'text-black' : 'text-zinc-300'} />
               {c.name}
+            </button>
+          ))}
+          <button
+            onClick={() => setFavoritesOnly(prev => !prev)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1 ${
+              favoritesOnly ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
+            }`}
+          >
+            <Star size={12} fill={favoritesOnly ? 'currentColor' : 'none'} />
+            {language === 'es' ? 'Favoritas' : 'Favorites'}
+          </button>
+          {allTags.map(tag => (
+            <button
+              key={tag}
+              onClick={() => setTagFilter(prev => prev === tag ? null : tag)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                tagFilter === tag ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
+              }`}
+            >
+              #{tag}
             </button>
           ))}
         </div>
