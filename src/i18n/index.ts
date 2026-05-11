@@ -43,7 +43,6 @@ const ES_TRANSLATIONS: Record<string, string> = {
   Language: 'Idioma',
   English: 'Inglés',
   Spanish: 'Español',
-  Sessions: 'Sesiones',
   'No sessions yet': 'Aún no hay sesiones',
   'Tap + to log your first training': 'Pulsa + para registrar tu primer entrenamiento',
   DATE: 'FECHA',
@@ -112,6 +111,8 @@ const ES_TRANSLATIONS: Record<string, string> = {
   'Paste or type an emoji': 'Pega o escribe un emoji',
   Suggestions: 'Sugerencias',
   Use: 'Usar',
+  All: 'Todas',
+  min: 'min',
 }
 
 const ES_DIFFICULTY: Record<Difficulty, string> = {
