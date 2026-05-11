@@ -110,7 +110,7 @@ export default function AddEditSessionPage() {
     if (!isEdit && clubs && clubs.length > 0 && clubId === null) {
       setClubId(clubs[0].id ?? null)
     }
-  }, [clubs, isEdit])
+  }, [clubs, isEdit, clubId])
 
   const handleSave = async () => {
     const session: Session = {
