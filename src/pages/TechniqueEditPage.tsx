@@ -6,7 +6,7 @@ import { db } from '../db/database'
 import type { Category, ConnectionType, Difficulty, Technique, TechniqueConnection } from '../types'
 import { CONNECTION_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
-import { useI18n, connectionTypeLabel } from '../i18n'
+import { useI18n, connectionTypeLabel, difficultyLabel } from '../i18n'
 
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
@@ -238,9 +238,7 @@ export default function TechniqueEditPage() {
                   difficulty === d ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
                 }`}
               >
-                {language === 'es'
-                  ? ({ Beginner: 'Principiante', Intermediate: 'Intermedio', Advanced: 'Avanzado', Elite: 'Élite' } as Record<string, string>)[DIFFICULTY_LABELS[d]]
-                  : DIFFICULTY_LABELS[d]}
+                {difficultyLabel(d, DIFFICULTY_LABELS[d], language)}
               </button>
             ))}
           </div>

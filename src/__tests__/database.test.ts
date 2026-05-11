@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { makeTestDb, openDb, closeDb } from '../test/testDb'
 import type { BJJDatabase } from '../db/database'
+import { resetPrefilledTechniques } from '../db/database'
 import { prefilledTechniques } from '../db/prefilled'
 
 let db: BJJDatabase
@@ -206,5 +207,33 @@ describe('DB upgrade safety', () => {
     // Prefilled techniques should all still be there
     const prefilled = await db.techniques.where('id').below(8000).toArray()
     expect(prefilled.every(t => t.isCustom === false)).toBe(true)
+  })
+})
+
+describe('Reset prefilled techniques', () => {
+  it('resets prefilled techniques but preserves custom ones', async () => {
+    await db.techniques.add({
+      id: 9001,
+      name: 'My Custom Technique',
+      description: 'custom',
+      cues: ['custom cue'],
+      categoryId: 1,
+      youtubeUrl: '',
+      difficulty: 'BEGINNER',
+      isCustom: true,
+    })
+
+    await db.techniques.update(101, {
+      name: 'Modified Prefilled Name',
+      description: 'changed',
+    })
+
+    await resetPrefilledTechniques(db)
+
+    const restoredPrefilled = await db.techniques.get(101)
+    const custom = await db.techniques.get(9001)
+    expect(restoredPrefilled?.name).toBe(prefilledTechniques.find(t => t.id === 101)?.name)
+    expect(custom?.name).toBe('My Custom Technique')
+    expect(custom?.isCustom).toBe(true)
   })
 })

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { DynamicIcon, iconNames } from 'lucide-react/dynamic'
 import { CATEGORY_ICON_OPTIONS, CategoryIcon, EMOJI_SUGGESTIONS, SUGGESTED_ICON_IDS } from './CategoryIcon'
+import { useI18n } from '../i18n'
 
 type IconName = Parameters<typeof DynamicIcon>[0]['name']
 
@@ -23,6 +24,7 @@ export default function IconPickerModal({
   onClose: () => void
   onSelect: (value: string) => void
 }) {
+  const { t: tr } = useI18n()
   const [tab, setTab] = useState<'icons' | 'emoji'>('icons')
   const [search, setSearch] = useState('')
   const [emojiInput, setEmojiInput] = useState('')
@@ -49,10 +51,10 @@ export default function IconPickerModal({
             onClick={() => { onSelect(''); onClose() }}
             className="text-xs text-zinc-400 active:text-zinc-200"
           >
-            Clear
+            {tr('Clear')}
           </button>
           <button onClick={onClose} className="text-gold font-semibold active:text-gold-light">
-            Done
+            {tr('Done')}
           </button>
         </div>
 
@@ -65,7 +67,7 @@ export default function IconPickerModal({
                 tab === t ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400'
               }`}
             >
-              {t === 'icons' ? 'Icons' : 'Emoji'}
+               {t === 'icons' ? tr('Icons') : tr('Emoji')}
             </button>
           ))}
         </div>
@@ -77,14 +79,14 @@ export default function IconPickerModal({
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search all icons…"
+                placeholder={tr('Search all icons…')}
                 className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
               />
             </div>
             <div className="px-4 pb-4 overflow-y-auto space-y-5">
               {showSuggested && (
                 <div>
-                  <div className="text-xs text-zinc-500 font-semibold mb-2">Suggested</div>
+                   <div className="text-xs text-zinc-500 font-semibold mb-2">{tr('Suggested')}</div>
                   <div className="grid grid-cols-5 gap-2">
                     {suggestedIcons.map(icon => (
                       <button
@@ -103,7 +105,7 @@ export default function IconPickerModal({
               )}
               <div>
                 {showSuggested && (
-                  <div className="text-xs text-zinc-500 font-semibold mb-2">All Icons ({ALL_ICON_IDS.length})</div>
+                    <div className="text-xs text-zinc-500 font-semibold mb-2">{tr('All Icons')} ({ALL_ICON_IDS.length})</div>
                 )}
                 <div className="grid grid-cols-5 gap-2">
                   {filteredIconIds.map(id => (
@@ -125,13 +127,13 @@ export default function IconPickerModal({
         ) : (
           <div className="px-4 py-4 space-y-4 overflow-y-auto">
             <div className="bg-zinc-800 rounded-xl p-3">
-              <label className="text-xs text-zinc-400">Paste or type an emoji</label>
+               <label className="text-xs text-zinc-400">{tr('Paste or type an emoji')}</label>
               <div className="flex gap-2 mt-2">
                 <input
                   type="text"
                   value={emojiInput}
                   onChange={e => setEmojiInput(e.target.value)}
-                  placeholder="e.g. 🥋"
+                   placeholder={tr('e.g. 🥋')}
                   className="flex-1 bg-zinc-900 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
                 />
                 <button
@@ -143,12 +145,12 @@ export default function IconPickerModal({
                   }}
                   className="px-3 rounded-lg bg-gold text-black text-sm font-semibold"
                 >
-                  Use
+                   {tr('Use')}
                 </button>
               </div>
             </div>
             <div>
-              <div className="text-xs text-zinc-400 mb-2">Suggestions</div>
+               <div className="text-xs text-zinc-400 mb-2">{tr('Suggestions')}</div>
               <div className="grid grid-cols-6 gap-2">
                 {EMOJI_SUGGESTIONS.map(emoji => (
                   <button

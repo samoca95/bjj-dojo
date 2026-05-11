@@ -109,6 +109,7 @@ const ES_TRANSLATIONS: Record<string, string> = {
   Suggested: 'Sugeridos',
   'All Icons': 'Todos los iconos',
   'Paste or type an emoji': 'Pega o escribe un emoji',
+  'e.g. 🥋': 'p. ej. 🥋',
   Suggestions: 'Sugerencias',
   Use: 'Usar',
   All: 'Todas',
@@ -154,9 +155,9 @@ export function translate(text: string, language: AppLanguage): string {
   return ES_TRANSLATIONS[text] ?? text
 }
 
-export function difficultyLabel(difficulty: Difficulty, language: AppLanguage): string {
-  if (language !== 'es') return difficulty
-  return ES_DIFFICULTY[difficulty]
+export function difficultyLabel(difficulty: Difficulty, fallback: string, language: AppLanguage): string {
+  if (language !== 'es') return fallback
+  return ES_DIFFICULTY[difficulty] ?? fallback
 }
 
 export function sessionTypeLabel(sessionType: SessionType, fallback: string, language: AppLanguage): string {

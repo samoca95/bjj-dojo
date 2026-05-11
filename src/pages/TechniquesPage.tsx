@@ -35,7 +35,7 @@ function TechniqueRow({ technique, categoryName, categoryIcon, onClick }: {
 
 export default function TechniquesPage() {
   const navigate = useNavigate()
-  const { t } = useI18n()
+  const { t, language } = useI18n()
   const [search, setSearch] = useState('')
   const [categoryId, setCategoryId] = useState<number | null>(null)
 
@@ -114,7 +114,7 @@ export default function TechniquesPage() {
             {techniques?.length ?? 0}{' '}
             {(() => {
               const count = techniques?.length ?? 0
-              if (t('Techniques') === 'Técnicas') return count === 1 ? 'técnica' : 'técnicas'
+              if (language === 'es') return count === 1 ? 'técnica' : 'técnicas'
               return count === 1 ? 'technique' : 'techniques'
             })()}
           </span>
