@@ -6,6 +6,7 @@ import type { Technique } from '../types'
 import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
+import { useI18n, connectionTypeLabel } from '../i18n'
 
 function ConnectedTechniqueRow({
   technique, badge, badgeCls, onClick,
@@ -25,6 +26,7 @@ function ConnectedTechniqueRow({
 export default function TechniqueDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { language, t } = useI18n()
   const numId = Number(id)
 
   const technique = useLiveQuery(() => db.techniques.get(numId), [numId])
@@ -87,8 +89,8 @@ export default function TechniqueDetailPage() {
             <DifficultyBadge difficulty={technique.difficulty} />
             {(sessionCount ?? 0) > 0 && (
               <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-900/40 text-blue-300">
-                Practiced {sessionCount}×
-              </span>
+                 {language === 'es' ? 'Practicada' : 'Practiced'} {sessionCount}×
+               </span>
             )}
           </div>
           <p className="text-sm text-zinc-300 leading-relaxed">{technique.description}</p>
@@ -97,7 +99,7 @@ export default function TechniqueDetailPage() {
         {/* Coaching cues */}
         {cues.length > 0 && (
           <div className="bg-zinc-900 rounded-2xl p-5">
-            <div className="text-xs font-semibold tracking-widest text-gold mb-3">COACHING CUES</div>
+             <div className="text-xs font-semibold tracking-widest text-gold mb-3">{t('COACHING CUES')}</div>
             <ul className="space-y-2">
               {cues.map((cue, i) => (
                 <li key={i} className="flex items-start gap-2.5">
@@ -120,14 +122,14 @@ export default function TechniqueDetailPage() {
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
             </svg>
-            Watch on YouTube
+            {t('Watch on YouTube')}
           </a>
         )}
 
         {/* Connections */}
         {((connectionsFrom?.length ?? 0) > 0 || (connectionsTo?.length ?? 0) > 0) && (
           <div>
-            <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">TECHNIQUE CONNECTIONS</h2>
+             <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">{t('TECHNIQUE CONNECTIONS')}</h2>
           </div>
         )}
 
@@ -135,7 +137,7 @@ export default function TechniqueDetailPage() {
           <div className="bg-zinc-900 rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <ArrowRight size={16} className="text-gold" strokeWidth={2} />
-              <span className="font-semibold text-zinc-100 text-sm">Leads To / Follow-ups</span>
+               <span className="font-semibold text-zinc-100 text-sm">{t('Leads To / Follow-ups')}</span>
             </div>
             <div className="space-y-2">
               {connectionsFrom.map(({ technique: t, connectionType }, i) =>
@@ -143,7 +145,7 @@ export default function TechniqueDetailPage() {
                   <ConnectedTechniqueRow
                     key={i}
                     technique={t}
-                    badge={CONNECTION_LABELS[connectionType]}
+                     badge={connectionTypeLabel(connectionType, CONNECTION_LABELS[connectionType], language)}
                     badgeCls={CONNECTION_COLORS[connectionType]}
                     onClick={() => navigate(`/techniques/${t.id}`)}
                   />
@@ -157,7 +159,7 @@ export default function TechniqueDetailPage() {
           <div className="bg-zinc-900 rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <ArrowLeft size={16} className="text-gold" strokeWidth={2} />
-              <span className="font-semibold text-zinc-100 text-sm">Can Be Set Up From</span>
+               <span className="font-semibold text-zinc-100 text-sm">{t('Can Be Set Up From')}</span>
             </div>
             <div className="space-y-2">
               {connectionsTo.map(({ technique: t, connectionType }, i) =>
@@ -165,7 +167,7 @@ export default function TechniqueDetailPage() {
                   <ConnectedTechniqueRow
                     key={i}
                     technique={t}
-                    badge={CONNECTION_LABELS[connectionType]}
+                     badge={connectionTypeLabel(connectionType, CONNECTION_LABELS[connectionType], language)}
                     badgeCls={CONNECTION_COLORS[connectionType]}
                     onClick={() => navigate(`/techniques/${t.id}`)}
                   />

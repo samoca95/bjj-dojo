@@ -4,12 +4,14 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react'
 import { db } from '../db/database'
 import type { Club } from '../types'
+import { useI18n } from '../i18n'
 
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
 
 export default function ClubsPage() {
   const navigate = useNavigate()
+  const { language, t } = useI18n()
   const clubs = useLiveQuery(
     () => db.clubs.orderBy('sortOrder').toArray(),
     [],
@@ -42,7 +44,9 @@ export default function ClubsPage() {
 
   const handleDelete = async (club: Club) => {
     if (!club.id) return
-    const message = `Delete ${club.name}?\nSessions will keep their data but will no longer be associated with this club.`
+    const message = language === 'es'
+      ? `¿Eliminar ${club.name}?\nLas sesiones conservarán sus datos pero ya no quedarán asociadas a esta academia.`
+      : `Delete ${club.name}?\nSessions will keep their data but will no longer be associated with this club.`
     if (!window.confirm(message)) return
     await db.sessions.where('clubId').equals(club.id).modify({ clubId: null })
     await db.clubs.delete(club.id)
@@ -68,29 +72,29 @@ export default function ClubsPage() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
-        <h1 className="flex-1 font-bold text-zinc-100">Clubs</h1>
+        <h1 className="flex-1 font-bold text-zinc-100">{t('Clubs')}</h1>
       </div>
 
       <div className="px-4 space-y-4 pb-6">
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <label className="text-xs text-gold font-semibold tracking-wide">ADD CLUB</label>
+          <label className="text-xs text-gold font-semibold tracking-wide">{t('ADD CLUB')}</label>
           <input
             type="text"
             value={newClubName}
             onChange={e => setNewClubName(e.target.value)}
-            placeholder="e.g. Main Dojo"
+            placeholder={t('e.g. Main Dojo')}
             className={inputCls}
           />
           <button
             onClick={handleAdd}
             className="w-full bg-gold text-black font-semibold py-2.5 rounded-xl active:bg-gold-light"
           >
-            Add Club
+            {t('Add Club')}
           </button>
         </div>
 
         {clubs?.length === 0 ? (
-          <div className="text-sm text-zinc-500 text-center py-8">No clubs yet. Add one above.</div>
+          <div className="text-sm text-zinc-500 text-center py-8">{t('No clubs yet. Add one above.')}</div>
         ) : (
           <div className="space-y-3">
             {clubs?.map((club, index) => (
@@ -108,13 +112,13 @@ export default function ClubsPage() {
                         onClick={saveEdit}
                         className="flex-1 bg-gold text-black font-semibold py-2 rounded-xl active:bg-gold-light"
                       >
-                        Save
+                        {t('Save')}
                       </button>
                       <button
                         onClick={() => { setEditingId(null); setEditingName('') }}
                         className="flex-1 bg-zinc-800 text-zinc-300 font-semibold py-2 rounded-xl active:bg-zinc-700"
                       >
-                        Cancel
+                        {t('Cancel')}
                       </button>
                     </div>
                   </>
@@ -123,20 +127,20 @@ export default function ClubsPage() {
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
                         <div className="font-semibold text-zinc-100">{club.name}</div>
-                        <div className="text-xs text-zinc-500">Order {index + 1}</div>
+                        <div className="text-xs text-zinc-500">{t('Order')} {index + 1}</div>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleMove(index, -1)}
                           className="w-9 h-9 rounded-lg bg-zinc-800 text-zinc-400 active:bg-zinc-700 flex items-center justify-center"
-                          aria-label="Move up"
+                          aria-label={t('Move up')}
                         >
                           <ChevronUp size={16} strokeWidth={2} />
                         </button>
                         <button
                           onClick={() => handleMove(index, 1)}
                           className="w-9 h-9 rounded-lg bg-zinc-800 text-zinc-400 active:bg-zinc-700 flex items-center justify-center"
-                          aria-label="Move down"
+                          aria-label={t('Move down')}
                         >
                           <ChevronDown size={16} strokeWidth={2} />
                         </button>
@@ -147,13 +151,13 @@ export default function ClubsPage() {
                         onClick={() => startEdit(club)}
                         className="flex-1 bg-zinc-800 text-zinc-200 font-semibold py-2 rounded-xl active:bg-zinc-700"
                       >
-                        Edit
+                        {t('Edit')}
                       </button>
                       <button
                         onClick={() => handleDelete(club)}
                         className="flex-1 bg-red-900/60 text-red-200 font-semibold py-2 rounded-xl active:bg-red-900"
                       >
-                        Delete
+                        {t('Delete')}
                       </button>
                     </div>
                   </>

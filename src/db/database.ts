@@ -47,6 +47,19 @@ export class BJJDatabase extends Dexie {
         .map(e => ({ ...e, ...byId.get(e.id)! }))
       if (updates.length > 0) await tx.table('techniques').bulkPut(updates)
     })
+    this.version(4).stores({
+      categories: 'id, name',
+      techniques: 'id, categoryId, name',
+      techniqueConnections: '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+      sessions: '++id, date, clubId',
+      sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
+      sessionTaps: '++id, sessionId, techniqueId',
+      clubs: '++id, sortOrder, name',
+    }).upgrade(async tx => {
+      // Keep prefilled data in sync for existing installs while preserving custom techniques.
+      await tx.table('techniques').bulkPut(prefilledTechniques)
+      await tx.table('techniqueConnections').bulkPut(prefilledConnections)
+    })
 
     // Populate on first creation — registered here so every instance gets it
     // (including isolated test instances).
@@ -59,3 +72,25 @@ export class BJJDatabase extends Dexie {
 }
 
 export const db = new BJJDatabase()
+
+export async function resetPrefilledTechniques(database: BJJDatabase = db) {
+  const prefilledIds = prefilledTechniques.map(t => t.id)
+  const prefilledIdSet = new Set(prefilledIds)
+
+  await database.transaction('rw', database.techniques, database.techniqueConnections, async () => {
+    // Remove all prefilled techniques only; custom techniques are preserved.
+    await database.techniques.bulkDelete(prefilledIds)
+    await database.techniques.bulkPut(prefilledTechniques)
+
+    // Preserve custom↔custom links, wipe links touching prefilled techniques, then restore canonical prefilled links.
+    const existingConnections = await database.techniqueConnections.toArray()
+    const customConnections = existingConnections.filter(
+      c => !prefilledIdSet.has(c.fromTechniqueId) && !prefilledIdSet.has(c.toTechniqueId),
+    )
+    await database.techniqueConnections.clear()
+    if (customConnections.length > 0) {
+      await database.techniqueConnections.bulkAdd(customConnections)
+    }
+    await database.techniqueConnections.bulkPut(prefilledConnections)
+  })
+}
