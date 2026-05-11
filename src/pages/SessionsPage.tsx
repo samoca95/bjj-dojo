@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { CalendarDays, Plus, Zap } from 'lucide-react'
 import { db } from '../db/database'
-import type { Club, Session } from '../types'
+import type { Club, Session, SessionType } from '../types'
 import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -22,6 +22,8 @@ function SessionCard({
   locale,
   t,
   language,
+  tapStats,
+  techniqueNames,
 }: {
   session: Session
   clubName?: string
@@ -30,24 +32,9 @@ function SessionCard({
   locale?: string
   t: (text: string) => string
   language: 'en' | 'es'
+  tapStats: { given: number; received: number }
+  techniqueNames: string[]
 }) {
-  const tapData = useLiveQuery(async () => {
-    if (!session.id) return { given: 0, received: 0 }
-    const taps = await db.sessionTaps.where('sessionId').equals(session.id).toArray()
-    return {
-      given: taps.filter(t => t.type === 'given').length,
-      received: taps.filter(t => t.type === 'received').length,
-    }
-  }, [session.id], { given: 0, received: 0 })
-
-  const techniques = useLiveQuery(async () => {
-    if (!session.id) return [] as string[]
-    const sts = await db.sessionTechniques.where('sessionId').equals(session.id).toArray()
-    if (sts.length === 0) return []
-    const techs = await db.techniques.where('id').anyOf(sts.map(s => s.techniqueId)).toArray()
-    return techs.map(t => t.name)
-  }, [session.id], [] as string[])
-
   return (
     <button
       onClick={onClick}
@@ -68,29 +55,29 @@ function SessionCard({
         <div className="flex items-center gap-3 mt-0.5">
           <span className="text-xs text-zinc-400">{session.durationMinutes} {t('min')}</span>
           {clubName && <span className="text-xs text-zinc-500 truncate">{clubName}</span>}
-          {(tapData?.given > 0 || tapData?.received > 0) && (
+          {(tapStats.given > 0 || tapStats.received > 0) && (
             <span className="flex items-center gap-1.5 text-xs text-zinc-500">
-              {(tapData?.given ?? 0) > 0 && (
+              {tapStats.given > 0 && (
                 <span className="flex items-center gap-0.5">
                   <Zap size={10} className="text-gold" />
-                  {tapData?.given}
+                  {tapStats.given}
                 </span>
               )}
-              {(tapData?.received ?? 0) > 0 && (
+              {tapStats.received > 0 && (
                 <span className="flex items-center gap-0.5">
                   <Zap size={10} className="text-red-400" />
-                  {tapData?.received}
+                  {tapStats.received}
                 </span>
               )}
             </span>
           )}
         </div>
-        {techniques && techniques.length > 0 && (
+        {techniqueNames.length > 0 && (
           <p className="text-xs text-zinc-500 mt-1 truncate">
-            {techniques.join(' · ')}
+            {techniqueNames.join(' · ')}
           </p>
         )}
-        {session.notes && !techniques?.length && (
+        {session.notes && techniqueNames.length === 0 && (
           <p className="text-xs text-zinc-500 mt-1 truncate">{session.notes}</p>
         )}
       </div>
@@ -103,13 +90,56 @@ export default function SessionsPage() {
   const navigate = useNavigate()
   const { t, locale, language } = useI18n()
   const [sessionTypeIcons, setSessionTypeIcons] = useState(getSessionTypeIcons())
+  const [clubFilter, setClubFilter] = useState<'all' | number>('all')
+  const [typeFilter, setTypeFilter] = useState<'all' | SessionType>('all')
+  const [daysFilter, setDaysFilter] = useState<30 | 90 | 365>(90)
   const sessions = useLiveQuery(
     () => db.sessions.orderBy('date').reverse().toArray(),
     [],
     [],
   )
   const clubs = useLiveQuery(() => db.clubs.toArray(), [], [] as Club[])
+  const sessionMeta = useLiveQuery(async () => {
+    const [sts, taps, techniques] = await Promise.all([
+      db.sessionTechniques.toArray(),
+      db.sessionTaps.toArray(),
+      db.techniques.toArray(),
+    ])
+
+    const techniqueNameById = new Map(techniques.map(technique => [technique.id, technique.name]))
+    const techniqueNamesBySessionId = new Map<number, string[]>()
+    for (const st of sts) {
+      const name = techniqueNameById.get(st.techniqueId)
+      if (!name) continue
+      const bucket = techniqueNamesBySessionId.get(st.sessionId) ?? []
+      bucket.push(name)
+      techniqueNamesBySessionId.set(st.sessionId, bucket)
+    }
+
+    const tapStatsBySessionId = new Map<number, { given: number; received: number }>()
+    for (const tap of taps) {
+      const bucket = tapStatsBySessionId.get(tap.sessionId) ?? { given: 0, received: 0 }
+      if (tap.type === 'given') bucket.given += 1
+      else bucket.received += 1
+      tapStatsBySessionId.set(tap.sessionId, bucket)
+    }
+
+    return {
+      techniqueNamesBySessionId,
+      tapStatsBySessionId,
+    }
+  }, [], {
+    techniqueNamesBySessionId: new Map<number, string[]>(),
+    tapStatsBySessionId: new Map<number, { given: number; received: number }>(),
+  })
   const clubMap = new Map(clubs?.map(c => [c.id, c.name]))
+  const cutoff = Date.now() - daysFilter * 24 * 60 * 60 * 1000
+  const visibleSessions = (sessions ?? []).filter(session => {
+    if (session.date < cutoff) return false
+    if (typeFilter !== 'all' && session.sessionType !== typeFilter) return false
+    if (clubFilter !== 'all' && session.clubId !== clubFilter) return false
+    return true
+  })
 
   useEffect(() => {
     const sync = () => setSessionTypeIcons(getSessionTypeIcons())
@@ -123,18 +153,65 @@ export default function SessionsPage() {
         <h1 className="text-2xl font-bold text-zinc-100">{t('Sessions')}</h1>
       </div>
 
-      <div className="px-4 pb-4">
-        {sessions?.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <div className="px-4 pb-4 space-y-3">
+          <div className="grid grid-cols-3 gap-2">
+            {[30, 90, 365].map(days => (
+              <button
+                key={days}
+                onClick={() => setDaysFilter(days as 30 | 90 | 365)}
+                className={`rounded-lg px-2 py-1.5 text-xs font-semibold ${
+                  daysFilter === days ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+                }`}
+              >
+                {days}d
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2 overflow-x-auto scrollbar-none">
+            <button
+              onClick={() => setTypeFilter('all')}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${typeFilter === 'all' ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
+            >
+              {t('All')}
+            </button>
+            {(Object.keys(SESSION_TYPE_LABELS) as SessionType[]).map(type => (
+              <button
+                key={type}
+                onClick={() => setTypeFilter(type)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${typeFilter === type ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
+              >
+                {sessionTypeLabel(type, SESSION_TYPE_LABELS[type], language)}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2 overflow-x-auto scrollbar-none">
+            <button
+              onClick={() => setClubFilter('all')}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${clubFilter === 'all' ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
+            >
+              {t('All')} {t('Clubs')}
+            </button>
+            {clubs?.map(club => (
+              <button
+                key={club.id}
+                onClick={() => setClubFilter(club.id ?? 'all')}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${clubFilter === club.id ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
+              >
+                {club.name}
+              </button>
+            ))}
+          </div>
+          {visibleSessions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
             <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center">
               <CalendarDays size={32} className="text-zinc-600" strokeWidth={2} />
             </div>
-            <p className="text-zinc-400 font-medium">{t('No sessions yet')}</p>
-            <p className="text-zinc-600 text-sm">{t('Tap + to log your first training')}</p>
-          </div>
-        ) : (
+              <p className="text-zinc-400 font-medium">{t('No sessions yet')}</p>
+              <p className="text-zinc-600 text-sm">{t('Tap + to log your first training')}</p>
+            </div>
+          ) : (
             <div className="space-y-3">
-              {sessions?.map(s => (
+              {visibleSessions.map(s => (
                 <SessionCard
                   key={s.id}
                   session={s}
@@ -142,6 +219,8 @@ export default function SessionsPage() {
                   locale={locale}
                   t={t}
                   language={language}
+                  tapStats={sessionMeta.tapStatsBySessionId.get(s.id ?? -1) ?? { given: 0, received: 0 }}
+                  techniqueNames={sessionMeta.techniqueNamesBySessionId.get(s.id ?? -1) ?? []}
                   clubName={s.clubId !== null && s.clubId !== undefined ? clubMap.get(s.clubId) : undefined}
                   onClick={() => navigate(`/sessions/${s.id}`)}
                 />

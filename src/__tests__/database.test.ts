@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import Dexie from 'dexie'
 import { makeTestDb, openDb, closeDb } from '../test/testDb'
 import type { BJJDatabase } from '../db/database'
-import { resetPrefilledTechniques } from '../db/database'
+import { BJJDatabase, importDatabaseBackup, exportDatabaseBackup, resetPrefilledTechniques } from '../db/database'
 import { prefilledTechniques } from '../db/prefilled'
 
 let db: BJJDatabase
@@ -235,5 +236,49 @@ describe('Reset prefilled techniques', () => {
     expect(restoredPrefilled?.name).toBe(prefilledTechniques.find(t => t.id === 101)?.name)
     expect(custom?.name).toBe('My Custom Technique')
     expect(custom?.isCustom).toBe(true)
+  })
+})
+
+describe('DB migration integrity (v1 -> v5)', () => {
+  it('upgrades legacy v1 data and preserves custom records', async () => {
+    const legacyName = `bjj-dojo-legacy-${Date.now()}`
+    const legacy = new Dexie(legacyName)
+    legacy.version(1).stores({
+      categories: 'id, name',
+      techniques: 'id, categoryId, name',
+      techniqueConnections: '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+      sessions: '++id, date',
+      sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
+    })
+    await legacy.open()
+    await legacy.table('categories').bulkAdd([
+      { id: 1, name: 'Guards', description: '' },
+    ])
+    await legacy.table('techniques').bulkAdd([
+      { id: 100, name: 'Legacy Prefilled', description: '', cues: ['a'], categoryId: 1, youtubeUrl: '', difficulty: 'BEGINNER', isCustom: false },
+      { id: 9001, name: 'Legacy Custom', description: '', cues: ['b'], categoryId: 1, youtubeUrl: '', difficulty: 'BEGINNER', isCustom: true },
+    ])
+    await legacy.close()
+
+    const upgraded = new BJJDatabase(legacyName)
+    await upgraded.open()
+    await expect(upgraded.sessionTaps.toArray()).resolves.toEqual([])
+    await expect(upgraded.drillPlans.toArray()).resolves.toEqual([])
+    const custom = await upgraded.techniques.get(9001)
+    expect(custom?.name).toBe('Legacy Custom')
+    expect(custom?.isCustom).toBe(true)
+    await closeDb(upgraded)
+  })
+})
+
+describe('Backup and restore integrity', () => {
+  it('exports and imports all collections including drill plans', async () => {
+    await db.drillPlans.add({ name: 'Main', techniqueIds: [401], createdAt: Date.now() })
+    const backup = await exportDatabaseBackup(db)
+    await db.sessions.clear()
+    await importDatabaseBackup(backup, db)
+    const restored = await db.drillPlans.toArray()
+    expect(restored.length).toBe(1)
+    expect(restored[0].techniqueIds).toEqual([401])
   })
 })

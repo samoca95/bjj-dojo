@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Pencil } from 'lucide-react'
 import type { SessionType } from '../types'
@@ -8,7 +8,8 @@ import IconPickerModal from '../components/IconPickerModal'
 import { getSessionTypeIcons, saveSessionTypeIcons, type SessionTypeIconsMap } from '../utils/sessionTypeIcons'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n } from '../i18n'
-import { resetPrefilledTechniques } from '../db/database'
+import { exportDatabaseBackup, importDatabaseBackup, resetPrefilledTechniques } from '../db/database'
+import { telemetry } from '../utils/telemetry'
 
 const SESSION_TYPES = Object.keys(SESSION_TYPE_LABELS) as SessionType[]
 
@@ -19,10 +20,37 @@ export default function SettingsPage() {
   const [activeSessionType, setActiveSessionType] = useState<SessionType | null>(null)
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
   const [typeIconsOpen, setTypeIconsOpen] = useState(false)
+  const [telemetryCount, setTelemetryCount] = useState(0)
+  const importRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setSessionTypeIcons(getSessionTypeIcons())
+    setTelemetryCount(telemetry.read().length)
   }, [])
+
+  const handleExportBackup = async () => {
+    const backup = await exportDatabaseBackup()
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `bjj-dojo-backup-${new Date().toISOString().slice(0, 10)}.json`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportBackup = async (file: File) => {
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text)
+      await importDatabaseBackup(parsed)
+      window.alert(language === 'es' ? 'Respaldo importado correctamente.' : 'Backup imported successfully.')
+      setTelemetryCount(telemetry.read().length)
+    } catch (error) {
+      telemetry.error('backup.import_failed', error)
+      window.alert(language === 'es' ? 'No se pudo importar el respaldo.' : 'Could not import backup.')
+    }
+  }
 
   const pickerTitle = useMemo(() => {
     if (!activeSessionType) return ''
@@ -178,6 +206,62 @@ export default function SettingsPage() {
               ? 'Solo se reinician técnicas y conexiones predefinidas; las personalizadas no se eliminan.'
               : 'Only pre-filled techniques and links are reset; custom techniques are kept.'}
           </p>
+        </div>
+
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">
+            {language === 'es' ? 'RESPALDO Y RECUPERACIÓN' : 'BACKUP & RECOVERY'}
+          </h2>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={handleExportBackup}
+              className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 active:bg-zinc-700"
+            >
+              {language === 'es' ? 'Exportar JSON' : 'Export JSON'}
+            </button>
+            <button
+              onClick={() => importRef.current?.click()}
+              className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 active:bg-zinc-700"
+            >
+              {language === 'es' ? 'Importar JSON' : 'Import JSON'}
+            </button>
+          </div>
+          <input
+            ref={importRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={event => {
+              const file = event.target.files?.[0]
+              if (file) void handleImportBackup(file)
+              event.currentTarget.value = ''
+            }}
+          />
+          <p className="text-xs text-zinc-500">
+            {language === 'es'
+              ? 'Usa exportar/importar para recuperar tus datos si el almacenamiento del navegador se pierde.'
+              : 'Use export/import to recover your data if browser storage is lost.'}
+          </p>
+        </div>
+
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">
+            {language === 'es' ? 'REGISTRO LOCAL' : 'LOCAL LOGGING'}
+          </h2>
+          <p className="text-xs text-zinc-500">
+            {language === 'es'
+              ? `Eventos registrados: ${telemetryCount}`
+              : `Logged events: ${telemetryCount}`}
+          </p>
+          <button
+            onClick={() => {
+              telemetry.clear()
+              setTelemetryCount(0)
+            }}
+            className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 px-3 active:bg-zinc-700"
+          >
+            {language === 'es' ? 'Limpiar registros' : 'Clear logs'}
+          </button>
         </div>
       </div>
 

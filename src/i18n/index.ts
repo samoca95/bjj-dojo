@@ -17,6 +17,7 @@ const ES_TRANSLATIONS: Record<string, string> = {
   'Taps Given': 'Sumisiones Aplicadas',
   'Taps Received': 'Sumisiones Recibidas',
   'QUICK ACCESS': 'ACCESO RÁPIDO',
+  TRENDING: 'TENDENCIAS',
   'Training Sessions': 'Sesiones de Entrenamiento',
   'Log and review your mat time': 'Registra y revisa tu tiempo en tatami',
   'Technique Library': 'Biblioteca de Técnicas',
