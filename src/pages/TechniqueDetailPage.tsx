@@ -7,7 +7,6 @@ import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel } from '../i18n'
-import { runWithTelemetry } from '../utils/telemetry'
 
 function ConnectedTechniqueRow({
   technique, badge, badgeCls, onClick,
@@ -79,20 +78,6 @@ export default function TechniqueDetailPage() {
 
   const cues = technique.cues ?? []
 
-  const addToDrillPlan = async () => {
-    const existing = await db.drillPlans.orderBy('createdAt').first()
-    if (!existing) {
-      await runWithTelemetry('drill_plan.create_failed', () => db.drillPlans.add({
-        name: language === 'es' ? 'Plan principal' : 'Main plan',
-        techniqueIds: [technique.id],
-        createdAt: Date.now(),
-      }))
-      return
-    }
-    const nextTechniqueIds = Array.from(new Set([...existing.techniqueIds, technique.id]))
-    await runWithTelemetry('drill_plan.update_failed', () => db.drillPlans.update(existing.id!, { techniqueIds: nextTechniqueIds }))
-  }
-
   return (
     <div className="min-h-full bg-zinc-950">
       {/* Header */}
@@ -137,12 +122,6 @@ export default function TechniqueDetailPage() {
               ))}
             </div>
           )}
-          <button
-            onClick={() => void addToDrillPlan()}
-            className="mt-4 rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold px-3 py-2 active:bg-zinc-700"
-          >
-            {language === 'es' ? 'Añadir al plan de drills' : 'Add to drill plan'}
-          </button>
         </div>
 
         {/* Coaching cues */}
