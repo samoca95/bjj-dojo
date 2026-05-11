@@ -3,6 +3,7 @@ const DESCRIPTION_MAX_LENGTH = 2000
 const NAME_MAX_LENGTH = 120
 const CUE_MAX_LENGTH = 240
 const TAG_MAX_LENGTH = 24
+const DEFAULT_DURATION_MINUTES = 60
 
 export const VALIDATION_LIMITS = {
   NOTE_MAX_LENGTH,
@@ -10,6 +11,7 @@ export const VALIDATION_LIMITS = {
   NAME_MAX_LENGTH,
   CUE_MAX_LENGTH,
   TAG_MAX_LENGTH,
+  DEFAULT_DURATION_MINUTES,
 }
 
 export function trimAndClamp(value: string, maxLength: number): string {
@@ -31,7 +33,7 @@ export function sanitizeTags(tags: string[]): string[] {
 
 export function normalizeDuration(input: string): number {
   const parsed = Number.parseInt(input, 10)
-  if (!Number.isFinite(parsed) || parsed <= 0) return 60
+  if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_DURATION_MINUTES
   return Math.min(parsed, 24 * 60)
 }
 

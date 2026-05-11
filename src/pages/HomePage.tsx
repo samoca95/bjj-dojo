@@ -5,6 +5,8 @@ import { db } from '../db/database'
 import { useI18n } from '../i18n'
 import TrendSparkline from '../components/TrendSparkline'
 
+const WEEKLY_GOAL_MINUTES = 180
+
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="bg-zinc-900 rounded-2xl p-4 flex flex-col gap-1">
@@ -31,8 +33,8 @@ export default function HomePage() {
     }
   }, [], { given: 0, received: 0 })
   const weeklySessions = useLiveQuery(
-    () => db.sessions.where('date').above(Date.now() - 7 * 24 * 60 * 60 * 1000).toArray(),
-    [],
+    () => db.sessions.where('date').aboveOrEqual(weekStart).toArray(),
+    [weekStart],
     [],
   )
   const recentSessions = useLiveQuery(
@@ -40,6 +42,15 @@ export default function HomePage() {
     [],
     [],
   )
+  const tapCountsBySessionId = useLiveQuery(async () => {
+    const taps = await db.sessionTaps.toArray()
+    const counts = new Map<number, number>()
+    for (const tap of taps) {
+      if (tap.type !== 'given') continue
+      counts.set(tap.sessionId, (counts.get(tap.sessionId) ?? 0) + 1)
+    }
+    return counts
+  }, [], new Map<number, number>())
   const drillPlan = useLiveQuery(async () => {
     const plan = await db.drillPlans.orderBy('createdAt').first()
     if (!plan || plan.techniqueIds.length === 0) return null
@@ -51,18 +62,36 @@ export default function HomePage() {
   const mins = totalMinutes % 60
   const timeLabel = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`
   const weeklyMinutes = weeklySessions.reduce((sum, session) => sum + session.durationMinutes, 0)
-  const weeklyGoal = 180
-  const weeklyGoalPct = Math.min(100, Math.round((weeklyMinutes / weeklyGoal) * 100))
+  const weeklyGoalPct = Math.min(100, Math.round((weeklyMinutes / WEEKLY_GOAL_MINUTES) * 100))
 
   const sortedAsc = [...recentSessions].sort((a, b) => a.date - b.date)
   const minuteTrend = sortedAsc.map(session => session.durationMinutes)
-  const tapTrend = sortedAsc.map(session => {
-    const given = tapCounts?.given ?? 0
-    return Math.round(given / Math.max(sessionCount, 1))
-  })
+  const tapTrend = sortedAsc.map(session => tapCountsBySessionId.get(session.id ?? -1) ?? 0)
 
-  const uniqueDays = new Set((sessions ?? []).map(session => new Date(session.date).toDateString()))
-  const streak = uniqueDays.size
+  const dayStarts = Array.from(
+    new Set((sessions ?? []).map(session => {
+      const day = new Date(session.date)
+      day.setHours(0, 0, 0, 0)
+      return day.getTime()
+    })),
+  ).sort((a, b) => b - a)
+
+  let streak = 0
+  if (dayStarts.length > 0) {
+    const yesterday = startOfToday.getTime() - 24 * 60 * 60 * 1000
+    const firstDay = dayStarts[0]
+    if (firstDay === startOfToday.getTime() || firstDay === yesterday) {
+      for (let index = 0; index < dayStarts.length; index += 1) {
+        if (index === 0) {
+          streak += 1
+          continue
+        }
+        const expectedNext = dayStarts[index - 1] - 24 * 60 * 60 * 1000
+        if (dayStarts[index] !== expectedNext) break
+        streak += 1
+      }
+    }
+  }
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -99,7 +128,7 @@ export default function HomePage() {
           <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-zinc-100 font-semibold">{language === 'es' ? 'Meta semanal' : 'Weekly goal'}</span>
-              <span className="text-xs text-zinc-400">{weeklyMinutes}/{weeklyGoal} min</span>
+              <span className="text-xs text-zinc-400">{weeklyMinutes}/{WEEKLY_GOAL_MINUTES} min</span>
             </div>
             <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
               <div className="h-full bg-gold" style={{ width: `${weeklyGoalPct}%` }} />
@@ -161,3 +190,6 @@ export default function HomePage() {
     </div>
   )
 }
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+  const weekStart = startOfToday.getTime() - 6 * 24 * 60 * 60 * 1000

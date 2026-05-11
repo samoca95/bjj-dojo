@@ -1,7 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type { Category, Technique, TechniqueConnection, Session, SessionTechnique, SessionTap, Club, DrillPlan } from '../types'
 import { prefilledCategories, prefilledTechniques, prefilledConnections } from './prefilled'
-import { telemetry } from '../utils/telemetry'
 
 export class BJJDatabase extends Dexie {
   categories!: Table<Category, number>
@@ -89,9 +88,6 @@ export class BJJDatabase extends Dexie {
       await this.techniqueConnections.bulkAdd(prefilledConnections)
     })
 
-    this.on('error', error => {
-      telemetry.error('db.operation_failed', error)
-    })
   }
 }
 
@@ -168,14 +164,16 @@ export async function importDatabaseBackup(backup: unknown, database: BJJDatabas
 
   await database.transaction(
     'rw',
-    database.categories,
-    database.techniques,
-    database.techniqueConnections,
-    database.sessions,
-    database.sessionTechniques,
-    database.sessionTaps,
-    database.clubs,
-    database.drillPlans,
+    [
+      database.categories,
+      database.techniques,
+      database.techniqueConnections,
+      database.sessions,
+      database.sessionTechniques,
+      database.sessionTaps,
+      database.clubs,
+      database.drillPlans,
+    ],
     async () => {
       await database.sessionTaps.clear()
       await database.sessionTechniques.clear()

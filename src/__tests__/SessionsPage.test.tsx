@@ -34,7 +34,7 @@ function renderSessionsPage() {
 // SessionsPage calls useLiveQuery three times per render: sessions, clubs, meta
 const mockSession = {
   id: 1,
-  date: new Date('2025-01-15').getTime(),
+  date: Date.now(),
   durationMinutes: 90,
   sessionType: 'GI' as const,
   clubId: null,

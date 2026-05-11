@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import Dexie from 'dexie'
 import { makeTestDb, openDb, closeDb } from '../test/testDb'
-import type { BJJDatabase } from '../db/database'
 import { BJJDatabase, importDatabaseBackup, exportDatabaseBackup, resetPrefilledTechniques } from '../db/database'
 import { prefilledTechniques } from '../db/prefilled'
 
