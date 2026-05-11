@@ -16,7 +16,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { t, language } = useI18n()
+  const { t } = useI18n()
 
   const sessionCount = useLiveQuery(() => db.sessions.count(), [], 0)
   const sessions = useLiveQuery(() => db.sessions.toArray(), [], [])
@@ -122,7 +122,7 @@ export default function HomePage() {
         {recommendations && recommendations.length > 0 && (
           <section>
             <h2 className="text-xs font-semibold tracking-widest text-gold mb-3 px-1">
-              {language === 'es' ? 'SIGUIENTES RECOMENDACIONES' : 'RECOMMENDED NEXT'}
+              {t('RECOMMENDED NEXT')}
             </h2>
             <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
               {recommendations.map(name => (

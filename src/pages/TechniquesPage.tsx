@@ -234,7 +234,7 @@ export default function TechniquesPage() {
             onClick={() => setFavoritesOnly(prev => !prev)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold ${favoritesOnly ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
           >
-            {language === 'es' ? 'Favoritas' : 'Favorites'}
+            {t('Favorites')}
           </button>
           <button
             onClick={() => {
@@ -243,7 +243,7 @@ export default function TechniquesPage() {
             }}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 ${planMode ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
           >
-            <ListChecks size={12} /> {language === 'es' ? 'Modo plan de drills' : 'Drill plan mode'}
+            <ListChecks size={12} /> {t('Drill plan mode')}
           </button>
         </div>
 
@@ -252,7 +252,7 @@ export default function TechniquesPage() {
             <input
               value={tagInput}
               onChange={e => setTagInput(e.target.value)}
-              placeholder={language === 'es' ? 'Nueva etiqueta (sin #)' : 'New tag (without #)'}
+              placeholder={t('New tag (without #)')}
               className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100"
             />
             <div className="flex gap-2">
@@ -261,7 +261,7 @@ export default function TechniquesPage() {
                 disabled={!tagInput.trim()}
                 className="flex-1 rounded-xl bg-gold text-black text-sm font-semibold py-2.5 disabled:opacity-50"
               >
-                {language === 'es' ? 'Guardar etiqueta' : 'Save tag'}
+                {t('Save tag')}
               </button>
               <button
                 onClick={() => { setTagEditorTechniqueId(null); setTagInput('') }}
@@ -301,7 +301,7 @@ export default function TechniquesPage() {
             <input
               value={planName}
               onChange={e => setPlanName(e.target.value)}
-              placeholder={language === 'es' ? 'Nombre del plan' : 'Plan name'}
+              placeholder={t('Plan name')}
               className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100"
             />
             <button
@@ -309,7 +309,7 @@ export default function TechniquesPage() {
               disabled={!planName.trim() || planSelection.size === 0}
               className="w-full rounded-xl bg-gold text-black text-sm font-semibold py-2.5 disabled:opacity-50"
             >
-              {language === 'es' ? 'Guardar plan de drills' : 'Save drill plan'} ({planSelection.size})
+              {t('Save drill plan')} ({planSelection.size})
             </button>
           </div>
         )}

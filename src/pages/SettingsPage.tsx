@@ -238,19 +238,19 @@ export default function SettingsPage() {
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {language === 'es' ? 'RESPALDO DE DATOS' : 'DATA BACKUP'}
+            {t('DATA BACKUP')}
           </h2>
           <button
             onClick={handleExportBackup}
             className="w-full rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700"
           >
-            {language === 'es' ? 'Exportar respaldo (JSON)' : 'Export backup (JSON)'}
+            {t('Export backup (JSON)')}
           </button>
           <button
             onClick={handleImportBackupClick}
             className="w-full rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700"
           >
-            {language === 'es' ? 'Importar respaldo (JSON)' : 'Import backup (JSON)'}
+            {t('Import backup (JSON)')}
           </button>
           <input
             ref={importInputRef}
@@ -267,12 +267,10 @@ export default function SettingsPage() {
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {language === 'es' ? 'TELEMETRÍA LOCAL' : 'LOCAL TELEMETRY'}
+            {t('LOCAL TELEMETRY')}
           </h2>
           <p className="text-xs text-zinc-500">
-            {language === 'es'
-              ? `Eventos registrados: ${telemetryCount}`
-              : `Stored events: ${telemetryCount}`}
+            {t('Stored events')}: {telemetryCount}
           </p>
           <button
             onClick={() => {
@@ -281,7 +279,7 @@ export default function SettingsPage() {
             }}
             className="w-full rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700"
           >
-            {language === 'es' ? 'Limpiar telemetría' : 'Clear telemetry logs'}
+            {t('Clear telemetry logs')}
           </button>
         </div>
       </div>
