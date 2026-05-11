@@ -10,6 +10,7 @@ import TechniqueEditPage from './pages/TechniqueEditPage'
 import ClubsPage from './pages/ClubsPage'
 import CategoriesPage from './pages/CategoriesPage'
 import SettingsPage from './pages/SettingsPage'
+import SessionTypeIconsPage from './pages/SessionTypeIconsPage'
 
 const router = createHashRouter([
   {
@@ -26,6 +27,7 @@ const router = createHashRouter([
       { path: '/techniques/:id', element: <TechniqueDetailPage /> },
       { path: '/techniques/:id/edit', element: <TechniqueEditPage /> },
       { path: '/categories', element: <CategoriesPage /> },
+      { path: '/session-type-icons', element: <SessionTypeIconsPage /> },
       { path: '/settings', element: <SettingsPage /> },
     ],
   },

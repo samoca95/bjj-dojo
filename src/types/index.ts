@@ -73,7 +73,7 @@ export const SESSION_TYPE_LABELS: Record<SessionType, string> = {
 }
 
 export const SESSION_TYPE_ICONS: Record<SessionType, string> = {
-  GI: '🥋',
+  GI: 'swords',
   NOGI: 'shirt',
   OPEN_MAT: 'users',
   COMPETITION: 'trophy',
