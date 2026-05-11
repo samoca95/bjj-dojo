@@ -105,6 +105,13 @@ export default function AddEditSessionPage() {
     })
   }, [id, isEdit])
 
+  // Default to first club when creating a new session
+  useEffect(() => {
+    if (!isEdit && clubs && clubs.length > 0 && clubId === null) {
+      setClubId(clubs[0].id ?? null)
+    }
+  }, [clubs, isEdit])
+
   const handleSave = async () => {
     const session: Session = {
       date: fromDateInput(date),
@@ -125,11 +132,8 @@ export default function AddEditSessionPage() {
       sid = (await db.sessions.add(session)) as number
     }
 
-    const allSelectedIds = new Set(selectedIds)
-    taps.forEach(t => allSelectedIds.add(t.techniqueId))
-
     await db.sessionTechniques.bulkAdd(
-      [...allSelectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
+      [...selectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
     )
     await db.sessionTaps.bulkAdd(
       taps.map(t => ({ sessionId: sid, techniqueId: t.techniqueId, type: t.type })),
@@ -167,7 +171,6 @@ export default function AddEditSessionPage() {
           type: tapType,
         },
       ])
-      setSelectedIds(prev => new Set([...prev, technique.id]))
     }
   }
 
@@ -342,9 +345,9 @@ export default function AddEditSessionPage() {
                 max={5}
                 value={energy}
                 onChange={e => setEnergy(Number(e.target.value))}
-                className="energy-slider w-full h-2.5 rounded-full appearance-none cursor-pointer"
+                className="energy-slider w-full h-1 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, var(--energy-teal) 0%, var(--energy-teal) ${energyProgress}%, #3f3f46 ${energyProgress}%, #3f3f46 100%)`,
+                  background: `linear-gradient(to right, #d4a017 0%, #d4a017 ${energyProgress}%, #3f3f46 ${energyProgress}%, #3f3f46 100%)`,
                 }}
               />
               <div className="flex justify-between mt-1">
@@ -528,6 +531,8 @@ export default function AddEditSessionPage() {
 
               {filteredTechniques?.map(t => {
                 const isSelected = pickerMode === 'techniques' && selectedIds.has(t.id)
+                const tapType = pickerMode === 'tap-given' ? 'given' : pickerMode === 'tap-received' ? 'received' : null
+                const tapCount = tapType ? taps.filter(tap => tap.techniqueId === t.id && tap.type === tapType).length : 0
                 return (
                   <button
                     key={t.id}
@@ -535,9 +540,10 @@ export default function AddEditSessionPage() {
                     className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
                   >
                     <div className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
-                      isSelected ? 'bg-gold border-gold' : 'border-zinc-600'
+                      isSelected ? 'bg-gold border-gold' : tapCount > 0 ? 'bg-zinc-700 border-zinc-500' : 'border-zinc-600'
                     }`}>
                       {isSelected && <Check size={11} className="text-black" strokeWidth={3} />}
+                      {tapCount > 0 && <span className="text-[10px] text-zinc-100 font-bold leading-none">{tapCount}</span>}
                     </div>
                     <span className="text-sm text-zinc-100">{t.name}</span>
                   </button>

@@ -82,6 +82,15 @@ export default function TechniqueEditPage() {
         isCustom: true,
       }
       await db.techniques.add(technique)
+      if (connections.length > 0) {
+        await db.techniqueConnections.bulkAdd(
+          connections.map(connection => ({
+            fromTechniqueId: newId,
+            toTechniqueId: connection.toTechniqueId,
+            connectionType: connection.connectionType,
+          })),
+        )
+      }
       navigate(`/techniques/${newId}`)
     } else {
       await db.techniques.update(Number(id), {
@@ -127,14 +136,13 @@ export default function TechniqueEditPage() {
   }
 
   const addConnection = () => {
-    if (!id || isNew) return
     if (!newConnectionTargetId) return
-    if (newConnectionTargetId === Number(id)) return
+    if (!isNew && newConnectionTargetId === Number(id)) return
     const exists = connections.some(c => c.toTechniqueId === newConnectionTargetId)
     if (exists) return
     setConnections(prev => [
       ...prev,
-      { fromTechniqueId: Number(id), toTechniqueId: newConnectionTargetId, connectionType: newConnectionType },
+      { fromTechniqueId: isNew ? 0 : Number(id), toTechniqueId: newConnectionTargetId, connectionType: newConnectionType },
     ])
     setNewConnectionTargetId(null)
     setNewConnectionType('FOLLOW_UP')
@@ -149,7 +157,7 @@ export default function TechniqueEditPage() {
   }
 
   const updateConnectionTarget = (previousTargetId: number, targetId: number) => {
-    if (!id || targetId === Number(id)) return
+    if (!isNew && targetId === Number(id)) return
     // Exclude the current row so editing its target/type doesn't trigger a false duplicate.
     const isDuplicate = connections.some(c => c.toTechniqueId !== previousTargetId && c.toTechniqueId === targetId)
     if (isDuplicate) return
@@ -290,8 +298,7 @@ export default function TechniqueEditPage() {
           </div>
         </div>
 
-        {!isNew && (
-          <div>
+        <div>
             <label className="text-xs text-gold font-semibold tracking-wide">TECHNIQUE CONNECTIONS</label>
             <div className="space-y-2 mt-2">
               {connections.length === 0 && (
@@ -368,7 +375,6 @@ export default function TechniqueEditPage() {
               </div>
             </div>
           </div>
-        )}
 
         {/* Delete */}
         {!isNew && (

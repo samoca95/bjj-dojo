@@ -24,7 +24,7 @@ describe('IconPickerModal — structure', () => {
   it('shows Suggested section by default (no search)', () => {
     renderModal()
     expect(screen.getByText('Suggested')).toBeInTheDocument()
-    expect(screen.getByText('All Icons')).toBeInTheDocument()
+    expect(screen.getByText(/All Icons/)).toBeInTheDocument()
   })
 
   it('renders Done and Clear buttons', () => {
@@ -45,7 +45,7 @@ describe('IconPickerModal — icon tab', () => {
     renderModal()
     await user.type(screen.getByPlaceholderText('Search all icons…'), 'shield')
     expect(screen.queryByText('Suggested')).toBeNull()
-    expect(screen.queryByText('All Icons')).toBeNull()
+    expect(screen.queryByText(/All Icons/)).toBeNull()
   })
 
   it('calls onSelect with icon id when an icon is clicked', async () => {
@@ -53,8 +53,9 @@ describe('IconPickerModal — icon tab', () => {
     const onClose = vi.fn()
     const user = userEvent.setup()
     renderModal(undefined, onSelect, onClose)
-    // Click the first icon button in suggested (Shield)
-    const shieldBtn = screen.getByText('Shield').closest('button')!
+    // Click the first icon button in suggested (Shield) — use getAllByText since it also appears in the all-icons grid
+    const shieldBtns = screen.getAllByText('Shield')
+    const shieldBtn = shieldBtns[0].closest('button')!
     await user.click(shieldBtn)
     expect(onSelect).toHaveBeenCalledWith('shield')
     expect(onClose).toHaveBeenCalled()
@@ -62,7 +63,8 @@ describe('IconPickerModal — icon tab', () => {
 
   it('highlights the currently selected icon', () => {
     renderModal('shield')
-    const shieldBtn = screen.getByText('Shield').closest('button')!
+    const shieldBtns = screen.getAllByText('Shield')
+    const shieldBtn = shieldBtns[0].closest('button')!
     expect(shieldBtn.className).toContain('border-gold')
   })
 

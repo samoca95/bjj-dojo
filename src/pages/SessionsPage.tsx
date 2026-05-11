@@ -41,8 +41,6 @@ function SessionCard({
     return techs.map(t => t.name)
   }, [session.id], [] as string[])
 
-  const totalTaps = (tapData?.given ?? 0) + (tapData?.received ?? 0)
-
   return (
     <button
       onClick={onClick}
@@ -63,10 +61,20 @@ function SessionCard({
         <div className="flex items-center gap-3 mt-0.5">
           <span className="text-xs text-zinc-400">{session.durationMinutes} min</span>
           {clubName && <span className="text-xs text-zinc-500 truncate">{clubName}</span>}
-          {totalTaps > 0 && (
-            <span className="flex items-center gap-0.5 text-xs text-zinc-500">
-              <Zap size={10} className="text-zinc-500" />
-              {totalTaps}
+          {(tapData?.given > 0 || tapData?.received > 0) && (
+            <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+              {(tapData?.given ?? 0) > 0 && (
+                <span className="flex items-center gap-0.5">
+                  <Zap size={10} className="text-gold" />
+                  {tapData?.given}
+                </span>
+              )}
+              {(tapData?.received ?? 0) > 0 && (
+                <span className="flex items-center gap-0.5">
+                  <Zap size={10} className="text-red-400" />
+                  {tapData?.received}
+                </span>
+              )}
             </span>
           )}
         </div>

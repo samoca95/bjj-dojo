@@ -17,6 +17,7 @@ import {
   Focus, Radio,
   Cpu, Network,
 } from 'lucide-react'
+import { DynamicIcon } from 'lucide-react/dynamic'
 import type { FC } from 'react'
 import { DEFAULT_CATEGORY_ICONS } from '../constants/categoryDefaults'
 
@@ -136,6 +137,17 @@ export function CategoryIcon({
   if (!resolved) return null
   const option = ICON_MAP[resolved]
   if (!option) {
+    // Check if it could be a lucide icon name (kebab-case) - try DynamicIcon
+    if (/^[a-z][a-z0-9-]*$/.test(resolved)) {
+      return (
+        <DynamicIcon
+          name={resolved as Parameters<typeof DynamicIcon>[0]['name']}
+          size={size}
+          className={className}
+          strokeWidth={2}
+        />
+      )
+    }
     return (
       <span className={className} style={{ fontSize: size, lineHeight: 1 }}>
         {resolved}

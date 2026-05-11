@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#17181d" />
-      <stop offset="100%" stop-color="#101116" />
+      <stop offset="0%" stop-color="#000000" />
+      <stop offset="100%" stop-color="#0a0a0a" />
     </linearGradient>
     <linearGradient id="belt" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#19e0ad" />
-      <stop offset="100%" stop-color="#10c696" />
+      <stop offset="0%" stop-color="#d4a017" />
+      <stop offset="100%" stop-color="#b8860b" />
     </linearGradient>
   </defs>
 
@@ -16,9 +16,9 @@
   <path fill="url(#belt)" d="M66 274h190l-170 97a28 28 0 0 1-38-10l-16-27z" />
   <path fill="url(#belt)" d="M446 274H256l170 97a28 28 0 0 0 38-10l16-27z" />
 
-  <rect x="214" y="242" width="84" height="24" rx="12" fill="#17d6a8" />
-  <rect x="206" y="274" width="100" height="22" rx="11" fill="#13c79a" />
+  <rect x="214" y="242" width="84" height="24" rx="12" fill="#c8940f" />
+  <rect x="206" y="274" width="100" height="22" rx="11" fill="#b8860b" />
 
-  <rect x="98" y="301" width="36" height="10" rx="5" transform="rotate(-30 98 301)" fill="#fff" opacity="0.9" />
-  <rect x="116" y="311" width="36" height="10" rx="5" transform="rotate(-30 116 311)" fill="#fff" opacity="0.9" />
+  <rect x="98" y="301" width="36" height="10" rx="5" transform="rotate(-30 98 301)" fill="#fff" opacity="0.7" />
+  <rect x="116" y="311" width="36" height="10" rx="5" transform="rotate(-30 116 311)" fill="#fff" opacity="0.7" />
 </svg>

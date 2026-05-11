@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Pencil } from 'lucide-react'
 import type { SessionType } from '../types'
 import { SESSION_TYPE_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -15,6 +15,7 @@ export default function SettingsPage() {
   const [sessionTypeIcons, setSessionTypeIcons] = useState<SessionTypeIconsMap>(getSessionTypeIcons())
   const [activeSessionType, setActiveSessionType] = useState<SessionType | null>(null)
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
+  const [typeIconsOpen, setTypeIconsOpen] = useState(false)
 
   useEffect(() => {
     setSessionTypeIcons(getSessionTypeIcons())
@@ -58,22 +59,34 @@ export default function SettingsPage() {
         </div>
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <h2 className="text-xs text-gold font-semibold tracking-widest">SESSION TYPE ICONS</h2>
-          <div className="space-y-2">
-            {SESSION_TYPES.map(sessionType => (
-              <button
-                key={sessionType}
-                onClick={() => setActiveSessionType(sessionType)}
-                className="w-full rounded-xl bg-zinc-800 px-3 py-2.5 text-left flex items-center gap-3 active:bg-zinc-700"
-              >
-                <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center shrink-0">
-                  <CategoryIcon value={sessionTypeIcons[sessionType]} size={18} className="text-gold" />
-                </div>
-                <span className="flex-1 text-sm text-zinc-100">{SESSION_TYPE_LABELS[sessionType]}</span>
-                <Pencil size={15} className="text-zinc-500 shrink-0" strokeWidth={2} />
-              </button>
-            ))}
-          </div>
+          <button
+            onClick={() => setTypeIconsOpen(prev => !prev)}
+            className="w-full flex items-center gap-3 text-left"
+          >
+            <h2 className="flex-1 text-xs text-gold font-semibold tracking-widest">SESSION TYPE ICONS</h2>
+            {typeIconsOpen ? (
+              <ChevronUp size={15} className="text-zinc-500 shrink-0" strokeWidth={2} />
+            ) : (
+              <ChevronDown size={15} className="text-zinc-500 shrink-0" strokeWidth={2} />
+            )}
+          </button>
+          {typeIconsOpen && (
+            <div className="space-y-2">
+              {SESSION_TYPES.map(sessionType => (
+                <button
+                  key={sessionType}
+                  onClick={() => setActiveSessionType(sessionType)}
+                  className="w-full rounded-xl bg-zinc-800 px-3 py-2.5 text-left flex items-center gap-3 active:bg-zinc-700"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center shrink-0">
+                    <CategoryIcon value={sessionTypeIcons[sessionType]} size={18} className="text-gold" />
+                  </div>
+                  <span className="flex-1 text-sm text-zinc-100">{SESSION_TYPE_LABELS[sessionType]}</span>
+                  <Pencil size={15} className="text-zinc-500 shrink-0" strokeWidth={2} />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="bg-zinc-900 rounded-2xl p-2">
