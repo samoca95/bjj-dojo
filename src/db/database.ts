@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie'
 import type { Category, Technique, TechniqueConnection, Session, SessionTechnique, SessionTap, Club } from '../types'
 import { prefilledCategories, prefilledTechniques, prefilledConnections } from './prefilled'
+import { logEvent } from '../utils/telemetry'
 
 export class BJJDatabase extends Dexie {
   categories!: Table<Category, number>
@@ -93,4 +94,6 @@ export async function resetPrefilledTechniques(database: BJJDatabase = db) {
     }
     await database.techniqueConnections.bulkPut(prefilledConnections)
   })
+
+  logEvent('db.reset-prefilled', 'Reset prefilled techniques', { dbName: database.name })
 }

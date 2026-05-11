@@ -4,17 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import SessionsPage from '../pages/SessionsPage'
 
-// Mock dexie-react-hooks useLiveQuery
 vi.mock('dexie-react-hooks', () => ({
   useLiveQuery: vi.fn(),
-}))
-
-// Mock the db module
-vi.mock('../db/database', () => ({
-  db: {
-    sessions: { orderBy: vi.fn(), toArray: vi.fn() },
-    clubs: { toArray: vi.fn() },
-  },
 }))
 
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -31,7 +22,6 @@ function renderSessionsPage() {
   )
 }
 
-// SessionsPage calls useLiveQuery twice per render: sessions, clubs
 const mockSession = {
   id: 1,
   date: new Date('2025-01-15').getTime(),
@@ -42,14 +32,25 @@ const mockSession = {
   energyLevel: 4,
 }
 
-function setupEmptyMocks() {
+function setupMocks({
+  sessions = [],
+  clubs = [],
+  tapsBySession = new Map<number, { given: number; received: number }>(),
+  techniquesBySession = new Map<number, string[]>(),
+}: {
+  sessions?: typeof mockSession[]
+  clubs?: Array<{ id?: number; name: string }>
+  tapsBySession?: Map<number, { given: number; received: number }>
+  techniquesBySession?: Map<number, string[]>
+} = {}) {
   let call = 0
-  mockUseLiveQuery.mockImplementation(() => (call++ % 2 === 0 ? [] : []))
-}
-
-function setupSessionMocks() {
-  let call = 0
-  mockUseLiveQuery.mockImplementation(() => (call++ % 2 === 0 ? [mockSession] : []))
+  mockUseLiveQuery.mockImplementation(() => {
+    call += 1
+    if (call % 4 === 1) return sessions
+    if (call % 4 === 2) return clubs
+    if (call % 4 === 3) return tapsBySession
+    return techniquesBySession
+  })
 }
 
 beforeEach(() => {
@@ -62,27 +63,27 @@ afterEach(() => {
 
 describe('SessionsPage', () => {
   it('renders the page heading', () => {
-    setupEmptyMocks()
+    setupMocks()
     renderSessionsPage()
     expect(screen.getByText('Sessions')).toBeInTheDocument()
   })
 
   it('shows empty state when no sessions exist', () => {
-    setupEmptyMocks()
+    setupMocks()
     renderSessionsPage()
     expect(screen.getByText('No sessions yet')).toBeInTheDocument()
     expect(screen.getByText('Tap + to log your first training')).toBeInTheDocument()
   })
 
   it('renders a session card when sessions exist', () => {
-    setupSessionMocks()
+    setupMocks({ sessions: [mockSession] })
     renderSessionsPage()
     expect(screen.getByText('90 min')).toBeInTheDocument()
     expect(screen.getByText(/Worked on guard/)).toBeInTheDocument()
   })
 
-  it('has a working + FAB button', async () => {
-    setupEmptyMocks()
+  it('has a working +FAB button', async () => {
+    setupMocks()
     const user = userEvent.setup()
     renderSessionsPage()
 
@@ -90,5 +91,11 @@ describe('SessionsPage', () => {
     expect(fab).not.toBeNull()
     await user.click(fab)
     expect(screen.getByTestId('new-session-page')).toBeInTheDocument()
+  })
+
+  it('renders weekly goal widget', () => {
+    setupMocks({ sessions: [mockSession] })
+    renderSessionsPage()
+    expect(screen.getByText('WEEKLY GOAL')).toBeInTheDocument()
   })
 })

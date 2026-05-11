@@ -7,6 +7,15 @@ import type { Category, ConnectionType, Difficulty, Technique, TechniqueConnecti
 import { CONNECTION_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel, difficultyLabel } from '../i18n'
+import { logError, logEvent } from '../utils/telemetry'
+import {
+  MAX_CUE_LENGTH,
+  MAX_TECHNIQUE_DESCRIPTION_LENGTH,
+  MAX_TECHNIQUE_NAME_LENGTH,
+  normalizeYoutubeUrl,
+  sanitizeCues,
+  validateTechniqueDraft,
+} from '../utils/validation'
 
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
@@ -69,51 +78,69 @@ export default function TechniqueEditPage() {
   }, [id, isNew])
 
   const handleSave = async () => {
-    if (!name.trim()) return
-    if (isNew) {
-      const maxId = await db.techniques.orderBy('id').last()
-      const newId = (maxId?.id ?? 1000) + 1
-      const technique: Technique = {
-        id: newId,
-        name: name.trim(),
-        description: description.trim(),
-        youtubeUrl: youtubeUrl.trim(),
-        difficulty,
-        categoryId,
-        cues,
-        isCustom: true,
+    const next = {
+      name: name.trim(),
+      description: description.trim(),
+      youtubeUrl: youtubeUrl.trim(),
+      cues: sanitizeCues(cues),
+    }
+    const validation = validateTechniqueDraft(next)
+    if (!validation.ok) {
+      window.alert(language === 'es' ? 'Datos inválidos para la técnica.' : validation.error)
+      return
+    }
+
+    try {
+      if (isNew) {
+        const maxId = await db.techniques.orderBy('id').last()
+        const newId = (maxId?.id ?? 1000) + 1
+        const technique: Technique = {
+          id: newId,
+          name: next.name,
+          description: next.description,
+          youtubeUrl: normalizeYoutubeUrl(next.youtubeUrl),
+          difficulty,
+          categoryId,
+          cues: next.cues,
+          isCustom: true,
+        }
+        await db.techniques.add(technique)
+        if (connections.length > 0) {
+          await db.techniqueConnections.bulkAdd(
+            connections.map(connection => ({
+              fromTechniqueId: newId,
+              toTechniqueId: connection.toTechniqueId,
+              connectionType: connection.connectionType,
+            })),
+          )
+        }
+        logEvent('technique.save', 'Technique created', { techniqueId: newId, connections: connections.length })
+        navigate(`/techniques/${newId}`)
+      } else {
+        await db.techniques.update(Number(id), {
+          name: next.name,
+          description: next.description,
+          youtubeUrl: normalizeYoutubeUrl(next.youtubeUrl),
+          difficulty,
+          categoryId,
+          cues: next.cues,
+        })
+        await db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete()
+        if (connections.length > 0) {
+          await db.techniqueConnections.bulkAdd(
+            connections.map(connection => ({
+              fromTechniqueId: Number(id),
+              toTechniqueId: connection.toTechniqueId,
+              connectionType: connection.connectionType,
+            })),
+          )
+        }
+        logEvent('technique.save', 'Technique updated', { techniqueId: Number(id), connections: connections.length })
+        navigate(`/techniques/${id}`)
       }
-      await db.techniques.add(technique)
-      if (connections.length > 0) {
-        await db.techniqueConnections.bulkAdd(
-          connections.map(connection => ({
-            fromTechniqueId: newId,
-            toTechniqueId: connection.toTechniqueId,
-            connectionType: connection.connectionType,
-          })),
-        )
-      }
-      navigate(`/techniques/${newId}`)
-    } else {
-      await db.techniques.update(Number(id), {
-        name: name.trim(),
-        description: description.trim(),
-        youtubeUrl: youtubeUrl.trim(),
-        difficulty,
-        categoryId,
-        cues,
-      })
-      await db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete()
-      if (connections.length > 0) {
-        await db.techniqueConnections.bulkAdd(
-          connections.map(connection => ({
-            fromTechniqueId: Number(id),
-            toTechniqueId: connection.toTechniqueId,
-            connectionType: connection.connectionType,
-          })),
-        )
-      }
-      navigate(`/techniques/${id}`)
+    } catch (error) {
+      logError('technique.save.error', error, { isNew, id })
+      window.alert(language === 'es' ? 'No se pudo guardar la técnica.' : 'Failed to save technique.')
     }
   }
 
@@ -130,7 +157,7 @@ export default function TechniqueEditPage() {
 
   const addCue = () => {
     const trimmed = newCue.trim()
-    if (!trimmed) return
+    if (!trimmed || trimmed.length > MAX_CUE_LENGTH) return
     setCues(prev => [...prev, trimmed])
     setNewCue('')
   }
@@ -198,6 +225,7 @@ export default function TechniqueEditPage() {
             value={name}
             onChange={e => setName(e.target.value)}
              placeholder={t('Technique name')}
+            maxLength={MAX_TECHNIQUE_NAME_LENGTH}
             className={`${inputCls} mt-2`}
           />
         </div>
@@ -252,6 +280,7 @@ export default function TechniqueEditPage() {
             onChange={e => setDescription(e.target.value)}
              placeholder={language === 'es' ? 'Describe esta técnica…' : 'Describe this technique…'}
             rows={4}
+            maxLength={MAX_TECHNIQUE_DESCRIPTION_LENGTH}
             className={`${inputCls} mt-2 resize-none`}
           />
         </div>

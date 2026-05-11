@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { makeTestDb, openDb, closeDb } from '../test/testDb'
-import type { BJJDatabase } from '../db/database'
-import { resetPrefilledTechniques } from '../db/database'
+import { BJJDatabase, resetPrefilledTechniques } from '../db/database'
 import { prefilledTechniques } from '../db/prefilled'
+import Dexie from 'dexie'
 
 let db: BJJDatabase
 
@@ -235,5 +235,41 @@ describe('Reset prefilled techniques', () => {
     expect(restoredPrefilled?.name).toBe(prefilledTechniques.find(t => t.id === 101)?.name)
     expect(custom?.name).toBe('My Custom Technique')
     expect(custom?.isCustom).toBe(true)
+  })
+})
+
+describe('Migration upgrade integrity', () => {
+  it('upgrades legacy v1 data to latest schema and preserves custom technique', async () => {
+    const legacyName = `bjj-dojo-legacy-${Date.now()}`
+    const legacy = new Dexie(legacyName)
+    legacy.version(1).stores({
+      categories: 'id, name',
+      techniques: 'id, categoryId, name',
+      techniqueConnections: '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+      sessions: '++id, date',
+      sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
+    })
+    await legacy.open()
+
+    await legacy.table('categories').bulkAdd([{ id: 1, name: 'Guards', description: '', icon: 'shield' }])
+    await legacy.table('techniques').bulkAdd([
+      { id: 101, name: 'Legacy Prefilled', description: '', cues: [], categoryId: 1, youtubeUrl: '', difficulty: 'BEGINNER', isCustom: false },
+      { id: 9000, name: 'Legacy Custom', description: 'custom', cues: [], categoryId: 1, youtubeUrl: '', difficulty: 'BEGINNER', isCustom: true },
+    ])
+    legacy.close()
+
+    const upgraded = new BJJDatabase(legacyName)
+    await upgraded.open()
+
+    await expect(upgraded.sessionTaps.toArray()).resolves.toEqual([])
+    await expect(upgraded.clubs.toArray()).resolves.toEqual([])
+    const custom = await upgraded.techniques.get(9000)
+    expect(custom?.name).toBe('Legacy Custom')
+    expect(custom?.isCustom).toBe(true)
+    const prefilled = await upgraded.techniques.get(101)
+    expect(prefilled?.name).toBe(prefilledTechniques.find(t => t.id === 101)?.name)
+
+    upgraded.close()
+    await Dexie.delete(legacyName)
   })
 })

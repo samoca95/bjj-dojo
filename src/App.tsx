@@ -1,5 +1,6 @@
 import { createHashRouter, RouterProvider } from 'react-router-dom'
 import Layout from './components/Layout'
+import AppErrorBoundary from './components/AppErrorBoundary'
 import HomePage from './pages/HomePage'
 import SessionsPage from './pages/SessionsPage'
 import SessionDetailPage from './pages/SessionDetailPage'
@@ -32,5 +33,9 @@ const router = createHashRouter([
 ])
 
 export default function App() {
-  return <RouterProvider router={router} />
+  return (
+    <AppErrorBoundary>
+      <RouterProvider router={router} />
+    </AppErrorBoundary>
+  )
 }

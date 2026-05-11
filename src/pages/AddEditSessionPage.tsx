@@ -10,6 +10,8 @@ import { SESSION_TYPE_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, sessionTypeLabel } from '../i18n'
 import { techniqueMatchesQuery } from '../utils/fuzzySearch'
+import { logError, logEvent } from '../utils/telemetry'
+import { MAX_TECHNIQUE_NAME_LENGTH, sanitizeCues, validateSessionDraft } from '../utils/validation'
 
 function toDateInput(epoch: number) {
   const d = new Date(epoch)
@@ -117,32 +119,54 @@ export default function AddEditSessionPage() {
   }, [clubs, isEdit, clubId])
 
   const handleSave = async () => {
-    const session: Session = {
+    const durationMinutes = parseInt(duration) || 60
+    const sessionDraft: Session = {
       date: fromDateInput(date),
-      durationMinutes: parseInt(duration) || 60,
+      durationMinutes,
       sessionType,
       clubId,
       notes: notes.trim(),
       energyLevel: energy,
     }
-    let sid: number
-    if (isEdit && id) {
-      session.id = Number(id)
-      await db.sessions.put(session)
-      await db.sessionTechniques.where('sessionId').equals(Number(id)).delete()
-      await db.sessionTaps.where('sessionId').equals(Number(id)).delete()
-      sid = Number(id)
-    } else {
-      sid = (await db.sessions.add(session)) as number
+    const validation = validateSessionDraft(sessionDraft)
+    if (!validation.ok) {
+      window.alert(validation.error)
+      return
     }
 
-    await db.sessionTechniques.bulkAdd(
-      [...selectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
-    )
-    await db.sessionTaps.bulkAdd(
-      taps.map(t => ({ sessionId: sid, techniqueId: t.techniqueId, type: t.type })),
-    )
-    navigate(isEdit ? `/sessions/${sid}` : '/sessions')
+    const session: Session = sessionDraft
+    let sid: number
+    try {
+      if (isEdit && id) {
+        session.id = Number(id)
+        await db.sessions.put(session)
+        await db.sessionTechniques.where('sessionId').equals(Number(id)).delete()
+        await db.sessionTaps.where('sessionId').equals(Number(id)).delete()
+        sid = Number(id)
+      } else {
+        sid = (await db.sessions.add(session)) as number
+      }
+
+      if (selectedIds.size > 0) {
+        await db.sessionTechniques.bulkAdd(
+          [...selectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
+        )
+      }
+      if (taps.length > 0) {
+        await db.sessionTaps.bulkAdd(
+          taps.map(t => ({ sessionId: sid, techniqueId: t.techniqueId, type: t.type })),
+        )
+      }
+      logEvent('session.save', isEdit ? 'Session updated' : 'Session created', {
+        sessionId: sid,
+        techniques: selectedIds.size,
+        taps: taps.length,
+      })
+      navigate(isEdit ? `/sessions/${sid}` : '/sessions')
+    } catch (error) {
+      logError('session.save.error', error, { isEdit })
+      window.alert(language === 'es' ? 'No se pudo guardar la sesión.' : 'Failed to save session.')
+    }
   }
 
   const filteredTechniques = allTechniques?.filter(t => techniqueMatchesQuery(t, pickerSearch))
@@ -178,23 +202,36 @@ export default function AddEditSessionPage() {
 
   const handleCreateTechnique = async () => {
     const name = newTechName.trim()
-    if (!name) return
-    const maxId = await db.techniques.orderBy('id').last()
-    const newId = (maxId?.id ?? 1000) + 1
-    const newTech: Technique = {
-      id: newId,
-      name,
-      description: '',
-      cues: [],
-      categoryId: newTechCatId,
-      youtubeUrl: '',
-      difficulty: 'BEGINNER',
-      isCustom: true,
+    if (!name || name.length > MAX_TECHNIQUE_NAME_LENGTH) {
+      window.alert(
+        language === 'es'
+          ? `Nombre inválido. Máximo ${MAX_TECHNIQUE_NAME_LENGTH} caracteres.`
+          : `Invalid name. Maximum ${MAX_TECHNIQUE_NAME_LENGTH} characters.`,
+      )
+      return
     }
-    await db.techniques.add(newTech)
-    handlePickerSelect(newTech)
-    setNewTechName('')
-    setShowCreateTechnique(false)
+    try {
+      const maxId = await db.techniques.orderBy('id').last()
+      const newId = (maxId?.id ?? 1000) + 1
+      const newTech: Technique = {
+        id: newId,
+        name,
+        description: '',
+        cues: sanitizeCues([]),
+        categoryId: newTechCatId,
+        youtubeUrl: '',
+        difficulty: 'BEGINNER',
+        isCustom: true,
+      }
+      await db.techniques.add(newTech)
+      handlePickerSelect(newTech)
+      setNewTechName('')
+      setShowCreateTechnique(false)
+      logEvent('session.quick-technique-create', 'Created technique from session picker', { techniqueId: newId })
+    } catch (error) {
+      logError('session.quick-technique-create.error', error)
+      window.alert(language === 'es' ? 'No se pudo crear la técnica.' : 'Failed to create technique.')
+    }
   }
 
   const removeTap = (uid: string) => {

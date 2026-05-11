@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Pencil } from 'lucide-react'
 import type { SessionType } from '../types'
@@ -9,6 +9,9 @@ import { getSessionTypeIcons, saveSessionTypeIcons, type SessionTypeIconsMap } f
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n } from '../i18n'
 import { resetPrefilledTechniques } from '../db/database'
+import { db } from '../db/database'
+import { exportDatabase, importDatabase, parseBackupJson } from '../db/backup'
+import { clearTelemetryEvents, getTelemetryEvents, logError, logEvent } from '../utils/telemetry'
 
 const SESSION_TYPES = Object.keys(SESSION_TYPE_LABELS) as SessionType[]
 
@@ -19,9 +22,12 @@ export default function SettingsPage() {
   const [activeSessionType, setActiveSessionType] = useState<SessionType | null>(null)
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
   const [typeIconsOpen, setTypeIconsOpen] = useState(false)
+  const [telemetryCount, setTelemetryCount] = useState(0)
+  const importInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     setSessionTypeIcons(getSessionTypeIcons())
+    setTelemetryCount(getTelemetryEvents().length)
   }, [])
 
   const pickerTitle = useMemo(() => {
@@ -36,11 +42,60 @@ export default function SettingsPage() {
       ? '¿Restablecer todas las técnicas predefinidas?\nTus técnicas personalizadas no se eliminarán.'
       : 'Reset all pre-filled techniques?\nYour custom techniques will be preserved.'
     if (!window.confirm(message)) return
-    await resetPrefilledTechniques()
-    const done = language === 'es'
-      ? 'Técnicas predefinidas restablecidas correctamente.'
-      : 'Pre-filled techniques were reset successfully.'
-    window.alert(done)
+    try {
+      await resetPrefilledTechniques()
+      const done = language === 'es'
+        ? 'Técnicas predefinidas restablecidas correctamente.'
+        : 'Pre-filled techniques were reset successfully.'
+      window.alert(done)
+      logEvent('settings.reset-prefilled.success', 'Prefilled techniques reset')
+    } catch (error) {
+      logError('settings.reset-prefilled.error', error)
+      window.alert(language === 'es' ? 'No se pudo restablecer.' : 'Failed to reset pre-filled techniques.')
+    }
+  }
+
+  const handleExportBackup = async () => {
+    try {
+      const payload = await exportDatabase(db)
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `bjj-dojo-backup-${new Date().toISOString().slice(0, 10)}.json`
+      link.click()
+      URL.revokeObjectURL(url)
+      logEvent('settings.backup.export', 'Backup exported', { size: blob.size })
+    } catch (error) {
+      logError('settings.backup.export.error', error)
+      window.alert(language === 'es' ? 'No se pudo exportar el respaldo.' : 'Failed to export backup.')
+    }
+  }
+
+  const handleImportBackupClick = () => {
+    importInputRef.current?.click()
+  }
+
+  const handleImportBackup = async (file: File | null) => {
+    if (!file) return
+    try {
+      const raw = await file.text()
+      const payload = parseBackupJson(raw)
+      const message = language === 'es'
+        ? '¿Importar respaldo y reemplazar todos los datos actuales?'
+        : 'Import backup and replace all current data?'
+      if (!window.confirm(message)) return
+      await importDatabase(db, payload)
+      logEvent('settings.backup.import', 'Backup imported', {
+        techniques: payload.techniques.length,
+        sessions: payload.sessions.length,
+      })
+      window.alert(language === 'es' ? 'Respaldo importado correctamente.' : 'Backup imported successfully.')
+      window.location.reload()
+    } catch (error) {
+      logError('settings.backup.import.error', error)
+      window.alert(language === 'es' ? 'Respaldo inválido o dañado.' : 'Invalid or corrupted backup file.')
+    }
   }
 
   return (
@@ -178,6 +233,55 @@ export default function SettingsPage() {
               ? 'Solo se reinician técnicas y conexiones predefinidas; las personalizadas no se eliminan.'
               : 'Only pre-filled techniques and links are reset; custom techniques are kept.'}
           </p>
+        </div>
+
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">
+            {language === 'es' ? 'RESPALDO DE DATOS' : 'DATA BACKUP'}
+          </h2>
+          <button
+            onClick={handleExportBackup}
+            className="w-full rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700"
+          >
+            {language === 'es' ? 'Exportar respaldo (JSON)' : 'Export backup (JSON)'}
+          </button>
+          <button
+            onClick={handleImportBackupClick}
+            className="w-full rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700"
+          >
+            {language === 'es' ? 'Importar respaldo (JSON)' : 'Import backup (JSON)'}
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={e => {
+              const file = e.currentTarget.files?.[0] ?? null
+              void handleImportBackup(file)
+              e.currentTarget.value = ''
+            }}
+          />
+        </div>
+
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">
+            {language === 'es' ? 'TELEMETRÍA LOCAL' : 'LOCAL TELEMETRY'}
+          </h2>
+          <p className="text-xs text-zinc-500">
+            {language === 'es'
+              ? `Eventos registrados: ${telemetryCount}`
+              : `Stored events: ${telemetryCount}`}
+          </p>
+          <button
+            onClick={() => {
+              clearTelemetryEvents()
+              setTelemetryCount(0)
+            }}
+            className="w-full rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700"
+          >
+            {language === 'es' ? 'Limpiar telemetría' : 'Clear telemetry logs'}
+          </button>
         </div>
       </div>
 

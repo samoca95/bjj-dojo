@@ -16,7 +16,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { t } = useI18n()
+  const { t, language } = useI18n()
 
   const sessionCount = useLiveQuery(() => db.sessions.count(), [], 0)
   const sessions = useLiveQuery(() => db.sessions.toArray(), [], [])
@@ -29,6 +29,37 @@ export default function HomePage() {
       received: taps.filter(t => t.type === 'received').length,
     }
   }, [], { given: 0, received: 0 })
+
+  const recommendations = useLiveQuery(async () => {
+    const sessionLinks = await db.sessionTechniques.toArray()
+    if (sessionLinks.length === 0) return [] as string[]
+    const counts = new Map<number, number>()
+    for (const link of sessionLinks) {
+      counts.set(link.techniqueId, (counts.get(link.techniqueId) ?? 0) + 1)
+    }
+    const topPracticed = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([id]) => id)
+    if (topPracticed.length === 0) return [] as string[]
+
+    const connections = await db.techniqueConnections.toArray()
+    const suggestionCounts = new Map<number, number>()
+    for (const connection of connections) {
+      if (!topPracticed.includes(connection.fromTechniqueId)) continue
+      suggestionCounts.set(
+        connection.toTechniqueId,
+        (suggestionCounts.get(connection.toTechniqueId) ?? 0) + 1,
+      )
+    }
+    const recommendedIds = [...suggestionCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([id]) => id)
+    if (recommendedIds.length === 0) return [] as string[]
+    const techniques = await db.techniques.where('id').anyOf(recommendedIds).toArray()
+    return techniques.map(t => t.name)
+  }, [], [] as string[])
 
   const hours = Math.floor(totalMinutes / 60)
   const mins = totalMinutes % 60
@@ -87,6 +118,19 @@ export default function HomePage() {
             </button>
           </div>
         </section>
+
+        {recommendations && recommendations.length > 0 && (
+          <section>
+            <h2 className="text-xs font-semibold tracking-widest text-gold mb-3 px-1">
+              {language === 'es' ? 'SIGUIENTES RECOMENDACIONES' : 'RECOMMENDED NEXT'}
+            </h2>
+            <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
+              {recommendations.map(name => (
+                <div key={name} className="text-sm text-zinc-200">• {name}</div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   )
