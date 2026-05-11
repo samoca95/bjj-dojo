@@ -52,6 +52,14 @@ export const prefilledTechniques: Technique[] = [
     description: 'DLR variation using the lapel threaded around the leg for extreme control and sweeps.',
     cues: ['Feed lapel under their knee and grab it', 'Hip escape creates the control position', 'Use lapel as a third grip — keep it tight', 'Invert and enter berimbolo from here'],
     youtubeUrl: 'https://www.youtube.com/results?search_query=worm+guard+bjj+keenan+cornelius' },
+  { id: 111, name: 'Z Guard', categoryId: 1, difficulty: 'INTERMEDIATE', isCustom: false,
+    description: 'A strong half-guard frame with knee shield to control distance and recover attacks.',
+    cues: ['Knee shield points across chest, not down', 'Frame at shoulder and bicep', 'Keep hips angled on your side', 'Underhook when they pressure in'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=z+guard+bjj+knee+shield' },
+  { id: 112, name: 'K Guard', categoryId: 1, difficulty: 'ADVANCED', isCustom: false,
+    description: 'Inverted guard variation used to enter leg entanglements and back takes.',
+    cues: ['Control near leg before inverting', 'Hide your hips under their base', 'Clamp knees to trap leg line', 'Transition quickly to leg entanglement'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=k+guard+bjj+entries' },
 
   // Guard Passing (2xx)
   { id: 201, name: 'Torreando Pass', categoryId: 2, difficulty: 'BEGINNER', isCustom: false,
@@ -86,6 +94,14 @@ export const prefilledTechniques: Technique[] = [
     description: 'Neutral passing position inside the guard, used to control and set up leg locks or passes.',
     cues: ['Maintain the inside position at all costs', 'Wedge knee to control their hip', 'Inside heel hook or straight ankle from here', 'Transition to leg lock or pass based on their response'],
     youtubeUrl: 'https://www.youtube.com/results?search_query=headquarters+position+bjj+nogi+passing' },
+  { id: 209, name: 'Body Lock Pass', categoryId: 2, difficulty: 'INTERMEDIATE', isCustom: false,
+    description: 'Chest-to-hip passing style using a tight body lock to flatten and clear the legs.',
+    cues: ['Lock hands at lower back line', 'Head tight under their chin', 'Drive chest pressure while stepping around', 'Clear knee line before settling'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=body+lock+pass+bjj' },
+  { id: 210, name: 'Long Step Pass', categoryId: 2, difficulty: 'ADVANCED', isCustom: false,
+    description: 'Dynamic passing movement stepping deep around the guard to expose side control.',
+    cues: ['Control hips before stepping', 'Long step lands behind their hip', 'Drop shoulder to pin legs', 'Switch base to kill inversion'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=long+step+pass+bjj' },
 
   // Sweeps (3xx)
   { id: 301, name: 'Hip Bump Sweep', categoryId: 3, difficulty: 'BEGINNER', isCustom: false,
@@ -120,6 +136,14 @@ export const prefilledTechniques: Technique[] = [
     description: 'Using foot on the hip and foot on the bicep to sweep the opponent.',
     cues: ['Foot on hip, foot on bicep simultaneously', 'Pull the sleeve to break their base', 'Extend hips as you pull the leg toward you', 'Come up to the top position quickly'],
     youtubeUrl: 'https://www.youtube.com/results?search_query=tripod+sweep+bjj+spider+guard+no+gi' },
+  { id: 309, name: 'Lumberjack Sweep', categoryId: 3, difficulty: 'INTERMEDIATE', isCustom: false,
+    description: 'Sweep from seated guard by elevating one leg and chopping the post leg.',
+    cues: ['Control sleeves or wrists first', 'Lift one leg with your hook', 'Chop the far post ankle with opposite foot', 'Sit up immediately to finish on top'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=lumberjack+sweep+bjj' },
+  { id: 310, name: 'Balloon Sweep', categoryId: 3, difficulty: 'INTERMEDIATE', isCustom: false,
+    description: 'Floating sweep from open guard that elevates opponent overhead before top transition.',
+    cues: ['Grips must connect to sleeves/collar', 'Bring knees to chest then extend', 'Guide them over your shoulder line', 'Follow and come up before scramble'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=balloon+sweep+bjj' },
 
   // Submissions (4xx)
   { id: 401, name: 'Armbar', categoryId: 4, difficulty: 'BEGINNER', isCustom: false,
@@ -186,6 +210,14 @@ export const prefilledTechniques: Technique[] = [
     description: 'Figure-4 shoulder lock bending the wrist upward — applied from mount or side control.',
     cues: ['Pin the wrist to the mat first', 'Figure-4 grip secures the arm', 'Drive elbow toward their hip in small circles', 'Keep the wrist lower than the elbow always'],
     youtubeUrl: 'https://www.youtube.com/results?search_query=americana+keylock+bjj+mount+side+control' },
+  { id: 417, name: 'Arm Triangle Choke', categoryId: 4, difficulty: 'INTERMEDIATE', isCustom: false,
+    description: 'Head-and-arm blood choke finished from mount or side control with shoulder pressure.',
+    cues: ['Trap their arm across neck first', 'Head low on same side as trapped arm', 'Walk to side while squeezing shoulder in', 'Finish with chest drop and pressure'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=arm+triangle+choke+bjj' },
+  { id: 418, name: 'North-South Choke', categoryId: 4, difficulty: 'ADVANCED', isCustom: false,
+    description: 'Choke from north-south using shoulder and lat pressure around the neck.',
+    cues: ['Arm wraps deep around neck line', 'Shoulder pressure down, not pulling up', 'Sprawl hips away to tighten', 'Hide elbow and keep chest heavy'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=north+south+choke+bjj' },
 
   // Takedowns & Throws (5xx)
   { id: 501, name: 'Double Leg Takedown', categoryId: 5, difficulty: 'BEGINNER', isCustom: false,
@@ -220,6 +252,14 @@ export const prefilledTechniques: Technique[] = [
     description: 'Loading the opponent across the back by gripping arm and ankle.',
     cues: ['Control one arm and the opposite ankle', 'Duck under and load across shoulders', 'Drive shoulder into their armpit', 'Roll them over your back to finish'],
     youtubeUrl: 'https://www.youtube.com/results?search_query=fireman+carry+wrestling+bjj+takedown' },
+  { id: 509, name: 'Foot Sweep (De Ashi Barai)', categoryId: 5, difficulty: 'INTERMEDIATE', isCustom: false,
+    description: 'Timing-based sweep that removes a stepping foot to take the opponent down cleanly.',
+    cues: ['Attack as their weight shifts', 'Use sleeve/collar pull to unbalance', 'Sweep low at ankle line', 'Direction of sweep follows their step'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=de+ashi+barai+bjj+judo' },
+  { id: 510, name: 'Snap Down to Front Headlock', categoryId: 5, difficulty: 'INTERMEDIATE', isCustom: false,
+    description: 'Pulling opponent head and posture down to secure front headlock control and attacks.',
+    cues: ['Pull with elbows not wrists', 'Step back as you snap down', 'Circle to angle off immediately', 'Secure chin strap and elbow control'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=snap+down+front+headlock+bjj' },
 
   // Escapes (6xx)
   { id: 601, name: 'Bridge and Roll (Upa)', categoryId: 6, difficulty: 'BEGINNER', isCustom: false,
@@ -246,6 +286,10 @@ export const prefilledTechniques: Technique[] = [
     description: 'Stacking, posturing, and using grip breaks to escape the triangle choke.',
     cues: ['Stack their hips immediately — take the weight off', 'Posture upright — chin up, back straight', 'Break their grip on your head or wrist', 'Step over their leg to escape the triangle'],
     youtubeUrl: 'https://www.youtube.com/results?search_query=triangle+choke+defense+escape+bjj' },
+  { id: 607, name: 'Knee-On-Belly Escape', categoryId: 6, difficulty: 'BEGINNER', isCustom: false,
+    description: 'Escape sequence to remove knee pressure and recover guard or half guard.',
+    cues: ['Frame at their knee and hip', 'Bridge then shrimp under pressure', 'Catch their stepping leg for half guard', 'Do not push with straight arms'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=knee+on+belly+escape+bjj' },
 
   // Positions (7xx)
   { id: 701, name: 'Mount', categoryId: 7, difficulty: 'BEGINNER', isCustom: false,
@@ -272,6 +316,10 @@ export const prefilledTechniques: Technique[] = [
     description: 'Defensive position on all fours — the opponent must break it open to attack.',
     cues: ['Chin to chest — protect the neck always', 'Post on head and hands for structure', 'Look for the sit-out or roll to escape', 'Never stay static — create movement to escape'],
     youtubeUrl: 'https://www.youtube.com/results?search_query=turtle+position+bjj+attacks+defense' },
+  { id: 707, name: 'Half Guard Top', categoryId: 7, difficulty: 'INTERMEDIATE', isCustom: false,
+    description: 'Top control position while opponent has one leg trapped, ideal for pressure passing.',
+    cues: ['Cross-face and underhook as priorities', 'Flatten hips before freeing leg', 'Walk knee line backward to clear trap', 'Switch base when they knee shield'],
+    youtubeUrl: 'https://www.youtube.com/results?search_query=half+guard+top+position+bjj' },
 ]
 
 export const prefilledConnections: TechniqueConnection[] = [
@@ -309,6 +357,8 @@ export const prefilledConnections: TechniqueConnection[] = [
   { fromTechniqueId: 109, toTechniqueId: 409, connectionType: 'FOLLOW_UP' },
   { fromTechniqueId: 109, toTechniqueId: 407, connectionType: 'FOLLOW_UP' },
   { fromTechniqueId: 109, toTechniqueId: 408, connectionType: 'FOLLOW_UP' },
+  { fromTechniqueId: 112, toTechniqueId: 407, connectionType: 'FOLLOW_UP' },
+  { fromTechniqueId: 112, toTechniqueId: 408, connectionType: 'FOLLOW_UP' },
   // Spider Guard
   { fromTechniqueId: 104, toTechniqueId: 402, connectionType: 'FOLLOW_UP' },
   { fromTechniqueId: 104, toTechniqueId: 308, connectionType: 'FOLLOW_UP' },
@@ -336,6 +386,7 @@ export const prefilledConnections: TechniqueConnection[] = [
   // North-South
   { fromTechniqueId: 704, toTechniqueId: 403, connectionType: 'FOLLOW_UP' },
   { fromTechniqueId: 704, toTechniqueId: 412, connectionType: 'FOLLOW_UP' },
+  { fromTechniqueId: 704, toTechniqueId: 418, connectionType: 'FOLLOW_UP' },
   // Knee on Belly
   { fromTechniqueId: 705, toTechniqueId: 401, connectionType: 'FOLLOW_UP' },
   { fromTechniqueId: 705, toTechniqueId: 402, connectionType: 'FOLLOW_UP' },
@@ -352,6 +403,8 @@ export const prefilledConnections: TechniqueConnection[] = [
   { fromTechniqueId: 203, toTechniqueId: 702, connectionType: 'TRANSITION' },
   { fromTechniqueId: 204, toTechniqueId: 702, connectionType: 'TRANSITION' },
   { fromTechniqueId: 205, toTechniqueId: 702, connectionType: 'TRANSITION' },
+  { fromTechniqueId: 209, toTechniqueId: 707, connectionType: 'TRANSITION' },
+  { fromTechniqueId: 210, toTechniqueId: 702, connectionType: 'TRANSITION' },
   { fromTechniqueId: 208, toTechniqueId: 407, connectionType: 'FOLLOW_UP' },
   { fromTechniqueId: 208, toTechniqueId: 409, connectionType: 'FOLLOW_UP' },
   { fromTechniqueId: 208, toTechniqueId: 408, connectionType: 'FOLLOW_UP' },

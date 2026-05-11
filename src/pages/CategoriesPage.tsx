@@ -6,9 +6,11 @@ import { db } from '../db/database'
 import type { Category } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import IconPickerModal from '../components/IconPickerModal'
+import { useI18n } from '../i18n'
 
 export default function CategoriesPage() {
   const navigate = useNavigate()
+  const { language, t } = useI18n()
   const [activeCategory, setActiveCategory] = useState<Category | null>(null)
   const categories = useLiveQuery(
     () => db.categories.orderBy('name').toArray(),
@@ -22,7 +24,7 @@ export default function CategoriesPage() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
-        <h1 className="flex-1 font-bold text-zinc-100">Categories</h1>
+        <h1 className="flex-1 font-bold text-zinc-100">{t('Categories')}</h1>
       </div>
 
       <div className="px-4 pb-6 space-y-3">
@@ -46,7 +48,7 @@ export default function CategoriesPage() {
 
       {activeCategory && (
         <IconPickerModal
-          title={`Icon for ${activeCategory.name}`}
+          title={language === 'es' ? `Icono para ${activeCategory.name}` : `Icon for ${activeCategory.name}`}
           value={activeCategory.icon}
           onClose={() => setActiveCategory(null)}
           onSelect={async icon => {

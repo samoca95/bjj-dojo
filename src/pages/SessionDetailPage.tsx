@@ -11,9 +11,10 @@ import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT } from '../utils/sessionTypeIcons'
+import { sessionTypeLabel, useI18n } from '../i18n'
 
-function formatDate(epoch: number) {
-  return new Date(epoch).toLocaleDateString(undefined, {
+function formatDate(epoch: number, locale?: string) {
+  return new Date(epoch).toLocaleDateString(locale, {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   })
 }
@@ -30,6 +31,7 @@ function InfoCard({ label, value }: { label: string; value: string }) {
 export default function SessionDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { t, language, locale } = useI18n()
   const [session, setSession] = useState<Session | null>(null)
   const [sessionTypeIcons, setSessionTypeIcons] = useState(getSessionTypeIcons())
   const club = useLiveQuery(
@@ -70,7 +72,9 @@ export default function SessionDetailPage() {
   )
 
   const handleDelete = () => {
-    if (!window.confirm('Delete this session? This cannot be undone.')) return
+    if (!window.confirm(language === 'es'
+      ? '¿Eliminar esta sesión? Esta acción no se puede deshacer.'
+      : 'Delete this session? This cannot be undone.')) return
     db.sessions.delete(session.id!)
     db.sessionTechniques.where('sessionId').equals(session.id!).delete()
     db.sessionTaps.where('sessionId').equals(session.id!).delete()
@@ -89,7 +93,7 @@ export default function SessionDetailPage() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
-        <h1 className="flex-1 font-bold text-zinc-100 truncate">{formatDate(session.date)}</h1>
+        <h1 className="flex-1 font-bold text-zinc-100 truncate">{formatDate(session.date, locale)}</h1>
         <button onClick={() => navigate(`/sessions/${session.id}/edit`)} className="p-2 text-gold active:text-gold-light">
           <Pencil size={20} strokeWidth={2} />
         </button>
@@ -102,14 +106,14 @@ export default function SessionDetailPage() {
         {/* Type badge with icon */}
         <div className={`inline-flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-lg ${SESSION_TYPE_COLORS[session.sessionType]}`}>
           <CategoryIcon value={sessionTypeIcons[session.sessionType]} size={16} className="text-current" />
-          {SESSION_TYPE_LABELS[session.sessionType]}
+          {sessionTypeLabel(session.sessionType, SESSION_TYPE_LABELS[session.sessionType], language)}
         </div>
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-3">
-          <InfoCard label="Duration" value={`${session.durationMinutes} min`} />
+          <InfoCard label={t('Duration')} value={`${session.durationMinutes} ${t('min')}`} />
           <div className="bg-zinc-900 rounded-xl p-4">
-            <div className="text-xs text-gold mb-2">Energy</div>
+            <div className="text-xs text-gold mb-2">{t('Energy')}</div>
             <EnergyDots level={session.energyLevel} />
           </div>
         </div>
@@ -118,7 +122,7 @@ export default function SessionDetailPage() {
           <div className="bg-zinc-900 rounded-xl p-4 flex gap-3 items-start">
             <Building2 size={16} className="text-gold mt-0.5 shrink-0" strokeWidth={2} />
             <div>
-              <div className="text-xs text-zinc-500 mb-0.5">Club</div>
+              <div className="text-xs text-zinc-500 mb-0.5">{t('Club')}</div>
               <div className="text-sm text-zinc-100">{club.name}</div>
             </div>
           </div>
@@ -126,9 +130,9 @@ export default function SessionDetailPage() {
 
         {/* Techniques Practiced — before taps */}
         <div>
-          <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">TECHNIQUES PRACTICED</h2>
+          <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">{t('TECHNIQUES PRACTICED')}</h2>
           {techniques?.length === 0 ? (
-            <p className="text-sm text-zinc-500">No techniques logged for this session.</p>
+            <p className="text-sm text-zinc-500">{t('No techniques logged for this session.')}</p>
           ) : (
             <div className="space-y-2">
               {techniques?.map(t => (
@@ -150,22 +154,22 @@ export default function SessionDetailPage() {
         {(givenTaps.length > 0 || receivedTaps.length > 0) && (
           <div className="bg-zinc-900 rounded-xl p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="text-xs text-gold">Taps / Submissions</div>
+              <div className="text-xs text-gold">{t('Taps / Submissions')}</div>
               <span className="text-xs text-zinc-500">
-                {givenTaps.length > 0 && `${givenTaps.length} given`}
+                {givenTaps.length > 0 && `${givenTaps.length} ${language === 'es' ? 'aplicada' : 'given'}`}
                 {givenTaps.length > 0 && receivedTaps.length > 0 && ' · '}
-                {receivedTaps.length > 0 && `${receivedTaps.length} received`}
+                {receivedTaps.length > 0 && `${receivedTaps.length} ${language === 'es' ? 'recibida' : 'received'}`}
               </span>
             </div>
             {givenTaps.length > 0 && (
               <div>
-                <div className="text-xs text-zinc-500 mb-1.5">Given ({givenTaps.length})</div>
+                <div className="text-xs text-zinc-500 mb-1.5">{t('Given')} ({givenTaps.length})</div>
                 <div className="space-y-1.5">
-                  {givenTaps.map((t, i) => (
+                  {givenTaps.map((tap, i) => (
                     <div key={i} className="flex items-center gap-2 bg-zinc-800 rounded-lg px-3 py-2">
                       <Zap size={13} className="text-gold shrink-0" strokeWidth={2} />
                       <span className="text-sm text-zinc-100">
-                        {tapTechniqueMap?.get(t.techniqueId) ?? 'Unknown'}
+                          {tapTechniqueMap?.get(tap.techniqueId) ?? t('Unknown')}
                       </span>
                     </div>
                   ))}
@@ -174,13 +178,13 @@ export default function SessionDetailPage() {
             )}
             {receivedTaps.length > 0 && (
               <div>
-                <div className="text-xs text-zinc-500 mb-1.5">Received ({receivedTaps.length})</div>
+                <div className="text-xs text-zinc-500 mb-1.5">{t('Received')} ({receivedTaps.length})</div>
                 <div className="space-y-1.5">
-                  {receivedTaps.map((t, i) => (
+                  {receivedTaps.map((tap, i) => (
                     <div key={i} className="flex items-center gap-2 bg-zinc-800 rounded-lg px-3 py-2">
                       <Zap size={13} className="text-red-400 shrink-0" strokeWidth={2} />
                       <span className="text-sm text-zinc-100">
-                        {tapTechniqueMap?.get(t.techniqueId) ?? 'Unknown'}
+                          {tapTechniqueMap?.get(tap.techniqueId) ?? t('Unknown')}
                       </span>
                     </div>
                   ))}
@@ -192,7 +196,7 @@ export default function SessionDetailPage() {
 
         {session.notes && (
           <div className="bg-zinc-900 rounded-xl p-4">
-            <div className="text-xs text-gold mb-2">Notes</div>
+            <div className="text-xs text-gold mb-2">{t('Notes')}</div>
             <p className="text-sm text-zinc-100 whitespace-pre-wrap">{session.notes}</p>
           </div>
         )}

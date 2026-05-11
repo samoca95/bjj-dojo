@@ -6,6 +6,7 @@ import { db } from '../db/database'
 import type { Category, ConnectionType, Difficulty, Technique, TechniqueConnection } from '../types'
 import { CONNECTION_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
+import { useI18n, connectionTypeLabel, difficultyLabel } from '../i18n'
 
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
@@ -23,6 +24,7 @@ const CONNECTION_TYPES = Object.keys(CONNECTION_LABELS) as ConnectionType[]
 
 export default function TechniqueEditPage() {
   const navigate = useNavigate()
+  const { language, t } = useI18n()
   const { id } = useParams<{ id: string }>()
   const isNew = !id
 
@@ -82,6 +84,15 @@ export default function TechniqueEditPage() {
         isCustom: true,
       }
       await db.techniques.add(technique)
+      if (connections.length > 0) {
+        await db.techniqueConnections.bulkAdd(
+          connections.map(connection => ({
+            fromTechniqueId: newId,
+            toTechniqueId: connection.toTechniqueId,
+            connectionType: connection.connectionType,
+          })),
+        )
+      }
       navigate(`/techniques/${newId}`)
     } else {
       await db.techniques.update(Number(id), {
@@ -108,7 +119,9 @@ export default function TechniqueEditPage() {
 
   const handleDelete = async () => {
     if (!id || isNew) return
-    if (!window.confirm('Delete this technique? This cannot be undone.')) return
+    if (!window.confirm(language === 'es'
+      ? '¿Eliminar esta técnica? Esta acción no se puede deshacer.'
+      : 'Delete this technique? This cannot be undone.')) return
     await db.techniques.delete(Number(id))
     await db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete()
     await db.techniqueConnections.where('toTechniqueId').equals(Number(id)).delete()
@@ -127,14 +140,13 @@ export default function TechniqueEditPage() {
   }
 
   const addConnection = () => {
-    if (!id || isNew) return
     if (!newConnectionTargetId) return
-    if (newConnectionTargetId === Number(id)) return
+    if (!isNew && newConnectionTargetId === Number(id)) return
     const exists = connections.some(c => c.toTechniqueId === newConnectionTargetId)
     if (exists) return
     setConnections(prev => [
       ...prev,
-      { fromTechniqueId: Number(id), toTechniqueId: newConnectionTargetId, connectionType: newConnectionType },
+      { fromTechniqueId: isNew ? 0 : Number(id), toTechniqueId: newConnectionTargetId, connectionType: newConnectionType },
     ])
     setNewConnectionTargetId(null)
     setNewConnectionType('FOLLOW_UP')
@@ -149,7 +161,7 @@ export default function TechniqueEditPage() {
   }
 
   const updateConnectionTarget = (previousTargetId: number, targetId: number) => {
-    if (!id || targetId === Number(id)) return
+    if (!isNew && targetId === Number(id)) return
     // Exclude the current row so editing its target/type doesn't trigger a false duplicate.
     const isDuplicate = connections.some(c => c.toTechniqueId !== previousTargetId && c.toTechniqueId === targetId)
     if (isDuplicate) return
@@ -167,32 +179,32 @@ export default function TechniqueEditPage() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
-        <h1 className="flex-1 font-bold text-zinc-100">{isNew ? 'New Technique' : 'Edit Technique'}</h1>
+        <h1 className="flex-1 font-bold text-zinc-100">{isNew ? t('New Technique') : t('Edit Technique')}</h1>
         <button
           onClick={handleSave}
           disabled={!name.trim()}
           className="text-gold font-bold text-sm active:text-gold-light px-2 disabled:opacity-40"
         >
-          Save
+            {t('Save')}
         </button>
       </div>
 
       <div className="px-4 space-y-5 pb-8">
         {/* Name */}
         <div>
-          <label className="text-xs text-gold font-semibold tracking-wide">NAME</label>
+           <label className="text-xs text-gold font-semibold tracking-wide">{t('NAME')}</label>
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="Technique name"
+             placeholder={t('Technique name')}
             className={`${inputCls} mt-2`}
           />
         </div>
 
         {/* Category */}
         <div>
-          <label className="text-xs text-gold font-semibold tracking-wide">CATEGORY</label>
+           <label className="text-xs text-gold font-semibold tracking-wide">{t('CATEGORY')}</label>
           <div className="flex flex-wrap gap-2 mt-2">
             {categories?.map(c => (
               <button
@@ -216,7 +228,7 @@ export default function TechniqueEditPage() {
 
         {/* Difficulty */}
         <div>
-          <label className="text-xs text-gold font-semibold tracking-wide">DIFFICULTY</label>
+           <label className="text-xs text-gold font-semibold tracking-wide">{t('DIFFICULTY')}</label>
           <div className="flex flex-wrap gap-2 mt-2">
             {DIFFICULTIES.map(d => (
               <button
@@ -226,7 +238,7 @@ export default function TechniqueEditPage() {
                   difficulty === d ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
                 }`}
               >
-                {DIFFICULTY_LABELS[d]}
+                {difficultyLabel(d, DIFFICULTY_LABELS[d], language)}
               </button>
             ))}
           </div>
@@ -234,11 +246,11 @@ export default function TechniqueEditPage() {
 
         {/* Description */}
         <div>
-          <label className="text-xs text-gold font-semibold tracking-wide">DESCRIPTION</label>
+           <label className="text-xs text-gold font-semibold tracking-wide">{t('DESCRIPTION')}</label>
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder="Describe this technique…"
+             placeholder={language === 'es' ? 'Describe esta técnica…' : 'Describe this technique…'}
             rows={4}
             className={`${inputCls} mt-2 resize-none`}
           />
@@ -246,7 +258,7 @@ export default function TechniqueEditPage() {
 
         {/* YouTube URL */}
         <div>
-          <label className="text-xs text-gold font-semibold tracking-wide">YOUTUBE URL</label>
+           <label className="text-xs text-gold font-semibold tracking-wide">{t('YOUTUBE URL')}</label>
           <input
             type="url"
             inputMode="url"
@@ -259,7 +271,7 @@ export default function TechniqueEditPage() {
 
         {/* Coaching cues */}
         <div>
-          <label className="text-xs text-gold font-semibold tracking-wide">COACHING CUES</label>
+           <label className="text-xs text-gold font-semibold tracking-wide">{t('COACHING CUES')}</label>
           <div className="space-y-2 mt-2">
             {cues.map((cue, i) => (
               <div key={i} className="flex items-center gap-2 bg-zinc-900 rounded-xl px-3 py-2.5">
@@ -276,7 +288,7 @@ export default function TechniqueEditPage() {
                 value={newCue}
                 onChange={e => setNewCue(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addCue()}
-                placeholder="Add a coaching cue…"
+                 placeholder={language === 'es' ? 'Añadir clave técnica…' : 'Add a coaching cue…'}
                 className="flex-1 bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
               />
               <button
@@ -290,13 +302,12 @@ export default function TechniqueEditPage() {
           </div>
         </div>
 
-        {!isNew && (
-          <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">TECHNIQUE CONNECTIONS</label>
+        <div>
+             <label className="text-xs text-gold font-semibold tracking-wide">{t('TECHNIQUE CONNECTIONS')}</label>
             <div className="space-y-2 mt-2">
               {connections.length === 0 && (
                 <div className="bg-zinc-900 rounded-xl px-3 py-2.5 text-sm text-zinc-500">
-                  No connections yet.
+                  {t('No connections yet.')}
                 </div>
               )}
               {connections.map(connection => (
@@ -317,19 +328,19 @@ export default function TechniqueEditPage() {
                       className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
                     >
                       {CONNECTION_TYPES.map(type => (
-                        <option key={type} value={type}>{CONNECTION_LABELS[type]}</option>
+                          <option key={type} value={type}>{connectionTypeLabel(type, CONNECTION_LABELS[type], language)}</option>
                       ))}
                     </select>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-zinc-500 truncate">
-                      {techniqueNameById.get(connection.toTechniqueId) ?? 'Unknown technique'}
+                      {techniqueNameById.get(connection.toTechniqueId) ?? t('Unknown technique')}
                     </span>
                     <button
                       onClick={() => removeConnection(connection.toTechniqueId)}
                       className="text-zinc-500 active:text-zinc-200 text-xs font-semibold"
                     >
-                      Remove
+                       {t('Remove')}
                     </button>
                   </div>
                 </div>
@@ -341,7 +352,7 @@ export default function TechniqueEditPage() {
                     onChange={e => setNewConnectionTargetId(e.target.value ? Number(e.target.value) : null)}
                     className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
                   >
-                    <option value="">Select connected technique…</option>
+                     <option value="">{t('Select connected technique…')}</option>
                     {connectionOptions
                       .filter(t => !connections.some(c => c.toTechniqueId === t.id))
                       .map(t => (
@@ -354,7 +365,7 @@ export default function TechniqueEditPage() {
                     className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
                   >
                     {CONNECTION_TYPES.map(type => (
-                      <option key={type} value={type}>{CONNECTION_LABELS[type]}</option>
+                       <option key={type} value={type}>{connectionTypeLabel(type, CONNECTION_LABELS[type], language)}</option>
                     ))}
                   </select>
                 </div>
@@ -363,12 +374,11 @@ export default function TechniqueEditPage() {
                   disabled={!newConnectionTargetId}
                   className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm font-semibold text-gold active:bg-zinc-700 disabled:opacity-40"
                 >
-                  Add Connection
+                   {t('Add Connection')}
                 </button>
               </div>
             </div>
           </div>
-        )}
 
         {/* Delete */}
         {!isNew && (
@@ -376,8 +386,8 @@ export default function TechniqueEditPage() {
             onClick={handleDelete}
             className="w-full mt-4 py-3 rounded-xl bg-red-900/30 text-red-400 text-sm font-semibold active:bg-red-900/50"
           >
-            Delete Technique
-          </button>
+             {t('Delete Technique')}
+           </button>
         )}
       </div>
     </div>

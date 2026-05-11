@@ -62,7 +62,10 @@ const sampleTechnique = {
 }
 
 function renderNew() {
-  mockUseLiveQuery.mockReturnValue(sampleCategories)
+  // Alternate: odd calls → categories, even calls → allTechniques ([])
+  // This handles multiple renders without running out of mocked values
+  let callIdx = 0
+  mockUseLiveQuery.mockImplementation(() => callIdx++ % 2 === 0 ? sampleCategories : [])
   return render(
     <MemoryRouter initialEntries={['/techniques/new/edit']}>
       <Routes>
@@ -76,7 +79,9 @@ function renderNew() {
 
 function renderEdit(technique = sampleTechnique) {
   mocks.get.mockResolvedValue(technique)
-  mockUseLiveQuery.mockReturnValue(sampleCategories)
+  // Alternate: odd calls → categories, even calls → allTechniques ([])
+  let callIdx = 0
+  mockUseLiveQuery.mockImplementation(() => callIdx++ % 2 === 0 ? sampleCategories : [])
   return render(
     <MemoryRouter initialEntries={[`/techniques/${technique.id}/edit`]}>
       <Routes>

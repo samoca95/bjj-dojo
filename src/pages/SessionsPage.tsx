@@ -8,9 +8,10 @@ import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT } from '../utils/sessionTypeIcons'
+import { useI18n, sessionTypeLabel } from '../i18n'
 
-function formatDate(epoch: number) {
-  return new Date(epoch).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+function formatDate(epoch: number, locale?: string) {
+  return new Date(epoch).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function SessionCard({
@@ -18,11 +19,17 @@ function SessionCard({
   clubName,
   onClick,
   icon,
+  locale,
+  t,
+  language,
 }: {
   session: Session
   clubName?: string
   onClick: () => void
   icon: string
+  locale?: string
+  t: (text: string) => string
+  language: 'en' | 'es'
 }) {
   const tapData = useLiveQuery(async () => {
     if (!session.id) return { given: 0, received: 0 }
@@ -41,8 +48,6 @@ function SessionCard({
     return techs.map(t => t.name)
   }, [session.id], [] as string[])
 
-  const totalTaps = (tapData?.given ?? 0) + (tapData?.received ?? 0)
-
   return (
     <button
       onClick={onClick}
@@ -55,18 +60,28 @@ function SessionCard({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-zinc-100 text-sm">{formatDate(session.date)}</span>
+          <span className="font-semibold text-zinc-100 text-sm">{formatDate(session.date, locale)}</span>
           <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${SESSION_TYPE_COLORS[session.sessionType]}`}>
-            {SESSION_TYPE_LABELS[session.sessionType]}
+            {sessionTypeLabel(session.sessionType, SESSION_TYPE_LABELS[session.sessionType], language)}
           </span>
         </div>
         <div className="flex items-center gap-3 mt-0.5">
-          <span className="text-xs text-zinc-400">{session.durationMinutes} min</span>
+          <span className="text-xs text-zinc-400">{session.durationMinutes} {t('min')}</span>
           {clubName && <span className="text-xs text-zinc-500 truncate">{clubName}</span>}
-          {totalTaps > 0 && (
-            <span className="flex items-center gap-0.5 text-xs text-zinc-500">
-              <Zap size={10} className="text-zinc-500" />
-              {totalTaps}
+          {(tapData?.given > 0 || tapData?.received > 0) && (
+            <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+              {(tapData?.given ?? 0) > 0 && (
+                <span className="flex items-center gap-0.5">
+                  <Zap size={10} className="text-gold" />
+                  {tapData?.given}
+                </span>
+              )}
+              {(tapData?.received ?? 0) > 0 && (
+                <span className="flex items-center gap-0.5">
+                  <Zap size={10} className="text-red-400" />
+                  {tapData?.received}
+                </span>
+              )}
             </span>
           )}
         </div>
@@ -86,6 +101,7 @@ function SessionCard({
 
 export default function SessionsPage() {
   const navigate = useNavigate()
+  const { t, locale, language } = useI18n()
   const [sessionTypeIcons, setSessionTypeIcons] = useState(getSessionTypeIcons())
   const sessions = useLiveQuery(
     () => db.sessions.orderBy('date').reverse().toArray(),
@@ -104,7 +120,7 @@ export default function SessionsPage() {
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-6 pt-12 pb-4 z-10">
-        <h1 className="text-2xl font-bold text-zinc-100">Sessions</h1>
+        <h1 className="text-2xl font-bold text-zinc-100">{t('Sessions')}</h1>
       </div>
 
       <div className="px-4 pb-4">
@@ -113,8 +129,8 @@ export default function SessionsPage() {
             <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center">
               <CalendarDays size={32} className="text-zinc-600" strokeWidth={2} />
             </div>
-            <p className="text-zinc-400 font-medium">No sessions yet</p>
-            <p className="text-zinc-600 text-sm">Tap + to log your first training</p>
+            <p className="text-zinc-400 font-medium">{t('No sessions yet')}</p>
+            <p className="text-zinc-600 text-sm">{t('Tap + to log your first training')}</p>
           </div>
         ) : (
             <div className="space-y-3">
@@ -123,6 +139,9 @@ export default function SessionsPage() {
                   key={s.id}
                   session={s}
                   icon={sessionTypeIcons[s.sessionType]}
+                  locale={locale}
+                  t={t}
+                  language={language}
                   clubName={s.clubId !== null && s.clubId !== undefined ? clubMap.get(s.clubId) : undefined}
                   onClick={() => navigate(`/sessions/${s.id}`)}
                 />

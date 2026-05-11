@@ -6,6 +6,8 @@ import { db } from '../db/database'
 import type { Category, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
+import { useI18n } from '../i18n'
+import { techniqueMatchesQuery } from '../utils/fuzzySearch'
 
 function TechniqueRow({ technique, categoryName, categoryIcon, onClick }: {
   technique: Technique; categoryName: string; categoryIcon?: string; onClick: () => void
@@ -33,6 +35,7 @@ function TechniqueRow({ technique, categoryName, categoryIcon, onClick }: {
 
 export default function TechniquesPage() {
   const navigate = useNavigate()
+  const { t, language } = useI18n()
   const [search, setSearch] = useState('')
   const [categoryId, setCategoryId] = useState<number | null>(null)
 
@@ -45,8 +48,7 @@ export default function TechniquesPage() {
         : db.techniques.toCollection()
       const results = await q.sortBy('name')
       if (search.trim()) {
-        const s = search.toLowerCase()
-        return results.filter(t => t.name.toLowerCase().includes(s))
+        return results.filter(t => techniqueMatchesQuery(t, search))
       }
       return results
     },
@@ -61,7 +63,7 @@ export default function TechniquesPage() {
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm z-10">
         <div className="px-6 pt-12 pb-3">
-          <h1 className="text-2xl font-bold text-zinc-100">Techniques</h1>
+          <h1 className="text-2xl font-bold text-zinc-100">{t('Techniques')}</h1>
         </div>
 
         {/* Search */}
@@ -72,7 +74,7 @@ export default function TechniquesPage() {
               type="text"
               value={search}
               onChange={e => { setSearch(e.target.value); setCategoryId(null) }}
-              placeholder="Search techniques…"
+               placeholder={t('Search techniques…')}
               className="w-full bg-zinc-800 rounded-xl pl-9 pr-9 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
             />
             {search && (
@@ -91,7 +93,7 @@ export default function TechniquesPage() {
               categoryId === null ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
             }`}
           >
-            All
+            {t('All')}
           </button>
           {categories?.map((c: Category) => (
             <button
@@ -108,7 +110,14 @@ export default function TechniquesPage() {
         </div>
 
         <div className="px-6 pb-2">
-          <span className="text-xs text-zinc-500">{techniques?.length ?? 0} technique{techniques?.length !== 1 ? 's' : ''}</span>
+          <span className="text-xs text-zinc-500">
+            {techniques?.length ?? 0}{' '}
+            {(() => {
+              const count = techniques?.length ?? 0
+              if (language === 'es') return count === 1 ? 'técnica' : 'técnicas'
+              return count === 1 ? 'technique' : 'techniques'
+            })()}
+          </span>
         </div>
       </div>
 

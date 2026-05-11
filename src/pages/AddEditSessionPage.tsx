@@ -8,6 +8,8 @@ import { db } from '../db/database'
 import type { Category, Club, Session, SessionType, Technique, TapType } from '../types'
 import { SESSION_TYPE_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
+import { useI18n, sessionTypeLabel } from '../i18n'
+import { techniqueMatchesQuery } from '../utils/fuzzySearch'
 
 function toDateInput(epoch: number) {
   const d = new Date(epoch)
@@ -27,7 +29,8 @@ const inputCls =
 
 const DURATION_PRESETS = [60, 75, 90, 120]
 
-const ENERGY_LABELS = ['', 'Exhausted', 'Low', 'Average', 'Good', 'Peak']
+const ENERGY_LABELS_EN = ['', 'Exhausted', 'Low', 'Average', 'Good', 'Peak']
+const ENERGY_LABELS_ES = ['', 'Agotado', 'Bajo', 'Medio', 'Bueno', 'Máximo']
 
 type LocalTap = { uid: string; techniqueId: number; techniqueName: string; type: TapType }
 
@@ -35,6 +38,7 @@ type PickerMode = 'techniques' | 'tap-given' | 'tap-received'
 
 export default function AddEditSessionPage() {
   const navigate = useNavigate()
+  const { t, language } = useI18n()
   const { id } = useParams<{ id: string }>()
   const isEdit = Boolean(id)
 
@@ -105,6 +109,13 @@ export default function AddEditSessionPage() {
     })
   }, [id, isEdit])
 
+  // Default to first club when creating a new session
+  useEffect(() => {
+    if (!isEdit && clubs && clubs.length > 0 && clubId === null) {
+      setClubId(clubs[0].id ?? null)
+    }
+  }, [clubs, isEdit, clubId])
+
   const handleSave = async () => {
     const session: Session = {
       date: fromDateInput(date),
@@ -125,11 +136,8 @@ export default function AddEditSessionPage() {
       sid = (await db.sessions.add(session)) as number
     }
 
-    const allSelectedIds = new Set(selectedIds)
-    taps.forEach(t => allSelectedIds.add(t.techniqueId))
-
     await db.sessionTechniques.bulkAdd(
-      [...allSelectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
+      [...selectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
     )
     await db.sessionTaps.bulkAdd(
       taps.map(t => ({ sessionId: sid, techniqueId: t.techniqueId, type: t.type })),
@@ -137,9 +145,7 @@ export default function AddEditSessionPage() {
     navigate(isEdit ? `/sessions/${sid}` : '/sessions')
   }
 
-  const filteredTechniques = allTechniques?.filter(t =>
-    pickerSearch === '' || t.name.toLowerCase().includes(pickerSearch.toLowerCase()),
-  )
+  const filteredTechniques = allTechniques?.filter(t => techniqueMatchesQuery(t, pickerSearch))
 
   const openPicker = (mode: PickerMode) => {
     setPickerMode(mode)
@@ -167,7 +173,6 @@ export default function AddEditSessionPage() {
           type: tapType,
         },
       ])
-      setSelectedIds(prev => new Set([...prev, technique.id]))
     }
   }
 
@@ -199,6 +204,7 @@ export default function AddEditSessionPage() {
   const givenTaps = taps.filter(t => t.type === 'given')
   const receivedTaps = taps.filter(t => t.type === 'received')
   const energyProgress = ((energy - 1) / 4) * 100
+  const ENERGY_LABELS = language === 'es' ? ENERGY_LABELS_ES : ENERGY_LABELS_EN
 
   return (
     <>
@@ -208,16 +214,16 @@ export default function AddEditSessionPage() {
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
             <ChevronLeft size={24} strokeWidth={2} />
           </button>
-          <h1 className="flex-1 font-bold text-zinc-100">{isEdit ? 'Edit Session' : 'Log Session'}</h1>
+          <h1 className="flex-1 font-bold text-zinc-100">{isEdit ? t('Edit Session') : t('Log Session')}</h1>
           <button onClick={handleSave} className="text-gold font-bold text-sm active:text-gold-light px-2">
-            Save
+            {t('Save')}
           </button>
         </div>
 
         <div className="px-4 space-y-5 pb-8">
           {/* Date — first field */}
           <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">DATE</label>
+            <label className="text-xs text-gold font-semibold tracking-wide">{t('DATE')}</label>
             <input
               type="date"
               value={date}
@@ -228,7 +234,7 @@ export default function AddEditSessionPage() {
 
           {/* Session type */}
           <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">SESSION TYPE</label>
+            <label className="text-xs text-gold font-semibold tracking-wide">{t('SESSION TYPE')}</label>
             <div className="flex flex-wrap gap-2 mt-2">
               {(Object.keys(SESSION_TYPE_LABELS) as SessionType[]).map(t => (
                 <button
@@ -240,7 +246,7 @@ export default function AddEditSessionPage() {
                       : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
                   }`}
                 >
-                  {SESSION_TYPE_LABELS[t]}
+                   {sessionTypeLabel(t, SESSION_TYPE_LABELS[t], language)}
                 </button>
               ))}
             </div>
@@ -249,12 +255,12 @@ export default function AddEditSessionPage() {
           {/* Club */}
           <div>
             <div className="flex items-center justify-between">
-              <label className="text-xs text-gold font-semibold tracking-wide">CLUB</label>
+               <label className="text-xs text-gold font-semibold tracking-wide">{t('CLUB')}</label>
               <button
                 onClick={() => navigate('/settings')}
                 className="text-xs text-gold font-semibold tracking-wide active:text-gold-light"
               >
-                Manage
+                 {t('Manage')}
               </button>
             </div>
             {clubs?.length === 0 ? (
@@ -262,7 +268,7 @@ export default function AddEditSessionPage() {
                 onClick={() => navigate('/settings')}
                 className="mt-2 w-full bg-zinc-800 rounded-xl px-4 py-3 text-sm text-left text-zinc-400 active:bg-zinc-700 transition-colors"
               >
-                Add your first club
+                 {language === 'es' ? 'Añade tu primera academia' : 'Add your first club'}
               </button>
             ) : (
               <div className="flex flex-wrap gap-2 mt-2">
@@ -283,7 +289,7 @@ export default function AddEditSessionPage() {
                     clubId === null ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
                   }`}
                 >
-                  Another
+                  {t('Another')}
                 </button>
               </div>
             )}
@@ -291,7 +297,7 @@ export default function AddEditSessionPage() {
 
           {/* Duration */}
           <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">DURATION</label>
+            <label className="text-xs text-gold font-semibold tracking-wide">{t('DURATION')}</label>
             <div className="flex flex-wrap gap-2 mt-2">
               {DURATION_PRESETS.map(d => (
                 <button
@@ -306,14 +312,14 @@ export default function AddEditSessionPage() {
                   {d}m
                 </button>
               ))}
-              <button
-                onClick={() => setCustomDuration(true)}
+                <button
+                  onClick={() => setCustomDuration(true)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   customDuration ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
                 }`}
               >
-                Custom
-              </button>
+                  {t('Custom')}
+                </button>
             </div>
             {customDuration && (
               <input
@@ -321,7 +327,7 @@ export default function AddEditSessionPage() {
                 inputMode="numeric"
                 value={duration}
                 onChange={e => setDuration(e.target.value)}
-                placeholder="Minutes"
+                 placeholder={t('Minutes')}
                 className={`${inputCls} mt-2`}
               />
             )}
@@ -330,7 +336,7 @@ export default function AddEditSessionPage() {
           {/* Energy — responsive slider */}
           <div>
             <div className="flex items-center justify-between">
-              <label className="text-xs text-gold font-semibold tracking-wide">ENERGY LEVEL</label>
+               <label className="text-xs text-gold font-semibold tracking-wide">{t('ENERGY LEVEL')}</label>
               <span className="text-sm text-zinc-400 font-medium">
                 {ENERGY_LABELS[energy]}
               </span>
@@ -342,9 +348,9 @@ export default function AddEditSessionPage() {
                 max={5}
                 value={energy}
                 onChange={e => setEnergy(Number(e.target.value))}
-                className="energy-slider w-full h-2.5 rounded-full appearance-none cursor-pointer"
+                className="energy-slider w-full h-1 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, var(--energy-teal) 0%, var(--energy-teal) ${energyProgress}%, #3f3f46 ${energyProgress}%, #3f3f46 100%)`,
+                  background: `linear-gradient(to right, #d4a017 0%, #d4a017 ${energyProgress}%, #3f3f46 ${energyProgress}%, #3f3f46 100%)`,
                 }}
               />
               <div className="flex justify-between mt-1">
@@ -357,42 +363,47 @@ export default function AddEditSessionPage() {
 
           {/* Techniques Practiced — before taps */}
           <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">TECHNIQUES PRACTICED</label>
+             <label className="text-xs text-gold font-semibold tracking-wide">{t('TECHNIQUES PRACTICED')}</label>
             <button
               onClick={() => openPicker('techniques')}
               className="mt-2 w-full bg-zinc-800 rounded-xl px-4 py-3 text-sm text-left active:bg-zinc-700 transition-colors"
             >
               {selectedIds.size === 0 ? (
-                <span className="text-zinc-500">Add techniques…</span>
+                 <span className="text-zinc-500">{t('Add techniques…')}</span>
               ) : (
-                <span className="text-zinc-100">{selectedIds.size} technique{selectedIds.size !== 1 ? 's' : ''} selected</span>
+                 <span className="text-zinc-100">
+                   {selectedIds.size}{' '}
+                   {language === 'es'
+                     ? `técnica${selectedIds.size !== 1 ? 's' : ''} seleccionada${selectedIds.size !== 1 ? 's' : ''}`
+                     : `technique${selectedIds.size !== 1 ? 's' : ''} selected`}
+                 </span>
               )}
             </button>
           </div>
 
           {/* Taps / Submissions — after techniques */}
           <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">TAPS / SUBMISSIONS</label>
+             <label className="text-xs text-gold font-semibold tracking-wide">{t('TAPS / SUBMISSIONS')}</label>
             <div className="flex gap-2 mt-2">
               <button
                 onClick={() => openPicker('tap-given')}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 active:bg-zinc-700"
               >
                 <Plus size={14} />
-                Given
+                 {t('Given')}
               </button>
               <button
                 onClick={() => openPicker('tap-received')}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 active:bg-zinc-700"
               >
                 <Plus size={14} />
-                Received
+                 {t('Received')}
               </button>
             </div>
 
             {givenTaps.length > 0 && (
               <div className="mt-3">
-                <div className="text-xs text-zinc-500 mb-1.5">Given ({givenTaps.length})</div>
+                 <div className="text-xs text-zinc-500 mb-1.5">{t('Given')} ({givenTaps.length})</div>
                 <div className="space-y-1.5">
                   {givenTaps.map(t => (
                     <div key={t.uid} className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2">
@@ -409,7 +420,7 @@ export default function AddEditSessionPage() {
 
             {receivedTaps.length > 0 && (
               <div className="mt-3">
-                <div className="text-xs text-zinc-500 mb-1.5">Received ({receivedTaps.length})</div>
+                 <div className="text-xs text-zinc-500 mb-1.5">{t('Received')} ({receivedTaps.length})</div>
                 <div className="space-y-1.5">
                   {receivedTaps.map(t => (
                     <div key={t.uid} className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2">
@@ -427,11 +438,11 @@ export default function AddEditSessionPage() {
 
           {/* Notes */}
           <div>
-            <label className="text-xs text-gold font-semibold tracking-wide">NOTES</label>
+             <label className="text-xs text-gold font-semibold tracking-wide">{t('NOTES')}</label>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="What did you work on? Any insights?"
+               placeholder={t('What did you work on? Any insights?')}
               rows={4}
               className={`${inputCls} mt-2 resize-none`}
             />
@@ -446,20 +457,20 @@ export default function AddEditSessionPage() {
             <div className="px-4 pt-4 pb-3 flex items-center gap-3 border-b border-zinc-800">
               <h2 className="flex-1 font-bold text-zinc-100">
                 {pickerMode === 'techniques'
-                  ? 'Select Techniques'
+                  ? t('Select Techniques')
                   : pickerMode === 'tap-given'
-                  ? 'Select Technique — Tap Given'
-                  : 'Select Technique — Tap Received'}
+                  ? t('Select Technique — Tap Given')
+                  : t('Select Technique — Tap Received')}
               </h2>
               <button
                 onClick={() => { setShowPicker(false); setShowCreateTechnique(false) }}
                 className="text-gold font-semibold active:text-gold-light"
               >
                 {pickerMode === 'techniques'
-                  ? `Done (${selectedIds.size})`
+                  ? `${t('Done')} (${selectedIds.size})`
                   : pickerMode === 'tap-given'
-                  ? `Done (${givenTaps.length})`
-                  : `Done (${receivedTaps.length})`}
+                    ? `${t('Done')} (${givenTaps.length})`
+                    : `${t('Done')} (${receivedTaps.length})`}
               </button>
             </div>
 
@@ -468,7 +479,7 @@ export default function AddEditSessionPage() {
                 type="text"
                 value={pickerSearch}
                 onChange={e => setPickerSearch(e.target.value)}
-                placeholder="Search…"
+                placeholder={language === 'es' ? 'Buscar…' : 'Search…'}
                 className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
               />
             </div>
@@ -481,16 +492,16 @@ export default function AddEditSessionPage() {
                   className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800 active:bg-zinc-800 text-left text-gold"
                 >
                   <Plus size={16} className="shrink-0" />
-                  <span className="text-sm font-medium">Add new technique…</span>
+                  <span className="text-sm font-medium">{t('Add new technique…')}</span>
                 </button>
               ) : (
                 <div className="px-4 py-3 border-b border-zinc-800 space-y-3 bg-zinc-950/40">
-                  <div className="text-xs text-gold font-semibold">NEW TECHNIQUE</div>
+                  <div className="text-xs text-gold font-semibold">{t('NEW TECHNIQUE')}</div>
                   <input
                     type="text"
                     value={newTechName}
                     onChange={e => setNewTechName(e.target.value)}
-                    placeholder="Technique name"
+                    placeholder={t('Technique name')}
                     autoFocus
                     className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
                   />
@@ -514,13 +525,13 @@ export default function AddEditSessionPage() {
                       disabled={!newTechName.trim()}
                       className="flex-1 bg-gold text-black font-semibold py-2 rounded-xl text-sm disabled:opacity-40"
                     >
-                      Add
+                      {t('Add')}
                     </button>
                     <button
                       onClick={() => { setShowCreateTechnique(false); setNewTechName('') }}
                       className="flex-1 bg-zinc-800 text-zinc-300 font-semibold py-2 rounded-xl text-sm"
                     >
-                      Cancel
+                      {t('Cancel')}
                     </button>
                   </div>
                 </div>
@@ -528,6 +539,8 @@ export default function AddEditSessionPage() {
 
               {filteredTechniques?.map(t => {
                 const isSelected = pickerMode === 'techniques' && selectedIds.has(t.id)
+                const tapType = pickerMode === 'tap-given' ? 'given' : pickerMode === 'tap-received' ? 'received' : null
+                const tapCount = tapType ? taps.filter(tap => tap.techniqueId === t.id && tap.type === tapType).length : 0
                 return (
                   <button
                     key={t.id}
@@ -535,9 +548,10 @@ export default function AddEditSessionPage() {
                     className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
                   >
                     <div className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
-                      isSelected ? 'bg-gold border-gold' : 'border-zinc-600'
+                      isSelected ? 'bg-gold border-gold' : tapCount > 0 ? 'bg-zinc-700 border-zinc-500' : 'border-zinc-600'
                     }`}>
                       {isSelected && <Check size={11} className="text-black" strokeWidth={3} />}
+                      {tapCount > 0 && <span className="text-[10px] text-zinc-100 font-bold leading-none">{tapCount}</span>}
                     </div>
                     <span className="text-sm text-zinc-100">{t.name}</span>
                   </button>
