@@ -88,9 +88,10 @@ export default function HomePage() {
     return counts
   }, [], new Map<number, number>())
   const receivedTapCountsByTechniqueId = useLiveQuery(async () => {
-    const taps = await db.sessionTaps.where('type').equals('received').toArray()
+    const taps = await db.sessionTaps.toArray()
     const counts = new Map<number, number>()
     for (const tap of taps) {
+      if (tap.type !== 'received') continue
       counts.set(tap.techniqueId, (counts.get(tap.techniqueId) ?? 0) + 1)
     }
     return counts
