@@ -65,6 +65,23 @@ function setupSessionMocks() {
   mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
 }
 
+function setupMixedDateSessionMocks() {
+  const now = Date.now()
+  const responses = [
+    [
+      { ...mockSession, id: 1, date: now, notes: 'Recent session' },
+      { ...mockSession, id: 2, date: now - 120 * 24 * 60 * 60 * 1000, notes: 'Old session' },
+    ],
+    [],
+    {
+      techniqueNamesBySessionId: new Map([[1, []], [2, []]]),
+      tapStatsBySessionId: new Map([[1, { given: 0, received: 0 }], [2, { given: 0, received: 0 }]]),
+    },
+  ]
+  let call = 0
+  mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -103,5 +120,24 @@ describe('SessionsPage', () => {
     expect(fab).not.toBeNull()
     await user.click(fab)
     expect(screen.getByTestId('new-session-page')).toBeInTheDocument()
+  })
+
+  it('shows all sessions by default before selecting a day range', () => {
+    setupMixedDateSessionMocks()
+    renderSessionsPage()
+    expect(screen.getByText('Recent session')).toBeInTheDocument()
+    expect(screen.getByText('Old session')).toBeInTheDocument()
+  })
+
+  it('filters sessions when a day range is selected', async () => {
+    setupMixedDateSessionMocks()
+    const user = userEvent.setup()
+    renderSessionsPage()
+
+    await user.click(screen.getByLabelText('Filter'))
+    await user.click(screen.getByRole('button', { name: '30d' }))
+
+    expect(screen.getByText('Recent session')).toBeInTheDocument()
+    expect(screen.queryByText('Old session')).not.toBeInTheDocument()
   })
 })

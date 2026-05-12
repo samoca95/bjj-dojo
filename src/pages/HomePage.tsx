@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, BookOpen, ChevronRight, Flame } from 'lucide-react'
+import { CalendarDays, BookOpen, ChevronRight, Flame, Crosshair } from 'lucide-react'
 import { db } from '../db/database'
 import { useI18n } from '../i18n'
 import { getGoalMatTime } from '../utils/goalMatTime'
+import { getFocusTechniqueIds, setFocusTechniqueIds } from '../utils/focusTechniques'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -35,6 +37,8 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 export default function HomePage() {
   const navigate = useNavigate()
   const { t } = useI18n()
+  const [focusPickerOpen, setFocusPickerOpen] = useState(false)
+  const [focusTechniqueIds, setFocusTechniqueIdsState] = useState<number[]>(getFocusTechniqueIds)
   const todayStart = startOfDay(Date.now())
   const weekStart = todayStart - 6 * DAY_MS
   const currentWeekStart = startOfWeek(Date.now())
@@ -71,6 +75,16 @@ export default function HomePage() {
     }
     return counts
   }, [], new Map<number, number>())
+  const techniques = useLiveQuery(() => db.techniques.orderBy('name').toArray(), [], [])
+  const givenTapCountsByTechniqueId = useLiveQuery(async () => {
+    const taps = await db.sessionTaps.toArray()
+    const counts = new Map<number, number>()
+    for (const tap of taps) {
+      if (tap.type !== 'given') continue
+      counts.set(tap.techniqueId, (counts.get(tap.techniqueId) ?? 0) + 1)
+    }
+    return counts
+  }, [], new Map<number, number>())
   const hours = Math.floor(totalMinutes / 60)
   const mins = totalMinutes % 60
   const timeLabel = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`
@@ -83,6 +97,7 @@ export default function HomePage() {
     ? 0
     : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
   const maxTaps5 = Math.max(...last5TapCounts, 1)
+  const focusTechniques = (techniques ?? []).filter(technique => focusTechniqueIds.includes(technique.id))
 
   const weekStarts = Array.from(
     new Set((sessions ?? []).map(session => {
@@ -130,42 +145,103 @@ export default function HomePage() {
           <h2 className="text-xs font-semibold tracking-widest text-gold px-1">
             {t('TRENDING')}
           </h2>
-          {/* Taps Given – avg of last 5 sessions */}
-          <div className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center gap-4">
-            <div className="flex-1">
-              <div className="text-xs text-zinc-500">{t('Avg taps / last 5')}</div>
-              <div className="text-xl font-bold text-blue-400 mt-0.5">
-                {avgTaps5.toFixed(1)}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center gap-4">
+              <div className="flex-1">
+                <div className="text-xs text-zinc-500">{t('Avg taps / last 5')}</div>
+                <div className="text-xl font-bold text-blue-400 mt-0.5">
+                  {avgTaps5.toFixed(1)}
+                </div>
+              </div>
+              {last5TapCounts.length > 0 && (
+                <div className="flex items-end gap-1 h-6">
+                  {last5TapCounts.map((count, i) => (
+                    <div
+                      key={i}
+                      className="w-2 rounded-sm bg-blue-400/60"
+                      style={{ height: `${Math.max(3, Math.round((count / maxTaps5) * 24))}px` }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="bg-zinc-900 rounded-2xl px-4 py-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-zinc-400">{t('Weekly goal')}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-zinc-500">{weeklyMinutes}/{weeklyGoalMinutes} min</span>
+                  <span className="flex items-center gap-1 text-xs font-semibold text-orange-400">
+                    <Flame size={13} fill="currentColor" strokeWidth={0} />
+                    <span>{trainingWeekStreak}</span>
+                    <span className="text-[10px] uppercase tracking-wide">{t('weeks')}</span>
+                  </span>
+                </div>
+              </div>
+              <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                <div className="h-full bg-gold" style={{ width: `${weeklyGoalPct}%` }} />
               </div>
             </div>
-            {last5TapCounts.length > 0 && (
-              <div className="flex items-end gap-1 h-6">
-                {last5TapCounts.map((count, i) => (
-                  <div
-                    key={i}
-                    className="w-2 rounded-sm bg-blue-400/60"
-                    style={{ height: `${Math.max(3, Math.round((count / maxTaps5) * 24))}px` }}
-                  />
-                ))}
-              </div>
-            )}
           </div>
-          {/* Weekly goal + week streak */}
-          <div className="bg-zinc-900 rounded-2xl px-4 py-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-zinc-400">{t('Weekly goal')}</span>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-zinc-500">{weeklyMinutes}/{weeklyGoalMinutes} min</span>
-                <span className="flex items-center gap-0.5 text-xs font-semibold text-orange-400">
-                  <Flame size={13} fill="currentColor" strokeWidth={0} />
-                  {trainingWeekStreak}
-                </span>
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-xs font-semibold tracking-widest text-gold">{t('FOCUS TECHNIQUES')}</h2>
+            <button
+              onClick={() => setFocusPickerOpen(prev => !prev)}
+              className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
+                focusPickerOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+              }`}
+            >
+              {t('Set focus')}
+            </button>
+          </div>
+          {focusPickerOpen && (
+            <div className="bg-zinc-900 rounded-2xl p-3">
+              <div className="text-xs text-zinc-500 mb-2">{t('Select focus techniques')}</div>
+              <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1">
+                {(techniques ?? []).map(technique => {
+                  const selected = focusTechniqueIds.includes(technique.id)
+                  return (
+                    <button
+                      key={technique.id}
+                      onClick={() => {
+                        const next = selected
+                          ? focusTechniqueIds.filter(id => id !== technique.id)
+                          : [...focusTechniqueIds, technique.id]
+                        setFocusTechniqueIds(next)
+                        setFocusTechniqueIdsState(next)
+                      }}
+                      className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                        selected ? 'bg-gold text-black font-semibold' : 'bg-zinc-800 text-zinc-200'
+                      }`}
+                    >
+                      {technique.name}
+                    </button>
+                  )
+                })}
               </div>
             </div>
-            <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-              <div className="h-full bg-gold" style={{ width: `${weeklyGoalPct}%` }} />
+          )}
+          {focusTechniques.length === 0 ? (
+            <div className="bg-zinc-900 rounded-2xl px-4 py-3 text-sm text-zinc-400">
+              {t('No focus techniques selected')}
             </div>
-          </div>
+          ) : (
+            <div className="space-y-2">
+              {focusTechniques.map(technique => (
+                <div key={technique.id} className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Crosshair size={14} className="text-gold shrink-0" />
+                    <span className="text-sm font-semibold text-zinc-100 truncate">{technique.name}</span>
+                  </div>
+                  <span className="text-xs text-zinc-400 shrink-0">
+                    {givenTapCountsByTechniqueId.get(technique.id) ?? 0} × {t('Given submissions')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Quick access */}
