@@ -1,9 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, BookOpen, ChevronRight } from 'lucide-react'
+import { CalendarDays, BookOpen, ChevronRight, Flame } from 'lucide-react'
 import { db } from '../db/database'
 import { useI18n } from '../i18n'
-import TrendSparkline from '../components/TrendSparkline'
 import { getGoalMatTime } from '../utils/goalMatTime'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -59,7 +58,7 @@ export default function HomePage() {
     [],
   )
   const recentSessions = useLiveQuery(
-    () => db.sessions.orderBy('date').reverse().limit(10).toArray(),
+    () => db.sessions.orderBy('date').reverse().limit(5).toArray(),
     [],
     [],
   )
@@ -79,12 +78,11 @@ export default function HomePage() {
   const weeklyGoalPct = Math.min(100, Math.round((weeklyMinutes / weeklyGoalMinutes) * 100))
 
   const sortedAsc = [...recentSessions].sort((a, b) => a.date - b.date)
-  const tapTrend = sortedAsc.map((_, index) => {
-    const start = Math.max(0, index - 4)
-    const window = sortedAsc.slice(start, index + 1)
-    const sum = window.reduce((acc, session) => acc + (tapCountsBySessionId.get(session.id ?? -1) ?? 0), 0)
-    return Number((sum / window.length).toFixed(2))
-  })
+  const last5TapCounts = sortedAsc.map(s => tapCountsBySessionId.get(s.id ?? -1) ?? 0)
+  const avgTaps5 = last5TapCounts.length === 0
+    ? 0
+    : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
+  const maxTaps5 = Math.max(...last5TapCounts, 1)
 
   const weekStarts = Array.from(
     new Set((sessions ?? []).map(session => {
@@ -132,22 +130,44 @@ export default function HomePage() {
           <h2 className="text-xs font-semibold tracking-widest text-gold px-1">
             {t('TRENDING')}
           </h2>
-          <div className="bg-zinc-900 rounded-2xl p-4">
-            <div className="text-xs text-zinc-500 mb-2">
-              {language === 'es' ? 'Taps dados (promedio móvil de 5, últimas 10)' : 'Taps Given (rolling avg 5, last 10)'}
+          {/* Taps Given – avg of last 5 sessions */}
+          <div className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center gap-4">
+            <div className="flex-1">
+              <div className="text-xs text-zinc-500">
+                {language === 'es' ? 'Avg. taps (últ. 5)' : 'Avg taps / last 5'}
+              </div>
+              <div className="text-xl font-bold text-blue-400 mt-0.5">
+                {avgTaps5.toFixed(1)}
+              </div>
             </div>
-            <TrendSparkline values={tapTrend} color="#60a5fa" />
+            {last5TapCounts.length > 0 && (
+              <div className="flex items-end gap-1 h-6">
+                {last5TapCounts.map((count, i) => (
+                  <div
+                    key={i}
+                    className="w-2 rounded-sm bg-blue-400/60"
+                    style={{ height: `${Math.max(3, Math.round((count / maxTaps5) * 24))}px` }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-          <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-100 font-semibold">{language === 'es' ? 'Meta semanal' : 'Weekly goal'}</span>
-              <span className="text-xs text-zinc-400">{weeklyMinutes}/{weeklyGoalMinutes} min</span>
+          {/* Weekly goal + week streak */}
+          <div className="bg-zinc-900 rounded-2xl px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-zinc-400">
+                {language === 'es' ? 'Meta semanal' : 'Weekly goal'}
+              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-zinc-500">{weeklyMinutes}/{weeklyGoalMinutes} min</span>
+                <span className="flex items-center gap-0.5 text-xs font-semibold text-orange-400">
+                  <Flame size={13} fill="currentColor" strokeWidth={0} />
+                  {trainingWeekStreak}
+                </span>
+              </div>
             </div>
-            <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+            <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
               <div className="h-full bg-gold" style={{ width: `${weeklyGoalPct}%` }} />
-            </div>
-            <div className="text-xs text-zinc-500">
-              {language === 'es' ? 'Racha de semanas entrenadas:' : 'Training-week streak:'} {trainingWeekStreak}
             </div>
           </div>
         </section>
