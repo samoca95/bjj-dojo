@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, BookOpen, ChevronRight, Flame, Crosshair } from 'lucide-react'
+import { CalendarDays, BookOpen, ChevronRight, Flame, Crosshair, Zap, Hand } from 'lucide-react'
 import { db } from '../db/database'
 import { useI18n } from '../i18n'
 import { getGoalMatTime } from '../utils/goalMatTime'
 import { getFocusTechniqueIds, setFocusTechniqueIds } from '../utils/focusTechniques'
+import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -38,6 +39,7 @@ export default function HomePage() {
   const navigate = useNavigate()
   const { t } = useI18n()
   const [focusPickerOpen, setFocusPickerOpen] = useState(false)
+  const [focusPickerSearch, setFocusPickerSearch] = useState('')
   const [focusTechniqueIds, setFocusTechniqueIdsState] = useState<number[]>(getFocusTechniqueIds)
   const todayStart = startOfDay(Date.now())
   const weekStart = todayStart - 6 * DAY_MS
@@ -85,6 +87,14 @@ export default function HomePage() {
     }
     return counts
   }, [], new Map<number, number>())
+  const receivedTapCountsByTechniqueId = useLiveQuery(async () => {
+    const taps = await db.sessionTaps.where('type').equals('received').toArray()
+    const counts = new Map<number, number>()
+    for (const tap of taps) {
+      counts.set(tap.techniqueId, (counts.get(tap.techniqueId) ?? 0) + 1)
+    }
+    return counts
+  }, [], new Map<number, number>())
   const hours = Math.floor(totalMinutes / 60)
   const mins = totalMinutes % 60
   const timeLabel = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`
@@ -98,6 +108,14 @@ export default function HomePage() {
     : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
   const maxTaps5 = Math.max(...last5TapCounts, 1)
   const focusTechniques = (techniques ?? []).filter(technique => focusTechniqueIds.includes(technique.id))
+
+  const filteredPickerTechniques = (() => {
+    const results = (techniques ?? []).filter(t => techniqueMatchesQuery(t, focusPickerSearch))
+    if (focusPickerSearch.trim()) {
+      return [...results].sort((a, b) => techniqueScore(b, focusPickerSearch) - techniqueScore(a, focusPickerSearch))
+    }
+    return results
+  })()
 
   const weekStarts = Array.from(
     new Set((sessions ?? []).map(session => {
@@ -185,7 +203,10 @@ export default function HomePage() {
           <div className="flex items-center justify-between px-1">
             <h2 className="text-xs font-semibold tracking-widest text-gold">{t('FOCUS TECHNIQUES')}</h2>
             <button
-              onClick={() => setFocusPickerOpen(prev => !prev)}
+              onClick={() => {
+                setFocusPickerOpen(prev => !prev)
+                setFocusPickerSearch('')
+              }}
               className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
                 focusPickerOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
               }`}
@@ -195,9 +216,15 @@ export default function HomePage() {
           </div>
           {focusPickerOpen && (
             <div className="bg-zinc-900 rounded-2xl p-3">
-              <div className="text-xs text-zinc-500 mb-2">{t('Select focus techniques')}</div>
+              <input
+                type="text"
+                value={focusPickerSearch}
+                onChange={e => setFocusPickerSearch(e.target.value)}
+                placeholder={t('Search…')}
+                className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600 mb-2"
+              />
               <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1">
-                {(techniques ?? []).map(technique => {
+                {filteredPickerTechniques.map(technique => {
                   const selected = focusTechniqueIds.includes(technique.id)
                   return (
                     <button
@@ -232,9 +259,16 @@ export default function HomePage() {
                     <Crosshair size={14} className="text-gold shrink-0" />
                     <span className="text-sm font-semibold text-zinc-100 truncate">{technique.name}</span>
                   </div>
-                  <span className="text-xs text-zinc-400 shrink-0">
-                    {givenTapCountsByTechniqueId.get(technique.id) ?? 0} × {t('Submissions')}
-                  </span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="flex items-center gap-1 text-xs text-red-400">
+                      <Hand size={12} strokeWidth={2} />
+                      {receivedTapCountsByTechniqueId.get(technique.id) ?? 0}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs text-green-500">
+                      <Zap size={12} strokeWidth={2} />
+                      {givenTapCountsByTechniqueId?.get(technique.id) ?? 0}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
