@@ -259,6 +259,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 min-w-0">
                     <Crosshair size={14} className="text-gold shrink-0" />
                     <span className="text-sm font-semibold text-zinc-100 truncate">{technique.name}</span>
+                    <CategoryIcon value={categoryIcon} fallbackId={technique.categoryId} size={14} className="text-gold shrink-0" />
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span className="flex items-center gap-1 text-xs text-red-400">
