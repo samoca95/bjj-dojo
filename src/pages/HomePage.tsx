@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { CalendarDays, BookOpen, ChevronRight, Flame, Crosshair, Zap, Hand } from 'lucide-react'
@@ -9,6 +9,11 @@ import { getFocusTechniqueIds, setFocusTechniqueIds } from '../utils/focusTechni
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 import TrainingCalendar from '../components/TrainingCalendar'
 import { CategoryIcon } from '../components/CategoryIcon'
+import {
+  getHomeSectionOrder,
+  HOME_SECTION_ORDER_UPDATED_EVENT,
+  type HomeSectionId,
+} from '../utils/homeSectionOrder'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -43,6 +48,17 @@ export default function HomePage() {
   const [focusPickerOpen, setFocusPickerOpen] = useState(false)
   const [focusPickerSearch, setFocusPickerSearch] = useState('')
   const [focusTechniqueIds, setFocusTechniqueIdsState] = useState<number[]>(getFocusTechniqueIds)
+  const [sectionOrder, setSectionOrder] = useState<HomeSectionId[]>(getHomeSectionOrder)
+
+  useEffect(() => {
+    const sync = () => setSectionOrder(getHomeSectionOrder())
+    window.addEventListener(HOME_SECTION_ORDER_UPDATED_EVENT, sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener(HOME_SECTION_ORDER_UPDATED_EVENT, sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
   const todayStart = startOfDay(Date.now())
   const weekStart = todayStart - 6 * DAY_MS
   const currentWeekStart = startOfWeek(Date.now())
@@ -142,6 +158,154 @@ export default function HomePage() {
     }
   }
 
+  const statsSection = (
+    <section key="stats">
+      <h2 className="text-xs font-semibold tracking-widest text-gold mb-3 px-1">{t('YOUR STATS')}</h2>
+      <div className="grid grid-cols-2 gap-3">
+        <StatCard label={t('Sessions')} value={String(sessionCount ?? 0)} />
+        <StatCard label={t('Mat Time')} value={totalMinutes > 0 ? timeLabel : '0m'} />
+        <StatCard label={t('Taps Given')} value={String(tapCounts?.given ?? 0)} />
+        <StatCard label={t('Taps Received')} value={String(tapCounts?.received ?? 0)} />
+      </div>
+    </section>
+  )
+
+  const trendingSection = (
+    <section key="trending" className="space-y-3">
+      <h2 className="text-xs font-semibold tracking-widest text-gold px-1">
+        {t('TRENDING')}
+      </h2>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center gap-4">
+          <div className="flex-1">
+            <div className="text-xs text-zinc-500">{t('Avg taps / last 5')}</div>
+            <div className="text-xl font-bold text-blue-400 mt-0.5">
+              {avgTaps5.toFixed(1)}
+            </div>
+          </div>
+          {last5TapCounts.length > 0 && (
+            <div className="flex items-end gap-1 h-6">
+              {last5TapCounts.map((count, i) => (
+                <div
+                  key={i}
+                  className="w-2 rounded-sm bg-blue-400/60"
+                  style={{ height: `${Math.max(3, Math.round((count / maxTaps5) * 24))}px` }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="bg-zinc-900 rounded-2xl px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-zinc-400">{t('Weekly goal')}</span>
+              <span className="flex items-center gap-1 text-xs font-semibold text-orange-400">
+                <Flame size={13} fill="currentColor" strokeWidth={0} />
+                <span>{trainingWeekStreak}</span>
+                <span className="text-[10px] uppercase tracking-wide">{t('w.')}</span>
+              </span>
+          </div>
+          <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+            <div className="h-full bg-gold" style={{ width: `${weeklyGoalPct}%` }} />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+
+  const focusSection = (
+    <section key="focus" className="space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <h2 className="text-xs font-semibold tracking-widest text-gold">{t('FOCUS TECHNIQUES')}</h2>
+        <button
+          onClick={() => {
+            setFocusPickerOpen(prev => !prev)
+            setFocusPickerSearch('')
+          }}
+          className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
+            focusPickerOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+          }`}
+        >
+          {t('Set focus')}
+        </button>
+      </div>
+      {focusPickerOpen && (
+        <div className="bg-zinc-900 rounded-2xl p-3">
+          <input
+            type="text"
+            value={focusPickerSearch}
+            onChange={e => setFocusPickerSearch(e.target.value)}
+            placeholder={t('Search…')}
+            className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600 mb-2"
+          />
+          <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1">
+            {filteredPickerTechniques.map(technique => {
+              const selected = focusTechniqueIds.includes(technique.id)
+              return (
+                <button
+                  key={technique.id}
+                  onClick={() => {
+                    const next = selected
+                      ? focusTechniqueIds.filter(id => id !== technique.id)
+                      : [...focusTechniqueIds, technique.id]
+                    setFocusTechniqueIds(next)
+                    setFocusTechniqueIdsState(next)
+                  }}
+                  className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                    selected ? 'bg-gold text-black font-semibold' : 'bg-zinc-800 text-zinc-200'
+                  }`}
+                >
+                  {technique.name}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      {focusTechniques.length === 0 ? (
+        <div className="bg-zinc-900 rounded-2xl px-4 py-3 text-sm text-zinc-400">
+          {t('No focus techniques selected')}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {focusTechniques.map(technique => (
+            <div key={technique.id} className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <Crosshair size={14} className="text-gold shrink-0" />
+                <span className="text-sm font-semibold text-zinc-100 truncate">{technique.name}</span>
+                <CategoryIcon fallbackId={technique.categoryId} size={14} className="text-gold shrink-0" />
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="flex items-center gap-1 text-xs text-red-400">
+                  <Hand size={12} strokeWidth={2} />
+                  {receivedTapCountsByTechniqueId.get(technique.id) ?? 0}
+                </span>
+                <span className="flex items-center gap-1 text-xs text-green-500">
+                  <Zap size={12} strokeWidth={2} />
+                  {givenTapCountsByTechniqueId?.get(technique.id) ?? 0}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+
+  const calendarSection = (
+    <TrainingCalendar
+      key="calendar"
+      sessions={sessions ?? []}
+      onDayClick={epoch => navigate('/sessions/new', { state: { date: epoch } })}
+    />
+  )
+
+  const sectionMap: Record<HomeSectionId, ReactNode> = {
+    focus: focusSection,
+    trending: trendingSection,
+    stats: statsSection,
+    calendar: calendarSection,
+  }
+
   return (
     <div className="min-h-full bg-zinc-950">
       {/* Header */}
@@ -151,138 +315,7 @@ export default function HomePage() {
       </div>
 
       <div className="px-4 space-y-6 pb-6">
-        {/* Stats */}
-        <section>
-          <h2 className="text-xs font-semibold tracking-widest text-gold mb-3 px-1">{t('YOUR STATS')}</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard label={t('Sessions')} value={String(sessionCount ?? 0)} />
-            <StatCard label={t('Mat Time')} value={totalMinutes > 0 ? timeLabel : '0m'} />
-            <StatCard label={t('Taps Given')} value={String(tapCounts?.given ?? 0)} />
-            <StatCard label={t('Taps Received')} value={String(tapCounts?.received ?? 0)} />
-          </div>
-        </section>
-
-        <section className="space-y-3">
-          <h2 className="text-xs font-semibold tracking-widest text-gold px-1">
-            {t('TRENDING')}
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center gap-4">
-              <div className="flex-1">
-                <div className="text-xs text-zinc-500">{t('Avg taps / last 5')}</div>
-                <div className="text-xl font-bold text-blue-400 mt-0.5">
-                  {avgTaps5.toFixed(1)}
-                </div>
-              </div>
-              {last5TapCounts.length > 0 && (
-                <div className="flex items-end gap-1 h-6">
-                  {last5TapCounts.map((count, i) => (
-                    <div
-                      key={i}
-                      className="w-2 rounded-sm bg-blue-400/60"
-                      style={{ height: `${Math.max(3, Math.round((count / maxTaps5) * 24))}px` }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="bg-zinc-900 rounded-2xl px-4 py-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-zinc-400">{t('Weekly goal')}</span>
-                  <span className="flex items-center gap-1 text-xs font-semibold text-orange-400">
-                    <Flame size={13} fill="currentColor" strokeWidth={0} />
-                    <span>{trainingWeekStreak}</span>
-                    <span className="text-[10px] uppercase tracking-wide">{t('w.')}</span>
-                  </span>
-              </div>
-              <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-                <div className="h-full bg-gold" style={{ width: `${weeklyGoalPct}%` }} />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-xs font-semibold tracking-widest text-gold">{t('FOCUS TECHNIQUES')}</h2>
-            <button
-              onClick={() => {
-                setFocusPickerOpen(prev => !prev)
-                setFocusPickerSearch('')
-              }}
-              className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
-                focusPickerOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
-              }`}
-            >
-              {t('Set focus')}
-            </button>
-          </div>
-          {focusPickerOpen && (
-            <div className="bg-zinc-900 rounded-2xl p-3">
-              <input
-                type="text"
-                value={focusPickerSearch}
-                onChange={e => setFocusPickerSearch(e.target.value)}
-                placeholder={t('Search…')}
-                className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600 mb-2"
-              />
-              <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1">
-                {filteredPickerTechniques.map(technique => {
-                  const selected = focusTechniqueIds.includes(technique.id)
-                  return (
-                    <button
-                      key={technique.id}
-                      onClick={() => {
-                        const next = selected
-                          ? focusTechniqueIds.filter(id => id !== technique.id)
-                          : [...focusTechniqueIds, technique.id]
-                        setFocusTechniqueIds(next)
-                        setFocusTechniqueIdsState(next)
-                      }}
-                      className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                        selected ? 'bg-gold text-black font-semibold' : 'bg-zinc-800 text-zinc-200'
-                      }`}
-                    >
-                      {technique.name}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-          {focusTechniques.length === 0 ? (
-            <div className="bg-zinc-900 rounded-2xl px-4 py-3 text-sm text-zinc-400">
-              {t('No focus techniques selected')}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {focusTechniques.map(technique => (
-                <div key={technique.id} className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Crosshair size={14} className="text-gold shrink-0" />
-                    <span className="text-sm font-semibold text-zinc-100 truncate">{technique.name}</span>
-                    <CategoryIcon fallbackId={technique.categoryId} size={14} className="text-gold shrink-0" />
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="flex items-center gap-1 text-xs text-red-400">
-                      <Hand size={12} strokeWidth={2} />
-                      {receivedTapCountsByTechniqueId.get(technique.id) ?? 0}
-                    </span>
-                    <span className="flex items-center gap-1 text-xs text-green-500">
-                      <Zap size={12} strokeWidth={2} />
-                      {givenTapCountsByTechniqueId?.get(technique.id) ?? 0}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <TrainingCalendar
-          sessions={sessions ?? []}
-          onDayClick={epoch => navigate('/sessions/new', { state: { date: epoch } })}
-        />
+        {sectionOrder.map(id => sectionMap[id])}
 
         {/* Quick access */}
         <section>
