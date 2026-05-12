@@ -4,13 +4,23 @@ import type { Session, SessionType } from '../types'
 import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT, type SessionTypeIconsMap } from '../utils/sessionTypeIcons'
 import { useI18n } from '../i18n'
 
-// Dimmed palette — same hues as session types but at low opacity for dot indicators
-const SESSION_TYPE_DOT: Record<SessionType, string> = {
-  GI: 'bg-blue-400/50',
-  NOGI: 'bg-green-400/50',
-  OPEN_MAT: 'bg-purple-400/50',
-  COMPETITION: 'bg-red-400/50',
-  DRILLING: 'bg-amber-400/50',
+// Solid hues per session type — used to fill the day circle
+const SESSION_TYPE_HEX: Record<SessionType, string> = {
+  GI: '#3b82f6',       // blue-500
+  NOGI: '#22c55e',     // green-500
+  OPEN_MAT: '#a855f7', // purple-500
+  COMPETITION: '#ef4444', // red-500
+  DRILLING: '#f59e0b', // amber-500
+}
+
+function buildCircleBackground(types: SessionType[]): string | undefined {
+  if (types.length === 0) return undefined
+  if (types.length === 1) return SESSION_TYPE_HEX[types[0]]
+  const step = 100 / types.length
+  const stops = types
+    .map((type, i) => `${SESSION_TYPE_HEX[type]} ${i * step}% ${(i + 1) * step}%`)
+    .join(', ')
+  return `conic-gradient(from 0deg, ${stops})`
 }
 
 const WEEKDAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
@@ -90,51 +100,56 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
         </div>
       </div>
 
-      {/* Weekday headers */}
+      {/* Weekday headers — single letter, minimalist */}
       <div className="grid grid-cols-7 gap-1 px-1">
         {WEEKDAY_KEYS.map(key => (
-          <div key={key} className="text-[9px] uppercase tracking-wider text-zinc-700 text-center">
-            {t(key)}
+          <div key={key} className="text-[11px] font-medium uppercase text-zinc-500 text-center">
+            {t(key).charAt(0)}
           </div>
         ))}
       </div>
 
       {/* Day grid — no card background, floats on page bg */}
-      <div className="grid grid-cols-7 gap-1 px-1">
+      <div className="grid grid-cols-7 gap-y-2 px-1">
         {Array.from({ length: totalCells }).map((_, index) => {
-          const dayNumber = index - leadingBlanks + 1
-          if (dayNumber < 1 || dayNumber > daysInMonth) {
-            return <div key={index} className="aspect-square" />
-          }
-          const epoch = new Date(year, month, dayNumber).getTime()
-          const daySessions = sessionsByDay.get(epoch) ?? []
+          const offset = index - leadingBlanks
+          const cellDate = new Date(year, month, offset + 1)
+          const dayNumber = cellDate.getDate()
+          const inMonth = offset >= 0 && offset < daysInMonth
+          const epoch = cellDate.getTime()
+          const daySessions = inMonth ? sessionsByDay.get(epoch) ?? [] : []
           const uniqueTypes = Array.from(new Set(daySessions.map(s => s.sessionType)))
           const isToday = epoch === todayKey
           const hasSessions = uniqueTypes.length > 0
+          const background = buildCircleBackground(uniqueTypes)
+
+          const numberColor = isToday
+            ? 'text-gold'
+            : hasSessions
+            ? 'text-white'
+            : inMonth
+            ? 'text-zinc-300'
+            : 'text-zinc-600'
 
           return (
             <button
               key={index}
-              onClick={() => onDayClick?.(epoch)}
-              className={`aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 transition-colors ${
-                isToday
-                  ? 'ring-1 ring-gold/60 text-gold'
-                  : hasSessions
-                  ? 'text-zinc-300'
-                  : 'text-zinc-700'
-              } ${onDayClick ? 'active:bg-zinc-800/60 cursor-pointer' : 'cursor-default'}`}
+              onClick={() => (inMonth ? onDayClick?.(epoch) : undefined)}
+              disabled={!inMonth}
+              className={`aspect-square flex items-center justify-center ${
+                onDayClick && inMonth ? 'cursor-pointer' : 'cursor-default'
+              }`}
             >
-              <span className="text-[11px] leading-none font-medium">{dayNumber}</span>
-              {hasSessions && (
-                <div className="flex gap-0.5 flex-wrap justify-center">
-                  {uniqueTypes.slice(0, 3).map(type => (
-                    <span
-                      key={type}
-                      className={`w-1 h-1 rounded-full ${SESSION_TYPE_DOT[type]}`}
-                    />
-                  ))}
-                </div>
-              )}
+              <span
+                className={`relative flex items-center justify-center rounded-full h-9 w-9 sm:h-10 sm:w-10 ${
+                  hasSessions ? 'shadow-sm' : ''
+                } ${onDayClick && inMonth ? 'active:scale-95 transition-transform' : ''}`}
+                style={background ? { background } : undefined}
+              >
+                <span className={`text-sm font-semibold leading-none ${numberColor}`}>
+                  {dayNumber}
+                </span>
+              </span>
             </button>
           )
         })}
