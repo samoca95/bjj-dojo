@@ -281,3 +281,129 @@ describe('Backup and restore integrity', () => {
     expect(restored[0].techniqueIds).toEqual([401])
   })
 })
+
+// ─── importDatabaseBackup validation ─────────────────────────────────────────
+
+function validBackup() {
+  return {
+    version: 1,
+    exportedAt: Date.now(),
+    categories: [{ id: 1, name: 'Guards', description: '' }],
+    techniques: [{ id: 101, name: 'Closed Guard', description: '', categoryId: 1, youtubeUrl: '', difficulty: 'BEGINNER', isCustom: false }],
+    techniqueConnections: [],
+    sessions: [{ id: 1, date: 1_700_000_000_000, durationMinutes: 60, sessionType: 'GI', notes: '', energyLevel: 3 }],
+    sessionTechniques: [{ sessionId: 1, techniqueId: 101 }],
+    sessionTaps: [{ id: 1, sessionId: 1, techniqueId: 101, type: 'given' }],
+    clubs: [{ id: 1, name: 'Dojo', sortOrder: 1 }],
+    drillPlans: [{ id: 1, name: 'Warm-up', techniqueIds: [101], createdAt: 1_700_000_000_000 }],
+  }
+}
+
+describe('importDatabaseBackup validation', () => {
+  it('accepts a well-formed backup', async () => {
+    await expect(importDatabaseBackup(validBackup(), db)).resolves.not.toThrow()
+  })
+
+  it('rejects non-object payload', async () => {
+    await expect(importDatabaseBackup('not an object', db)).rejects.toThrow('Malformed backup payload')
+  })
+
+  it('rejects a category with a non-integer id', async () => {
+    const bad = { ...validBackup(), categories: [{ id: 'x', name: 'Guards', description: '' }] }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("categories[0]: 'id' must be a positive integer")
+  })
+
+  it('rejects a category with an empty name', async () => {
+    const bad = { ...validBackup(), categories: [{ id: 1, name: '   ', description: '' }] }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("categories[0]: 'name' must be a non-empty string")
+  })
+
+  it('rejects a technique with an invalid difficulty', async () => {
+    const bad = {
+      ...validBackup(),
+      techniques: [{ id: 101, name: 'T', description: '', categoryId: 1, youtubeUrl: '', difficulty: 'EXPERT', isCustom: false }],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("techniques[0]: 'difficulty' must be one of")
+  })
+
+  it('rejects a technique with an invalid YouTube URL', async () => {
+    const bad = {
+      ...validBackup(),
+      techniques: [{ id: 101, name: 'T', description: '', categoryId: 1, youtubeUrl: 'https://evil.com/x', difficulty: 'BEGINNER', isCustom: false }],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("techniques[0]: 'youtubeUrl' is not a valid YouTube URL")
+  })
+
+  it('rejects a technique with a non-boolean isCustom', async () => {
+    const bad = {
+      ...validBackup(),
+      techniques: [{ id: 101, name: 'T', description: '', categoryId: 1, youtubeUrl: '', difficulty: 'BEGINNER', isCustom: 'yes' }],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("techniques[0]: 'isCustom' must be a boolean")
+  })
+
+  it('rejects a techniqueConnection with an invalid connectionType', async () => {
+    const bad = { ...validBackup(), techniqueConnections: [{ fromTechniqueId: 1, toTechniqueId: 2, connectionType: 'NOPE' }] }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("techniqueConnections[0]: 'connectionType' must be one of")
+  })
+
+  it('rejects a session with energyLevel out of range', async () => {
+    const bad = {
+      ...validBackup(),
+      sessions: [{ id: 1, date: 1_700_000_000_000, durationMinutes: 60, sessionType: 'GI', notes: '', energyLevel: 6 }],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("sessions[0]: 'energyLevel' must be an integer between 1 and 5")
+  })
+
+  it('rejects a session with durationMinutes out of range', async () => {
+    const bad = {
+      ...validBackup(),
+      sessions: [{ id: 1, date: 1_700_000_000_000, durationMinutes: 0, sessionType: 'GI', notes: '', energyLevel: 3 }],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("sessions[0]: 'durationMinutes' must be an integer between 1 and 1440")
+  })
+
+  it('rejects a session with an invalid sessionType', async () => {
+    const bad = {
+      ...validBackup(),
+      sessions: [{ id: 1, date: 1_700_000_000_000, durationMinutes: 60, sessionType: 'YOGA', notes: '', energyLevel: 3 }],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("sessions[0]: 'sessionType' must be one of")
+  })
+
+  it('rejects a sessionTap with an invalid type', async () => {
+    const bad = { ...validBackup(), sessionTaps: [{ id: 1, sessionId: 1, techniqueId: 101, type: 'submitted' }] }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("sessionTaps[0]: 'type' must be one of")
+  })
+
+  it('rejects a club with a missing name', async () => {
+    const bad = { ...validBackup(), clubs: [{ id: 1, name: '', sortOrder: 1 }] }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("clubs[0]: 'name' must be a non-empty string")
+  })
+
+  it('rejects a drillPlan with a non-array techniqueIds', async () => {
+    const bad = { ...validBackup(), drillPlans: [{ id: 1, name: 'Plan', techniqueIds: 'all', createdAt: 1_700_000_000_000 }] }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("drillPlans[0]: 'techniqueIds' must be an array")
+  })
+
+  it('rejects a drillPlan with a non-integer element in techniqueIds', async () => {
+    const bad = { ...validBackup(), drillPlans: [{ id: 1, name: 'Plan', techniqueIds: ['x'], createdAt: 1_700_000_000_000 }] }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("drillPlans[0]: 'techniqueIds[0]' must be an integer")
+  })
+
+  it('leaves the database unmodified when validation fails', async () => {
+    const sid = await db.sessions.add({ date: Date.now(), durationMinutes: 45, sessionType: 'GI', notes: 'original', energyLevel: 3 }) as number
+    const countBefore = await db.sessions.count()
+
+    const bad = {
+      ...validBackup(),
+      sessions: [{ id: 1, date: 1_700_000_000_000, durationMinutes: 9999, sessionType: 'GI', notes: '', energyLevel: 3 }],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow()
+
+    const countAfter = await db.sessions.count()
+    const original = await db.sessions.get(sid)
+    expect(countAfter).toBe(countBefore)
+    expect(original?.notes).toBe('original')
+  })
+})
