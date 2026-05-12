@@ -65,6 +65,19 @@ function setupSessionMocks() {
   mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
 }
 
+function setupTapSessionMocks() {
+  const responses = [
+    [mockSession],
+    [],
+    {
+      techniqueNamesBySessionId: new Map([[1, []]]),
+      tapStatsBySessionId: new Map([[1, { given: 2, received: 1 }]]),
+    },
+  ]
+  let call = 0
+  mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
+}
+
 function setupMixedDateSessionMocks() {
   const now = Date.now()
   const responses = [
@@ -109,6 +122,16 @@ describe('SessionsPage', () => {
     renderSessionsPage()
     expect(screen.getByText('90 min')).toBeInTheDocument()
     expect(screen.getByText(/Worked on guard/)).toBeInTheDocument()
+  })
+
+  it('shows given and received tap stats with green zap and red hand icons', () => {
+    setupTapSessionMocks()
+    const { container } = renderSessionsPage()
+
+    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(container.querySelector('svg.text-green-500')).not.toBeNull()
+    expect(container.querySelector('svg.text-red-400')).not.toBeNull()
   })
 
   it('has a working + FAB button', async () => {
