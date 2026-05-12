@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react'
 import { db } from '../db/database'
@@ -11,7 +11,19 @@ const inputCls =
 
 export default function ClubsPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { language, t } = useI18n()
+  const returnContext = location.state as { returnTo?: string; returnState?: unknown } | null
+  const returnTo = returnContext?.returnTo
+  const returnState = returnContext?.returnState
+
+  const navigateBack = () => {
+    if (returnTo) {
+      navigate(returnTo, { state: returnState })
+      return
+    }
+    navigate(-1)
+  }
   const clubs = useLiveQuery(
     () => db.clubs.orderBy('sortOrder').toArray(),
     [],
@@ -28,6 +40,7 @@ export default function ClubsPage() {
     const sortOrder = typeof last?.sortOrder === 'number' ? last.sortOrder + 1 : 1
     await db.clubs.add({ name, sortOrder })
     setNewClubName('')
+    if (returnTo) navigate(returnTo, { state: returnState })
   }
 
   const handleMove = async (index: number, direction: -1 | 1) => {
@@ -64,12 +77,13 @@ export default function ClubsPage() {
     await db.clubs.update(editingId, { name })
     setEditingId(null)
     setEditingName('')
+    if (returnTo) navigate(returnTo, { state: returnState })
   }
 
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 z-10 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
+        <button onClick={navigateBack} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <h1 className="flex-1 font-bold text-zinc-100">{t('Clubs')}</h1>

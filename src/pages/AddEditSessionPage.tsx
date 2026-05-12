@@ -117,6 +117,15 @@ export default function AddEditSessionPage() {
     }
   }, [clubs, isEdit, clubId])
 
+  const openClubSettings = () => {
+    navigate('/clubs', {
+      state: {
+        returnTo: location.pathname,
+        returnState: location.state,
+      },
+    })
+  }
+
   const handleSave = async () => {
     const safeDate = normalizeDateInput(date)
     const safeDuration = normalizeDuration(duration)
@@ -287,7 +296,7 @@ export default function AddEditSessionPage() {
             <div className="flex items-center justify-between">
                <label className="text-xs text-gold font-semibold tracking-wide">{t('CLUB')}</label>
               <button
-                onClick={() => navigate('/settings')}
+                onClick={openClubSettings}
                 className="text-xs text-gold font-semibold tracking-wide active:text-gold-light"
               >
                  {t('Manage')}
@@ -295,7 +304,7 @@ export default function AddEditSessionPage() {
             </div>
             {clubs?.length === 0 ? (
               <button
-                onClick={() => navigate('/settings')}
+                onClick={openClubSettings}
                 className="mt-2 w-full bg-zinc-800 rounded-xl px-4 py-3 text-sm text-left text-zinc-400 active:bg-zinc-700 transition-colors"
               >
                  {language === 'es' ? 'Añade tu primera academia' : 'Add your first club'}
