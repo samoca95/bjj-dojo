@@ -173,13 +173,13 @@ export default function SessionsPage() {
             {/* Header row inside panel */}
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-400 tracking-widest">
-                {language === 'es' ? 'FILTROS' : 'FILTERS'}
+                {t('FILTERS')}
               </span>
               <button
                 onClick={() => { setTypeFilter('all'); setClubFilter('all'); setDaysFilter(90) }}
                 className="text-xs text-zinc-500 active:text-zinc-300"
               >
-                {language === 'es' ? 'Limpiar' : 'Clear'}
+                {t('Clear')}
               </button>
             </div>
 

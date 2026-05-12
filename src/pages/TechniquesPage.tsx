@@ -29,7 +29,7 @@ function TechniqueRow({ technique, categoryName, categoryIcon, onClick, onToggle
         <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{technique.description}</p>
       </button>
       <button
-        onClick={e => { e.stopPropagation(); onToggleFavorite() }}
+        onClick={() => onToggleFavorite()}
         className="shrink-0 mt-0.5 p-1 -mr-1 text-amber-400 active:text-amber-300 transition-colors"
         aria-label={technique.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
       >

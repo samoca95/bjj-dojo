@@ -34,7 +34,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { t, language } = useI18n()
+  const { t } = useI18n()
   const todayStart = startOfDay(Date.now())
   const weekStart = todayStart - 6 * DAY_MS
   const currentWeekStart = startOfWeek(Date.now())
@@ -133,9 +133,7 @@ export default function HomePage() {
           {/* Taps Given – avg of last 5 sessions */}
           <div className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center gap-4">
             <div className="flex-1">
-              <div className="text-xs text-zinc-500">
-                {language === 'es' ? 'Avg. taps (últ. 5)' : 'Avg taps / last 5'}
-              </div>
+              <div className="text-xs text-zinc-500">{t('Avg taps / last 5')}</div>
               <div className="text-xl font-bold text-blue-400 mt-0.5">
                 {avgTaps5.toFixed(1)}
               </div>
@@ -155,9 +153,7 @@ export default function HomePage() {
           {/* Weekly goal + week streak */}
           <div className="bg-zinc-900 rounded-2xl px-4 py-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-zinc-400">
-                {language === 'es' ? 'Meta semanal' : 'Weekly goal'}
-              </span>
+              <span className="text-xs text-zinc-400">{t('Weekly goal')}</span>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-zinc-500">{weeklyMinutes}/{weeklyGoalMinutes} min</span>
                 <span className="flex items-center gap-0.5 text-xs font-semibold text-orange-400">
