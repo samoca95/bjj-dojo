@@ -111,6 +111,7 @@ const ES_TRANSLATIONS: Record<string, string> = {
   'Weekly goal': 'Meta semanal',
   'Avg taps / last 5': 'Avg. taps (últ. 5)',
   weeks: 'semanas',
+  'w.':'s.',
   'FOCUS TECHNIQUES': 'TÉCNICAS DE ENFOQUE',
   'Set focus': 'Definir enfoque',
   'Select focus techniques': 'Selecciona técnicas de enfoque',
