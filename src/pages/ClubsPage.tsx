@@ -13,8 +13,9 @@ export default function ClubsPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { language, t } = useI18n()
-  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
-  const returnState = (location.state as { returnState?: unknown } | null)?.returnState
+  const navigationState = location.state as { returnTo?: string; returnState?: unknown } | null
+  const returnTo = navigationState?.returnTo
+  const returnState = navigationState?.returnState
 
   const navigateBack = () => {
     if (returnTo) {
