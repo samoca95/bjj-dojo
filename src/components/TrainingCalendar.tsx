@@ -143,7 +143,7 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
               <span
                 className={`relative flex items-center justify-center rounded-full h-9 w-9 sm:h-10 sm:w-10 ${
                   hasSessions ? 'shadow-sm' : ''
-                } ${isToday ? 'ring-[3px] ring-gold' : ''} ${
+                } ${isToday ? 'ring-[2px] ring-gold' : ''} ${
                   onDayClick && inMonth ? 'active:scale-95 transition-transform' : ''
                 }`}
                 style={background ? { background } : undefined}

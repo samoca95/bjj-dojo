@@ -109,7 +109,7 @@ const ES_TRANSLATIONS: Record<string, string> = {
   Filter: 'Filtrar',
   FILTERS: 'FILTROS',
   'Weekly goal': 'Meta semanal',
-  'Avg taps / last 5': 'Avg. taps (últ. 5)',
+  'Avg taps': 'Avg. taps',
   weeks: 'semanas',
   'w.':'s.',
   'FOCUS TECHNIQUES': 'TÉCNICAS DE ENFOQUE',

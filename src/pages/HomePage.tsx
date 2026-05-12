@@ -228,7 +228,7 @@ export default function HomePage() {
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center gap-4">
           <div className="flex-1">
-            <div className="text-xs text-zinc-500">{t('Avg taps / last 5')}</div>
+            <div className="text-xs text-zinc-500">{t('Avg taps')}</div>
             <div className="text-xl font-bold text-blue-400 mt-0.5">
               {avgTaps5.toFixed(1)}
             </div>
