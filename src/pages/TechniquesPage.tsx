@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { Search, X, Plus, Star } from 'lucide-react'
@@ -43,9 +43,15 @@ export default function TechniquesPage() {
   const navigate = useNavigate()
   const { t, language } = useI18n()
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [categoryId, setCategoryId] = useState<number | null>(null)
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [tagFilter, setTagFilter] = useState<string | null>(null)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 200)
+    return () => clearTimeout(timer)
+  }, [search])
 
   const categories = useLiveQuery(() => db.categories.orderBy('name').toArray(), [], [] as Category[])
 
@@ -56,17 +62,17 @@ export default function TechniquesPage() {
         : db.techniques.toCollection()
       const results = await q.sortBy('name')
       const filtered = results.filter(t => {
-        if (search.trim() && !techniqueMatchesQuery(t, search)) return false
+        if (debouncedSearch.trim() && !techniqueMatchesQuery(t, debouncedSearch)) return false
         if (favoritesOnly && !t.isFavorite) return false
         if (tagFilter && !(t.tags ?? []).includes(tagFilter)) return false
         return true
       })
-      if (search.trim()) {
-        filtered.sort((a, b) => techniqueScore(b, search) - techniqueScore(a, search))
+      if (debouncedSearch.trim()) {
+        filtered.sort((a, b) => techniqueScore(b, debouncedSearch) - techniqueScore(a, debouncedSearch))
       }
       return filtered
     },
-    [search, categoryId, favoritesOnly, tagFilter],
+    [debouncedSearch, categoryId, favoritesOnly, tagFilter],
     [] as Technique[],
   )
 
@@ -93,7 +99,7 @@ export default function TechniquesPage() {
               className="w-full bg-zinc-800 rounded-xl pl-9 pr-9 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 active:text-zinc-300">
+              <button onClick={() => { setSearch(''); setDebouncedSearch('') }} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 active:text-zinc-300">
                 <X size={16} strokeWidth={2} />
               </button>
             )}
@@ -103,7 +109,7 @@ export default function TechniquesPage() {
         {/* Category chips */}
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-none">
           <button
-            onClick={() => { setCategoryId(null); setSearch(''); setFavoritesOnly(false); setTagFilter(null) }}
+            onClick={() => { setCategoryId(null); setSearch(''); setDebouncedSearch(''); setFavoritesOnly(false); setTagFilter(null) }}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
               categoryId === null ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
             }`}
@@ -113,7 +119,7 @@ export default function TechniquesPage() {
           {categories?.map((c: Category) => (
             <button
               key={c.id}
-              onClick={() => { setCategoryId(c.id); setSearch('') }}
+              onClick={() => { setCategoryId(c.id); setSearch(''); setDebouncedSearch('') }}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${
                 categoryId === c.id ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
               }`}
