@@ -276,12 +276,12 @@ export default function SettingsPage() {
         <div className="bg-zinc-900 rounded-2xl p-2">
           <button
             onClick={() => navigate('/session-type-icons')}
-            className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
+            className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-900"
           >
             <div className="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
               <CategoryIcon value="swords" size={18} className="text-gold" />
             </div>
-            <div className="flex-1">
+            <div className="bg-zinc-900 flex-1">
               <div className="text-sm font-semibold text-zinc-100">{t('SESSION TYPE ICONS')}</div>
               <div className="text-xs text-zinc-500">{t('Customize icons for each session type')}</div>
             </div>
@@ -289,12 +289,12 @@ export default function SettingsPage() {
           </button>
           <button
             onClick={() => navigate('/categories')}
-            className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
+            className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-900"
           >
-            <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
               <CategoryIcon value="shield" size={18} className="text-gold" />
             </div>
-            <div className="flex-1">
+            <div className="bg-zinc-900 flex-1">
               <div className="text-sm font-semibold text-zinc-100">{t('Categories')}</div>
               <div className="text-xs text-zinc-500">{t('Manage technique categories and icons')}</div>
             </div>
@@ -302,12 +302,12 @@ export default function SettingsPage() {
           </button>
           <button
             onClick={() => navigate('/clubs')}
-            className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
+            className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-900"
           >
             <div className="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
               <CategoryIcon value="map-pin" size={18} className="text-gold" />
             </div>
-            <div className="flex-1">
+            <div className="bg-zinc-900 flex-1">
               <div className="text-sm font-semibold text-zinc-100">{t('Clubs')}</div>
               <div className="text-xs text-zinc-500">{t('Manage your training locations')}</div>
             </div>

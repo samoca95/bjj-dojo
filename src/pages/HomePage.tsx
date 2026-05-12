@@ -34,10 +34,10 @@ const BELT_STYLES: Record<BeltColor, { bg: string; text: string; activeStripe: s
 function BeltDisplay({ color, stripes, beltLabel }: { color: BeltColor; stripes: number; beltLabel: string }) {
   const s = BELT_STYLES[color]
   return (
-    <div className="overflow-hidden rounded-2xl flex h-14 shadow-lg">
+    <div className="overflow-hidden rounded-xl flex h-14 shadow-lg">
       <div className={`flex-1 flex items-center px-5 gap-3 ${s.bg}`}>
         <div
-          className="w-5 h-8 rounded-sm shrink-0"
+          className="w-5 h-8 rounded-lg shrink-0"
           style={{ background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 2px, transparent 2px, transparent 6px)' }}
         />
         <span className={`text-xs font-bold tracking-widest uppercase ${s.text}`}>{beltLabel}</span>
@@ -368,7 +368,7 @@ export default function HomePage() {
         <div className="flex items-baseline gap-4">
           <h1 className="text-3xl font-black tracking-widest text-gold">BJJ DOJO</h1>
           <span
-            className="text-2xl text-gold/70 leading-none"
+            className="text-2xl text-gold leading-none"
             style={{ fontFamily: "'Zen Old Mincho', serif", fontWeight: 900 }}
           >
             柔術
