@@ -93,7 +93,7 @@ export default function SessionsPage() {
   const [filterOpen, setFilterOpen] = useState(false)
   const [clubFilter, setClubFilter] = useState<'all' | number>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | SessionType>('all')
-  const [daysFilter, setDaysFilter] = useState<30 | 90 | 365>(90)
+  const [daysFilter, setDaysFilter] = useState<'all' | 30 | 90 | 365>('all')
   const sessions = useLiveQuery(
     () => db.sessions.orderBy('date').reverse().toArray(),
     [],
@@ -134,9 +134,9 @@ export default function SessionsPage() {
     tapStatsBySessionId: new Map<number, { given: number; received: number }>(),
   })
   const clubMap = new Map(clubs?.map(c => [c.id, c.name]))
-  const cutoff = Date.now() - daysFilter * 24 * 60 * 60 * 1000
+  const cutoff = daysFilter === 'all' ? null : Date.now() - daysFilter * 24 * 60 * 60 * 1000
   const visibleSessions = (sessions ?? []).filter(session => {
-    if (session.date < cutoff) return false
+    if (cutoff !== null && session.date < cutoff) return false
     if (typeFilter !== 'all' && session.sessionType !== typeFilter) return false
     if (clubFilter !== 'all' && session.clubId !== clubFilter) return false
     return true
@@ -161,7 +161,7 @@ export default function SessionsPage() {
             aria-label={t('Filter')}
           >
             <SlidersHorizontal size={18} strokeWidth={2} />
-            {(typeFilter !== 'all' || clubFilter !== 'all' || daysFilter !== 90) && !filterOpen && (
+            {(typeFilter !== 'all' || clubFilter !== 'all' || daysFilter !== 'all') && !filterOpen && (
               <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
             )}
           </button>
@@ -176,7 +176,7 @@ export default function SessionsPage() {
                 {t('FILTERS')}
               </span>
               <button
-                onClick={() => { setTypeFilter('all'); setClubFilter('all'); setDaysFilter(90) }}
+                onClick={() => { setTypeFilter('all'); setClubFilter('all'); setDaysFilter('all') }}
                 className="text-xs text-zinc-500 active:text-zinc-300"
               >
                 {t('Clear')}
@@ -184,7 +184,15 @@ export default function SessionsPage() {
             </div>
 
             {/* Days */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
+              <button
+                onClick={() => setDaysFilter('all')}
+                className={`rounded-lg px-2 py-1.5 text-xs font-semibold ${
+                  daysFilter === 'all' ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+                }`}
+              >
+                {t('All')}
+              </button>
               {[30, 90, 365].map(days => (
                 <button
                   key={days}
