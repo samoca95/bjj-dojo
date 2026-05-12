@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, Plus, Zap } from 'lucide-react'
+import { CalendarDays, Plus, Zap, SlidersHorizontal } from 'lucide-react'
 import { db } from '../db/database'
 import type { Club, Session, SessionType } from '../types'
 import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
@@ -90,6 +90,7 @@ export default function SessionsPage() {
   const navigate = useNavigate()
   const { t, locale, language } = useI18n()
   const [sessionTypeIcons, setSessionTypeIcons] = useState(getSessionTypeIcons())
+  const [filterOpen, setFilterOpen] = useState(false)
   const [clubFilter, setClubFilter] = useState<'all' | number>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | SessionType>('all')
   const [daysFilter, setDaysFilter] = useState<30 | 90 | 365>(90)
@@ -150,57 +151,97 @@ export default function SessionsPage() {
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-6 pt-12 pb-4 z-10">
-        <h1 className="text-2xl font-bold text-zinc-100">{t('Sessions')}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-zinc-100">{t('Sessions')}</h1>
+          <button
+            onClick={() => setFilterOpen(prev => !prev)}
+            className={`p-2 rounded-xl transition-colors relative ${
+              filterOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
+            }`}
+            aria-label={t('Filter')}
+          >
+            <SlidersHorizontal size={18} strokeWidth={2} />
+            {(typeFilter !== 'all' || clubFilter !== 'all' || daysFilter !== 90) && !filterOpen && (
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
+            )}
+          </button>
+        </div>
+
+        {/* Collapsible filter panel */}
+        {filterOpen && (
+          <div className="mt-3 bg-zinc-900 rounded-2xl p-3 space-y-3">
+            {/* Header row inside panel */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-zinc-400 tracking-widest">
+                {t('FILTERS')}
+              </span>
+              <button
+                onClick={() => { setTypeFilter('all'); setClubFilter('all'); setDaysFilter(90) }}
+                className="text-xs text-zinc-500 active:text-zinc-300"
+              >
+                {t('Clear')}
+              </button>
+            </div>
+
+            {/* Days */}
+            <div className="grid grid-cols-3 gap-2">
+              {[30, 90, 365].map(days => (
+                <button
+                  key={days}
+                  onClick={() => setDaysFilter(days as 30 | 90 | 365)}
+                  className={`rounded-lg px-2 py-1.5 text-xs font-semibold ${
+                    daysFilter === days ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+                  }`}
+                >
+                  {days}d
+                </button>
+              ))}
+            </div>
+
+            {/* Session type */}
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setTypeFilter('all')}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${typeFilter === 'all' ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
+              >
+                {t('All')}
+              </button>
+              {(Object.keys(SESSION_TYPE_LABELS) as SessionType[]).map(type => (
+                <button
+                  key={type}
+                  onClick={() => setTypeFilter(type)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${typeFilter === type ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
+                >
+                  {sessionTypeLabel(type, SESSION_TYPE_LABELS[type], language)}
+                </button>
+              ))}
+            </div>
+
+            {/* Club filter (only if clubs exist) */}
+            {(clubs?.length ?? 0) > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setClubFilter('all')}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${clubFilter === 'all' ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
+                >
+                  {t('All')} {t('Clubs')}
+                </button>
+                {clubs?.map(club => (
+                  <button
+                    key={club.id}
+                    onClick={() => setClubFilter(club.id ?? 'all')}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${clubFilter === club.id ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
+                  >
+                    {club.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
         <div className="px-4 pb-4 space-y-3">
-          <div className="grid grid-cols-3 gap-2">
-            {[30, 90, 365].map(days => (
-              <button
-                key={days}
-                onClick={() => setDaysFilter(days as 30 | 90 | 365)}
-                className={`rounded-lg px-2 py-1.5 text-xs font-semibold ${
-                  daysFilter === days ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
-                }`}
-              >
-                {days}d
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2 overflow-x-auto scrollbar-none">
-            <button
-              onClick={() => setTypeFilter('all')}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${typeFilter === 'all' ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
-            >
-              {t('All')}
-            </button>
-            {(Object.keys(SESSION_TYPE_LABELS) as SessionType[]).map(type => (
-              <button
-                key={type}
-                onClick={() => setTypeFilter(type)}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${typeFilter === type ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
-              >
-                {sessionTypeLabel(type, SESSION_TYPE_LABELS[type], language)}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2 overflow-x-auto scrollbar-none">
-            <button
-              onClick={() => setClubFilter('all')}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${clubFilter === 'all' ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
-            >
-              {t('All')} {t('Clubs')}
-            </button>
-            {clubs?.map(club => (
-              <button
-                key={club.id}
-                onClick={() => setClubFilter(club.id ?? 'all')}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${clubFilter === club.id ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'}`}
-              >
-                {club.name}
-              </button>
-            ))}
-          </div>
           {visibleSessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
             <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center">

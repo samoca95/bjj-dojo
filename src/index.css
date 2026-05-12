@@ -68,15 +68,24 @@ html.theme-light [class*='bg-zinc-900'] {
 html.theme-light [class*='bg-zinc-800'] {
   background-color: #e4e4e7 !important;
 }
+html.theme-light [class*='bg-zinc-700'] {
+  background-color: #d4d4d8 !important;
+}
 html.theme-light [class*='text-zinc-100'] {
   color: #18181b !important;
+}
+html.theme-light [class*='text-zinc-200'] {
+  color: #27272a !important;
+}
+html.theme-light [class*='text-zinc-300'] {
+  color: #3f3f46 !important;
+}
+html.theme-light [class*='text-zinc-400'] {
+  color: #3f3f46 !important;
 }
 html.theme-light [class*='text-zinc-500'],
 html.theme-light [class*='text-zinc-600'] {
   color: #52525b !important;
-}
-html.theme-light [class*='text-zinc-400'] {
-  color: #3f3f46 !important;
 }
 html.theme-light [class*='border-zinc-800'] {
   border-color: #d4d4d8 !important;
@@ -86,4 +95,48 @@ html.theme-light [class*='from-zinc-900'] {
 }
 html.theme-light [class*='to-zinc-950'] {
   --tw-gradient-to: #f4f4f5 !important;
+}
+/* Colored badge backgrounds */
+html.theme-light [class*='bg-blue-900'] {
+  background-color: #dbeafe !important;
+}
+html.theme-light [class*='bg-green-900'] {
+  background-color: #dcfce7 !important;
+}
+html.theme-light [class*='bg-purple-900'] {
+  background-color: #f3e8ff !important;
+}
+html.theme-light [class*='bg-red-900'] {
+  background-color: #fee2e2 !important;
+}
+html.theme-light [class*='bg-amber-900'] {
+  background-color: #fef3c7 !important;
+}
+/* Colored badge and accent text */
+html.theme-light [class*='text-blue-300'] {
+  color: #1d4ed8 !important;
+}
+html.theme-light [class*='text-green-300'] {
+  color: #15803d !important;
+}
+html.theme-light [class*='text-purple-300'] {
+  color: #7e22ce !important;
+}
+html.theme-light [class*='text-red-300'] {
+  color: #b91c1c !important;
+}
+html.theme-light [class*='text-red-200'] {
+  color: #991b1b !important;
+}
+html.theme-light [class*='text-amber-300'] {
+  color: #92400e !important;
+}
+html.theme-light [class*='text-amber-400'] {
+  color: #b45309 !important;
+}
+html.theme-light [class*='text-orange-400'] {
+  color: #c2410c !important;
+}
+html.theme-light [class*='text-blue-400'] {
+  color: #1d4ed8 !important;
 }

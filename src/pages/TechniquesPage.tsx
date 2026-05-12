@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { Search, X, ChevronRight, Plus, Star } from 'lucide-react'
+import { Search, X, Plus, Star } from 'lucide-react'
 import { db } from '../db/database'
 import type { Category, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
@@ -9,15 +9,15 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n } from '../i18n'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 
-function TechniqueRow({ technique, categoryName, categoryIcon, onClick }: {
-  technique: Technique; categoryName: string; categoryIcon?: string; onClick: () => void
+function TechniqueRow({ technique, categoryName, categoryIcon, onClick, onToggleFavorite }: {
+  technique: Technique; categoryName: string; categoryIcon?: string; onClick: () => void; onToggleFavorite: () => void
 }) {
   return (
-    <button
-      onClick={onClick}
-      className="w-full bg-zinc-900 rounded-2xl p-4 flex gap-3 text-left active:bg-zinc-800 transition-colors"
-    >
-      <div className="flex-1 min-w-0">
+    <div className="w-full bg-zinc-900 rounded-2xl p-4 flex gap-3 text-left">
+      <button
+        onClick={onClick}
+        className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity"
+      >
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold text-zinc-100 text-sm">{technique.name}</span>
           <DifficultyBadge difficulty={technique.difficulty} />
@@ -27,9 +27,15 @@ function TechniqueRow({ technique, categoryName, categoryIcon, onClick }: {
           <span>{categoryName}</span>
         </div>
         <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{technique.description}</p>
-      </div>
-      <ChevronRight size={20} className="text-zinc-600 shrink-0 mt-1" strokeWidth={2} />
-    </button>
+      </button>
+      <button
+        onClick={() => onToggleFavorite()}
+        className="shrink-0 mt-0.5 p-1 -mr-1 text-amber-400 active:text-amber-300 transition-colors"
+        aria-label={technique.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+      >
+        <Star size={18} strokeWidth={1.5} fill={technique.isFavorite ? 'currentColor' : 'none'} />
+      </button>
+    </div>
   )
 }
 
@@ -158,6 +164,9 @@ export default function TechniquesPage() {
             categoryName={catMap.get(t.categoryId) ?? ''}
             categoryIcon={catIconMap.get(t.categoryId)}
             onClick={() => navigate(`/techniques/${t.id}`)}
+            onToggleFavorite={() => {
+              void db.techniques.update(t.id, { isFavorite: !t.isFavorite })
+            }}
           />
         ))}
       </div>
