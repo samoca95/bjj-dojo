@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import SessionsPage from '../pages/SessionsPage'
@@ -65,6 +65,19 @@ function setupSessionMocks() {
   mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
 }
 
+function setupTapSessionMocks() {
+  const responses = [
+    [mockSession],
+    [],
+    {
+      techniqueNamesBySessionId: new Map([[1, []]]),
+      tapStatsBySessionId: new Map([[1, { given: 2, received: 1 }]]),
+    },
+  ]
+  let call = 0
+  mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
+}
+
 function setupMixedDateSessionMocks() {
   const now = Date.now()
   const responses = [
@@ -109,6 +122,18 @@ describe('SessionsPage', () => {
     renderSessionsPage()
     expect(screen.getByText('90 min')).toBeInTheDocument()
     expect(screen.getByText(/Worked on guard/)).toBeInTheDocument()
+  })
+
+  it('shows given and received tap stats with green zap and red hand icons', () => {
+    setupTapSessionMocks()
+    renderSessionsPage()
+    const sessionCard = screen.getByText(/Worked on guard/).closest('button')
+
+    expect(sessionCard).not.toBeNull()
+    expect(within(sessionCard!).getByText('2')).toBeInTheDocument()
+    expect(within(sessionCard!).getByText('1')).toBeInTheDocument()
+    expect(sessionCard?.querySelector('svg.text-green-500')).not.toBeNull()
+    expect(sessionCard?.querySelector('svg.text-red-400')).not.toBeNull()
   })
 
   it('has a working + FAB button', async () => {

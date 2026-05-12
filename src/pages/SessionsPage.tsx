@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, Plus, Zap, SlidersHorizontal } from 'lucide-react'
+import { CalendarDays, Hand, Plus, SlidersHorizontal, Zap } from 'lucide-react'
 import { db } from '../db/database'
 import type { Club, Session, SessionType } from '../types'
 import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
@@ -59,13 +59,13 @@ function SessionCard({
             <span className="flex items-center gap-1.5 text-xs text-zinc-500">
               {tapStats.given > 0 && (
                 <span className="flex items-center gap-0.5">
-                  <Zap size={10} className="text-gold" />
+                  <Zap size={10} className="text-green-500" />
                   {tapStats.given}
                 </span>
               )}
               {tapStats.received > 0 && (
                 <span className="flex items-center gap-0.5">
-                  <Zap size={10} className="text-red-400" />
+                  <Hand size={10} className="text-red-400" />
                   {tapStats.received}
                 </span>
               )}
