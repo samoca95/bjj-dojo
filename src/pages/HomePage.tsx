@@ -27,8 +27,8 @@ function startOfWeek(epoch: number): number {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="bg-zinc-900 rounded-2xl p-4 flex flex-col gap-1">
-      <span className="text-2xl font-bold text-zinc-100">{value}</span>
+    <div className="bg-zinc-900 rounded-2xl px-4 py-3 flex flex-col gap-1">
+      <span className="text-xl font-bold text-zinc-100">{value}</span>
       {sub && <span className="text-sm text-zinc-400">{sub}</span>}
       <span className="text-xs text-zinc-500">{label}</span>
     </div>
