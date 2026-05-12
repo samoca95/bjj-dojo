@@ -168,14 +168,11 @@ export default function HomePage() {
             <div className="bg-zinc-900 rounded-2xl px-4 py-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-zinc-400">{t('Weekly goal')}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500">{weeklyMinutes}/{weeklyGoalMinutes} min</span>
                   <span className="flex items-center gap-1 text-xs font-semibold text-orange-400">
                     <Flame size={13} fill="currentColor" strokeWidth={0} />
                     <span>{trainingWeekStreak}</span>
-                    <span className="text-[10px] uppercase tracking-wide">{t('weeks')}</span>
+                    <span className="text-[10px] uppercase tracking-wide">{t('w.')}</span>
                   </span>
-                </div>
               </div>
               <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                 <div className="h-full bg-gold" style={{ width: `${weeklyGoalPct}%` }} />
