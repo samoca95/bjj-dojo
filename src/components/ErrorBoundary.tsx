@@ -3,6 +3,8 @@ import { telemetry } from '../utils/telemetry'
 
 interface ErrorBoundaryProps {
   children: ReactNode
+  /** When provided, renders this instead of the full-page fallback. Receives a retry handler. */
+  fallback?: (retry: () => void) => ReactNode
 }
 
 interface ErrorBoundaryState {
@@ -36,6 +38,10 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   render() {
     if (!this.state.hasError) {
       return this.props.children
+    }
+
+    if (this.props.fallback) {
+      return this.props.fallback(this.handleTryAgain)
     }
 
     return (

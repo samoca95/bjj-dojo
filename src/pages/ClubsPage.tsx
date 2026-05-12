@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react'
 import { db } from '../db/database'
 import type { Club } from '../types'
 import { useI18n } from '../i18n'
+import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
 
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
@@ -36,11 +37,15 @@ export default function ClubsPage() {
   const handleAdd = async () => {
     const name = newClubName.trim()
     if (!name) return
-    const last = await db.clubs.orderBy('sortOrder').last()
-    const sortOrder = typeof last?.sortOrder === 'number' ? last.sortOrder + 1 : 1
-    await db.clubs.add({ name, sortOrder })
-    setNewClubName('')
-    if (returnTo) navigate(returnTo, { state: returnState })
+    try {
+      const last = await db.clubs.orderBy('sortOrder').last()
+      const sortOrder = typeof last?.sortOrder === 'number' ? last.sortOrder + 1 : 1
+      await db.clubs.add({ name, sortOrder })
+      setNewClubName('')
+      if (returnTo) navigate(returnTo, { state: returnState })
+    } catch (err) {
+      if (isQuotaError(err)) notifyQuotaError()
+    }
   }
 
   const handleMove = async (index: number, direction: -1 | 1) => {
@@ -49,10 +54,14 @@ export default function ClubsPage() {
     if (targetIndex < 0 || targetIndex >= clubs.length) return
     const current = clubs[index]
     const target = clubs[targetIndex]
-    await db.clubs.bulkPut([
-      { ...current, sortOrder: target.sortOrder },
-      { ...target, sortOrder: current.sortOrder },
-    ])
+    try {
+      await db.clubs.bulkPut([
+        { ...current, sortOrder: target.sortOrder },
+        { ...target, sortOrder: current.sortOrder },
+      ])
+    } catch (err) {
+      if (isQuotaError(err)) notifyQuotaError()
+    }
   }
 
   const handleDelete = async (club: Club) => {
@@ -61,8 +70,12 @@ export default function ClubsPage() {
       ? `¿Eliminar ${club.name}?\nLas sesiones conservarán sus datos pero ya no quedarán asociadas a esta academia.`
       : `Delete ${club.name}?\nSessions will keep their data but will no longer be associated with this club.`
     if (!window.confirm(message)) return
-    await db.sessions.where('clubId').equals(club.id).modify({ clubId: null })
-    await db.clubs.delete(club.id)
+    try {
+      await db.sessions.where('clubId').equals(club.id).modify({ clubId: null })
+      await db.clubs.delete(club.id)
+    } catch (err) {
+      if (isQuotaError(err)) notifyQuotaError()
+    }
   }
 
   const startEdit = (club: Club) => {
@@ -74,10 +87,14 @@ export default function ClubsPage() {
     if (!editingId) return
     const name = editingName.trim()
     if (!name) return
-    await db.clubs.update(editingId, { name })
-    setEditingId(null)
-    setEditingName('')
-    if (returnTo) navigate(returnTo, { state: returnState })
+    try {
+      await db.clubs.update(editingId, { name })
+      setEditingId(null)
+      setEditingName('')
+      if (returnTo) navigate(returnTo, { state: returnState })
+    } catch (err) {
+      if (isQuotaError(err)) notifyQuotaError()
+    }
   }
 
   return (

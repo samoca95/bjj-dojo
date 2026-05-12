@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { CalendarDays, BookOpen, ChevronRight, Flame, Crosshair, Zap, Hand } from 'lucide-react'
 import { db } from '../db/database'
 import { useI18n } from '../i18n'
+import ErrorBoundary from '../components/ErrorBoundary'
 import { getGoalMatTime } from '../utils/goalMatTime'
 import { getFocusTechniqueIds, setFocusTechniqueIds } from '../utils/focusTechniques'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
@@ -65,6 +66,16 @@ function startOfWeek(epoch: number): number {
   const offset = (dayOfWeek + 6) % 7 // Monday = 0
   day.setDate(day.getDate() - offset)
   return day.getTime()
+}
+
+function SectionErrorCard({ onRetry }: { onRetry: () => void }) {
+  const { t } = useI18n()
+  return (
+    <div className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center justify-between">
+      <span className="text-sm text-zinc-400">{t('Section unavailable')}</span>
+      <button onClick={onRetry} className="text-xs font-semibold text-gold">{t('Try again')}</button>
+    </div>
+  )
 }
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -350,10 +361,10 @@ export default function HomePage() {
   )
 
   const sectionMap: Record<HomeSectionId, ReactNode> = {
-    focus: focusSection,
-    trending: trendingSection,
-    stats: statsSection,
-    calendar: calendarSection,
+    focus: <ErrorBoundary key="focus" fallback={retry => <SectionErrorCard onRetry={retry} />}>{focusSection}</ErrorBoundary>,
+    trending: <ErrorBoundary key="trending" fallback={retry => <SectionErrorCard onRetry={retry} />}>{trendingSection}</ErrorBoundary>,
+    stats: <ErrorBoundary key="stats" fallback={retry => <SectionErrorCard onRetry={retry} />}>{statsSection}</ErrorBoundary>,
+    calendar: <ErrorBoundary key="calendar" fallback={retry => <SectionErrorCard onRetry={retry} />}>{calendarSection}</ErrorBoundary>,
   }
 
   const beltLabel = t(`${beltColor.charAt(0).toUpperCase() + beltColor.slice(1)} Belt`)
