@@ -9,6 +9,7 @@ export default {
           light: '#ffcc44',
           dim: '#8a6a00',
         },
+        'belt-black': 'var(--belt-black)',
       },
     },
   },
