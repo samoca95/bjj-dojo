@@ -128,6 +128,16 @@ const ES_TRANSLATIONS: Record<string, string> = {
   Use: 'Usar',
   All: 'Todas',
   min: 'min',
+  'TRAINING CALENDAR': 'CALENDARIO DE ENTRENO',
+  'Previous month': 'Mes anterior',
+  'Next month': 'Mes siguiente',
+  Mon: 'Lun',
+  Tue: 'Mar',
+  Wed: 'Mié',
+  Thu: 'Jue',
+  Fri: 'Vie',
+  Sat: 'Sáb',
+  Sun: 'Dom',
 }
 
 const ES_DIFFICULTY: Record<Difficulty, string> = {

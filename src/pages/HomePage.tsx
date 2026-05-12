@@ -7,6 +7,7 @@ import { useI18n } from '../i18n'
 import { getGoalMatTime } from '../utils/goalMatTime'
 import { getFocusTechniqueIds, setFocusTechniqueIds } from '../utils/focusTechniques'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
+import TrainingCalendar from '../components/TrainingCalendar'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -276,6 +277,8 @@ export default function HomePage() {
             </div>
           )}
         </section>
+
+        <TrainingCalendar sessions={sessions ?? []} />
 
         {/* Quick access */}
         <section>
