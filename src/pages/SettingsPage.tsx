@@ -291,7 +291,7 @@ export default function SettingsPage() {
             onClick={() => navigate('/categories')}
             className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
           >
-            <div className="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center shrink-0">
               <CategoryIcon value="shield" size={18} className="text-gold" />
             </div>
             <div className="flex-1">
