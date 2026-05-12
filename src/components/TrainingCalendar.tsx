@@ -4,13 +4,13 @@ import type { Session, SessionType } from '../types'
 import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT, type SessionTypeIconsMap } from '../utils/sessionTypeIcons'
 import { useI18n } from '../i18n'
 
-// Solid hues per session type — used to fill the day circle
+// Day-circle fill — matches the session log icon background (bg-{hue}-900/40)
 const SESSION_TYPE_HEX: Record<SessionType, string> = {
-  GI: '#3b82f6',       // blue-500
-  NOGI: '#22c55e',     // green-500
-  OPEN_MAT: '#a855f7', // purple-500
-  COMPETITION: '#ef4444', // red-500
-  DRILLING: '#f59e0b', // amber-500
+  GI: 'rgba(30, 58, 138, 0.4)',   // blue-900/40
+  NOGI: 'rgba(20, 83, 45, 0.4)',  // green-900/40
+  OPEN_MAT: 'rgba(88, 28, 135, 0.4)', // purple-900/40
+  COMPETITION: 'rgba(127, 29, 29, 0.4)', // red-900/40
+  DRILLING: 'rgba(120, 53, 15, 0.4)', // amber-900/40
 }
 
 function buildCircleBackground(types: SessionType[]): string | undefined {
@@ -72,7 +72,9 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
   const totalCells = Math.ceil((leadingBlanks + daysInMonth) / 7) * 7
   const todayKey = startOfDay(Date.now())
 
-  const monthLabel = firstOfMonth.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
+  const monthLabel = firstOfMonth
+    .toLocaleDateString(locale, { month: 'long', year: 'numeric' })
+    .replace(/\sde\s/i, ' ')
 
   const goPrev = () => setCursor(new Date(year, month - 1, 1))
   const goNext = () => setCursor(new Date(year, month + 1, 1))
@@ -110,7 +112,7 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
       </div>
 
       {/* Day grid — no card background, floats on page bg */}
-      <div className="grid grid-cols-7 gap-y-2 px-1">
+      <div className="grid grid-cols-7 gap-y-0.5 px-1">
         {Array.from({ length: totalCells }).map((_, index) => {
           const offset = index - leadingBlanks
           const cellDate = new Date(year, month, offset + 1)
@@ -119,13 +121,11 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
           const epoch = cellDate.getTime()
           const daySessions = inMonth ? sessionsByDay.get(epoch) ?? [] : []
           const uniqueTypes = Array.from(new Set(daySessions.map(s => s.sessionType)))
-          const isToday = epoch === todayKey
+          const isToday = inMonth && epoch === todayKey
           const hasSessions = uniqueTypes.length > 0
           const background = buildCircleBackground(uniqueTypes)
 
-          const numberColor = isToday
-            ? 'text-gold'
-            : hasSessions
+          const numberColor = hasSessions
             ? 'text-white'
             : inMonth
             ? 'text-zinc-300'
@@ -136,14 +136,16 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
               key={index}
               onClick={() => (inMonth ? onDayClick?.(epoch) : undefined)}
               disabled={!inMonth}
-              className={`aspect-square flex items-center justify-center ${
+              className={`h-10 flex items-center justify-center ${
                 onDayClick && inMonth ? 'cursor-pointer' : 'cursor-default'
               }`}
             >
               <span
                 className={`relative flex items-center justify-center rounded-full h-9 w-9 sm:h-10 sm:w-10 ${
                   hasSessions ? 'shadow-sm' : ''
-                } ${onDayClick && inMonth ? 'active:scale-95 transition-transform' : ''}`}
+                } ${isToday ? 'ring-[3px] ring-gold' : ''} ${
+                  onDayClick && inMonth ? 'active:scale-95 transition-transform' : ''
+                }`}
                 style={background ? { background } : undefined}
               >
                 <span className={`text-sm font-semibold leading-none ${numberColor}`}>

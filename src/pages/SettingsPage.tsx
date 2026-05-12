@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n } from '../i18n'
 import { exportDatabaseBackup, importDatabaseBackup, resetPrefilledTechniques } from '../db/database'
 import { telemetry } from '../utils/telemetry'
 import { getGoalMatTime, setGoalMatTime, DEFAULT_WEEKLY_GOAL_MINUTES } from '../utils/goalMatTime'
+import {
+  getHomeSectionOrder,
+  setHomeSectionOrder,
+  type HomeSectionId,
+} from '../utils/homeSectionOrder'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -14,6 +19,23 @@ export default function SettingsPage() {
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
   const [telemetryCount, setTelemetryCount] = useState(0)
   const [goalInput, setGoalInput] = useState(String(getGoalMatTime()))
+  const [sectionOrder, setSectionOrder] = useState<HomeSectionId[]>(getHomeSectionOrder)
+
+  const moveSection = (index: number, delta: number) => {
+    const next = [...sectionOrder]
+    const target = index + delta
+    if (target < 0 || target >= next.length) return
+    ;[next[index], next[target]] = [next[target], next[index]]
+    setSectionOrder(next)
+    setHomeSectionOrder(next)
+  }
+
+  const sectionLabels: Record<HomeSectionId, string> = {
+    focus: t('FOCUS TECHNIQUES'),
+    trending: t('TRENDING'),
+    stats: t('YOUR STATS'),
+    calendar: t('TRAINING CALENDAR'),
+  }
   const importRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -123,6 +145,43 @@ export default function SettingsPage() {
           </div>
           <div className="text-xs text-zinc-500">
             {language === 'es' ? 'Vista previa de fecha:' : 'Date preview:'} {new Date().toLocaleDateString(locale)}
+          </div>
+        </div>
+
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">
+            {language === 'es' ? 'ORDEN DEL INICIO' : 'HOME SECTION ORDER'}
+          </h2>
+          <p className="text-xs text-zinc-500">
+            {language === 'es'
+              ? 'Reordena las secciones de la pantalla principal.'
+              : 'Reorder the sections on the home screen.'}
+          </p>
+          <div className="space-y-2">
+            {sectionOrder.map((id, index) => (
+              <div
+                key={id}
+                className="flex items-center gap-2 bg-zinc-800 rounded-xl px-3 py-2"
+              >
+                <span className="flex-1 text-sm text-zinc-100">{sectionLabels[id]}</span>
+                <button
+                  onClick={() => moveSection(index, -1)}
+                  disabled={index === 0}
+                  aria-label={t('Move up')}
+                  className="p-1.5 rounded-lg text-zinc-300 disabled:text-zinc-600 active:bg-zinc-700"
+                >
+                  <ArrowUp size={16} strokeWidth={2} />
+                </button>
+                <button
+                  onClick={() => moveSection(index, 1)}
+                  disabled={index === sectionOrder.length - 1}
+                  aria-label={t('Move down')}
+                  className="p-1.5 rounded-lg text-zinc-300 disabled:text-zinc-600 active:bg-zinc-700"
+                >
+                  <ArrowDown size={16} strokeWidth={2} />
+                </button>
+              </div>
+            ))}
           </div>
         </div>
 
