@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import BottomNav from './BottomNav'
 import OfflineNotice from './OfflineNotice'
@@ -6,6 +6,7 @@ import PwaUpdatePrompt from './PwaUpdatePrompt'
 import FirstLaunchSetupPrompt, { isInitialSetupRequired } from './FirstLaunchSetupPrompt'
 
 export default function Layout() {
+  const navigate = useNavigate()
   const [showInitialSetup, setShowInitialSetup] = useState(() => isInitialSetupRequired())
 
   return (
@@ -16,7 +17,14 @@ export default function Layout() {
       </main>
       <BottomNav />
       <PwaUpdatePrompt />
-      {showInitialSetup && <FirstLaunchSetupPrompt onComplete={() => setShowInitialSetup(false)} />}
+      {showInitialSetup && (
+        <FirstLaunchSetupPrompt
+          onComplete={() => {
+            setShowInitialSetup(false)
+            navigate('/', { replace: true })
+          }}
+        />
+      )}
     </div>
   )
 }
