@@ -117,6 +117,7 @@ const ES_TRANSLATIONS: Record<string, string> = {
   'Select focus techniques': 'Selecciona técnicas de enfoque',
   'No focus techniques selected': 'No hay técnicas de enfoque seleccionadas',
   'Given submissions': 'submisiones aplicadas',
+  'Submissions': 'sumisiones',
   Icons: 'Iconos',
   Emoji: 'Emoji',
   Suggested: 'Sugeridos',
