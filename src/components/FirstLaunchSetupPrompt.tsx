@@ -156,9 +156,7 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
                 return (
                   <button
                     key={i}
-                    onClick={() => {
-                      setStripes(selected === stripes ? Math.max(0, stripes - 1) : selected)
-                    }}
+                    onClick={() => setStripes(selected)}
                     aria-label={stripeLabel}
                     className={`h-7 w-4 rounded-sm transition-colors ${
                       i < stripes ? 'bg-gold' : 'bg-zinc-700'

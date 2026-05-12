@@ -6,7 +6,7 @@ import PwaUpdatePrompt from './PwaUpdatePrompt'
 import FirstLaunchSetupPrompt, { isInitialSetupRequired } from './FirstLaunchSetupPrompt'
 
 export default function Layout() {
-  const [showInitialSetup, setShowInitialSetup] = useState(isInitialSetupRequired)
+  const [showInitialSetup, setShowInitialSetup] = useState(() => isInitialSetupRequired())
 
   return (
     <div className="h-full flex flex-col bg-zinc-950">
