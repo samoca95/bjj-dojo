@@ -126,7 +126,7 @@ describe('SessionsPage', () => {
 
   it('shows given and received tap stats with green zap and red hand icons', () => {
     setupTapSessionMocks()
-    const { container } = renderSessionsPage()
+    renderSessionsPage()
     const sessionCard = screen.getByText(/Worked on guard/).closest('button')
 
     expect(sessionCard).not.toBeNull()
