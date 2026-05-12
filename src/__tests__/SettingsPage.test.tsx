@@ -32,8 +32,8 @@ describe('SettingsPage — theme mode', () => {
         <SettingsPage />
       </MemoryRouter>,
     )
-    expect(screen.getByText('THEME MODE')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Black' })).toBeInTheDocument()
+    expect(screen.getByText('THEME & LANGUAGE')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Dark' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Light' })).toBeInTheDocument()
   })
 
@@ -49,7 +49,7 @@ describe('SettingsPage — theme mode', () => {
     expect(document.documentElement.classList.contains('theme-light')).toBe(true)
   })
 
-  it('removes light class when Black is selected', async () => {
+  it('removes light class when Dark is selected', async () => {
     localStorage.setItem(APP_THEME_STORAGE_KEY, 'light')
     document.documentElement.classList.add('theme-light')
     const user = userEvent.setup()
@@ -58,7 +58,7 @@ describe('SettingsPage — theme mode', () => {
         <SettingsPage />
       </MemoryRouter>,
     )
-    await user.click(screen.getByRole('button', { name: 'Black' }))
+    await user.click(screen.getByRole('button', { name: 'Dark' }))
     expect(localStorage.getItem(APP_THEME_STORAGE_KEY)).toBe('black')
     expect(document.documentElement.classList.contains('theme-light')).toBe(false)
   })
@@ -70,7 +70,7 @@ describe('SettingsPage — theme mode', () => {
         <SettingsPage />
       </MemoryRouter>,
     )
-    await user.click(screen.getByRole('button', { name: 'Spanish' }))
+    await user.click(screen.getByRole('button', { name: 'ES' }))
     expect(localStorage.getItem(APP_LANGUAGE_STORAGE_KEY)).toBe('es')
     expect(screen.getByText('Ajustes')).toBeInTheDocument()
   })
