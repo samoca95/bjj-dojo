@@ -44,15 +44,6 @@ export default function AddEditSessionPage() {
     const stateDate = (location.state as { date?: number } | null)?.date
     return toDateInput(stateDate ?? Date.now())
   })
-
-  const openClubSettings = () => {
-    navigate('/clubs', {
-      state: {
-        returnTo: location.pathname,
-        returnState: location.state,
-      },
-    })
-  }
   const [duration, setDuration] = useState('60')
   const [customDuration, setCustomDuration] = useState(false)
   const [sessionType, setSessionType] = useState<SessionType>('GI')
@@ -125,6 +116,15 @@ export default function AddEditSessionPage() {
       setClubId(clubs[0].id ?? null)
     }
   }, [clubs, isEdit, clubId])
+
+  const openClubSettings = () => {
+    navigate('/clubs', {
+      state: {
+        returnTo: location.pathname,
+        returnState: location.state,
+      },
+    })
+  }
 
   const handleSave = async () => {
     const safeDate = normalizeDateInput(date)
