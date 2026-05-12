@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   ChevronLeft, Pencil, Trash2, ChevronRight,
-  Zap, Building2,
+  Zap, Hand, Building2,
 } from 'lucide-react'
 import { db } from '../db/database'
 import type { Session, SessionTap, Technique } from '../types'
@@ -167,7 +167,7 @@ export default function SessionDetailPage() {
                 <div className="space-y-1.5">
                   {givenTaps.map((tap, i) => (
                     <div key={i} className="flex items-center gap-2 bg-zinc-800 rounded-lg px-3 py-2">
-                      <Zap size={13} className="text-gold shrink-0" strokeWidth={2} />
+                      <Zap size={13} className="text-green-500 shrink-0" strokeWidth={2} />
                       <span className="text-sm text-zinc-100">
                           {tapTechniqueMap?.get(tap.techniqueId) ?? t('Unknown')}
                       </span>
@@ -182,7 +182,7 @@ export default function SessionDetailPage() {
                 <div className="space-y-1.5">
                   {receivedTaps.map((tap, i) => (
                     <div key={i} className="flex items-center gap-2 bg-zinc-800 rounded-lg px-3 py-2">
-                      <Zap size={13} className="text-red-400 shrink-0" strokeWidth={2} />
+                      <Hand size={13} className="text-red-400 shrink-0" strokeWidth={2} />
                       <span className="text-sm text-zinc-100">
                           {tapTechniqueMap?.get(tap.techniqueId) ?? t('Unknown')}
                       </span>

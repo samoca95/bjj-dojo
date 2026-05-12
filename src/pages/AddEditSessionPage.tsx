@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  ChevronLeft, Plus, Check, X, Zap,
+  ChevronLeft, Plus, Check, X, Zap, Hand,
 } from 'lucide-react'
 import { db } from '../db/database'
 import type { Category, Club, Session, SessionType, Technique, TapType } from '../types'
@@ -435,7 +435,7 @@ export default function AddEditSessionPage() {
                 <div className="space-y-1.5">
                   {givenTaps.map(t => (
                     <div key={t.uid} className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2">
-                      <Zap size={13} className="text-gold shrink-0" />
+                      <Zap size={13} className="text-green-500 shrink-0" />
                       <span className="flex-1 text-sm text-zinc-100">{t.techniqueName}</span>
                       <button onClick={() => removeTap(t.uid)} className="text-zinc-600 active:text-zinc-300">
                         <X size={14} />
@@ -452,7 +452,7 @@ export default function AddEditSessionPage() {
                 <div className="space-y-1.5">
                   {receivedTaps.map(t => (
                     <div key={t.uid} className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2">
-                      <Zap size={13} className="text-red-400 shrink-0" />
+                      <Hand size={13} className="text-red-400 shrink-0" />
                       <span className="flex-1 text-sm text-zinc-100">{t.techniqueName}</span>
                       <button onClick={() => removeTap(t.uid)} className="text-zinc-600 active:text-zinc-300">
                         <X size={14} />
