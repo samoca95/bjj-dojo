@@ -88,10 +88,9 @@ export default function HomePage() {
     return counts
   }, [], new Map<number, number>())
   const receivedTapCountsByTechniqueId = useLiveQuery(async () => {
-    const taps = await db.sessionTaps.toArray()
+    const taps = await db.sessionTaps.where('type').equals('received').toArray()
     const counts = new Map<number, number>()
     for (const tap of taps) {
-      if (tap.type !== 'received') continue
       counts.set(tap.techniqueId, (counts.get(tap.techniqueId) ?? 0) + 1)
     }
     return counts
@@ -263,7 +262,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-3 shrink-0">
                     <span className="flex items-center gap-1 text-xs text-red-400">
                       <Hand size={12} strokeWidth={2} />
-                      {receivedTapCountsByTechniqueId?.get(technique.id) ?? 0}
+                      {receivedTapCountsByTechniqueId.get(technique.id) ?? 0}
                     </span>
                     <span className="flex items-center gap-1 text-xs text-green-500">
                       <Zap size={12} strokeWidth={2} />
