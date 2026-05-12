@@ -8,6 +8,7 @@ import { getGoalMatTime } from '../utils/goalMatTime'
 import { getFocusTechniqueIds, setFocusTechniqueIds } from '../utils/focusTechniques'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 import TrainingCalendar from '../components/TrainingCalendar'
+import { CategoryIcon } from '../components/CategoryIcon'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -260,7 +261,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 min-w-0">
                     <Crosshair size={14} className="text-gold shrink-0" />
                     <span className="text-sm font-semibold text-zinc-100 truncate">{technique.name}</span>
-                    <CategoryIcon value={categoryIcon} fallbackId={technique.categoryId} size={14} className="text-gold shrink-0" />
+                    <CategoryIcon fallbackId={technique.categoryId} size={14} className="text-gold shrink-0" />
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span className="flex items-center gap-1 text-xs text-red-400">
