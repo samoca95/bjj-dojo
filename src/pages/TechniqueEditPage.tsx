@@ -9,6 +9,7 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel, difficultyLabel } from '../i18n'
 import { isValidYoutubeUrl, normalizeTechniquePayload, VALIDATION_LIMITS } from '../utils/validation'
 import { runWithTelemetry } from '../utils/telemetry'
+import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
 
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
@@ -87,54 +88,62 @@ export default function TechniqueEditPage() {
       window.alert(language === 'es' ? 'URL de YouTube inválida.' : 'Invalid YouTube URL.')
       return
     }
-    if (isNew) {
-      const maxId = await db.techniques.orderBy('id').last()
-      const newId = (maxId?.id ?? 1000) + 1
-      const technique: Technique = {
-        id: newId,
-        name: payload.name,
-        description: payload.description,
-        youtubeUrl: payload.youtubeUrl,
-        difficulty,
-        categoryId,
-        cues: payload.cues,
-        tags: payload.tags,
-        isFavorite,
-        isCustom: true,
+    try {
+      if (isNew) {
+        const maxId = await db.techniques.orderBy('id').last()
+        const newId = (maxId?.id ?? 1000) + 1
+        const technique: Technique = {
+          id: newId,
+          name: payload.name,
+          description: payload.description,
+          youtubeUrl: payload.youtubeUrl,
+          difficulty,
+          categoryId,
+          cues: payload.cues,
+          tags: payload.tags,
+          isFavorite,
+          isCustom: true,
+        }
+        await runWithTelemetry('technique.save_failed', () => db.techniques.add(technique))
+        if (connections.length > 0) {
+          await runWithTelemetry('technique.connection_save_failed', () => db.techniqueConnections.bulkAdd(
+            connections.map(connection => ({
+              fromTechniqueId: newId,
+              toTechniqueId: connection.toTechniqueId,
+              connectionType: connection.connectionType,
+            })),
+          ))
+        }
+        navigate(`/techniques/${newId}`)
+      } else {
+        await runWithTelemetry('technique.update_failed', () => db.techniques.update(Number(id), {
+          name: payload.name,
+          description: payload.description,
+          youtubeUrl: payload.youtubeUrl,
+          difficulty,
+          categoryId,
+          cues: payload.cues,
+          tags: payload.tags,
+          isFavorite,
+        }))
+        await runWithTelemetry('technique.connection_clear_failed', () => db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete())
+        if (connections.length > 0) {
+          await runWithTelemetry('technique.connection_save_failed', () => db.techniqueConnections.bulkAdd(
+            connections.map(connection => ({
+              fromTechniqueId: Number(id),
+              toTechniqueId: connection.toTechniqueId,
+              connectionType: connection.connectionType,
+            })),
+          ))
+        }
+        navigate(`/techniques/${id}`)
       }
-      await runWithTelemetry('technique.save_failed', () => db.techniques.add(technique))
-      if (connections.length > 0) {
-        await runWithTelemetry('technique.connection_save_failed', () => db.techniqueConnections.bulkAdd(
-          connections.map(connection => ({
-            fromTechniqueId: newId,
-            toTechniqueId: connection.toTechniqueId,
-            connectionType: connection.connectionType,
-          })),
-        ))
+    } catch (err) {
+      if (isQuotaError(err)) {
+        notifyQuotaError()
+      } else {
+        window.alert(language === 'es' ? 'No se pudo guardar la técnica.' : 'Could not save technique.')
       }
-      navigate(`/techniques/${newId}`)
-    } else {
-      await runWithTelemetry('technique.update_failed', () => db.techniques.update(Number(id), {
-        name: payload.name,
-        description: payload.description,
-        youtubeUrl: payload.youtubeUrl,
-        difficulty,
-        categoryId,
-        cues: payload.cues,
-        tags: payload.tags,
-        isFavorite,
-      }))
-      await runWithTelemetry('technique.connection_clear_failed', () => db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete())
-      if (connections.length > 0) {
-        await runWithTelemetry('technique.connection_save_failed', () => db.techniqueConnections.bulkAdd(
-          connections.map(connection => ({
-            fromTechniqueId: Number(id),
-            toTechniqueId: connection.toTechniqueId,
-            connectionType: connection.connectionType,
-          })),
-        ))
-      }
-      navigate(`/techniques/${id}`)
     }
   }
 
@@ -143,10 +152,14 @@ export default function TechniqueEditPage() {
     if (!window.confirm(language === 'es'
       ? '¿Eliminar esta técnica? Esta acción no se puede deshacer.'
       : 'Delete this technique? This cannot be undone.')) return
-    await db.techniques.delete(Number(id))
-    await db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete()
-    await db.techniqueConnections.where('toTechniqueId').equals(Number(id)).delete()
-    navigate('/techniques')
+    try {
+      await db.techniques.delete(Number(id))
+      await db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete()
+      await db.techniqueConnections.where('toTechniqueId').equals(Number(id)).delete()
+      navigate('/techniques')
+    } catch (err) {
+      if (isQuotaError(err)) notifyQuotaError()
+    }
   }
 
   const addCue = () => {

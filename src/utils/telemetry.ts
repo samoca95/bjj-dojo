@@ -9,6 +9,9 @@ export interface TelemetryEntry {
 
 const TELEMETRY_STORAGE_KEY = 'bjj-dojo:telemetry'
 const MAX_TELEMETRY_ENTRIES = 200
+const MAX_SESSION_TELEMETRY_ENTRIES = 50
+
+let sessionEntryCount = 0
 
 function serializeErrorContext(context?: unknown): unknown {
   if (context instanceof Error) {
@@ -44,6 +47,8 @@ function writeTelemetry(entries: TelemetryEntry[]) {
 }
 
 export function logTelemetry(level: TelemetryLevel, event: string, context?: unknown) {
+  if (sessionEntryCount >= MAX_SESSION_TELEMETRY_ENTRIES) return
+
   const entry: TelemetryEntry = {
     timestamp: Date.now(),
     level,
@@ -52,6 +57,18 @@ export function logTelemetry(level: TelemetryLevel, event: string, context?: unk
   }
 
   const history = readTelemetry()
+
+  // Skip consecutive identical entries to avoid log spam
+  const last = history[history.length - 1]
+  if (last && last.event === entry.event && last.level === entry.level) {
+    try {
+      if (JSON.stringify(last.context) === JSON.stringify(entry.context)) return
+    } catch {
+      // ignore comparison failures; allow the entry
+    }
+  }
+
+  sessionEntryCount++
   history.push(entry)
   writeTelemetry(history)
 

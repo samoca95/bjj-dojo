@@ -143,6 +143,12 @@ const ES_TRANSLATIONS: Record<string, string> = {
   Fri: 'Vie',
   Sat: 'Sáb',
   Sun: 'Dom',
+  'Section unavailable': 'Sección no disponible',
+  'Try again': 'Reintentar',
+  'Storage full': 'Almacenamiento lleno',
+  'Your device storage is full. Export a backup to free up space.': 'El almacenamiento del dispositivo está lleno. Exporta un respaldo para liberar espacio.',
+  'Export backup': 'Exportar respaldo',
+  Dismiss: 'Cerrar',
 }
 
 const ES_CATEGORY_CONTENT: Record<number, { name: string; description: string }> = {

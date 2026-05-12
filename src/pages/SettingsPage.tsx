@@ -7,6 +7,7 @@ import { useI18n } from '../i18n'
 import { db, exportDatabaseBackup, importDatabaseBackup, resetPrefilledTechniques } from '../db/database'
 import { setAppLanguage } from '../i18n'
 import { telemetry } from '../utils/telemetry'
+import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
 import { getGoalMatTime, setGoalMatTime, DEFAULT_WEEKLY_GOAL_MINUTES } from '../utils/goalMatTime'
 import {
   getHomeSectionOrder,
@@ -85,7 +86,11 @@ export default function SettingsPage() {
       setTelemetryCount(telemetry.read().length)
     } catch (error) {
       telemetry.error('backup.import_failed', error)
-      window.alert(language === 'es' ? 'No se pudo importar el respaldo.' : 'Could not import backup.')
+      if (isQuotaError(error)) {
+        notifyQuotaError()
+      } else {
+        window.alert(language === 'es' ? 'No se pudo importar el respaldo.' : 'Could not import backup.')
+      }
     }
   }
 
@@ -94,11 +99,19 @@ export default function SettingsPage() {
       ? '¿Restablecer todas las técnicas predefinidas?\nTus técnicas personalizadas no se eliminarán.'
       : 'Reset all pre-filled techniques?\nYour custom techniques will be preserved.'
     if (!window.confirm(message)) return
-    await resetPrefilledTechniques()
-    const done = language === 'es'
-      ? 'Técnicas predefinidas restablecidas correctamente.'
-      : 'Pre-filled techniques were reset successfully.'
-    window.alert(done)
+    try {
+      await resetPrefilledTechniques()
+      const done = language === 'es'
+        ? 'Técnicas predefinidas restablecidas correctamente.'
+        : 'Pre-filled techniques were reset successfully.'
+      window.alert(done)
+    } catch (err) {
+      if (isQuotaError(err)) {
+        notifyQuotaError()
+      } else {
+        window.alert(language === 'es' ? 'No se pudo restablecer.' : 'Could not reset techniques.')
+      }
+    }
   }
 
   return (

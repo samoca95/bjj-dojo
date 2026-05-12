@@ -7,6 +7,7 @@ import type { Category } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import IconPickerModal from '../components/IconPickerModal'
 import { useI18n, getCategoryName, getCategoryDescription } from '../i18n'
+import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
 
 export default function CategoriesPage() {
   const navigate = useNavigate()
@@ -52,7 +53,11 @@ export default function CategoriesPage() {
           value={activeCategory.icon}
           onClose={() => setActiveCategory(null)}
           onSelect={async icon => {
-            await db.categories.update(activeCategory.id, { icon: icon.trim() })
+            try {
+              await db.categories.update(activeCategory.id, { icon: icon.trim() })
+            } catch (err) {
+              if (isQuotaError(err)) notifyQuotaError()
+            }
           }}
         />
       )}

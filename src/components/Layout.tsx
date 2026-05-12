@@ -4,6 +4,7 @@ import BottomNav from './BottomNav'
 import OfflineNotice from './OfflineNotice'
 import PwaUpdatePrompt from './PwaUpdatePrompt'
 import FirstLaunchSetupPrompt, { isInitialSetupRequired } from './FirstLaunchSetupPrompt'
+import QuotaErrorModal from './QuotaErrorModal'
 
 export default function Layout() {
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ export default function Layout() {
       </main>
       <BottomNav />
       <PwaUpdatePrompt />
+      <QuotaErrorModal />
       {showInitialSetup && (
         <FirstLaunchSetupPrompt
           onComplete={() => {

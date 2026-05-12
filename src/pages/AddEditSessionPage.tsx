@@ -12,6 +12,7 @@ import { useI18n, sessionTypeLabel } from '../i18n'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 import { normalizeDateInput, normalizeDuration, normalizeSessionNotes, normalizeTechniquePayload, toSafeDateEpoch, VALIDATION_LIMITS } from '../utils/validation'
 import { runWithTelemetry } from '../utils/telemetry'
+import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
 
 function toDateInput(epoch: number) {
   const d = new Date(epoch)
@@ -168,9 +169,13 @@ export default function AddEditSessionPage() {
         }
       })
       navigate(isEdit ? `/sessions/${sid}` : '/sessions')
-    } catch {
+    } catch (err) {
       setSubmitting(false)
-      window.alert(language === 'es' ? 'No se pudo guardar la sesión.' : 'Could not save session.')
+      if (isQuotaError(err)) {
+        notifyQuotaError()
+      } else {
+        window.alert(language === 'es' ? 'No se pudo guardar la sesión.' : 'Could not save session.')
+      }
     }
   }
 
