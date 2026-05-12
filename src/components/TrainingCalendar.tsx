@@ -5,7 +5,7 @@ import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT, type SessionType
 import { APP_THEME_UPDATED_EVENT, getAppTheme } from '../utils/theme'
 import { useI18n } from '../i18n'
 
-const SESSION_TYPE_HEX_DARK: Record<SessionType, string> = {
+const SESSION_TYPE_COLORS_DARK: Record<SessionType, string> = {
   GI: 'rgba(37, 99, 235, 0.42)',
   NOGI: 'rgba(22, 163, 74, 0.42)',
   OPEN_MAT: 'rgba(147, 51, 234, 0.42)',
@@ -13,7 +13,7 @@ const SESSION_TYPE_HEX_DARK: Record<SessionType, string> = {
   DRILLING: 'rgba(217, 119, 6, 0.42)',
 }
 
-const SESSION_TYPE_HEX_LIGHT: Record<SessionType, string> = {
+const SESSION_TYPE_COLORS_LIGHT: Record<SessionType, string> = {
   GI: 'rgba(191, 219, 254, 0.95)',
   NOGI: 'rgba(187, 247, 208, 0.95)',
   OPEN_MAT: 'rgba(233, 213, 255, 0.95)',
@@ -140,7 +140,7 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
           const hasSessions = uniqueTypes.length > 0
           const background = buildCircleBackground(
             uniqueTypes,
-            isLightTheme ? SESSION_TYPE_HEX_LIGHT : SESSION_TYPE_HEX_DARK,
+            isLightTheme ? SESSION_TYPE_COLORS_LIGHT : SESSION_TYPE_COLORS_DARK,
           )
 
           const activeDayNumberColor = isLightTheme ? 'text-zinc-900' : 'text-white'
