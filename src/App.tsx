@@ -1,16 +1,18 @@
+import { lazy, Suspense } from 'react'
 import { createHashRouter, RouterProvider } from 'react-router-dom'
 import Layout from './components/Layout'
-import HomePage from './pages/HomePage'
-import SessionsPage from './pages/SessionsPage'
-import SessionDetailPage from './pages/SessionDetailPage'
-import AddEditSessionPage from './pages/AddEditSessionPage'
-import TechniquesPage from './pages/TechniquesPage'
-import TechniqueDetailPage from './pages/TechniqueDetailPage'
-import TechniqueEditPage from './pages/TechniqueEditPage'
-import ClubsPage from './pages/ClubsPage'
-import CategoriesPage from './pages/CategoriesPage'
-import SettingsPage from './pages/SettingsPage'
-import SessionTypeIconsPage from './pages/SessionTypeIconsPage'
+
+const HomePage = lazy(() => import('./pages/HomePage'))
+const SessionsPage = lazy(() => import('./pages/SessionsPage'))
+const SessionDetailPage = lazy(() => import('./pages/SessionDetailPage'))
+const AddEditSessionPage = lazy(() => import('./pages/AddEditSessionPage'))
+const TechniquesPage = lazy(() => import('./pages/TechniquesPage'))
+const TechniqueDetailPage = lazy(() => import('./pages/TechniqueDetailPage'))
+const TechniqueEditPage = lazy(() => import('./pages/TechniqueEditPage'))
+const ClubsPage = lazy(() => import('./pages/ClubsPage'))
+const CategoriesPage = lazy(() => import('./pages/CategoriesPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const SessionTypeIconsPage = lazy(() => import('./pages/SessionTypeIconsPage'))
 
 const router = createHashRouter([
   {
@@ -34,5 +36,9 @@ const router = createHashRouter([
 ])
 
 export default function App() {
-  return <RouterProvider router={router} />
+  return (
+    <Suspense fallback={<div />}>
+      <RouterProvider router={router} />
+    </Suspense>
+  )
 }

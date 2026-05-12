@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, useMemo, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { CalendarDays, BookOpen, ChevronRight, Flame, Crosshair, Zap, Hand } from 'lucide-react'
@@ -128,7 +128,10 @@ export default function HomePage() {
 
   const sessionCount = useLiveQuery(() => db.sessions.count(), [], 0)
   const sessions = useLiveQuery(() => db.sessions.toArray(), [], [])
-  const totalMinutes = sessions?.reduce((s, r) => s + r.durationMinutes, 0) ?? 0
+  const totalMinutes = useMemo(
+    () => (sessions ?? []).reduce((s, r) => s + r.durationMinutes, 0),
+    [sessions],
+  )
 
   const tapCounts = useLiveQuery(async () => {
     const taps = await db.sessionTaps.toArray()
@@ -175,49 +178,59 @@ export default function HomePage() {
     }
     return counts
   }, [], new Map<number, number>())
-  const hours = Math.floor(totalMinutes / 60)
-  const mins = totalMinutes % 60
-  const timeLabel = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`
-  const weeklyMinutes = weeklySessions.reduce((sum, session) => sum + session.durationMinutes, 0)
-  const weeklyGoalPct = Math.min(100, Math.round((weeklyMinutes / weeklyGoalMinutes) * 100))
+  const timeLabel = useMemo(() => {
+    const h = Math.floor(totalMinutes / 60)
+    const m = totalMinutes % 60
+    return h > 0 ? `${h}h ${m}m` : `${m}m`
+  }, [totalMinutes])
+  const weeklyMinutes = useMemo(
+    () => (weeklySessions ?? []).reduce((sum, s) => sum + s.durationMinutes, 0),
+    [weeklySessions],
+  )
+  const weeklyGoalPct = useMemo(
+    () => Math.min(100, Math.round((weeklyMinutes / weeklyGoalMinutes) * 100)),
+    [weeklyMinutes, weeklyGoalMinutes],
+  )
 
-  const sortedAsc = [...recentSessions].sort((a, b) => a.date - b.date)
-  const last5TapCounts = sortedAsc.map(s => tapCountsBySessionId.get(s.id ?? -1) ?? 0)
-  const avgTaps5 = last5TapCounts.length === 0
-    ? 0
-    : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
-  const maxTaps5 = Math.max(...last5TapCounts, 1)
-  const focusTechniques = (techniques ?? []).filter(technique => focusTechniqueIds.includes(technique.id))
+  const { last5TapCounts, avgTaps5, maxTaps5 } = useMemo(() => {
+    const sorted = [...(recentSessions ?? [])].sort((a, b) => a.date - b.date)
+    const last5TapCounts = sorted.map(s => tapCountsBySessionId.get(s.id ?? -1) ?? 0)
+    const avgTaps5 = last5TapCounts.length === 0
+      ? 0
+      : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
+    const maxTaps5 = Math.max(...last5TapCounts, 1)
+    return { last5TapCounts, avgTaps5, maxTaps5 }
+  }, [recentSessions, tapCountsBySessionId])
+  const focusTechniques = useMemo(
+    () => (techniques ?? []).filter(t => focusTechniqueIds.includes(t.id)),
+    [techniques, focusTechniqueIds],
+  )
 
-  const filteredPickerTechniques = (() => {
+  const filteredPickerTechniques = useMemo(() => {
     const results = (techniques ?? []).filter(t => techniqueMatchesQuery(t, focusPickerSearch))
     if (focusPickerSearch.trim()) {
       return [...results].sort((a, b) => techniqueScore(b, focusPickerSearch) - techniqueScore(a, focusPickerSearch))
     }
     return results
-  })()
+  }, [techniques, focusPickerSearch])
 
-  const weekStarts = Array.from(
-    new Set((sessions ?? []).map(session => {
-      return startOfWeek(session.date)
-    })),
-  ).sort((a, b) => b - a)
-
-  let trainingWeekStreak = 0
-  if (weekStarts.length > 0) {
-    const firstWeek = weekStarts[0]
-    if (firstWeek === currentWeekStart || firstWeek === previousWeekStart) {
-      for (let index = 0; index < weekStarts.length; index += 1) {
-        if (index === 0) {
-          trainingWeekStreak += 1
-          continue
+  const trainingWeekStreak = useMemo(() => {
+    const weekStarts = Array.from(
+      new Set((sessions ?? []).map(s => startOfWeek(s.date))),
+    ).sort((a, b) => b - a)
+    let streak = 0
+    if (weekStarts.length > 0) {
+      const firstWeek = weekStarts[0]
+      if (firstWeek === currentWeekStart || firstWeek === previousWeekStart) {
+        for (let index = 0; index < weekStarts.length; index += 1) {
+          if (index === 0) { streak += 1; continue }
+          if (weekStarts[index] !== weekStarts[index - 1] - 7 * DAY_MS) break
+          streak += 1
         }
-        const expectedNext = weekStarts[index - 1] - 7 * DAY_MS
-        if (weekStarts[index] !== expectedNext) break
-        trainingWeekStreak += 1
       }
     }
-  }
+    return streak
+  }, [sessions, currentWeekStart, previousWeekStart])
 
   const statsSection = (
     <section key="stats">
