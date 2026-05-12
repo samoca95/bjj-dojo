@@ -5,6 +5,7 @@ import {
   ChevronLeft, Plus, Check, X, Zap, Hand,
 } from 'lucide-react'
 import { db } from '../db/database'
+import { getCategoryMap } from '../db/categoryCache'
 import type { Category, Club, Session, SessionType, Technique, TapType } from '../types'
 import { SESSION_TYPE_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -75,7 +76,7 @@ export default function AddEditSessionPage() {
     [] as Club[],
   )
   const categories = useLiveQuery(
-    () => db.categories.orderBy('name').toArray(),
+    () => getCategoryMap().then(m => [...m.values()]),
     [],
     [] as Category[],
   )

@@ -10,12 +10,28 @@ vi.mock('dexie-react-hooks', () => ({
 
 vi.mock('../db/database', () => ({
   db: {
-    categories: { orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })) },
+    categories: { orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })), count: vi.fn().mockResolvedValue(0) },
     techniques: {
       toCollection: vi.fn(() => ({ sortBy: vi.fn().mockResolvedValue([]) })),
       where: vi.fn(() => ({ equals: vi.fn(() => ({ sortBy: vi.fn().mockResolvedValue([]) })) })),
     },
   },
+}))
+
+vi.mock('../db/categoryCache', () => ({
+  getCategoryMap: vi.fn().mockResolvedValue(new Map()),
+}))
+
+// Render all items without virtualization — tests care about content, not windowing
+vi.mock('react-window', () => ({
+  FixedSizeList: ({ children, itemCount }: {
+    children: (props: { index: number; style: React.CSSProperties }) => React.ReactNode
+    itemCount: number
+  }) => (
+    <div>
+      {Array.from({ length: itemCount }, (_, i) => children({ index: i, style: {} }))}
+    </div>
+  ),
 }))
 
 import { useLiveQuery } from 'dexie-react-hooks'
