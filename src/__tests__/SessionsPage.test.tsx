@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import SessionsPage from '../pages/SessionsPage'
@@ -127,11 +127,13 @@ describe('SessionsPage', () => {
   it('shows given and received tap stats with green zap and red hand icons', () => {
     setupTapSessionMocks()
     const { container } = renderSessionsPage()
+    const sessionCard = screen.getByText(/Worked on guard/).closest('button')
 
-    expect(screen.getByText('2')).toBeInTheDocument()
-    expect(screen.getByText('1')).toBeInTheDocument()
-    expect(container.querySelector('svg.text-green-500')).not.toBeNull()
-    expect(container.querySelector('svg.text-red-400')).not.toBeNull()
+    expect(sessionCard).not.toBeNull()
+    expect(within(sessionCard!).getByText('2')).toBeInTheDocument()
+    expect(within(sessionCard!).getByText('1')).toBeInTheDocument()
+    expect(sessionCard?.querySelector('svg.text-green-500')).not.toBeNull()
+    expect(sessionCard?.querySelector('svg.text-red-400')).not.toBeNull()
   })
 
   it('has a working + FAB button', async () => {
