@@ -35,8 +35,8 @@ function assertCleanedUp(
   removeSpy: ReturnType<typeof vi.spyOn>,
   eventType: string,
 ) {
-  const added = addSpy.mock.calls.filter(c => c[0] === eventType)
-  const removed = removeSpy.mock.calls.filter(c => c[0] === eventType)
+  const added = addSpy.mock.calls.filter((c: unknown[]) => c[0] === eventType)
+  const removed = removeSpy.mock.calls.filter((c: unknown[]) => c[0] === eventType)
   expect(added.length, `${eventType}: should be registered at least once`).toBeGreaterThan(0)
   expect(removed.length, `${eventType}: removeEventListener count must match addEventListener count`).toBe(added.length)
   for (let i = 0; i < added.length; i++) {
@@ -120,14 +120,14 @@ describe('HomePage — event listener cleanup', () => {
     )
 
     // Capture storage count while mounted so we can assert full removal after unmount
-    const storageAddedBeforeUnmount = addSpy.mock.calls.filter(c => c[0] === 'storage').length
+    const storageAddedBeforeUnmount = addSpy.mock.calls.filter((c: unknown[]) => c[0] === 'storage').length
 
     unmount()
 
     assertCleanedUp(addSpy, removeSpy, HOME_SECTION_ORDER_UPDATED_EVENT)
     assertCleanedUp(addSpy, removeSpy, BELT_RANK_UPDATED_EVENT)
 
-    const storageRemoved = removeSpy.mock.calls.filter(c => c[0] === 'storage').length
+    const storageRemoved = removeSpy.mock.calls.filter((c: unknown[]) => c[0] === 'storage').length
     expect(storageRemoved, 'all storage listeners must be removed on unmount').toBe(storageAddedBeforeUnmount)
   })
 })
