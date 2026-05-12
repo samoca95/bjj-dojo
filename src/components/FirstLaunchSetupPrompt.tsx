@@ -150,8 +150,13 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
               {Array.from({ length: MAX_STRIPES }).map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setStripes(i + 1 === stripes ? i : i + 1)}
-                  aria-label={`${i + 1} stripe${i > 0 ? 's' : ''}`}
+                  onClick={() => {
+                    const selected = i + 1
+                    setStripes(selected === stripes ? Math.max(0, stripes - 1) : selected)
+                  }}
+                  aria-label={language === 'es'
+                    ? `${i + 1} grado${i > 0 ? 's' : ''}`
+                    : `${i + 1} stripe${i > 0 ? 's' : ''}`}
                   className={`h-7 w-4 rounded-sm transition-colors ${
                     i < stripes ? 'bg-gold' : 'bg-zinc-700'
                   }`}
