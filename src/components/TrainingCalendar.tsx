@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Session, SessionType } from '../types'
 import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT, type SessionTypeIconsMap } from '../utils/sessionTypeIcons'
-import { APP_THEME_UPDATED_EVENT } from '../utils/theme'
+import { APP_THEME_UPDATED_EVENT, getAppTheme } from '../utils/theme'
 import { useI18n } from '../i18n'
 
 const SESSION_TYPE_HEX_DARK: Record<SessionType, string> = {
@@ -33,10 +33,6 @@ function buildCircleBackground(types: SessionType[], palette: Record<SessionType
 
 const WEEKDAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
-function isLightThemeEnabled(): boolean {
-  return typeof document !== 'undefined' && document.documentElement.classList.contains('theme-light')
-}
-
 function startOfDay(epoch: number): number {
   const d = new Date(epoch)
   d.setHours(0, 0, 0, 0)
@@ -55,7 +51,7 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
     return new Date(now.getFullYear(), now.getMonth(), 1)
   })
   const [iconsMap, setIconsMap] = useState<SessionTypeIconsMap>(getSessionTypeIcons())
-  const [isLightTheme, setIsLightTheme] = useState(isLightThemeEnabled)
+  const [isLightTheme, setIsLightTheme] = useState(() => getAppTheme() === 'light')
 
   useEffect(() => {
     const sync = () => setIconsMap(getSessionTypeIcons())
@@ -64,7 +60,7 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
   }, [])
 
   useEffect(() => {
-    const syncTheme = () => setIsLightTheme(isLightThemeEnabled())
+    const syncTheme = () => setIsLightTheme(getAppTheme() === 'light')
     window.addEventListener(APP_THEME_UPDATED_EVENT, syncTheme)
     return () => window.removeEventListener(APP_THEME_UPDATED_EVENT, syncTheme)
   }, [])
