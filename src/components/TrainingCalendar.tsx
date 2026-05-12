@@ -2,23 +2,31 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Session, SessionType } from '../types'
 import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT, type SessionTypeIconsMap } from '../utils/sessionTypeIcons'
+import { APP_THEME_UPDATED_EVENT } from '../utils/theme'
 import { useI18n } from '../i18n'
 
-// Day-circle fill — matches the session log icon background (bg-{hue}-900/40)
-const SESSION_TYPE_HEX: Record<SessionType, string> = {
-  GI: 'rgba(30, 58, 138, 0.4)',   // blue-900/40
-  NOGI: 'rgba(20, 83, 45, 0.4)',  // green-900/40
-  OPEN_MAT: 'rgba(88, 28, 135, 0.4)', // purple-900/40
-  COMPETITION: 'rgba(127, 29, 29, 0.4)', // red-900/40
-  DRILLING: 'rgba(120, 53, 15, 0.4)', // amber-900/40
+const SESSION_TYPE_HEX_DARK: Record<SessionType, string> = {
+  GI: 'rgba(37, 99, 235, 0.42)',
+  NOGI: 'rgba(22, 163, 74, 0.42)',
+  OPEN_MAT: 'rgba(147, 51, 234, 0.42)',
+  COMPETITION: 'rgba(220, 38, 38, 0.42)',
+  DRILLING: 'rgba(217, 119, 6, 0.42)',
 }
 
-function buildCircleBackground(types: SessionType[]): string | undefined {
+const SESSION_TYPE_HEX_LIGHT: Record<SessionType, string> = {
+  GI: 'rgba(191, 219, 254, 0.95)',
+  NOGI: 'rgba(187, 247, 208, 0.95)',
+  OPEN_MAT: 'rgba(233, 213, 255, 0.95)',
+  COMPETITION: 'rgba(254, 202, 202, 0.95)',
+  DRILLING: 'rgba(253, 230, 138, 0.95)',
+}
+
+function buildCircleBackground(types: SessionType[], palette: Record<SessionType, string>): string | undefined {
   if (types.length === 0) return undefined
-  if (types.length === 1) return SESSION_TYPE_HEX[types[0]]
+  if (types.length === 1) return palette[types[0]]
   const step = 100 / types.length
   const stops = types
-    .map((type, i) => `${SESSION_TYPE_HEX[type]} ${i * step}% ${(i + 1) * step}%`)
+    .map((type, i) => `${palette[type]} ${i * step}% ${(i + 1) * step}%`)
     .join(', ')
   return `conic-gradient(from 0deg, ${stops})`
 }
@@ -43,11 +51,22 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
     return new Date(now.getFullYear(), now.getMonth(), 1)
   })
   const [iconsMap, setIconsMap] = useState<SessionTypeIconsMap>(getSessionTypeIcons())
+  const [isLightTheme, setIsLightTheme] = useState(
+    () => typeof document !== 'undefined' && document.documentElement.classList.contains('theme-light'),
+  )
 
   useEffect(() => {
     const sync = () => setIconsMap(getSessionTypeIcons())
     window.addEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
     return () => window.removeEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
+  }, [])
+
+  useEffect(() => {
+    const syncTheme = () => {
+      setIsLightTheme(typeof document !== 'undefined' && document.documentElement.classList.contains('theme-light'))
+    }
+    window.addEventListener(APP_THEME_UPDATED_EVENT, syncTheme)
+    return () => window.removeEventListener(APP_THEME_UPDATED_EVENT, syncTheme)
   }, [])
 
   // keep iconsMap referenced so no unused-var warning
@@ -123,10 +142,13 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
           const uniqueTypes = Array.from(new Set(daySessions.map(s => s.sessionType)))
           const isToday = inMonth && epoch === todayKey
           const hasSessions = uniqueTypes.length > 0
-          const background = buildCircleBackground(uniqueTypes)
+          const background = buildCircleBackground(
+            uniqueTypes,
+            isLightTheme ? SESSION_TYPE_HEX_LIGHT : SESSION_TYPE_HEX_DARK,
+          )
 
           const numberColor = hasSessions
-            ? 'text-white'
+            ? isLightTheme ? 'text-zinc-900' : 'text-white'
             : inMonth
             ? 'text-zinc-300'
             : 'text-zinc-600'

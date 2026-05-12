@@ -81,11 +81,11 @@ export const SESSION_TYPE_ICONS: Record<SessionType, string> = {
 }
 
 export const SESSION_TYPE_COLORS: Record<SessionType, string> = {
-  GI: 'bg-blue-900/40 text-blue-300',
-  NOGI: 'bg-green-900/40 text-green-300',
-  OPEN_MAT: 'bg-purple-900/40 text-purple-300',
-  COMPETITION: 'bg-red-900/40 text-red-300',
-  DRILLING: 'bg-amber-900/40 text-amber-300',
+  GI: 'bg-blue-900/55 text-blue-300',
+  NOGI: 'bg-green-900/55 text-green-300',
+  OPEN_MAT: 'bg-purple-900/55 text-purple-300',
+  COMPETITION: 'bg-red-900/55 text-red-300',
+  DRILLING: 'bg-amber-900/55 text-amber-300',
 }
 
 export const CONNECTION_LABELS: Record<ConnectionType, string> = {
