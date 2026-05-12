@@ -35,7 +35,7 @@ const mockUseLiveQuery = vi.mocked(useLiveQuery)
 
 function renderPage(state?: unknown) {
   return render(
-    <MemoryRouter initialEntries={[{ pathname: '/clubs', state }]}> 
+    <MemoryRouter initialEntries={[{ pathname: '/clubs', state }]}>
       <Routes>
         <Route path="/clubs" element={<ClubsPage />} />
         <Route path="/sessions/new" element={<div data-testid="session-log-page" />} />

@@ -49,7 +49,6 @@ function setupMocks() {
   mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
 }
 
-
 function ClubsStateProbe() {
   const location = useLocation()
   return <pre data-testid="clubs-state">{JSON.stringify(location.state)}</pre>
@@ -233,8 +232,6 @@ describe('AddEditSessionPage — tap tracking', () => {
     expect(screen.queryByText(/Given \(1\)/)).toBeNull()
   })
 })
-
-
 describe('AddEditSessionPage — clubs flow', () => {
   it('opens clubs page with return context from session log', async () => {
     const user = userEvent.setup()
