@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, Pencil } from 'lucide-react'
 import { db } from '../db/database'
+import { getCategoryMap, invalidateCategoryCache } from '../db/categoryCache'
 import type { Category } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import IconPickerModal from '../components/IconPickerModal'
@@ -14,7 +15,7 @@ export default function CategoriesPage() {
   const { language, t } = useI18n()
   const [activeCategory, setActiveCategory] = useState<Category | null>(null)
   const categories = useLiveQuery(
-    () => db.categories.orderBy('name').toArray(),
+    () => getCategoryMap().then(m => [...m.values()]),
     [],
     [] as Category[],
   )
@@ -55,6 +56,7 @@ export default function CategoriesPage() {
           onSelect={async icon => {
             try {
               await db.categories.update(activeCategory.id, { icon: icon.trim() })
+              invalidateCategoryCache()
             } catch (err) {
               if (isQuotaError(err)) notifyQuotaError()
             }

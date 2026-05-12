@@ -2,7 +2,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Pencil, Star } from 'lucide-react'
 import { db } from '../db/database'
-import type { Technique } from '../types'
+import { getCategoryMap } from '../db/categoryCache'
+import type { Category, Technique } from '../types'
 import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -30,10 +31,9 @@ export default function TechniqueDetailPage() {
   const numId = Number(id)
 
   const technique = useLiveQuery(() => db.techniques.get(numId), [numId])
-  const category = useLiveQuery(
-    async () => technique ? db.categories.get(technique.categoryId) : undefined,
-    [technique?.categoryId],
-  )
+  // P5: use cached map — no per-categoryId re-query when only the technique changes
+  const catMap = useLiveQuery(() => getCategoryMap(), [], new Map<number, Category>())
+  const category = technique ? catMap?.get(technique.categoryId) : undefined
   const sessionCount = useLiveQuery(async () => {
     const sts = await db.sessionTechniques.where('techniqueId').equals(numId).toArray()
     return new Set(sts.map(st => st.sessionId)).size

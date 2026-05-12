@@ -5,6 +5,7 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n } from '../i18n'
 import { db, exportDatabaseBackup, importDatabaseBackup, resetPrefilledTechniques } from '../db/database'
+import { invalidateCategoryCache } from '../db/categoryCache'
 import { setAppLanguage } from '../i18n'
 import { telemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
@@ -80,6 +81,7 @@ export default function SettingsPage() {
       const text = await file.text()
       const parsed = JSON.parse(text)
       const importedLanguage = await importDatabaseBackup(parsed)
+      invalidateCategoryCache()
       if (importedLanguage) setAppLanguage(importedLanguage)
       const lang = importedLanguage ?? language
       window.alert(lang === 'es' ? 'Respaldo importado correctamente.' : 'Backup imported successfully.')

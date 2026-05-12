@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, Plus, X } from 'lucide-react'
 import { db } from '../db/database'
+import { getCategoryMap } from '../db/categoryCache'
 import type { Category, ConnectionType, Difficulty, Technique, TechniqueConnection } from '../types'
 import { CONNECTION_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -45,7 +46,7 @@ export default function TechniqueEditPage() {
   const [isFavorite, setIsFavorite] = useState(false)
 
   const categories = useLiveQuery(
-    () => db.categories.orderBy('name').toArray(),
+    () => getCategoryMap().then(m => [...m.values()]),
     [],
     [] as Category[],
   )

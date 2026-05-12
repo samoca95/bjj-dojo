@@ -1,13 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect, forwardRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
+import { FixedSizeList, type ListChildComponentProps } from 'react-window'
 import { Search, X, Plus, Star } from 'lucide-react'
 import { db } from '../db/database'
+import { getCategoryMap } from '../db/categoryCache'
 import type { Category, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, getCategoryName, getTechniqueDescription } from '../i18n'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
+
+const ITEM_SIZE = 116 // card height (~104px) + gap (12px)
+
+// Adds bottom padding so the last card clears the bottom nav + FAB
+const ListInner = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ style, ...rest }, ref) => (
+    <div ref={ref} style={{ ...style, paddingBottom: 96 }} {...rest} />
+  ),
+)
+ListInner.displayName = 'ListInner'
 
 function TechniqueRow({ technique, categoryName, categoryIcon, description, onClick, onToggleFavorite }: {
   technique: Technique; categoryName: string; categoryIcon?: string; description: string; onClick: () => void; onToggleFavorite: () => void
@@ -48,12 +60,35 @@ export default function TechniquesPage() {
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [tagFilter, setTagFilter] = useState<string | null>(null)
 
+  const headerRef = useRef<HTMLDivElement>(null)
+  const [listHeight, setListHeight] = useState(() => window.innerHeight - 200)
+
+  useLayoutEffect(() => {
+    function update() {
+      const h = headerRef.current?.getBoundingClientRect().height ?? 0
+      setListHeight(window.innerHeight - h)
+    }
+    update()
+    if (typeof ResizeObserver !== 'undefined' && headerRef.current) {
+      const ro = new ResizeObserver(update)
+      ro.observe(headerRef.current)
+      return () => ro.disconnect()
+    }
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 200)
     return () => clearTimeout(timer)
   }, [search])
 
-  const categories = useLiveQuery(() => db.categories.orderBy('name').toArray(), [], [] as Category[])
+  // P5: category data served from module-level cache; returns ordered Category[]
+  const categories = useLiveQuery(
+    () => getCategoryMap().then(m => [...m.values()]),
+    [],
+    [] as Category[],
+  )
 
   const techniques = useLiveQuery(
     async () => {
@@ -80,9 +115,27 @@ export default function TechniquesPage() {
   const catIconMap = new Map(categories?.map(c => [c.id, c.icon]))
   const allTags = Array.from(new Set((techniques ?? []).flatMap(t => t.tags ?? []))).slice(0, 8)
 
+  const renderRow = ({ index, style }: ListChildComponentProps) => {
+    const technique = techniques![index]
+    return (
+      <div style={{ ...style, paddingLeft: 16, paddingRight: 16 }}>
+        <TechniqueRow
+          technique={technique}
+          categoryName={catMap.get(technique.categoryId) ?? ''}
+          categoryIcon={catIconMap.get(technique.categoryId)}
+          description={getTechniqueDescription(technique, language)}
+          onClick={() => navigate(`/techniques/${technique.id}`)}
+          onToggleFavorite={() => {
+            void db.techniques.update(technique.id, { isFavorite: !technique.isFavorite })
+          }}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-full bg-zinc-950">
-      <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm z-10">
+      <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm z-10" ref={headerRef}>
         <div className="px-6 pt-12 pb-3">
           <h1 className="text-2xl font-bold text-zinc-100">{t('Techniques')}</h1>
         </div>
@@ -162,21 +215,17 @@ export default function TechniquesPage() {
         </div>
       </div>
 
-      <div className="px-4 pb-24 space-y-3">
-        {techniques?.map((t: Technique) => (
-          <TechniqueRow
-            key={t.id}
-            technique={t}
-            categoryName={catMap.get(t.categoryId) ?? ''}
-            categoryIcon={catIconMap.get(t.categoryId)}
-            description={getTechniqueDescription(t, language)}
-            onClick={() => navigate(`/techniques/${t.id}`)}
-            onToggleFavorite={() => {
-              void db.techniques.update(t.id, { isFavorite: !t.isFavorite })
-            }}
-          />
-        ))}
-      </div>
+      {/* P4: windowed list — only visible cards are in the DOM */}
+      <FixedSizeList
+        height={listHeight}
+        itemCount={techniques?.length ?? 0}
+        itemSize={ITEM_SIZE}
+        width="100%"
+        innerElementType={ListInner}
+        overscanCount={3}
+      >
+        {renderRow}
+      </FixedSizeList>
 
       {/* FAB */}
       <button
