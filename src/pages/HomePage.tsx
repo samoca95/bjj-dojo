@@ -279,7 +279,10 @@ export default function HomePage() {
           )}
         </section>
 
-        <TrainingCalendar sessions={sessions ?? []} />
+        <TrainingCalendar
+          sessions={sessions ?? []}
+          onDayClick={epoch => navigate('/sessions/new', { state: { date: epoch } })}
+        />
 
         {/* Quick access */}
         <section>

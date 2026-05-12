@@ -126,7 +126,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="bg-zinc-900 rounded-2xl p-2">
+        <div className="rounded-2xl p-2">
           <button
             onClick={() => navigate('/session-type-icons')}
             className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
