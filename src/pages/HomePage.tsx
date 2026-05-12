@@ -36,8 +36,7 @@ function BeltDisplay({ color, stripes, beltLabel }: { color: BeltColor; stripes:
   const tipClass = color === 'black' ? 'bg-red-700' : 'bg-belt-black'
   return (
     <div className="overflow-hidden rounded-xl flex h-10 belt-outline">
-      <div className={`flex-1 flex items-center px-5 gap-3 ${s.bg}`}>
-        <div className={`w-1 h-5 rounded-full shrink-0 ${color === 'white' ? 'bg-zinc-400/70' : 'bg-white/60'}`} />
+      <div className={`flex-1 flex items-center px-5 ${s.bg}`}>
         <span className={`text-xs font-bold tracking-widest uppercase ${s.text}`}>{beltLabel}</span>
       </div>
       {/* Tip with stripes */}
@@ -363,7 +362,7 @@ export default function HomePage() {
     <div className="min-h-full bg-zinc-950">
       {/* Header */}
       <div className="px-6 pt-12 pb-8 bg-gradient-to-b from-zinc-900 to-zinc-950">
-        <div className="flex items-baseline gap-4">
+        <div className="flex items-baseline justify-between">
           <h1 className="text-3xl font-black tracking-widest text-gold">BJJ DOJO</h1>
           <span
             className="text-2xl text-gold leading-none"

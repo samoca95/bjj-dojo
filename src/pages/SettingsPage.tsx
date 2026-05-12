@@ -25,7 +25,7 @@ import {
 
 export default function SettingsPage() {
   const navigate = useNavigate()
-  const { language, setLanguage, t, locale } = useI18n()
+  const { language, setLanguage, t } = useI18n()
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
   const [telemetryCount, setTelemetryCount] = useState(0)
   const [goalInput, setGoalInput] = useState(String(getGoalMatTime()))
@@ -132,7 +132,7 @@ export default function SettingsPage() {
                   key={color}
                   onClick={() => { setBelt(color); setBeltColor(color) }}
                   className={`relative rounded-xl py-2.5 flex items-center justify-center transition-all ${swatchClass[color]} ${
-                    isSelected ? 'ring-2 ring-gold' : 'opacity-60 active:opacity-100'
+                    isSelected ? 'ring-2 ring-gold' : 'ring-2 ring-white/40 opacity-60 active:opacity-100'
                   }`}
                   aria-label={color}
                 >
@@ -186,53 +186,50 @@ export default function SettingsPage() {
         </div>
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <h2 className="text-xs text-gold font-semibold tracking-widest">{t('THEME MODE')}</h2>
-          <div className="grid grid-cols-2 gap-2">
-            {(['black', 'light'] as const).map(mode => (
+          <h2 className="text-xs text-gold font-semibold tracking-widest">
+            {language === 'es' ? 'TEMA E IDIOMA' : 'THEME & LANGUAGE'}
+          </h2>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-zinc-300">{language === 'es' ? 'Tema' : 'Theme'}</span>
+            <div className="flex bg-zinc-800 rounded-lg p-0.5 gap-0.5">
               <button
-                key={mode}
-                onClick={() => {
-                  setTheme(mode)
-                  setAppTheme(mode)
-                }}
-                className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
-                  theme === mode
-                    ? 'bg-gold text-black'
-                    : 'bg-zinc-800 text-zinc-200 active:bg-zinc-700'
+                onClick={() => { setTheme('black'); setAppTheme('black') }}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  theme === 'black' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
                 }`}
               >
-                {mode === 'black' ? t('Black') : t('Light')}
+                {language === 'es' ? 'Oscuro' : 'Dark'}
               </button>
-            ))}
+              <button
+                onClick={() => { setTheme('light'); setAppTheme('light') }}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  theme === 'light' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
+                }`}
+              >
+                {language === 'es' ? 'Claro' : 'Light'}
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <h2 className="text-xs text-gold font-semibold tracking-widest">{t('Language')}</h2>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setLanguage('en')}
-              className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
-                language === 'en'
-                  ? 'bg-gold text-black'
-                  : 'bg-zinc-800 text-zinc-200 active:bg-zinc-700'
-              }`}
-            >
-              {t('English')}
-            </button>
-            <button
-              onClick={() => setLanguage('es')}
-              className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
-                language === 'es'
-                  ? 'bg-gold text-black'
-                  : 'bg-zinc-800 text-zinc-200 active:bg-zinc-700'
-              }`}
-            >
-              {t('Spanish')}
-            </button>
-          </div>
-          <div className="text-xs text-zinc-500">
-            {language === 'es' ? 'Vista previa de fecha:' : 'Date preview:'} {new Date().toLocaleDateString(locale)}
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-zinc-300">{language === 'es' ? 'Idioma' : 'Language'}</span>
+            <div className="flex bg-zinc-800 rounded-lg p-0.5 gap-0.5">
+              <button
+                onClick={() => setLanguage('en')}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  language === 'en' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => setLanguage('es')}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  language === 'es' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
+                }`}
+              >
+                ES
+              </button>
+            </div>
           </div>
         </div>
 
