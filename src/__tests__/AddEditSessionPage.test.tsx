@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom'
 import AddEditSessionPage from '../pages/AddEditSessionPage'
 
 vi.mock('dexie-react-hooks', () => ({
@@ -49,6 +49,12 @@ function setupMocks() {
   mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
 }
 
+
+function ClubsStateProbe() {
+  const location = useLocation()
+  return <pre data-testid="clubs-state">{JSON.stringify(location.state)}</pre>
+}
+
 function renderPage(path = '/sessions/new') {
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -56,6 +62,7 @@ function renderPage(path = '/sessions/new') {
         <Route path="/sessions/new" element={<AddEditSessionPage />} />
         <Route path="/sessions/:id/edit" element={<AddEditSessionPage />} />
         <Route path="/sessions" element={<div data-testid="sessions-list" />} />
+        <Route path="/clubs" element={<ClubsStateProbe />} />
       </Routes>
     </MemoryRouter>,
   )
@@ -224,5 +231,18 @@ describe('AddEditSessionPage — tap tracking', () => {
     const tapRow = within(givenSection).getByText('Armbar').closest('div')!
     await user.click(within(tapRow).getByRole('button'))
     expect(screen.queryByText(/Given \(1\)/)).toBeNull()
+  })
+})
+
+
+describe('AddEditSessionPage — clubs flow', () => {
+  it('opens clubs page with return context from session log', async () => {
+    const user = userEvent.setup()
+    renderPage('/sessions/new')
+
+    await user.click(screen.getByText('Manage'))
+
+    const stateText = screen.getByTestId('clubs-state').textContent ?? ''
+    expect(stateText).toContain('"returnTo":"/sessions/new"')
   })
 })
