@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie'
 import type { Category, Technique, TechniqueConnection, Session, SessionTechnique, SessionTap, Club, DrillPlan } from '../types'
 import { prefilledCategories, prefilledTechniques, prefilledConnections } from './prefilled'
+import { type AppLanguage, translateCategoryForExport, translateTechniqueForExport } from '../i18n'
 
 export class BJJDatabase extends Dexie {
   categories!: Table<Category, number>
@@ -118,6 +119,7 @@ export async function resetPrefilledTechniques(database: BJJDatabase = db) {
 export interface DatabaseBackup {
   version: number
   exportedAt: number
+  language?: AppLanguage
   categories: Category[]
   techniques: Technique[]
   techniqueConnections: TechniqueConnection[]
@@ -128,12 +130,15 @@ export interface DatabaseBackup {
   drillPlans: DrillPlan[]
 }
 
-export async function exportDatabaseBackup(database: BJJDatabase = db): Promise<DatabaseBackup> {
+export async function exportDatabaseBackup(database: BJJDatabase = db, language: AppLanguage = 'en'): Promise<DatabaseBackup> {
+  const categories = await database.categories.toArray()
+  const techniques = await database.techniques.toArray()
   return {
     version: 1,
     exportedAt: Date.now(),
-    categories: await database.categories.toArray(),
-    techniques: await database.techniques.toArray(),
+    language,
+    categories: categories.map(c => translateCategoryForExport(c, language)),
+    techniques: techniques.map(t => translateTechniqueForExport(t, language)),
     techniqueConnections: await database.techniqueConnections.toArray(),
     sessions: await database.sessions.toArray(),
     sessionTechniques: await database.sessionTechniques.toArray(),
@@ -147,11 +152,12 @@ function asArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : []
 }
 
-export async function importDatabaseBackup(backup: unknown, database: BJJDatabase = db) {
+export async function importDatabaseBackup(backup: unknown, database: BJJDatabase = db): Promise<AppLanguage | undefined> {
   const payload = backup as Partial<DatabaseBackup> | null
   if (!payload || typeof payload !== 'object') {
     throw new Error('Malformed backup payload')
   }
+  const backupLanguage = payload.language === 'es' ? 'es' : payload.language === 'en' ? 'en' : undefined
 
   const categories = asArray<Category>(payload.categories)
   const techniques = asArray<Technique>(payload.techniques)
@@ -194,4 +200,5 @@ export async function importDatabaseBackup(backup: unknown, database: BJJDatabas
       if (drillPlans.length) await database.drillPlans.bulkAdd(drillPlans)
     },
   )
+  return backupLanguage
 }
