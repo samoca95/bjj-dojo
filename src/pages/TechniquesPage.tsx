@@ -6,11 +6,11 @@ import { db } from '../db/database'
 import type { Category, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
-import { useI18n } from '../i18n'
+import { useI18n, getCategoryName, getTechniqueDescription } from '../i18n'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 
-function TechniqueRow({ technique, categoryName, categoryIcon, onClick, onToggleFavorite }: {
-  technique: Technique; categoryName: string; categoryIcon?: string; onClick: () => void; onToggleFavorite: () => void
+function TechniqueRow({ technique, categoryName, categoryIcon, description, onClick, onToggleFavorite }: {
+  technique: Technique; categoryName: string; categoryIcon?: string; description: string; onClick: () => void; onToggleFavorite: () => void
 }) {
   return (
     <div className="w-full bg-zinc-900 rounded-2xl p-4 flex gap-3 text-left">
@@ -26,7 +26,7 @@ function TechniqueRow({ technique, categoryName, categoryIcon, onClick, onToggle
           <CategoryIcon value={categoryIcon} fallbackId={technique.categoryId} size={14} className="text-gold" />
           <span>{categoryName}</span>
         </div>
-        <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{technique.description}</p>
+        <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{description}</p>
       </button>
       <button
         onClick={() => onToggleFavorite()}
@@ -70,7 +70,7 @@ export default function TechniquesPage() {
     [] as Technique[],
   )
 
-  const catMap = new Map(categories?.map(c => [c.id, c.name]))
+  const catMap = new Map(categories?.map(c => [c.id, getCategoryName(c, language)]))
   const catIconMap = new Map(categories?.map(c => [c.id, c.icon]))
   const allTags = Array.from(new Set((techniques ?? []).flatMap(t => t.tags ?? []))).slice(0, 8)
 
@@ -119,7 +119,7 @@ export default function TechniquesPage() {
               }`}
             >
               <CategoryIcon value={c.icon} fallbackId={c.id} size={14} className={categoryId === c.id ? 'text-black' : 'text-zinc-300'} />
-              {c.name}
+              {getCategoryName(c, language)}
             </button>
           ))}
           <button
@@ -163,6 +163,7 @@ export default function TechniquesPage() {
             technique={t}
             categoryName={catMap.get(t.categoryId) ?? ''}
             categoryIcon={catIconMap.get(t.categoryId)}
+            description={getTechniqueDescription(t, language)}
             onClick={() => navigate(`/techniques/${t.id}`)}
             onToggleFavorite={() => {
               void db.techniques.update(t.id, { isFavorite: !t.isFavorite })

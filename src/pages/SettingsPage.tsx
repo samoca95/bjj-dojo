@@ -4,7 +4,8 @@ import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n } from '../i18n'
-import { exportDatabaseBackup, importDatabaseBackup, resetPrefilledTechniques } from '../db/database'
+import { db, exportDatabaseBackup, importDatabaseBackup, resetPrefilledTechniques } from '../db/database'
+import { setAppLanguage } from '../i18n'
 import { telemetry } from '../utils/telemetry'
 import { getGoalMatTime, setGoalMatTime, DEFAULT_WEEKLY_GOAL_MINUTES } from '../utils/goalMatTime'
 import {
@@ -52,7 +53,7 @@ export default function SettingsPage() {
   }
 
   const handleExportBackup = async () => {
-    const backup = await exportDatabaseBackup()
+    const backup = await exportDatabaseBackup(db, language)
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
@@ -66,8 +67,10 @@ export default function SettingsPage() {
     try {
       const text = await file.text()
       const parsed = JSON.parse(text)
-      await importDatabaseBackup(parsed)
-      window.alert(language === 'es' ? 'Respaldo importado correctamente.' : 'Backup imported successfully.')
+      const importedLanguage = await importDatabaseBackup(parsed)
+      if (importedLanguage) setAppLanguage(importedLanguage)
+      const lang = importedLanguage ?? language
+      window.alert(lang === 'es' ? 'Respaldo importado correctamente.' : 'Backup imported successfully.')
       setTelemetryCount(telemetry.read().length)
     } catch (error) {
       telemetry.error('backup.import_failed', error)

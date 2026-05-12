@@ -6,7 +6,7 @@ import { db } from '../db/database'
 import type { Category } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import IconPickerModal from '../components/IconPickerModal'
-import { useI18n } from '../i18n'
+import { useI18n, getCategoryName, getCategoryDescription } from '../i18n'
 
 export default function CategoriesPage() {
   const navigate = useNavigate()
@@ -38,8 +38,8 @@ export default function CategoriesPage() {
               <CategoryIcon value={category.icon} fallbackId={category.id} size={20} className="text-gold" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-zinc-100">{category.name}</div>
-              <div className="text-xs text-zinc-500 mt-1 line-clamp-2">{category.description}</div>
+              <div className="font-semibold text-zinc-100">{getCategoryName(category, language)}</div>
+              <div className="text-xs text-zinc-500 mt-1 line-clamp-2">{getCategoryDescription(category, language)}</div>
             </div>
             <Pencil size={18} className="text-zinc-600" strokeWidth={2} />
           </button>
@@ -48,7 +48,7 @@ export default function CategoriesPage() {
 
       {activeCategory && (
         <IconPickerModal
-          title={language === 'es' ? `Icono para ${activeCategory.name}` : `Icon for ${activeCategory.name}`}
+          title={language === 'es' ? `Icono para ${getCategoryName(activeCategory, language)}` : `Icon for ${getCategoryName(activeCategory, language)}`}
           value={activeCategory.icon}
           onClose={() => setActiveCategory(null)}
           onSelect={async icon => {

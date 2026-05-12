@@ -6,7 +6,7 @@ import type { Technique } from '../types'
 import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
-import { useI18n, connectionTypeLabel } from '../i18n'
+import { useI18n, connectionTypeLabel, getCategoryName, getTechniqueDescription, getTechniqueCues } from '../i18n'
 
 function ConnectedTechniqueRow({
   technique, badge, badgeCls, onClick,
@@ -76,7 +76,7 @@ export default function TechniqueDetailPage() {
     </div>
   )
 
-  const cues = technique.cues ?? []
+  const cues = getTechniqueCues(technique, language)
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -98,7 +98,7 @@ export default function TechniqueDetailPage() {
             {category && (
               <span className="text-xs font-semibold px-2 py-1 rounded bg-gold/20 text-gold flex items-center gap-1.5">
                 <CategoryIcon value={category.icon} fallbackId={category.id} size={12} className="text-gold" />
-                {category.name}
+                {getCategoryName(category, language)}
               </span>
             )}
             <DifficultyBadge difficulty={technique.difficulty} />
@@ -114,7 +114,7 @@ export default function TechniqueDetailPage() {
                </span>
             )}
           </div>
-          <p className="text-sm text-zinc-300 leading-relaxed">{technique.description}</p>
+          <p className="text-sm text-zinc-300 leading-relaxed">{getTechniqueDescription(technique, language)}</p>
           {(technique.tags?.length ?? 0) > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {(technique.tags ?? []).map(tag => (
