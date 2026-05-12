@@ -233,7 +233,7 @@ export default function HomePage() {
                     <span className="text-sm font-semibold text-zinc-100 truncate">{technique.name}</span>
                   </div>
                   <span className="text-xs text-zinc-400 shrink-0">
-                    {givenTapCountsByTechniqueId.get(technique.id) ?? 0} × {t('Given submissions')}
+                    {givenTapCountsByTechniqueId.get(technique.id) ?? 0} × {t('Submissions')}
                   </span>
                 </div>
               ))}
