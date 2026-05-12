@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   ChevronLeft, Plus, Check, X, Zap, Hand,
@@ -35,11 +35,15 @@ type PickerMode = 'techniques' | 'tap-given' | 'tap-received'
 
 export default function AddEditSessionPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { t, language } = useI18n()
   const { id } = useParams<{ id: string }>()
   const isEdit = Boolean(id)
 
-  const [date, setDate] = useState(toDateInput(Date.now()))
+  const [date, setDate] = useState(() => {
+    const stateDate = (location.state as { date?: number } | null)?.date
+    return toDateInput(stateDate ?? Date.now())
+  })
   const [duration, setDuration] = useState('60')
   const [customDuration, setCustomDuration] = useState(false)
   const [sessionType, setSessionType] = useState<SessionType>('GI')
