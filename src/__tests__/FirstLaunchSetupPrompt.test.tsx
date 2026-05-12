@@ -32,7 +32,7 @@ describe('FirstLaunchSetupPrompt', () => {
 
     await user.click(screen.getByRole('button', { name: 'ES' }))
     await user.click(screen.getByRole('button', { name: 'Azul' }))
-    await user.click(screen.getByRole('button', { name: 'Increase stripes' }))
+    await user.click(screen.getByRole('button', { name: 'Aumentar grados' }))
     await user.click(screen.getByRole('button', { name: 'Comenzar' }))
 
     expect(localStorage.getItem(APP_LANGUAGE_STORAGE_KEY)).toBe('es')
