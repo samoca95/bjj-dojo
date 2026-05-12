@@ -1,9 +1,13 @@
 import { Outlet } from 'react-router-dom'
+import { useState } from 'react'
 import BottomNav from './BottomNav'
 import OfflineNotice from './OfflineNotice'
 import PwaUpdatePrompt from './PwaUpdatePrompt'
+import FirstLaunchSetupPrompt, { isInitialSetupRequired } from './FirstLaunchSetupPrompt'
 
 export default function Layout() {
+  const [showInitialSetup, setShowInitialSetup] = useState(isInitialSetupRequired)
+
   return (
     <div className="h-full flex flex-col bg-zinc-950">
       <OfflineNotice />
@@ -12,6 +16,7 @@ export default function Layout() {
       </main>
       <BottomNav />
       <PwaUpdatePrompt />
+      {showInitialSetup && <FirstLaunchSetupPrompt onComplete={() => setShowInitialSetup(false)} />}
     </div>
   )
 }
