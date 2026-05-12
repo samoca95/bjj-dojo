@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus } from 'lucide-react'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n } from '../i18n'
@@ -13,6 +13,15 @@ import {
   setHomeSectionOrder,
   type HomeSectionId,
 } from '../utils/homeSectionOrder'
+import {
+  getBeltColor,
+  setBeltColor,
+  getBeltStripes,
+  setBeltStripes,
+  BELT_COLORS,
+  MAX_STRIPES,
+  type BeltColor,
+} from '../utils/beltRank'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -21,6 +30,8 @@ export default function SettingsPage() {
   const [telemetryCount, setTelemetryCount] = useState(0)
   const [goalInput, setGoalInput] = useState(String(getGoalMatTime()))
   const [sectionOrder, setSectionOrder] = useState<HomeSectionId[]>(getHomeSectionOrder)
+  const [belt, setBelt] = useState<BeltColor>(getBeltColor)
+  const [stripes, setStripes] = useState<number>(getBeltStripes)
 
   const moveSection = (index: number, delta: number) => {
     const next = [...sectionOrder]
@@ -119,6 +130,79 @@ export default function SettingsPage() {
                 {mode === 'black' ? t('Black') : t('Light')}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-4">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">
+            {language === 'es' ? 'TU CINTURÓN' : 'YOUR BELT'}
+          </h2>
+          {/* Belt color picker */}
+          <div className="grid grid-cols-5 gap-1.5">
+            {BELT_COLORS.map(color => {
+              const isSelected = belt === color
+              const swatchClass: Record<BeltColor, string> = {
+                white:  'bg-zinc-100',
+                blue:   'bg-blue-600',
+                purple: 'bg-purple-600',
+                brown:  'bg-amber-800',
+                black:  'bg-zinc-800',
+              }
+              return (
+                <button
+                  key={color}
+                  onClick={() => { setBelt(color); setBeltColor(color) }}
+                  className={`relative rounded-xl py-2.5 flex items-center justify-center transition-all ${swatchClass[color]} ${
+                    isSelected ? 'ring-2 ring-gold ring-offset-2 ring-offset-zinc-900' : 'opacity-60 active:opacity-100'
+                  }`}
+                  aria-label={color}
+                >
+                  <span className={`text-[10px] font-bold tracking-wide uppercase ${
+                    color === 'white' ? 'text-zinc-700' : 'text-white'
+                  }`}>
+                    {color === 'white' ? (language === 'es' ? 'Bco' : 'Wht') :
+                     color === 'blue'  ? (language === 'es' ? 'Azl' : 'Blu') :
+                     color === 'purple'? (language === 'es' ? 'Mor' : 'Pur') :
+                     color === 'brown' ? (language === 'es' ? 'Caf' : 'Brn') :
+                                         (language === 'es' ? 'Ngr' : 'Blk')}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          {/* Stripe counter */}
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-zinc-400">
+              {language === 'es' ? 'Rayas' : 'Stripes'}
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => { const n = Math.max(0, stripes - 1); setStripes(n); setBeltStripes(n) }}
+                disabled={stripes === 0}
+                className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 disabled:text-zinc-600 active:bg-zinc-700"
+              >
+                <Minus size={14} strokeWidth={2.5} />
+              </button>
+              <div className="flex gap-2">
+                {Array.from({ length: MAX_STRIPES }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { const n = i + 1 === stripes ? i : i + 1; setStripes(n); setBeltStripes(n) }}
+                    className={`h-7 w-4 rounded-sm transition-colors ${
+                      i < stripes ? 'bg-gold' : 'bg-zinc-700'
+                    }`}
+                    aria-label={`${i + 1} stripe${i > 0 ? 's' : ''}`}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={() => { const n = Math.min(MAX_STRIPES, stripes + 1); setStripes(n); setBeltStripes(n) }}
+                disabled={stripes === MAX_STRIPES}
+                className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 disabled:text-zinc-600 active:bg-zinc-700"
+              >
+                <Plus size={14} strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         </div>
 
