@@ -143,8 +143,9 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
             isLightTheme ? SESSION_TYPE_HEX_LIGHT : SESSION_TYPE_HEX_DARK,
           )
 
+          const activeDayNumberColor = isLightTheme ? 'text-zinc-900' : 'text-white'
           const numberColor = hasSessions
-            ? isLightTheme ? 'text-zinc-900' : 'text-white'
+            ? activeDayNumberColor
             : inMonth
             ? 'text-zinc-300'
             : 'text-zinc-600'
