@@ -24,30 +24,31 @@ import {
 const DAY_MS = 24 * 60 * 60 * 1000
 
 const BELT_STYLES: Record<BeltColor, { bg: string; text: string; activeStripe: string; dimStripe: string }> = {
-  white:  { bg: 'bg-zinc-100',   text: 'text-zinc-900', activeStripe: 'bg-zinc-700',  dimStripe: 'bg-zinc-300' },
-  blue:   { bg: 'bg-blue-600',   text: 'text-white',    activeStripe: 'bg-white',      dimStripe: 'bg-blue-300/40' },
-  purple: { bg: 'bg-purple-600', text: 'text-white',    activeStripe: 'bg-white',      dimStripe: 'bg-purple-300/40' },
-  brown:  { bg: 'bg-amber-800',  text: 'text-white',    activeStripe: 'bg-white',      dimStripe: 'bg-amber-600/40' },
-  black:  { bg: 'bg-zinc-900',   text: 'text-zinc-100', activeStripe: 'bg-gold',       dimStripe: 'bg-zinc-700' },
+  white:  { bg: 'bg-zinc-100',   text: 'text-zinc-900', activeStripe: 'bg-zinc-700',       dimStripe: 'bg-transparent border border-zinc-400/70' },
+  blue:   { bg: 'bg-blue-600',   text: 'text-white',    activeStripe: 'bg-white',           dimStripe: 'bg-transparent border border-zinc-400/60' },
+  purple: { bg: 'bg-purple-600', text: 'text-white',    activeStripe: 'bg-white',           dimStripe: 'bg-transparent border border-zinc-400/60' },
+  brown:  { bg: 'bg-amber-800',  text: 'text-white',    activeStripe: 'bg-white',           dimStripe: 'bg-transparent border border-zinc-400/60' },
+  black:  { bg: 'bg-belt-black', text: 'text-zinc-100', activeStripe: 'bg-gold',            dimStripe: 'bg-transparent border border-red-300/40' },
 }
 
 function BeltDisplay({ color, stripes, beltLabel }: { color: BeltColor; stripes: number; beltLabel: string }) {
   const s = BELT_STYLES[color]
+  const tipClass = color === 'black' ? 'bg-red-700' : 'bg-belt-black'
   return (
-    <div className="overflow-hidden rounded-xl flex h-14 shadow-lg">
+    <div className="overflow-hidden rounded-xl flex h-10 belt-outline">
       <div className={`flex-1 flex items-center px-5 gap-3 ${s.bg}`}>
         <div
-          className="w-5 h-8 rounded-lg shrink-0"
+          className="w-4 h-6 rounded shrink-0"
           style={{ background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 2px, transparent 2px, transparent 6px)' }}
         />
         <span className={`text-xs font-bold tracking-widest uppercase ${s.text}`}>{beltLabel}</span>
       </div>
-      {/* Black tip with stripes */}
-      <div className="flex items-center gap-2 px-4 bg-zinc-950">
+      {/* Tip with stripes */}
+      <div className={`flex items-center gap-2 px-4 ${tipClass}`}>
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className={`h-6 w-3 rounded-sm transition-colors ${i < stripes ? s.activeStripe : s.dimStripe}`}
+            className={`h-5 w-3 rounded-sm transition-colors ${i < stripes ? s.activeStripe : s.dimStripe}`}
           />
         ))}
       </div>
