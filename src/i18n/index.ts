@@ -132,7 +132,7 @@ const ES_TRANSLATIONS: Record<string, string> = {
   'White Belt': 'Cinturón Blanco',
   'Blue Belt': 'Cinturón Azul',
   'Purple Belt': 'Cinturón Morado',
-  'Brown Belt': 'Cinturón Café',
+  'Brown Belt': 'Cinturón Marrón',
   'Black Belt': 'Cinturón Negro',
   'Previous month': 'Mes anterior',
   'Next month': 'Mes siguiente',

@@ -111,27 +111,6 @@ export default function SettingsPage() {
       </div>
 
       <div className="px-4 pb-6 space-y-4">
-        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <h2 className="text-xs text-gold font-semibold tracking-widest">{t('THEME MODE')}</h2>
-          <div className="grid grid-cols-2 gap-2">
-            {(['black', 'light'] as const).map(mode => (
-              <button
-                key={mode}
-                onClick={() => {
-                  setTheme(mode)
-                  setAppTheme(mode)
-                }}
-                className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
-                  theme === mode
-                    ? 'bg-gold text-black'
-                    : 'bg-zinc-800 text-zinc-200 active:bg-zinc-700'
-                }`}
-              >
-                {mode === 'black' ? t('Black') : t('Light')}
-              </button>
-            ))}
-          </div>
-        </div>
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-4">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
@@ -163,7 +142,7 @@ export default function SettingsPage() {
                     {color === 'white' ? (language === 'es' ? 'Bco' : 'Wht') :
                      color === 'blue'  ? (language === 'es' ? 'Azl' : 'Blu') :
                      color === 'purple'? (language === 'es' ? 'Mor' : 'Pur') :
-                     color === 'brown' ? (language === 'es' ? 'Caf' : 'Brn') :
+                     color === 'brown' ? (language === 'es' ? 'Mrn' : 'Brn') :
                                          (language === 'es' ? 'Ngr' : 'Blk')}
                   </span>
                 </button>
@@ -173,7 +152,7 @@ export default function SettingsPage() {
           {/* Stripe counter */}
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs text-zinc-400">
-              {language === 'es' ? 'Rayas' : 'Stripes'}
+              {language === 'es' ? 'Grados' : 'Stripes'}
             </span>
             <div className="flex items-center gap-3">
               <button
@@ -203,6 +182,28 @@ export default function SettingsPage() {
                 <Plus size={14} strokeWidth={2.5} />
               </button>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">{t('THEME MODE')}</h2>
+          <div className="grid grid-cols-2 gap-2">
+            {(['black', 'light'] as const).map(mode => (
+              <button
+                key={mode}
+                onClick={() => {
+                  setTheme(mode)
+                  setAppTheme(mode)
+                }}
+                className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+                  theme === mode
+                    ? 'bg-gold text-black'
+                    : 'bg-zinc-800 text-zinc-200 active:bg-zinc-700'
+                }`}
+              >
+                {mode === 'black' ? t('Black') : t('Light')}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -272,7 +273,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl p-2">
+        <div className="bg-zinc-900 rounded-2xl p-2">
           <button
             onClick={() => navigate('/session-type-icons')}
             className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
