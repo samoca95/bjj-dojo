@@ -38,16 +38,18 @@ export class BJJDatabase extends Dexie {
       sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
       sessionTaps: '++id, sessionId, techniqueId',
       clubs: '++id, sortOrder, name',
-    }).upgrade(async tx => {
-      // Backfill cues onto existing prefilled techniques.
-      // Use toArray() + JS filter — isCustom is not an indexed field.
-      const all = await tx.table('techniques').toArray() as Technique[]
-      const prefilled = all.filter(e => e.isCustom === false)
-      const byId = new Map(prefilledTechniques.map(t => [t.id, t]))
-      const updates = prefilled
-        .filter(e => byId.has(e.id))
-        .map(e => ({ ...e, ...byId.get(e.id)! }))
-      if (updates.length > 0) await tx.table('techniques').bulkPut(updates)
+    }).upgrade(async () => {
+      await this.transaction('rw', [this.techniques], async () => {
+        // Backfill cues onto existing prefilled techniques.
+        // Use toArray() + JS filter — isCustom is not an indexed field.
+        const all = await this.techniques.toArray() as Technique[]
+        const prefilled = all.filter(e => e.isCustom === false)
+        const byId = new Map(prefilledTechniques.map(t => [t.id, t]))
+        const updates = prefilled
+          .filter(e => byId.has(e.id))
+          .map(e => ({ ...e, ...byId.get(e.id)! }))
+        if (updates.length > 0) await this.techniques.bulkPut(updates)
+      })
     })
     this.version(4).stores({
       categories: 'id, name',
@@ -57,10 +59,12 @@ export class BJJDatabase extends Dexie {
       sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
       sessionTaps: '++id, sessionId, techniqueId',
       clubs: '++id, sortOrder, name',
-    }).upgrade(async tx => {
+    }).upgrade(async () => {
       // Keep prefilled data in sync for existing installs while preserving custom techniques.
-      await tx.table('techniques').bulkPut(prefilledTechniques)
-      await tx.table('techniqueConnections').bulkPut(prefilledConnections)
+      await this.transaction('rw', [this.techniques, this.techniqueConnections], async () => {
+        await this.techniques.bulkPut(prefilledTechniques)
+        await this.techniqueConnections.bulkPut(prefilledConnections)
+      })
     })
     this.version(5).stores({
       categories: 'id, name',
@@ -71,14 +75,16 @@ export class BJJDatabase extends Dexie {
       sessionTaps: '++id, sessionId, techniqueId',
       clubs: '++id, sortOrder, name',
       drillPlans: '++id, name, createdAt',
-    }).upgrade(async tx => {
-      const all = await tx.table('techniques').toArray() as Technique[]
-      const normalized = all.map(t => ({
-        ...t,
-        tags: Array.isArray((t as Technique).tags) ? (t as Technique).tags : [],
-        isFavorite: Boolean((t as Technique).isFavorite),
-      }))
-      if (normalized.length > 0) await tx.table('techniques').bulkPut(normalized)
+    }).upgrade(async () => {
+      await this.transaction('rw', [this.techniques], async () => {
+        const all = await this.techniques.toArray() as Technique[]
+        const normalized = all.map(t => ({
+          ...t,
+          tags: Array.isArray(t.tags) ? t.tags : [],
+          isFavorite: Boolean(t.isFavorite),
+        }))
+        if (normalized.length > 0) await this.techniques.bulkPut(normalized)
+      })
     })
 
     // Populate on first creation — registered here so every instance gets it
