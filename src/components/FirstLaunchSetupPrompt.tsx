@@ -147,21 +147,25 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
               <Minus size={14} strokeWidth={2.5} />
             </button>
             <div className="flex gap-2">
-              {Array.from({ length: MAX_STRIPES }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    const selected = i + 1
-                    setStripes(selected === stripes ? Math.max(0, stripes - 1) : selected)
-                  }}
-                  aria-label={language === 'es'
-                    ? `${i + 1} grado${i > 0 ? 's' : ''}`
-                    : `${i + 1} stripe${i > 0 ? 's' : ''}`}
-                  className={`h-7 w-4 rounded-sm transition-colors ${
-                    i < stripes ? 'bg-gold' : 'bg-zinc-700'
-                  }`}
-                />
-              ))}
+              {Array.from({ length: MAX_STRIPES }).map((_, i) => {
+                const selected = i + 1
+                const plural = selected > 1
+                const stripeLabel = language === 'es'
+                  ? `${selected} grado${plural ? 's' : ''}`
+                  : `${selected} stripe${plural ? 's' : ''}`
+                return (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setStripes(selected === stripes ? Math.max(0, stripes - 1) : selected)
+                    }}
+                    aria-label={stripeLabel}
+                    className={`h-7 w-4 rounded-sm transition-colors ${
+                      i < stripes ? 'bg-gold' : 'bg-zinc-700'
+                    }`}
+                  />
+                )
+              })}
             </div>
             <button
               onClick={() => setStripes(prev => Math.min(MAX_STRIPES, prev + 1))}
