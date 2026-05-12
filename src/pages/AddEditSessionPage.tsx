@@ -57,6 +57,8 @@ export default function AddEditSessionPage() {
   const [pickerMode, setPickerMode] = useState<PickerMode>('techniques')
   const [pickerSearch, setPickerSearch] = useState('')
 
+  const [submitting, setSubmitting] = useState(false)
+
   const [showCreateTechnique, setShowCreateTechnique] = useState(false)
   const [newTechName, setNewTechName] = useState('')
   const [newTechCatId, setNewTechCatId] = useState<number>(1)
@@ -127,6 +129,8 @@ export default function AddEditSessionPage() {
   }
 
   const handleSave = async () => {
+    if (submitting) return
+    setSubmitting(true)
     const safeDate = normalizeDateInput(date)
     const safeDuration = normalizeDuration(duration)
     const safeNotes = normalizeSessionNotes(notes)
@@ -165,6 +169,7 @@ export default function AddEditSessionPage() {
       })
       navigate(isEdit ? `/sessions/${sid}` : '/sessions')
     } catch {
+      setSubmitting(false)
       window.alert(language === 'es' ? 'No se pudo guardar la sesión.' : 'Could not save session.')
     }
   }
@@ -254,7 +259,11 @@ export default function AddEditSessionPage() {
             <ChevronLeft size={24} strokeWidth={2} />
           </button>
           <h1 className="flex-1 font-bold text-zinc-100">{isEdit ? t('Edit Session') : t('Log Session')}</h1>
-          <button onClick={handleSave} className="text-gold font-bold text-sm active:text-gold-light px-2">
+          <button
+            onClick={handleSave}
+            disabled={submitting}
+            className="text-gold font-bold text-sm active:text-gold-light px-2 disabled:opacity-40"
+          >
             {t('Save')}
           </button>
         </div>
