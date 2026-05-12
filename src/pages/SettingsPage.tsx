@@ -279,7 +279,7 @@ export default function SettingsPage() {
               <CategoryIcon value="swords" size={18} className="text-gold" />
             </div>
             <div className="bg-zinc-900 flex-1">
-              <div className="text-sm font-semibold text-zinc-100">{t('SESSION TYPE ICONS')}</div>
+              <div className="text-sm font-semibold text-zinc-100">{t('Session type')}</div>
               <div className="text-xs text-zinc-500">{t('Customize icons for each session type')}</div>
             </div>
             <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />

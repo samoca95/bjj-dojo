@@ -38,7 +38,7 @@ const ES_TRANSLATIONS: Record<string, string> = {
   'THEME MODE': 'MODO DE TEMA',
   Black: 'Oscuro',
   Light: 'Claro',
-  'SESSION TYPE ICONS': 'ICONOS DE TIPO DE SESIÓN',
+  'Session type': 'Tipo de sesión',
   'Customize icons for each session type': 'Personaliza los iconos de cada tipo de sesión',
   'Manage technique categories and icons': 'Gestiona categorías e iconos de técnicas',
   'Manage your training locations': 'Gestiona tus lugares de entrenamiento',
