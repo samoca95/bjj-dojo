@@ -24,11 +24,11 @@ import {
 const DAY_MS = 24 * 60 * 60 * 1000
 
 const BELT_STYLES: Record<BeltColor, { bg: string; text: string; activeStripe: string; dimStripe: string }> = {
-  white:  { bg: 'bg-zinc-100',   text: 'text-zinc-900', activeStripe: 'bg-zinc-700',       dimStripe: 'bg-transparent border border-zinc-400/70' },
-  blue:   { bg: 'bg-blue-600',   text: 'text-white',    activeStripe: 'bg-white',           dimStripe: 'bg-transparent border border-zinc-400/60' },
-  purple: { bg: 'bg-purple-600', text: 'text-white',    activeStripe: 'bg-white',           dimStripe: 'bg-transparent border border-zinc-400/60' },
-  brown:  { bg: 'bg-amber-800',  text: 'text-white',    activeStripe: 'bg-white',           dimStripe: 'bg-transparent border border-zinc-400/60' },
-  black:  { bg: 'bg-belt-black', text: 'text-zinc-100', activeStripe: 'bg-gold',            dimStripe: 'bg-transparent border border-red-300/40' },
+  white:  { bg: 'bg-zinc-100',   text: 'text-zinc-900', activeStripe: 'bg-white', dimStripe: 'bg-transparent border border-zinc-400/70' },
+  blue:   { bg: 'bg-blue-600',   text: 'text-white',    activeStripe: 'bg-white', dimStripe: 'bg-transparent border border-zinc-400/60' },
+  purple: { bg: 'bg-purple-600', text: 'text-white',    activeStripe: 'bg-white', dimStripe: 'bg-transparent border border-zinc-400/60' },
+  brown:  { bg: 'bg-amber-800',  text: 'text-white',    activeStripe: 'bg-white', dimStripe: 'bg-transparent border border-zinc-400/60' },
+  black:  { bg: 'bg-belt-black', text: 'text-white',    activeStripe: 'bg-white', dimStripe: 'bg-transparent border border-red-300/40' },
 }
 
 function BeltDisplay({ color, stripes, beltLabel }: { color: BeltColor; stripes: number; beltLabel: string }) {
@@ -37,10 +37,7 @@ function BeltDisplay({ color, stripes, beltLabel }: { color: BeltColor; stripes:
   return (
     <div className="overflow-hidden rounded-xl flex h-10 belt-outline">
       <div className={`flex-1 flex items-center px-5 gap-3 ${s.bg}`}>
-        <div
-          className="w-4 h-6 rounded shrink-0"
-          style={{ background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 2px, transparent 2px, transparent 6px)' }}
-        />
+        <div className={`w-1 h-5 rounded-full shrink-0 ${color === 'white' ? 'bg-zinc-400/70' : 'bg-white/60'}`} />
         <span className={`text-xs font-bold tracking-widest uppercase ${s.text}`}>{beltLabel}</span>
       </div>
       {/* Tip with stripes */}

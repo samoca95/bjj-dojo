@@ -125,14 +125,14 @@ export default function SettingsPage() {
                 blue:   'bg-blue-600',
                 purple: 'bg-purple-600',
                 brown:  'bg-amber-800',
-                black:  'bg-zinc-800',
+                black:  'bg-belt-black',
               }
               return (
                 <button
                   key={color}
                   onClick={() => { setBelt(color); setBeltColor(color) }}
                   className={`relative rounded-xl py-2.5 flex items-center justify-center transition-all ${swatchClass[color]} ${
-                    isSelected ? 'ring-2 ring-gold ring-offset-2 ring-offset-zinc-900' : 'opacity-60 active:opacity-100'
+                    isSelected ? 'ring-2 ring-gold' : 'opacity-60 active:opacity-100'
                   }`}
                   aria-label={color}
                 >
