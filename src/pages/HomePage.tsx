@@ -14,8 +14,46 @@ import {
   HOME_SECTION_ORDER_UPDATED_EVENT,
   type HomeSectionId,
 } from '../utils/homeSectionOrder'
+import {
+  getBeltColor,
+  getBeltStripes,
+  BELT_RANK_UPDATED_EVENT,
+  type BeltColor,
+} from '../utils/beltRank'
 
 const DAY_MS = 24 * 60 * 60 * 1000
+
+const BELT_STYLES: Record<BeltColor, { bg: string; text: string; activeStripe: string; dimStripe: string }> = {
+  white:  { bg: 'bg-zinc-100',   text: 'text-zinc-900', activeStripe: 'bg-zinc-700',  dimStripe: 'bg-zinc-300' },
+  blue:   { bg: 'bg-blue-600',   text: 'text-white',    activeStripe: 'bg-white',      dimStripe: 'bg-blue-300/40' },
+  purple: { bg: 'bg-purple-600', text: 'text-white',    activeStripe: 'bg-white',      dimStripe: 'bg-purple-300/40' },
+  brown:  { bg: 'bg-amber-800',  text: 'text-white',    activeStripe: 'bg-white',      dimStripe: 'bg-amber-600/40' },
+  black:  { bg: 'bg-zinc-900',   text: 'text-zinc-100', activeStripe: 'bg-gold',       dimStripe: 'bg-zinc-700' },
+}
+
+function BeltDisplay({ color, stripes, beltLabel }: { color: BeltColor; stripes: number; beltLabel: string }) {
+  const s = BELT_STYLES[color]
+  return (
+    <div className="overflow-hidden rounded-2xl flex h-14 shadow-lg">
+      <div className={`flex-1 flex items-center px-5 gap-3 ${s.bg}`}>
+        <div
+          className="w-5 h-8 rounded-sm shrink-0"
+          style={{ background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 2px, transparent 2px, transparent 6px)' }}
+        />
+        <span className={`text-xs font-bold tracking-widest uppercase ${s.text}`}>{beltLabel}</span>
+      </div>
+      {/* Black tip with stripes */}
+      <div className="flex items-center gap-2 px-4 bg-zinc-950">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className={`h-6 w-3 rounded-sm transition-colors ${i < stripes ? s.activeStripe : s.dimStripe}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function startOfDay(epoch: number): number {
   const day = new Date(epoch)
@@ -49,6 +87,8 @@ export default function HomePage() {
   const [focusPickerSearch, setFocusPickerSearch] = useState('')
   const [focusTechniqueIds, setFocusTechniqueIdsState] = useState<number[]>(getFocusTechniqueIds)
   const [sectionOrder, setSectionOrder] = useState<HomeSectionId[]>(getHomeSectionOrder)
+  const [beltColor, setBeltColorState] = useState<BeltColor>(getBeltColor)
+  const [beltStripes, setBeltStripesState] = useState<number>(getBeltStripes)
 
   useEffect(() => {
     const sync = () => setSectionOrder(getHomeSectionOrder())
@@ -56,6 +96,19 @@ export default function HomePage() {
     window.addEventListener('storage', sync)
     return () => {
       window.removeEventListener(HOME_SECTION_ORDER_UPDATED_EVENT, sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
+
+  useEffect(() => {
+    const sync = () => {
+      setBeltColorState(getBeltColor())
+      setBeltStripesState(getBeltStripes())
+    }
+    window.addEventListener(BELT_RANK_UPDATED_EVENT, sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener(BELT_RANK_UPDATED_EVENT, sync)
       window.removeEventListener('storage', sync)
     }
   }, [])
@@ -306,15 +359,26 @@ export default function HomePage() {
     calendar: calendarSection,
   }
 
+  const beltLabel = t(`${beltColor.charAt(0).toUpperCase() + beltColor.slice(1)} Belt`)
+
   return (
     <div className="min-h-full bg-zinc-950">
       {/* Header */}
       <div className="px-6 pt-12 pb-8 bg-gradient-to-b from-zinc-900 to-zinc-950">
-        <h1 className="text-3xl font-black tracking-widest text-gold">BJJ DOJO</h1>
+        <div className="flex items-baseline gap-4">
+          <h1 className="text-3xl font-black tracking-widest text-gold">BJJ DOJO</h1>
+          <span
+            className="text-2xl text-gold/70 leading-none"
+            style={{ fontFamily: "'Zen Old Mincho', serif", fontWeight: 900 }}
+          >
+            柔術
+          </span>
+        </div>
         <p className="text-zinc-400 text-sm mt-1">{t('Track your journey on the mats')}</p>
       </div>
 
       <div className="px-4 space-y-6 pb-6">
+        <BeltDisplay color={beltColor} stripes={beltStripes} beltLabel={beltLabel} />
         {sectionOrder.map(id => sectionMap[id])}
 
         {/* Quick access */}
