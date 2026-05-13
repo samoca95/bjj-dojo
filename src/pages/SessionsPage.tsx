@@ -32,7 +32,7 @@ function SessionCard({
   onClick: () => void
   icon: string
   locale?: string
-  t: (text: string) => string
+  t: (text: import('../i18n').TranslationKey) => string
   language: AppLanguage
   tapStats: { given: number; received: number }
   techniqueNames: string[]

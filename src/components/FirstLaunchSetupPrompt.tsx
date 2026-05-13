@@ -140,30 +140,23 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
             {LANGUAGE_LABEL[language]}
           </span>
           <div className="flex bg-zinc-800 rounded-lg p-0.5 gap-0.5">
-            <button
-              onClick={() => setLanguage('en')}
-              className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
-                language === 'en' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
-              }`}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setLanguage('es')}
-              className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
-                language === 'es' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
-              }`}
-            >
-              ES
-            </button>
-            <button
-              onClick={() => setLanguage('fr')}
-              className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
-                language === 'fr' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
-              }`}
-            >
-              FR
-            </button>
+            {([
+              { code: 'en', flag: '🇬🇧', label: 'EN' },
+              { code: 'es', flag: '🇪🇸', label: 'ES' },
+              { code: 'fr', flag: '🇫🇷', label: 'FR' },
+            ] as const).map(({ code, flag, label }) => (
+              <button
+                key={code}
+                onClick={() => setLanguage(code)}
+                aria-label={label}
+                className={`flex-1 rounded-md px-2 py-2 text-xs font-semibold transition-colors flex items-center justify-center gap-1 ${
+                  language === code ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
+                }`}
+              >
+                <span aria-hidden="true">{flag}</span>
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
         </div>
 

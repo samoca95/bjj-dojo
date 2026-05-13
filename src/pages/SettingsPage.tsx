@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff } from 'lucide-react'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
-import { useI18n } from '../i18n'
+import { useI18n, translate } from '../i18n'
 import { db, exportDatabaseBackup, importDatabaseBackup, resetPrefilledTechniques } from '../db/database'
 import { invalidateCategoryCache } from '../db/categoryCache'
 import { setAppLanguage } from '../i18n'
@@ -26,6 +26,19 @@ import {
   MAX_STRIPES,
   type BeltColor,
 } from '../utils/beltRank'
+import type { AppLanguage } from '../i18n'
+
+const BELT_ABBREV: Record<AppLanguage, Record<BeltColor, string>> = {
+  en: { white: 'Wht', blue: 'Blu', purple: 'Pur', brown: 'Brn', black: 'Blk' },
+  es: { white: 'Bco', blue: 'Azl', purple: 'Mor', brown: 'Mrn', black: 'Ngr' },
+  fr: { white: 'Bla', blue: 'Ble', purple: 'Vio', brown: 'Mar', black: 'Noi' },
+}
+
+const LANGUAGE_OPTIONS: { code: AppLanguage; flag: string; label: string }[] = [
+  { code: 'en', flag: '🇬🇧', label: 'EN' },
+  { code: 'es', flag: '🇪🇸', label: 'ES' },
+  { code: 'fr', flag: '🇫🇷', label: 'FR' },
+]
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -99,34 +112,28 @@ export default function SettingsPage() {
       invalidateCategoryCache()
       if (importedLanguage) setAppLanguage(importedLanguage)
       const lang = importedLanguage ?? language
-      window.alert(lang === 'es' ? 'Respaldo importado correctamente.' : 'Backup imported successfully.')
+      window.alert(translate('Backup imported successfully.', lang))
       setTelemetryCount(telemetry.read().length)
     } catch (error) {
       telemetry.error('backup.import_failed', error)
       if (isQuotaError(error)) {
         notifyQuotaError()
       } else {
-        window.alert(language === 'es' ? 'No se pudo importar el respaldo.' : 'Could not import backup.')
+        window.alert(t('Could not import backup.'))
       }
     }
   }
 
   const handleResetPrefilled = async () => {
-    const message = language === 'es'
-      ? '¿Restablecer todas las técnicas predefinidas?\nTus técnicas personalizadas no se eliminarán.'
-      : 'Reset all pre-filled techniques?\nYour custom techniques will be preserved.'
-    if (!window.confirm(message)) return
+    if (!window.confirm(t('Reset all pre-filled techniques?\nYour custom techniques will be preserved.'))) return
     try {
       await resetPrefilledTechniques()
-      const done = language === 'es'
-        ? 'Técnicas predefinidas restablecidas correctamente.'
-        : 'Pre-filled techniques were reset successfully.'
-      window.alert(done)
+      window.alert(t('Pre-filled techniques were reset successfully.'))
     } catch (err) {
       if (isQuotaError(err)) {
         notifyQuotaError()
       } else {
-        window.alert(language === 'es' ? 'No se pudo restablecer.' : 'Could not reset techniques.')
+        window.alert(t('Could not reset techniques.'))
       }
     }
   }
@@ -144,7 +151,7 @@ export default function SettingsPage() {
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-4">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {language === 'es' ? 'TU CINTURÓN' : 'YOUR BELT'}
+            {t('YOUR BELT')}
           </h2>
           {/* Belt color picker */}
           <div className="grid grid-cols-5 gap-1.5">
@@ -169,11 +176,7 @@ export default function SettingsPage() {
                   <span className={`text-[10px] font-bold tracking-wide uppercase ${
                     color === 'white' ? 'text-zinc-700' : 'text-white'
                   }`}>
-                    {color === 'white' ? (language === 'es' ? 'Bco' : 'Wht') :
-                     color === 'blue'  ? (language === 'es' ? 'Azl' : 'Blu') :
-                     color === 'purple'? (language === 'es' ? 'Mor' : 'Pur') :
-                     color === 'brown' ? (language === 'es' ? 'Mrn' : 'Brn') :
-                                         (language === 'es' ? 'Ngr' : 'Blk')}
+                    {BELT_ABBREV[language][color]}
                   </span>
                 </button>
               )
@@ -182,7 +185,7 @@ export default function SettingsPage() {
           {/* Stripe counter */}
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs text-zinc-400">
-              {language === 'es' ? 'Grados' : 'Stripes'}
+              {t('Stripes')}
             </span>
             <div className="flex items-center gap-3">
               <button
@@ -217,10 +220,10 @@ export default function SettingsPage() {
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {language === 'es' ? 'TEMA E IDIOMA' : 'THEME & LANGUAGE'}
+            {t('THEME & LANGUAGE')}
           </h2>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-zinc-300">{language === 'es' ? 'Tema' : 'Theme'}</span>
+            <span className="text-sm text-zinc-300">{t('Theme')}</span>
             <div className="flex bg-zinc-800 rounded-lg p-0.5 gap-0.5">
               <button
                 onClick={() => { setTheme('black'); setAppTheme('black') }}
@@ -228,7 +231,7 @@ export default function SettingsPage() {
                   theme === 'black' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
                 }`}
               >
-                {language === 'es' ? 'Oscuro' : 'Dark'}
+                {t('Dark')}
               </button>
               <button
                 onClick={() => { setTheme('light'); setAppTheme('light') }}
@@ -236,49 +239,36 @@ export default function SettingsPage() {
                   theme === 'light' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
                 }`}
               >
-                {language === 'es' ? 'Claro' : 'Light'}
+                {t('Light')}
               </button>
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-zinc-300">{language === 'es' ? 'Idioma' : 'Language'}</span>
+            <span className="text-sm text-zinc-300">{t('Language')}</span>
             <div className="flex bg-zinc-800 rounded-lg p-0.5 gap-0.5">
-              <button
-                onClick={() => setLanguage('en')}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  language === 'en' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
-                }`}
-              >
-                EN
-              </button>
-              <button
-                onClick={() => setLanguage('es')}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  language === 'es' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
-                }`}
-              >
-                ES
-              </button>
-              <button
-                onClick={() => setLanguage('fr')}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  language === 'fr' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
-                }`}
-              >
-                FR
-              </button>
+              {LANGUAGE_OPTIONS.map(({ code, flag, label }) => (
+                <button
+                  key={code}
+                  onClick={() => setLanguage(code)}
+                  aria-label={label}
+                  className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors flex items-center gap-1 ${
+                    language === code ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
+                  }`}
+                >
+                  <span aria-hidden="true">{flag}</span>
+                  <span>{label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {language === 'es' ? 'ORDEN DEL INICIO' : 'HOME SECTION ORDER'}
+            {t('HOME SECTION ORDER')}
           </h2>
           <p className="text-xs text-zinc-500">
-            {language === 'es'
-              ? 'Reordena las secciones de la pantalla principal y oculta las que no quieras ver.'
-              : 'Reorder the sections on the home screen and hide the ones you do not want to see.'}
+            {t('Reorder the sections on the home screen and hide the ones you do not want to see.')}
           </p>
           <div className="space-y-2">
             {sectionOrder.map((id, index) => (
@@ -359,7 +349,7 @@ export default function SettingsPage() {
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {language === 'es' ? 'META SEMANAL DE TATAMI' : 'WEEKLY MAT TIME GOAL'}
+            {t('WEEKLY MAT TIME GOAL')}
           </h2>
           <div className="flex items-center gap-3">
             <input
@@ -381,9 +371,7 @@ export default function SettingsPage() {
             </button>
           </div>
           <p className="text-xs text-zinc-500">
-            {language === 'es'
-              ? `Predeterminado: ${DEFAULT_WEEKLY_GOAL_MINUTES} min`
-              : `Default: ${DEFAULT_WEEKLY_GOAL_MINUTES} min`}
+            {t('Default:')} {DEFAULT_WEEKLY_GOAL_MINUTES} {t('min')}
           </p>
         </div>
 
@@ -392,33 +380,29 @@ export default function SettingsPage() {
             onClick={handleResetPrefilled}
             className="w-full rounded-xl bg-red-900/50 text-red-200 text-sm font-semibold py-2.5 active:bg-red-900"
           >
-            {language === 'es'
-              ? 'Restablecer técnicas predefinidas'
-              : 'Reset pre-filled techniques'}
+            {t('Reset pre-filled techniques')}
           </button>
           <p className="text-xs text-zinc-500 mt-2">
-            {language === 'es'
-              ? 'Solo se reinician técnicas y conexiones predefinidas; las personalizadas no se eliminan.'
-              : 'Only pre-filled techniques and links are reset; custom techniques are kept.'}
+            {t('Only pre-filled techniques and links are reset; custom techniques are kept.')}
           </p>
         </div>
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {language === 'es' ? 'RESPALDO Y RECUPERACIÓN' : 'BACKUP & RECOVERY'}
+            {t('BACKUP & RECOVERY')}
           </h2>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={handleExportBackup}
               className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 active:bg-zinc-700"
             >
-              {language === 'es' ? 'Exportar JSON' : 'Export JSON'}
+              {t('Export JSON')}
             </button>
             <button
               onClick={() => importRef.current?.click()}
               className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 active:bg-zinc-700"
             >
-              {language === 'es' ? 'Importar JSON' : 'Import JSON'}
+              {t('Import JSON')}
             </button>
           </div>
           <input
@@ -433,20 +417,16 @@ export default function SettingsPage() {
             }}
           />
           <p className="text-xs text-zinc-500">
-            {language === 'es'
-              ? 'Usa exportar/importar para recuperar tus datos si el almacenamiento del navegador se pierde.'
-              : 'Use export/import to recover your data if browser storage is lost.'}
+            {t('Use export/import to recover your data if browser storage is lost.')}
           </p>
         </div>
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {language === 'es' ? 'REGISTRO LOCAL' : 'LOCAL LOGGING'}
+            {t('LOCAL LOGGING')}
           </h2>
           <p className="text-xs text-zinc-500">
-            {language === 'es'
-              ? `Eventos registrados: ${telemetryCount}`
-              : `Logged events: ${telemetryCount}`}
+            {t('Logged events:')} {telemetryCount}
           </p>
           <button
             onClick={() => {
@@ -455,18 +435,16 @@ export default function SettingsPage() {
             }}
             className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 px-3 active:bg-zinc-700"
           >
-            {language === 'es' ? 'Limpiar registros' : 'Clear logs'}
+            {t('Clear logs')}
           </button>
         </div>
 
         <div className="px-1 pt-2 pb-4 text-center space-y-1">
           <p className="text-xs text-zinc-500">
-            {language === 'es'
-              ? `Versión de la app: ${appVersionLabel}`
-              : `App version: ${appVersionLabel}`}
+            {t('App version:')} {appVersionLabel}
           </p>
           <p className="text-xs text-zinc-500">
-            {language === 'es' ? 'Desarrollado por: samoca95' : 'Developed by: samoca95'}
+            {t('Developed by:')} samoca95
           </p>
           <a
             href={githubRepoUrl}
