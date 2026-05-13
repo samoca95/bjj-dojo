@@ -13,6 +13,7 @@ import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 
 const ITEM_SIZE = 116 // card height (~104px) + gap (12px)
 const LIST_SCROLL_KEY = 'bjj-dojo.techniques.scroll-offset'
+const LIST_CONTEXT_KEY = 'bjj-dojo.techniques.list-context'
 const DIFFICULTY_ORDER: Record<Difficulty, number> = {
   BEGINNER: 0,
   INTERMEDIATE: 1,
@@ -96,6 +97,37 @@ export default function TechniquesPage() {
   }, [search])
 
   useEffect(() => {
+    const rawContext = window.sessionStorage.getItem(LIST_CONTEXT_KEY)
+    if (rawContext) {
+      try {
+        const parsed = JSON.parse(rawContext) as {
+          search?: unknown
+          categoryId?: unknown
+          favoritesOnly?: unknown
+          difficultyFilter?: unknown
+          sortBy?: unknown
+        }
+        if (typeof parsed.search === 'string') {
+          setSearch(parsed.search)
+          setDebouncedSearch(parsed.search)
+        }
+        if (typeof parsed.categoryId === 'number' || parsed.categoryId === null) {
+          setCategoryId(parsed.categoryId)
+        }
+        if (typeof parsed.favoritesOnly === 'boolean') {
+          setFavoritesOnly(parsed.favoritesOnly)
+        }
+        if (parsed.difficultyFilter === 'all' || DIFFICULTIES.includes(parsed.difficultyFilter as Difficulty)) {
+          setDifficultyFilter(parsed.difficultyFilter as 'all' | Difficulty)
+        }
+        if (parsed.sortBy === 'name_asc' || parsed.sortBy === 'name_desc' || parsed.sortBy === 'level' || parsed.sortBy === 'frequency') {
+          setSortBy(parsed.sortBy)
+        }
+      } catch {
+        // Ignore malformed storage and fall back to defaults.
+      }
+    }
+
     const raw = window.sessionStorage.getItem(LIST_SCROLL_KEY)
     if (!raw) return
     const parsed = Number(raw)
@@ -103,6 +135,19 @@ export default function TechniquesPage() {
     setInitialScrollOffset(parsed)
     scrollOffsetRef.current = parsed
   }, [])
+
+  useEffect(() => {
+    window.sessionStorage.setItem(
+      LIST_CONTEXT_KEY,
+      JSON.stringify({
+        search,
+        categoryId,
+        favoritesOnly,
+        difficultyFilter,
+        sortBy,
+      }),
+    )
+  }, [search, categoryId, favoritesOnly, difficultyFilter, sortBy])
 
   // P5: category data served from module-level cache; returns ordered Category[]
   const categories = useLiveQuery(
@@ -168,6 +213,16 @@ export default function TechniquesPage() {
           categoryIcon={catIconMap.get(technique.categoryId)}
           description={getTechniqueDescription(technique, language)}
           onClick={() => {
+            window.sessionStorage.setItem(
+              LIST_CONTEXT_KEY,
+              JSON.stringify({
+                search,
+                categoryId,
+                favoritesOnly,
+                difficultyFilter,
+                sortBy,
+              }),
+            )
             window.sessionStorage.setItem(LIST_SCROLL_KEY, String(scrollOffsetRef.current))
             navigate(`/techniques/${technique.id}`)
           }}
@@ -325,6 +380,7 @@ export default function TechniquesPage() {
         initialScrollOffset={initialScrollOffset}
         onScroll={({ scrollOffset }) => {
           scrollOffsetRef.current = scrollOffset
+          window.sessionStorage.setItem(LIST_SCROLL_KEY, String(scrollOffset))
         }}
       >
         {renderRow}

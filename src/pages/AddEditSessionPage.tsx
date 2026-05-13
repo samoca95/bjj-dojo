@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  ChevronLeft, Plus, Check, X, Zap, Hand,
+  Plus, Check, X, Zap, Hand,
 } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
@@ -265,16 +265,13 @@ export default function AddEditSessionPage() {
       <div className="min-h-full bg-zinc-950">
         {/* Header */}
         <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 z-10 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
-            <ChevronLeft size={24} strokeWidth={2} />
-          </button>
-          <h1 className="flex-1 font-bold text-zinc-100">{isEdit ? t('Edit Session') : t('Log Session')}</h1>
           <button
             onClick={handleCancel}
-            className="text-zinc-400 font-semibold text-sm active:text-zinc-200 px-2"
+            className="text-zinc-400 font-semibold text-sm active:text-zinc-200"
           >
             {t('Cancel')}
           </button>
+          <h1 className="flex-1 font-bold text-zinc-100">{isEdit ? t('Edit Session') : t('Log Session')}</h1>
           <button
             onClick={handleSave}
             disabled={submitting}
