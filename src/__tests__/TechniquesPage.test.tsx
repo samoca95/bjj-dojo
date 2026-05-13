@@ -50,10 +50,10 @@ const sampleTechniques = [
 function setupMocks(categories = sampleCategories, techniques = sampleTechniques) {
   // TechniquesPage calls useLiveQuery twice per render:
   // 1st: categories with [] deps
-  // 2nd: techniques with [search, categoryId] deps (length 2)
+  // 2nd: techniques+freqMap with non-empty deps — returns { items, freqMap }
   mockUseLiveQuery.mockImplementation((_fn, deps) => {
     if (Array.isArray(deps) && deps.length === 0) return categories
-    return techniques
+    return { items: techniques, freqMap: new Map<number, number>() }
   })
 }
 
