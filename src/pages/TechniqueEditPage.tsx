@@ -8,7 +8,7 @@ import type { Category, ConnectionType, Difficulty, ReferenceLink, Technique, Te
 import { CONNECTION_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel, difficultyLabel } from '../i18n'
-import { isValidYoutubeUrl, normalizeTechniquePayload, VALIDATION_LIMITS } from '../utils/validation'
+import { isValidYoutubeUrl, isValidImageUrl, normalizeTechniquePayload, VALIDATION_LIMITS } from '../utils/validation'
 import { runWithTelemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
 
@@ -35,6 +35,7 @@ export default function TechniqueEditPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
   const [difficulty, setDifficulty] = useState<Difficulty>('BEGINNER')
   const [categoryId, setCategoryId] = useState<number>(1)
   const [cues, setCues] = useState<string[]>([])
@@ -66,6 +67,7 @@ export default function TechniqueEditPage() {
       setName(t.name)
       setDescription(t.description)
       setYoutubeUrl(t.youtubeUrl)
+      setImageUrl(t.imageUrl ?? '')
       setDifficulty(t.difficulty)
       setCategoryId(t.categoryId)
       setCues(t.cues ?? [])
@@ -86,11 +88,16 @@ export default function TechniqueEditPage() {
       description,
       cues,
       youtubeUrl,
+      imageUrl,
       tags: tagsInput.split(','),
     })
     if (!payload.name) return
     if (!isValidYoutubeUrl(payload.youtubeUrl)) {
       window.alert(language === 'es' ? 'URL de YouTube inválida.' : 'Invalid YouTube URL.')
+      return
+    }
+    if (!isValidImageUrl(payload.imageUrl)) {
+      window.alert(language === 'es' ? 'URL de imagen inválida.' : 'Invalid image URL.')
       return
     }
     const cleanedReferenceLinks: ReferenceLink[] = referenceLinks
@@ -118,6 +125,7 @@ export default function TechniqueEditPage() {
           name: payload.name,
           description: payload.description,
           youtubeUrl: payload.youtubeUrl,
+          imageUrl: payload.imageUrl || undefined,
           difficulty,
           categoryId,
           cues: payload.cues,
@@ -142,6 +150,7 @@ export default function TechniqueEditPage() {
           name: payload.name,
           description: payload.description,
           youtubeUrl: payload.youtubeUrl,
+          imageUrl: payload.imageUrl || undefined,
           difficulty,
           categoryId,
           cues: payload.cues,
@@ -326,6 +335,33 @@ export default function TechniqueEditPage() {
             placeholder="https://youtube.com/watch?v=…"
             className={`${inputCls} mt-2`}
           />
+        </div>
+
+        {/* Image URL */}
+        <div>
+          <label className="text-xs text-gold font-semibold tracking-wide">
+            {language === 'es' ? 'URL DE IMAGEN' : 'IMAGE URL'}
+          </label>
+          <input
+            type="url"
+            inputMode="url"
+            value={imageUrl}
+            onChange={e => setImageUrl(e.target.value)}
+            placeholder="https://…"
+            maxLength={500}
+            className={`${inputCls} mt-2`}
+          />
+          {imageUrl.trim() && (
+            <div className="mt-2 overflow-hidden rounded-xl bg-zinc-900">
+              <img
+                src={imageUrl.trim()}
+                alt=""
+                loading="lazy"
+                className="w-full h-40 object-cover"
+                onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Additional reference links */}
