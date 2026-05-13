@@ -457,7 +457,7 @@ export default function SettingsPage() {
           <div className="flex justify-center mb-3">
             <PlainLogo
               fill={theme === 'light' ? '#8a6a00' : '#d4a017'}
-              className="h-21 w-21"
+              className="h-14 w-14"
             />
           </div>
           <p className="text-xs text-zinc-500">
