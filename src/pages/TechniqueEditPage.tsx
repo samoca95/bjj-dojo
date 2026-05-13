@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, Plus, X } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
-import type { Category, ConnectionType, Difficulty, Technique, TechniqueConnection } from '../types'
+import type { Category, ConnectionType, Difficulty, ReferenceLink, Technique, TechniqueConnection } from '../types'
 import { CONNECTION_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel, difficultyLabel } from '../i18n'
@@ -44,6 +44,9 @@ export default function TechniqueEditPage() {
   const [newConnectionTargetId, setNewConnectionTargetId] = useState<number | null>(null)
   const [tagsInput, setTagsInput] = useState('')
   const [isFavorite, setIsFavorite] = useState(false)
+  const [referenceLinks, setReferenceLinks] = useState<ReferenceLink[]>([])
+  const [newLinkUrl, setNewLinkUrl] = useState('')
+  const [newLinkLabel, setNewLinkLabel] = useState('')
 
   const categories = useLiveQuery(
     () => getCategoryMap().then(m => [...m.values()]),
@@ -68,6 +71,7 @@ export default function TechniqueEditPage() {
       setCues(t.cues ?? [])
       setTagsInput((t.tags ?? []).join(', '))
       setIsFavorite(Boolean(t.isFavorite))
+      setReferenceLinks(Array.isArray(t.referenceLinks) ? t.referenceLinks : [])
       const techniqueConnections = await db.techniqueConnections
         .where('fromTechniqueId')
         .equals(Number(id))
@@ -89,6 +93,22 @@ export default function TechniqueEditPage() {
       window.alert(language === 'es' ? 'URL de YouTube inválida.' : 'Invalid YouTube URL.')
       return
     }
+    const cleanedReferenceLinks: ReferenceLink[] = referenceLinks
+      .map(link => ({
+        url: link.url.trim(),
+        ...(link.label?.trim() ? { label: link.label.trim() } : {}),
+      }))
+      .filter(link => link.url.length > 0)
+      .slice(0, 20)
+    for (const link of cleanedReferenceLinks) {
+      try {
+        const parsed = new URL(link.url)
+        if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('bad protocol')
+      } catch {
+        window.alert(language === 'es' ? `URL de referencia inválida: ${link.url}` : `Invalid reference URL: ${link.url}`)
+        return
+      }
+    }
     try {
       if (isNew) {
         const maxId = await db.techniques.orderBy('id').last()
@@ -103,6 +123,7 @@ export default function TechniqueEditPage() {
           cues: payload.cues,
           tags: payload.tags,
           isFavorite,
+          referenceLinks: cleanedReferenceLinks,
           isCustom: true,
         }
         await runWithTelemetry('technique.save_failed', () => db.techniques.add(technique))
@@ -126,6 +147,7 @@ export default function TechniqueEditPage() {
           cues: payload.cues,
           tags: payload.tags,
           isFavorite,
+          referenceLinks: cleanedReferenceLinks,
         }))
         await runWithTelemetry('technique.connection_clear_failed', () => db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete())
         if (connections.length > 0) {
@@ -304,6 +326,83 @@ export default function TechniqueEditPage() {
             placeholder="https://youtube.com/watch?v=…"
             className={`${inputCls} mt-2`}
           />
+        </div>
+
+        {/* Additional reference links */}
+        <div>
+          <label className="text-xs text-gold font-semibold tracking-wide">
+            {language === 'es' ? 'REFERENCIAS (ARTÍCULOS, VIDEOS…)' : 'REFERENCE LINKS (ARTICLES, VIDEOS…)'}
+          </label>
+          <div className="space-y-2 mt-2">
+            {referenceLinks.map((link, i) => (
+              <div key={i} className="bg-zinc-900 rounded-xl px-3 py-2.5 space-y-2">
+                <input
+                  type="text"
+                  value={link.label ?? ''}
+                  onChange={e =>
+                    setReferenceLinks(prev => prev.map((it, idx) => idx === i ? { ...it, label: e.target.value } : it))
+                  }
+                  placeholder={language === 'es' ? 'Etiqueta (opcional)' : 'Label (optional)'}
+                  className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    inputMode="url"
+                    value={link.url}
+                    onChange={e =>
+                      setReferenceLinks(prev => prev.map((it, idx) => idx === i ? { ...it, url: e.target.value } : it))
+                    }
+                    placeholder="https://…"
+                    className="flex-1 bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
+                  />
+                  <button
+                    onClick={() => setReferenceLinks(prev => prev.filter((_, idx) => idx !== i))}
+                    className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-500 active:text-zinc-200"
+                    aria-label={t('Remove')}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+            <div className="bg-zinc-900 rounded-xl px-3 py-2.5 space-y-2">
+              <input
+                type="text"
+                value={newLinkLabel}
+                onChange={e => setNewLinkLabel(e.target.value)}
+                placeholder={language === 'es' ? 'Etiqueta (opcional)' : 'Label (optional)'}
+                className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  inputMode="url"
+                  value={newLinkUrl}
+                  onChange={e => setNewLinkUrl(e.target.value)}
+                  placeholder="https://…"
+                  className="flex-1 bg-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
+                />
+                <button
+                  onClick={() => {
+                    const trimmedUrl = newLinkUrl.trim()
+                    if (!trimmedUrl) return
+                    setReferenceLinks(prev => [
+                      ...prev,
+                      { url: trimmedUrl, ...(newLinkLabel.trim() ? { label: newLinkLabel.trim() } : {}) },
+                    ])
+                    setNewLinkUrl('')
+                    setNewLinkLabel('')
+                  }}
+                  disabled={!newLinkUrl.trim()}
+                  className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-gold disabled:opacity-40 active:bg-zinc-700"
+                  aria-label={language === 'es' ? 'Añadir referencia' : 'Add reference'}
+                >
+                  <Plus size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div>

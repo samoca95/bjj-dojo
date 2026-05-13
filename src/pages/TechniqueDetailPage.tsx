@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Pencil, Star } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Pencil, Star, ExternalLink } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
 import type { Category, Technique } from '../types'
@@ -152,6 +152,29 @@ export default function TechniqueDetailPage() {
             </svg>
             {t('Watch on YouTube')}
           </a>
+        )}
+
+        {/* Additional reference links */}
+        {(technique.referenceLinks?.length ?? 0) > 0 && (
+          <div className="bg-zinc-900 rounded-2xl p-4">
+            <div className="text-xs font-semibold tracking-widest text-gold mb-3">
+              {language === 'es' ? 'REFERENCIAS' : 'REFERENCES'}
+            </div>
+            <div className="space-y-2">
+              {technique.referenceLinks!.map((link, i) => (
+                <a
+                  key={i}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 bg-zinc-950 rounded-xl px-3 py-2.5 text-sm text-zinc-100 active:bg-zinc-800"
+                >
+                  <ExternalLink size={14} className="text-gold shrink-0" />
+                  <span className="flex-1 truncate">{link.label?.trim() || link.url}</span>
+                </a>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Connections */}

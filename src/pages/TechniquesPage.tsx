@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useLayoutEffect, forwardRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { FixedSizeList, type ListChildComponentProps } from 'react-window'
-import { Search, X, Plus, Star } from 'lucide-react'
+import { Search, X, Plus, Star, SlidersHorizontal } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
 import type { Category, Technique } from '../types'
@@ -59,6 +59,7 @@ export default function TechniquesPage() {
   const [categoryId, setCategoryId] = useState<number | null>(null)
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [tagFilter, setTagFilter] = useState<string | null>(null)
+  const [filterOpen, setFilterOpen] = useState(false)
 
   const headerRef = useRef<HTMLDivElement>(null)
   const [listHeight, setListHeight] = useState(() => window.innerHeight - 200)
@@ -136,8 +137,20 @@ export default function TechniquesPage() {
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm z-10" ref={headerRef}>
-        <div className="px-6 pt-12 pb-3">
+        <div className="px-6 pt-12 pb-3 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-zinc-100">{t('Techniques')}</h1>
+          <button
+            onClick={() => setFilterOpen(prev => !prev)}
+            className={`p-2 rounded-xl transition-colors relative ${
+              filterOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
+            }`}
+            aria-label={t('Filter')}
+          >
+            <SlidersHorizontal size={18} strokeWidth={2} />
+            {(categoryId !== null || favoritesOnly || tagFilter !== null) && !filterOpen && (
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
+            )}
+          </button>
         </div>
 
         {/* Search */}
@@ -159,49 +172,66 @@ export default function TechniquesPage() {
           </div>
         </div>
 
-        {/* Category chips */}
-        <div className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-none">
-          <button
-            onClick={() => { setCategoryId(null); setSearch(''); setDebouncedSearch(''); setFavoritesOnly(false); setTagFilter(null) }}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-              categoryId === null ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
-            }`}
-          >
-            {t('All')}
-          </button>
-          {categories?.map((c: Category) => (
-            <button
-              key={c.id}
-              onClick={() => { setCategoryId(c.id); setSearch(''); setDebouncedSearch('') }}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${
-                categoryId === c.id ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
-              }`}
-            >
-              <CategoryIcon value={c.icon} fallbackId={c.id} size={14} className={categoryId === c.id ? 'text-black' : 'text-zinc-300'} />
-              {getCategoryName(c, language)}
-            </button>
-          ))}
-          <button
-            onClick={() => setFavoritesOnly(prev => !prev)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1 ${
-              favoritesOnly ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
-            }`}
-          >
-            <Star size={12} fill={favoritesOnly ? 'currentColor' : 'none'} />
-            {language === 'es' ? 'Favoritas' : 'Favorites'}
-          </button>
-          {allTags.map(tag => (
-            <button
-              key={tag}
-              onClick={() => setTagFilter(prev => prev === tag ? null : tag)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                tagFilter === tag ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
-              }`}
-            >
-              #{tag}
-            </button>
-          ))}
-        </div>
+        {/* Collapsible filters */}
+        {filterOpen && (
+          <div className="mx-4 mb-3 bg-zinc-900 rounded-2xl p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-zinc-400 tracking-widest">{t('FILTERS')}</span>
+              <button
+                onClick={() => { setCategoryId(null); setFavoritesOnly(false); setTagFilter(null) }}
+                className="text-xs text-zinc-500 active:text-zinc-300"
+              >
+                {t('Clear')}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => { setCategoryId(null); setSearch(''); setDebouncedSearch('') }}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  categoryId === null ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+                }`}
+              >
+                {t('All')}
+              </button>
+              {categories?.map((c: Category) => (
+                <button
+                  key={c.id}
+                  onClick={() => { setCategoryId(c.id); setSearch(''); setDebouncedSearch('') }}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold flex items-center gap-1.5 ${
+                    categoryId === c.id ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+                  }`}
+                >
+                  <CategoryIcon value={c.icon} fallbackId={c.id} size={14} className={categoryId === c.id ? 'text-black' : 'text-zinc-300'} />
+                  {getCategoryName(c, language)}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setFavoritesOnly(prev => !prev)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold flex items-center gap-1 ${
+                  favoritesOnly ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+                }`}
+              >
+                <Star size={12} fill={favoritesOnly ? 'currentColor' : 'none'} />
+                {language === 'es' ? 'Favoritas' : 'Favorites'}
+              </button>
+              {allTags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setTagFilter(prev => prev === tag ? null : tag)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    tagFilter === tag ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+                  }`}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="px-6 pb-2">
           <span className="text-xs text-zinc-500">
