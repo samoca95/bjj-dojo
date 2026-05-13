@@ -4,11 +4,14 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: process.env.GITHUB_ACTIONS ? '/bjj-dojo/' : '/',
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '1.0.0'),
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['bjj-icon.svg', 'offline.html'],
+      includeAssets: ['bjj-icon.svg', 'bjj-icon.png', 'offline.html'],
       manifest: {
         name: 'BJJ Dojo',
         short_name: 'BJJ Dojo',
