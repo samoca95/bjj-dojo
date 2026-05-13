@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useLayoutEffect, forwardRef } from 'react'
+import { getAppTheme, APP_THEME_UPDATED_EVENT, type AppTheme } from '../utils/theme'
+import { PlainLogo } from '../components/PlainLogo'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { FixedSizeList, type ListChildComponentProps } from 'react-window'
@@ -68,6 +70,7 @@ function TechniqueRow({ technique, categoryName, categoryIcon, description, prac
 export default function TechniquesPage() {
   const navigate = useNavigate()
   const { t, language } = useI18n()
+  const [theme, setTheme] = useState<AppTheme>(getAppTheme())
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [categoryId, setCategoryId] = useState<number | null>(null)
@@ -94,6 +97,12 @@ export default function TechniquesPage() {
     }
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
+  }, [])
+
+  useEffect(() => {
+    const sync = () => setTheme(getAppTheme())
+    window.addEventListener(APP_THEME_UPDATED_EVENT, sync)
+    return () => window.removeEventListener(APP_THEME_UPDATED_EVENT, sync)
   }, [])
 
   useEffect(() => {
@@ -243,6 +252,12 @@ export default function TechniquesPage() {
 
   return (
     <div className="min-h-full bg-zinc-950">
+      <div className="pointer-events-none fixed inset-0 flex items-center justify-center" style={{ zIndex: 1 }}>
+        <PlainLogo
+          fill={theme === 'light' ? '#18181b' : '#ffffff'}
+          className="w-72 h-72 opacity-[0.04]"
+        />
+      </div>
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm z-10" ref={headerRef}>
         <div className="px-6 pt-12 pb-3 flex items-center justify-between gap-3">
           <h1 className="text-2xl font-bold text-zinc-100">{t('Techniques')}</h1>

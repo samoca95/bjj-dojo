@@ -22,6 +22,7 @@ import {
   BELT_RANK_UPDATED_EVENT,
   type BeltColor,
 } from '../utils/beltRank'
+import { PlainLogo } from '../components/PlainLogo'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -36,9 +37,11 @@ const BELT_STYLES: Record<BeltColor, { bg: string; text: string; activeStripe: s
 function BeltDisplay({ color, stripes, beltLabel }: { color: BeltColor; stripes: number; beltLabel: string }) {
   const s = BELT_STYLES[color]
   const tipClass = color === 'black' ? 'bg-red-700' : 'bg-belt-black'
+  const logoFill = color === 'black' ? '#b91c1c' : '#18181b'
   return (
     <div className="overflow-hidden rounded-xl flex h-10 belt-outline">
-      <div className={`flex-1 flex items-center px-5 ${s.bg}`}>
+      <div className={`flex-1 flex items-center px-5 gap-2 ${s.bg}`}>
+        <PlainLogo fill={logoFill} className="h-5 w-5 shrink-0" />
         <span className={`text-xs font-bold tracking-widest uppercase ${s.text}`}>{beltLabel}</span>
       </div>
       {/* Tip with stripes */}

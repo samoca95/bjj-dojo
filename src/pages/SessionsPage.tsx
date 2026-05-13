@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useState } from 'react'
+import { getAppTheme, APP_THEME_UPDATED_EVENT, type AppTheme } from '../utils/theme'
+import { PlainLogo } from '../components/PlainLogo'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { CalendarDays, Hand, Plus, Search, SlidersHorizontal, Zap } from 'lucide-react'
@@ -88,6 +90,7 @@ function SessionCard({
 export default function SessionsPage() {
   const navigate = useNavigate()
   const { t, locale, language } = useI18n()
+  const [theme, setTheme] = useState<AppTheme>(getAppTheme())
   const [sessionTypeIcons, setSessionTypeIcons] = useState(getSessionTypeIcons())
   const [filterOpen, setFilterOpen] = useState(false)
   const [clubFilter, setClubFilter] = useState<'all' | number>('all')
@@ -202,6 +205,12 @@ export default function SessionsPage() {
     return () => window.removeEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
   }, [])
 
+  useEffect(() => {
+    const sync = () => setTheme(getAppTheme())
+    window.addEventListener(APP_THEME_UPDATED_EVENT, sync)
+    return () => window.removeEventListener(APP_THEME_UPDATED_EVENT, sync)
+  }, [])
+
   useLayoutEffect(() => {
     const raw = window.sessionStorage.getItem(LIST_SCROLL_KEY)
     if (!raw) return
@@ -218,6 +227,12 @@ export default function SessionsPage() {
 
   return (
     <div className="min-h-full bg-zinc-950">
+      <div className="pointer-events-none fixed inset-0 flex items-center justify-center" style={{ zIndex: 1 }}>
+        <PlainLogo
+          fill={theme === 'light' ? '#18181b' : '#ffffff'}
+          className="w-72 h-72 opacity-[0.04]"
+        />
+      </div>
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm z-10">
         <div className="px-6 pt-12 pb-3 flex items-center justify-between gap-3">
           <h1 className="text-2xl font-bold text-zinc-100">{t('Sessions')}</h1>

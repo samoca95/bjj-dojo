@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, HandHeart, Lightbulb } from 'lucide-react'
+import { PlainLogo } from '../components/PlainLogo'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n, translate } from '../i18n'
@@ -453,6 +454,12 @@ export default function SettingsPage() {
         </div>
 
         <div className="px-1 pt-2 pb-4 text-center space-y-1">
+          <div className="flex justify-center mb-3">
+            <PlainLogo
+              fill={theme === 'light' ? '#8a6a00' : '#d4a017'}
+              className="h-14 w-14"
+            />
+          </div>
           <p className="text-xs text-zinc-500">
             {t('App version:')} {appVersionLabel}
           </p>
