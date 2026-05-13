@@ -249,8 +249,8 @@ export default function SessionDetailPage() {
       </div>
 
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-2xl bg-zinc-900 border border-zinc-800 p-4 space-y-4">
+        <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
+          <div className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl bg-zinc-900 border border-zinc-800 p-4 space-y-4">
             <h2 className="text-base font-bold text-zinc-100">
               {language === 'es' ? 'Eliminar sesión' : 'Delete session'}
             </h2>
@@ -296,7 +296,7 @@ export default function SessionDetailPage() {
       )}
 
       {pendingUndoSession && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
+        <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
           <span className="text-sm text-zinc-100">
             {language === 'es' ? 'Sesión eliminada.' : 'Session deleted.'}
           </span>
