@@ -11,7 +11,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['bjj-icon.svg', 'offline.html'],
+      includeAssets: ['bjj-icon.svg', 'bjj-icon.png', 'offline.html'],
       manifest: {
         name: 'BJJ Dojo',
         short_name: 'BJJ Dojo',

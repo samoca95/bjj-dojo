@@ -31,6 +31,7 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const { language, setLanguage, t } = useI18n()
   const appVersion = __APP_VERSION__
+  const appVersionLabel = appVersion.startsWith('v') ? appVersion : `v${appVersion}`
   const githubRepoUrl = 'https://github.com/samoca95/bjj-dojo'
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
   const [telemetryCount, setTelemetryCount] = useState(0)
@@ -453,8 +454,8 @@ export default function SettingsPage() {
         <div className="px-1 pt-2 pb-4 text-center space-y-1">
           <p className="text-xs text-zinc-500">
             {language === 'es'
-              ? `Versión de la app: v${appVersion}`
-              : `App version: v${appVersion}`}
+              ? `Versión de la app: ${appVersionLabel}`
+              : `App version: ${appVersionLabel}`}
           </p>
           <p className="text-xs text-zinc-500">
             {language === 'es' ? 'Desarrollado por: samoca95' : 'Developed by: samoca95'}
