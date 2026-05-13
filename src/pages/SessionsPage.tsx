@@ -1,6 +1,4 @@
 import { useEffect, useLayoutEffect, useState } from 'react'
-import { getAppTheme, APP_THEME_UPDATED_EVENT, type AppTheme } from '../utils/theme'
-import { PlainLogo } from '../components/PlainLogo'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { CalendarDays, Hand, Plus, Search, SlidersHorizontal, Zap } from 'lucide-react'
@@ -90,7 +88,6 @@ function SessionCard({
 export default function SessionsPage() {
   const navigate = useNavigate()
   const { t, locale, language } = useI18n()
-  const [theme, setTheme] = useState<AppTheme>(getAppTheme())
   const [sessionTypeIcons, setSessionTypeIcons] = useState(getSessionTypeIcons())
   const [filterOpen, setFilterOpen] = useState(false)
   const [clubFilter, setClubFilter] = useState<'all' | number>('all')
@@ -203,12 +200,6 @@ export default function SessionsPage() {
     const sync = () => setSessionTypeIcons(getSessionTypeIcons())
     window.addEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
     return () => window.removeEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
-  }, [])
-
-  useEffect(() => {
-    const sync = () => setTheme(getAppTheme())
-    window.addEventListener(APP_THEME_UPDATED_EVENT, sync)
-    return () => window.removeEventListener(APP_THEME_UPDATED_EVENT, sync)
   }, [])
 
   useLayoutEffect(() => {
