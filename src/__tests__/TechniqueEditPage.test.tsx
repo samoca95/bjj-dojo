@@ -14,7 +14,9 @@ const mocks = vi.hoisted(() => ({
   add: vi.fn().mockResolvedValue(1001),
   update: vi.fn(),
   del: vi.fn(),
+  put: vi.fn(),
   last: vi.fn().mockResolvedValue({ id: 1000 }),
+  connBulkPut: vi.fn(),
   connWhere: vi.fn(() => ({
     equals: vi.fn(() => ({
       delete: vi.fn().mockResolvedValue(0),
@@ -30,11 +32,13 @@ vi.mock('../db/database', () => ({
       add: mocks.add,
       update: mocks.update,
       delete: mocks.del,
+      put: mocks.put,
       orderBy: vi.fn(() => ({ last: mocks.last })),
     },
     techniqueConnections: {
       where: mocks.connWhere,
       bulkAdd: vi.fn(),
+      bulkPut: mocks.connBulkPut,
     },
     categories: {
       orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
@@ -212,5 +216,33 @@ describe('TechniqueEditPage — edit existing technique', () => {
     const cueInput = screen.getByPlaceholderText('Add a coaching cue…')
     await user.type(cueInput, 'Hip escape first{Enter}')
     expect(screen.getByText('Hip escape first')).toBeInTheDocument()
+  })
+
+  it('opens in-app delete modal showing technique name', async () => {
+    const user = userEvent.setup()
+    const confirmSpy = vi.spyOn(window, 'confirm')
+    renderEdit()
+    await waitFor(() => expect(screen.getByText('Delete Technique')).toBeInTheDocument())
+    await user.click(screen.getByText('Delete Technique'))
+
+    expect(screen.getByText('Delete technique')).toBeInTheDocument()
+    expect(screen.getByText('This technique will be deleted:')).toBeInTheDocument()
+    expect(screen.getByText('Armbar')).toBeInTheDocument()
+    expect(confirmSpy).not.toHaveBeenCalled()
+  })
+
+  it('shows undo snackbar and restores deleted technique', async () => {
+    const user = userEvent.setup()
+    renderEdit()
+    await waitFor(() => expect(screen.getByText('Delete Technique')).toBeInTheDocument())
+
+    await user.click(screen.getByText('Delete Technique'))
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await waitFor(() => expect(screen.getByText('Technique deleted.')).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: 'UNDO' }))
+
+    await waitFor(() => {
+      expect(mocks.put).toHaveBeenCalled()
+    })
   })
 })
