@@ -96,7 +96,7 @@ export default function TechniqueEditPage() {
       window.alert(language === 'es' ? 'URL de YouTube inválida.' : 'Invalid YouTube URL.')
       return
     }
-    if (!isValidImageUrl(payload.imageUrl)) {
+    if (payload.imageUrl && !isValidImageUrl(payload.imageUrl)) {
       window.alert(language === 'es' ? 'URL de imagen inválida.' : 'Invalid image URL.')
       return
     }
@@ -350,7 +350,7 @@ export default function TechniqueEditPage() {
             value={imageUrl}
             onChange={e => setImageUrl(e.target.value)}
             placeholder="https://…"
-            maxLength={500}
+            maxLength={VALIDATION_LIMITS.IMAGE_URL_MAX_LENGTH}
             className={`${inputCls} mt-2`}
           />
           {showImagePreview && (
