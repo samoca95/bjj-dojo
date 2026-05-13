@@ -23,14 +23,17 @@ const mocks = vi.hoisted(() => ({
     })),
   })),
   sessionsDelete: vi.fn(),
+  sessionsPut: vi.fn(),
+  sessionTechniquesBulkPut: vi.fn(),
+  sessionTapsBulkPut: vi.fn(),
 }))
 
 vi.mock('../db/database', () => ({
   db: {
-    sessions: { get: mocks.get, delete: mocks.sessionsDelete },
+    sessions: { get: mocks.get, delete: mocks.sessionsDelete, put: mocks.sessionsPut },
     clubs: { get: vi.fn() },
-    sessionTechniques: { where: mocks.sessionTechsWhere },
-    sessionTaps: { where: mocks.tapsWhere },
+    sessionTechniques: { where: mocks.sessionTechsWhere, bulkPut: mocks.sessionTechniquesBulkPut },
+    sessionTaps: { where: mocks.tapsWhere, bulkPut: mocks.sessionTapsBulkPut },
     techniques: { where: mocks.techsWhere },
   },
 }))
@@ -147,7 +150,7 @@ describe('SessionDetailPage — structure', () => {
   it('shows technique names when techniques are present', async () => {
     setupMocks({ techniques: mockTechniques })
     renderPage()
-    await waitFor(() => expect(screen.getByText('Armbar')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getAllByText('Armbar').length).toBeGreaterThan(0))
   })
 })
 
@@ -197,8 +200,47 @@ describe('SessionDetailPage — navigation', () => {
     setupMocks({ techniques: mockTechniques })
     const user = userEvent.setup()
     renderPage()
-    await waitFor(() => expect(screen.getByText('Armbar')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getAllByText('Armbar').length).toBeGreaterThan(0))
     await user.click(screen.getByText('Armbar'))
     expect(screen.getByTestId('technique-detail')).toBeInTheDocument()
+  })
+})
+
+describe('SessionDetailPage — delete flow', () => {
+  it('opens in-app delete modal with session details', async () => {
+    setupMocks({ techniques: mockTechniques })
+    const user = userEvent.setup()
+    const confirmSpy = vi.spyOn(window, 'confirm')
+    renderPage()
+    await waitFor(() => expect(screen.getAllByText('Armbar').length).toBeGreaterThan(0))
+
+    const deleteBtn = document.querySelector('button svg.lucide-trash-2')?.closest('button') as HTMLElement
+    await user.click(deleteBtn)
+
+    expect(screen.getByText('Delete session')).toBeInTheDocument()
+    expect(screen.getByText('This session will be deleted:')).toBeInTheDocument()
+    expect(screen.getAllByText('Armbar').length).toBeGreaterThan(0)
+    expect(confirmSpy).not.toHaveBeenCalled()
+  })
+
+  it('shows undo snackbar and restores session when undo is clicked', async () => {
+    setupMocks({
+      techniques: mockTechniques,
+      taps: [mockGivenTap],
+    })
+    const user = userEvent.setup()
+    renderPage()
+    await waitFor(() => expect(screen.getAllByText('Armbar').length).toBeGreaterThan(0))
+
+    const deleteBtn = document.querySelector('button svg.lucide-trash-2')?.closest('button') as HTMLElement
+    await user.click(deleteBtn)
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => expect(screen.getByText('Session deleted.')).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: 'UNDO' }))
+
+    await waitFor(() => {
+      expect(mocks.sessionsPut).toHaveBeenCalledWith(mockSession)
+    })
   })
 })
