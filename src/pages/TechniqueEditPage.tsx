@@ -8,7 +8,7 @@ import type { Category, ConnectionType, Difficulty, ReferenceLink, Technique, Te
 import { CONNECTION_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel, difficultyLabel } from '../i18n'
-import { isValidYoutubeUrl, normalizeTechniquePayload, VALIDATION_LIMITS } from '../utils/validation'
+import { isValidYoutubeUrl, isValidImageUrl, normalizeTechniquePayload, VALIDATION_LIMITS } from '../utils/validation'
 import { runWithTelemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
 
@@ -88,6 +88,7 @@ export default function TechniqueEditPage() {
       description,
       cues,
       youtubeUrl,
+      imageUrl,
       tags: tagsInput.split(','),
     })
     if (!payload.name) return
@@ -95,15 +96,9 @@ export default function TechniqueEditPage() {
       window.alert(language === 'es' ? 'URL de YouTube inválida.' : 'Invalid YouTube URL.')
       return
     }
-    const trimmedImageUrl = imageUrl.trim()
-    if (trimmedImageUrl) {
-      try {
-        const parsed = new URL(trimmedImageUrl)
-        if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('bad protocol')
-      } catch {
-        window.alert(language === 'es' ? 'URL de imagen inválida.' : 'Invalid image URL.')
-        return
-      }
+    if (!isValidImageUrl(payload.imageUrl)) {
+      window.alert(language === 'es' ? 'URL de imagen inválida.' : 'Invalid image URL.')
+      return
     }
     const cleanedReferenceLinks: ReferenceLink[] = referenceLinks
       .map(link => ({
@@ -130,7 +125,7 @@ export default function TechniqueEditPage() {
           name: payload.name,
           description: payload.description,
           youtubeUrl: payload.youtubeUrl,
-          imageUrl: trimmedImageUrl || undefined,
+          imageUrl: payload.imageUrl || undefined,
           difficulty,
           categoryId,
           cues: payload.cues,
@@ -155,7 +150,7 @@ export default function TechniqueEditPage() {
           name: payload.name,
           description: payload.description,
           youtubeUrl: payload.youtubeUrl,
-          imageUrl: trimmedImageUrl || undefined,
+          imageUrl: payload.imageUrl || undefined,
           difficulty,
           categoryId,
           cues: payload.cues,
@@ -352,16 +347,20 @@ export default function TechniqueEditPage() {
             inputMode="url"
             value={imageUrl}
             onChange={e => setImageUrl(e.target.value)}
-            placeholder="https://…/image.jpg"
+            placeholder="https://…"
+            maxLength={500}
             className={`${inputCls} mt-2`}
           />
           {imageUrl.trim() && (
-            <img
-              src={imageUrl.trim()}
-              alt=""
-              className="mt-2 w-full aspect-[16/9] object-cover rounded-xl bg-zinc-900"
-              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-            />
+            <div className="mt-2 overflow-hidden rounded-xl bg-zinc-900">
+              <img
+                src={imageUrl.trim()}
+                alt=""
+                loading="lazy"
+                className="w-full h-40 object-cover"
+                onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+              />
+            </div>
           )}
         </div>
 

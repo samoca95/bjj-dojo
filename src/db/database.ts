@@ -210,6 +210,7 @@ function validateTechniques(records: unknown[]): Technique[] {
     if (!isPosInt(rec.categoryId)) throw new Error(`${ctx}: 'categoryId' must be a positive integer`)
     if (typeof rec.youtubeUrl !== 'string') throw new Error(`${ctx}: 'youtubeUrl' must be a string`)
     if (!isValidYoutubeUrl(rec.youtubeUrl)) throw new Error(`${ctx}: 'youtubeUrl' is not a valid YouTube URL`)
+    if (rec.imageUrl !== undefined && typeof rec.imageUrl !== 'string') throw new Error(`${ctx}: 'imageUrl' must be a string`)
     if (!VALID_DIFFICULTIES.has(rec.difficulty as string)) throw new Error(`${ctx}: 'difficulty' must be one of ${[...VALID_DIFFICULTIES].join(', ')}`)
     if (typeof rec.isCustom !== 'boolean') throw new Error(`${ctx}: 'isCustom' must be a boolean`)
     if (rec.cues !== undefined) {
