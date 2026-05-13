@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import SettingsPage from '../pages/SettingsPage'
 import { APP_THEME_STORAGE_KEY } from '../utils/theme'
 import { APP_LANGUAGE_STORAGE_KEY } from '../i18n'
+import { HOME_SECTION_VISIBILITY_STORAGE_KEY } from '../utils/homeSectionOrder'
 
 const { resetPrefilledTechniquesMock } = vi.hoisted(() => ({
   resetPrefilledTechniquesMock: vi.fn().mockResolvedValue(undefined),
@@ -22,6 +23,7 @@ describe('SettingsPage — theme mode', () => {
   beforeEach(() => {
     localStorage.removeItem(APP_THEME_STORAGE_KEY)
     localStorage.removeItem(APP_LANGUAGE_STORAGE_KEY)
+    localStorage.removeItem(HOME_SECTION_VISIBILITY_STORAGE_KEY)
     document.documentElement.classList.remove('theme-light')
     resetPrefilledTechniquesMock.mockClear()
   })
@@ -88,5 +90,18 @@ describe('SettingsPage — theme mode', () => {
     expect(resetPrefilledTechniquesMock).toHaveBeenCalledTimes(1)
     confirmSpy.mockRestore()
     alertSpy.mockRestore()
+  })
+
+  it('persists hidden state when hiding a homepage section', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <SettingsPage />
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getAllByLabelText('Hide section')[0])
+
+    expect(localStorage.getItem(HOME_SECTION_VISIBILITY_STORAGE_KEY)).toContain('"focus":false')
   })
 })

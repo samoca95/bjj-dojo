@@ -95,6 +95,24 @@ function setupMixedDateSessionMocks() {
   mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
 }
 
+function setupSearchSessionMocks() {
+  const now = Date.now()
+  const responses = [
+    [
+      { ...mockSession, id: 1, date: now, notes: 'Guard passing rounds' },
+      { ...mockSession, id: 2, date: now - 1000, notes: 'Competition prep' },
+    ],
+    [],
+    {
+      techniqueNamesBySessionId: new Map([[1, ['Knee cut pass']], [2, ['Armbar']]]),
+      tapStatsBySessionId: new Map([[1, { given: 0, received: 0 }], [2, { given: 0, received: 0 }]]),
+      searchTextBySessionId: new Map([[1, 'knee cut pass pressure passing'], [2, 'armbar submission mechanics']]),
+    },
+  ]
+  let call = 0
+  mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -164,5 +182,16 @@ describe('SessionsPage', () => {
 
     expect(screen.getByText('Recent session')).toBeInTheDocument()
     expect(screen.queryByText('Old session')).not.toBeInTheDocument()
+  })
+
+  it('filters sessions by search query across notes and techniques', async () => {
+    setupSearchSessionMocks()
+    const user = userEvent.setup()
+    renderSessionsPage()
+
+    await user.type(screen.getByLabelText('Search sessions'), 'knee cut')
+
+    expect(screen.getByText('Knee cut pass')).toBeInTheDocument()
+    expect(screen.queryByText('Competition prep')).not.toBeInTheDocument()
   })
 })

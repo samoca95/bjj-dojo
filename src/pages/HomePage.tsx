@@ -12,6 +12,7 @@ import TrainingCalendar from '../components/TrainingCalendar'
 import { CategoryIcon } from '../components/CategoryIcon'
 import {
   getHomeSectionOrder,
+  getHomeSectionVisibility,
   HOME_SECTION_ORDER_UPDATED_EVENT,
   type HomeSectionId,
 } from '../utils/homeSectionOrder'
@@ -95,11 +96,15 @@ export default function HomePage() {
   const [focusPickerSearch, setFocusPickerSearch] = useState('')
   const [focusTechniqueIds, setFocusTechniqueIdsState] = useState<number[]>(getFocusTechniqueIds)
   const [sectionOrder, setSectionOrder] = useState<HomeSectionId[]>(getHomeSectionOrder)
+  const [sectionVisibility, setSectionVisibility] = useState(getHomeSectionVisibility)
   const [beltColor, setBeltColorState] = useState<BeltColor>(getBeltColor)
   const [beltStripes, setBeltStripesState] = useState<number>(getBeltStripes)
 
   useEffect(() => {
-    const sync = () => setSectionOrder(getHomeSectionOrder())
+    const sync = () => {
+      setSectionOrder(getHomeSectionOrder())
+      setSectionVisibility(getHomeSectionVisibility())
+    }
     window.addEventListener(HOME_SECTION_ORDER_UPDATED_EVENT, sync)
     window.addEventListener('storage', sync)
     return () => {
@@ -400,7 +405,7 @@ export default function HomePage() {
 
       <div className="px-4 space-y-6 pb-6">
         <BeltDisplay color={beltColor} stripes={beltStripes} beltLabel={beltLabel} />
-        {sectionOrder.map(id => sectionMap[id])}
+        {sectionOrder.filter(id => sectionVisibility[id]).map(id => sectionMap[id])}
 
         {/* Quick access */}
         <section>

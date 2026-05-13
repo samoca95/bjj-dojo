@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, Hand, Plus, SlidersHorizontal, Zap } from 'lucide-react'
+import { CalendarDays, Hand, Plus, Search, SlidersHorizontal, Zap } from 'lucide-react'
 import { db } from '../db/database'
 import type { Club, Session, SessionType } from '../types'
 import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
@@ -97,6 +97,7 @@ export default function SessionsPage() {
   const [typeFilter, setTypeFilter] = useState<'all' | SessionType>('all')
   const [daysFilter, setDaysFilter] = useState<'all' | 30 | 90 | 365>('all')
   const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'duration' | 'taps_total' | 'taps_given' | 'taps_received'>('date_desc')
+  const [searchQuery, setSearchQuery] = useState('')
   const sessions = useLiveQuery(
     () => db.sessions.orderBy('date').reverse().toArray(),
     [],
@@ -111,13 +112,29 @@ export default function SessionsPage() {
     ])
 
     const techniqueNameById = new Map(techniques.map(technique => [technique.id, technique.name]))
+    const searchableTechniqueTextById = new Map(
+      techniques.map(technique => {
+        const text = [
+          technique.name,
+          technique.description,
+          ...(technique.cues ?? []),
+          ...(technique.tags ?? []),
+        ].join(' ').toLowerCase()
+        return [technique.id, text]
+      }),
+    )
     const techniqueNamesBySessionId = new Map<number, string[]>()
+    const searchTextBySessionId = new Map<number, string>()
     for (const st of sts) {
       const name = techniqueNameById.get(st.techniqueId)
       if (!name) continue
       const bucket = techniqueNamesBySessionId.get(st.sessionId) ?? []
       bucket.push(name)
       techniqueNamesBySessionId.set(st.sessionId, bucket)
+
+      const searchBucket = searchTextBySessionId.get(st.sessionId) ?? ''
+      const techniqueSearchText = searchableTechniqueTextById.get(st.techniqueId) ?? name.toLowerCase()
+      searchTextBySessionId.set(st.sessionId, `${searchBucket} ${techniqueSearchText}`.trim())
     }
 
     const tapStatsBySessionId = new Map<number, { given: number; received: number }>()
@@ -131,17 +148,33 @@ export default function SessionsPage() {
     return {
       techniqueNamesBySessionId,
       tapStatsBySessionId,
+      searchTextBySessionId,
     }
   }, [], {
     techniqueNamesBySessionId: new Map<number, string[]>(),
     tapStatsBySessionId: new Map<number, { given: number; received: number }>(),
+    searchTextBySessionId: new Map<number, string>(),
   })
   const clubMap = new Map(clubs?.map(c => [c.id, c.name]))
   const cutoff = daysFilter === 'all' ? null : Date.now() - daysFilter * 24 * 60 * 60 * 1000
+  const searchTokens = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean)
   const visibleSessions = (sessions ?? []).filter(session => {
     if (cutoff !== null && session.date < cutoff) return false
     if (typeFilter !== 'all' && session.sessionType !== typeFilter) return false
     if (clubFilter !== 'all' && session.clubId !== clubFilter) return false
+    if (searchTokens.length > 0) {
+      const sessionId = session.id ?? -1
+      const clubName = session.clubId !== null && session.clubId !== undefined ? clubMap.get(session.clubId) : ''
+      const searchable = [
+        session.notes,
+        clubName,
+        session.sessionType,
+        SESSION_TYPE_LABELS[session.sessionType],
+        sessionMeta.searchTextBySessionId?.get(sessionId) ?? '',
+      ].join(' ').toLowerCase()
+      const matches = searchTokens.every(token => searchable.includes(token))
+      if (!matches) return false
+    }
     return true
   })
   const sortedVisibleSessions = [...visibleSessions].sort((a, b) => {
@@ -216,6 +249,17 @@ export default function SessionsPage() {
               )}
             </button>
           </div>
+        </div>
+        <div className="mt-3 relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder={t('Search sessions…')}
+            aria-label={t('Search sessions')}
+            className="w-full bg-zinc-900 rounded-xl pl-9 pr-3 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
+          />
         </div>
 
         {/* Collapsible filter panel */}
@@ -306,8 +350,16 @@ export default function SessionsPage() {
             <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center">
               <CalendarDays size={32} className="text-zinc-600" strokeWidth={2} />
             </div>
-              <p className="text-zinc-400 font-medium">{t('No sessions yet')}</p>
-              <p className="text-zinc-600 text-sm">{t('Tap + to log your first training')}</p>
+              <p className="text-zinc-400 font-medium">
+                {searchTokens.length > 0 || typeFilter !== 'all' || clubFilter !== 'all' || daysFilter !== 'all'
+                  ? t('No matching sessions')
+                  : t('No sessions yet')}
+              </p>
+              <p className="text-zinc-600 text-sm">
+                {searchTokens.length > 0 || typeFilter !== 'all' || clubFilter !== 'all' || daysFilter !== 'all'
+                  ? t('Try a different search or filter')
+                  : t('Tap + to log your first training')}
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
