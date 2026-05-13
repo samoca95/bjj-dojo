@@ -3,6 +3,7 @@ const DESCRIPTION_MAX_LENGTH = 2000
 const NAME_MAX_LENGTH = 120
 const CUE_MAX_LENGTH = 240
 const TAG_MAX_LENGTH = 24
+const IMAGE_URL_MAX_LENGTH = 500
 const DEFAULT_DURATION_MINUTES = 60
 
 export const VALIDATION_LIMITS = {
@@ -12,6 +13,7 @@ export const VALIDATION_LIMITS = {
   CUE_MAX_LENGTH,
   TAG_MAX_LENGTH,
   DEFAULT_DURATION_MINUTES,
+  IMAGE_URL_MAX_LENGTH,
 }
 
 export function trimAndClamp(value: string, maxLength: number): string {
@@ -93,7 +95,7 @@ export function normalizeTechniquePayload(input: {
     description: trimAndClamp(input.description, DESCRIPTION_MAX_LENGTH),
     cues: input.cues.map(cue => trimAndClamp(cue, CUE_MAX_LENGTH)).filter(Boolean).slice(0, 20),
     youtubeUrl: trimAndClamp(input.youtubeUrl, 300),
-    imageUrl: trimAndClamp(input.imageUrl ?? '', 500),
+    imageUrl: trimAndClamp(input.imageUrl ?? '', IMAGE_URL_MAX_LENGTH),
     tags: sanitizeTags(input.tags ?? []),
   }
 }

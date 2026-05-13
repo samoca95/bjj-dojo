@@ -238,6 +238,8 @@ export default function TechniqueEditPage() {
 
   const connectionOptions = allTechniques.filter(t => !id || t.id !== Number(id))
   const techniqueNameById = new Map(allTechniques.map(t => [t.id, t.name]))
+  const previewImageUrl = imageUrl.trim()
+  const showImagePreview = Boolean(previewImageUrl) && isValidImageUrl(previewImageUrl)
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -351,10 +353,10 @@ export default function TechniqueEditPage() {
             maxLength={500}
             className={`${inputCls} mt-2`}
           />
-          {imageUrl.trim() && (
+          {showImagePreview && (
             <div className="mt-2 overflow-hidden rounded-xl bg-zinc-900">
               <img
-                src={imageUrl.trim()}
+                src={previewImageUrl}
                 alt=""
                 loading="lazy"
                 className="w-full h-40 object-cover"
