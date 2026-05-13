@@ -219,7 +219,7 @@ export default function TechniqueEditPage() {
       undoTimerRef.current = window.setTimeout(() => {
         undoTimerRef.current = null
         setPendingUndoTechnique(null)
-        navigate('/techniques')
+        navigate(-1)
       }, 5000)
       setShowDeleteModal(false)
     } catch (err) {

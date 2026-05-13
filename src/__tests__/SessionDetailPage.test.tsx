@@ -83,10 +83,11 @@ function setupMocks(overrides?: {
   })
 }
 
-function renderPage() {
+function renderPage(initialEntries: string[] = ['/sessions/1']) {
   return render(
-    <MemoryRouter initialEntries={['/sessions/1']}>
+    <MemoryRouter initialEntries={initialEntries}>
       <Routes>
+        <Route path="/" element={<div data-testid="home-page" />} />
         <Route path="/sessions/:id" element={<SessionDetailPage />} />
         <Route path="/sessions/:id/edit" element={<div data-testid="edit-page" />} />
         <Route path="/sessions" element={<div data-testid="sessions-list" />} />
@@ -243,4 +244,19 @@ describe('SessionDetailPage — delete flow', () => {
       expect(mocks.sessionsPut).toHaveBeenCalledWith(mockSession)
     })
   })
+
+  it('returns to previous window after delete timeout', async () => {
+    const user = userEvent.setup()
+    setupMocks({ techniques: mockTechniques })
+    renderPage(['/', '/sessions/1'])
+    await waitFor(() => expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument())
+
+    const deleteBtn = document.querySelector('button svg.lucide-trash-2')?.closest('button') as HTMLElement
+    await user.click(deleteBtn)
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await waitFor(() => expect(screen.getByText('Session deleted.')).toBeInTheDocument())
+
+    await new Promise(resolve => setTimeout(resolve, 5100))
+    await waitFor(() => expect(screen.getByTestId('home-page')).toBeInTheDocument())
+  }, 12000)
 })

@@ -32,6 +32,14 @@ describe('IconPickerModal — structure', () => {
     expect(screen.getByText('Done')).toBeInTheDocument()
     expect(screen.getByText('Clear')).toBeInTheDocument()
   })
+
+  it('renders above bottom nav and constrains frame height to viewport', () => {
+    const { container } = renderModal()
+    const overlay = container.firstElementChild as HTMLElement
+    const frame = overlay.firstElementChild as HTMLElement
+    expect(overlay.className).toContain('z-[60]')
+    expect(frame.className).toContain('max-h-[calc(100dvh-0.5rem)]')
+  })
 })
 
 describe('IconPickerModal — icon tab', () => {

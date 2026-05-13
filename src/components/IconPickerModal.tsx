@@ -43,8 +43,8 @@ export default function IconPickerModal({
   const showSuggested = tab === 'icons' && search.trim() === ''
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-end">
-      <div className="bg-zinc-900 w-full rounded-t-3xl max-h-[85vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/80 z-[60] flex items-end">
+      <div className="bg-zinc-900 w-full rounded-t-3xl max-h-[calc(100dvh-0.5rem)] flex flex-col">
         <div className="px-4 pt-4 pb-3 flex items-center gap-3 border-b border-zinc-800">
           <h2 className="flex-1 font-bold text-zinc-100">{title}</h2>
           <button
@@ -83,7 +83,7 @@ export default function IconPickerModal({
                 className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
               />
             </div>
-            <div className="px-4 pb-4 overflow-y-auto min-h-[40vh] space-y-5">
+            <div className="px-4 pb-4 overflow-y-auto min-h-0 flex-1 space-y-5">
               {showSuggested && (
                 <div>
                    <div className="text-xs text-zinc-500 font-semibold mb-2">{tr('Suggested')}</div>
@@ -125,7 +125,7 @@ export default function IconPickerModal({
             </div>
           </>
         ) : (
-          <div className="px-4 py-4 space-y-4 overflow-y-auto min-h-[40vh]">
+          <div className="px-4 py-4 space-y-4 overflow-y-auto min-h-0 flex-1">
             <div className="bg-zinc-800 rounded-xl p-3">
                <label className="text-xs text-zinc-400">{tr('Paste or type an emoji')}</label>
               <div className="flex gap-2 mt-2">
