@@ -6,7 +6,7 @@ import {
   Zap, Hand, Building2,
 } from 'lucide-react'
 import { db } from '../db/database'
-import type { Session, SessionTap, SessionTechnique, Technique } from '../types'
+import type { Session, SessionTap, Technique } from '../types'
 import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 import { CategoryIcon } from '../components/CategoryIcon'
