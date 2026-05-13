@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, GitFork, Lightbulb } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, GitFork, Lightbulb, HandHeart } from 'lucide-react'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n, translate } from '../i18n'
@@ -457,7 +457,7 @@ export default function SettingsPage() {
             {t('App version:')} {appVersionLabel}
           </p>
           <p className="text-xs text-zinc-500">
-            {t('Developed by:')} samoca95
+            {t('Developed by:')} Samuel Molina Casino
           </p>
           <a
             href={githubRepoUrl}
@@ -465,7 +465,7 @@ export default function SettingsPage() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-gold underline underline-offset-2 hover:text-gold-light"
           >
-            <GitFork size={13} strokeWidth={2} />
+            <HandHeart size={13} strokeWidth={2} />
             {t('Github repo')}
           </a>
         </div>
