@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, Home, Sparkles, X } from 'lucide-react'
+import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, Home, Share2, Sparkles, X } from 'lucide-react'
 import { db } from '../db/database'
 import { getAppLanguage, type AppLanguage } from '../i18n'
 
@@ -19,7 +19,7 @@ export function isOnboardingRequired(): boolean {
 interface Slide {
   title: string
   body: string
-  icon: 'sparkles' | 'sessions' | 'techniques' | 'home'
+  icon: 'sparkles' | 'sessions' | 'techniques' | 'home' | 'share'
   // route is resolved when the slide becomes active; may depend on the dummy session id
   route?: (ctx: { dummySessionId: number | null }) => string | undefined
 }
@@ -41,6 +41,12 @@ const SLIDES: Record<AppLanguage, Slide[]> = {
       icon: 'sessions',
       title: 'Open a session',
       body: 'Tap any session to see its details — duration, taps, techniques, notes, and energy level.',
+      route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
+    },
+    {
+      icon: 'share',
+      title: 'Share a session',
+      body: 'Tap the share icon on any session to export a clean summary — perfect for sending to a coach or training partner.',
       route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
     },
     {
@@ -81,6 +87,12 @@ const SLIDES: Record<AppLanguage, Slide[]> = {
       route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
     },
     {
+      icon: 'share',
+      title: 'Comparte una sesión',
+      body: 'Toca el icono de compartir en cualquier sesión para exportar un resumen — ideal para enviárselo a tu profe o compañero de entrenamiento.',
+      route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
+    },
+    {
       icon: 'techniques',
       title: 'Explora técnicas',
       body: 'Recorre la biblioteca, marca favoritas y añade las tuyas con referencias y claves técnicas.',
@@ -115,6 +127,12 @@ const SLIDES: Record<AppLanguage, Slide[]> = {
       icon: 'sessions',
       title: 'Ouvrez une session',
       body: 'Touchez une session pour voir les détails : durée, soumissions, techniques, notes et niveau d’énergie.',
+      route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
+    },
+    {
+      icon: 'share',
+      title: 'Partagez une session',
+      body: 'Touchez l’icône de partage sur n’importe quelle session pour exporter un résumé — parfait à envoyer à votre coach ou partenaire d’entraînement.',
       route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
     },
     {
@@ -153,6 +171,7 @@ function ICON({ name, size = 28 }: { name: Slide['icon']; size?: number }) {
   if (name === 'sparkles') return <Sparkles size={size} className="text-gold" />
   if (name === 'sessions') return <CalendarDays size={size} className="text-gold" />
   if (name === 'techniques') return <BookOpen size={size} className="text-gold" />
+  if (name === 'share') return <Share2 size={size} className="text-gold" />
   return <Home size={size} className="text-gold" />
 }
 

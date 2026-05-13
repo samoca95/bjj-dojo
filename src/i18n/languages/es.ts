@@ -188,6 +188,7 @@ const ES_TRANSLATIONS = {
     '¿Restablecer todas las técnicas predefinidas?\nTus técnicas personalizadas no se eliminarán.',
   'Pre-filled techniques were reset successfully.': 'Técnicas predefinidas restablecidas correctamente.',
   'Could not reset techniques.': 'No se pudo restablecer.',
+  'Export session': 'Exportar sesión',
 } satisfies Record<TranslationKey, string>
 
 export const ES_CATEGORY_CONTENT: Record<number, { name: string; description: string }> = {

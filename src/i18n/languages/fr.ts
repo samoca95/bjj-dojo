@@ -188,6 +188,7 @@ const FR_TRANSLATIONS = {
     'Réinitialiser toutes les techniques prédéfinies ?\nVos techniques personnalisées seront conservées.',
   'Pre-filled techniques were reset successfully.': 'Les techniques prédéfinies ont été réinitialisées avec succès.',
   'Could not reset techniques.': 'Impossible de réinitialiser les techniques.',
+  'Export session': 'Exporter la session',
 } satisfies Record<TranslationKey, string>
 
 const FR_CATEGORY_CONTENT: LanguagePack['categoryContent'] = {

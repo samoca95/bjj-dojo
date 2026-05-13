@@ -61,6 +61,7 @@ export type TranslationKey =
   | 'Exhausted'
   | 'Export JSON'
   | 'Export backup'
+  | 'Export session'
   | 'FILTERS'
   | 'FOCUS TECHNIQUES'
   | 'Filter'
