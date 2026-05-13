@@ -329,7 +329,11 @@ export async function importDatabaseBackup(backup: unknown, database: BJJDatabas
   if (!payload || typeof payload !== 'object') {
     throw new Error('Malformed backup payload')
   }
-  const backupLanguage = payload.language === 'es' ? 'es' : payload.language === 'en' ? 'en' : undefined
+  const backupLanguage = payload.language === 'es' || payload.language === 'fr'
+    ? payload.language
+    : payload.language === 'en'
+      ? 'en'
+      : undefined
 
   // Validate all records before any write — throws with a user-facing message on first failure
   const categories = validateCategories(asArray<unknown>(payload.categories))

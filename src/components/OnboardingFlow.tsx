@@ -99,6 +99,54 @@ const SLIDES: Record<AppLanguage, Slide[]> = {
       route: () => '/',
     },
   ],
+  fr: [
+    {
+      icon: 'sparkles',
+      title: 'Bienvenue sur BJJ Dojo',
+      body: 'Un aperçu rapide des fonctionnalités principales. Vous pouvez ignorer ce guide à tout moment ou revenir en arrière.',
+    },
+    {
+      icon: 'sessions',
+      title: 'Enregistrez vos sessions',
+      body: 'Suivez votre temps de tatami, vos soumissions et les techniques travaillées. Une session exemple a été ajoutée.',
+      route: () => '/sessions',
+    },
+    {
+      icon: 'sessions',
+      title: 'Ouvrez une session',
+      body: 'Touchez une session pour voir les détails : durée, soumissions, techniques, notes et niveau d’énergie.',
+      route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
+    },
+    {
+      icon: 'techniques',
+      title: 'Parcourez les techniques',
+      body: 'Explorez la bibliothèque, marquez des favorites et ajoutez les vôtres avec références et conseils.',
+      route: () => '/techniques',
+    },
+    {
+      icon: 'techniques',
+      title: 'Consultez une technique',
+      body: 'Chaque technique a une vue détaillée avec image, conseils, références et connexions (enchaînements, contres, entrées).',
+      route: () => `/techniques/${SHOWCASE_TECHNIQUE_ID}`,
+    },
+    {
+      icon: 'home',
+      title: 'Suivez vos progrès',
+      body: 'L’onglet Accueil montre votre temps hebdomadaire, vos séries et vos techniques de focus. Bonne séance !',
+      route: () => '/',
+    },
+  ],
+}
+
+const ONBOARDING_ACTION_LABELS: Record<AppLanguage, {
+  skip: string
+  back: string
+  done: string
+  next: string
+}> = {
+  en: { skip: 'Skip', back: 'Back', done: 'Done', next: 'Next' },
+  es: { skip: 'Saltar', back: 'Atrás', done: 'Listo', next: 'Siguiente' },
+  fr: { skip: 'Ignorer', back: 'Retour', done: 'Terminer', next: 'Suivant' },
 }
 
 function ICON({ name, size = 28 }: { name: Slide['icon']; size?: number }) {
@@ -114,7 +162,9 @@ async function createDummySession(language: AppLanguage): Promise<number | null>
     if (existing) return Number(existing)
     const notes = language === 'es'
       ? 'Sesión de ejemplo — se borrará al terminar el recorrido.'
-      : 'Sample session — will be removed when the tour ends.'
+      : language === 'fr'
+        ? 'Session exemple — elle sera supprimée à la fin du guide.'
+        : 'Sample session — will be removed when the tour ends.'
     const id = await db.sessions.add({
       date: Date.now(),
       durationMinutes: 60,
@@ -229,7 +279,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <button
                 onClick={() => void finish(true)}
                 className="p-1 -m-1 text-zinc-500 active:text-zinc-200"
-                aria-label={language === 'es' ? 'Saltar' : 'Skip'}
+                aria-label={ONBOARDING_ACTION_LABELS[language].skip}
               >
                 <X size={16} />
               </button>
@@ -252,10 +302,10 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 <button
                   onClick={() => setIndex(i => Math.max(0, i - 1))}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-200 text-xs font-semibold active:bg-zinc-700"
-                  aria-label={language === 'es' ? 'Atrás' : 'Back'}
+                  aria-label={ONBOARDING_ACTION_LABELS[language].back}
                 >
                   <ChevronLeft size={14} strokeWidth={2.5} />
-                  {language === 'es' ? 'Atrás' : 'Back'}
+                  {ONBOARDING_ACTION_LABELS[language].back}
                 </button>
               )}
               {isFirst && (
@@ -263,7 +313,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   onClick={() => void finish(true)}
                   className="px-3 py-1.5 text-xs font-semibold text-zinc-400 active:text-zinc-200"
                 >
-                  {language === 'es' ? 'Saltar' : 'Skip'}
+                  {ONBOARDING_ACTION_LABELS[language].skip}
                 </button>
               )}
               {isLast ? (
@@ -271,14 +321,14 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   onClick={() => void finish(false)}
                   className="px-4 py-1.5 rounded-lg bg-gold text-black text-xs font-bold active:bg-gold-light"
                 >
-                  {language === 'es' ? 'Listo' : 'Done'}
+                  {ONBOARDING_ACTION_LABELS[language].done}
                 </button>
               ) : (
                 <button
                   onClick={() => setIndex(i => Math.min(slides.length - 1, i + 1))}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gold text-black text-xs font-bold active:bg-gold-light"
                 >
-                  {language === 'es' ? 'Siguiente' : 'Next'}
+                  {ONBOARDING_ACTION_LABELS[language].next}
                   <ChevronRight size={14} strokeWidth={2.5} />
                 </button>
               )}

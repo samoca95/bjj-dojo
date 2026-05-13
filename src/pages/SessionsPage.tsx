@@ -8,7 +8,7 @@ import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT } from '../utils/sessionTypeIcons'
-import { useI18n, sessionTypeLabel } from '../i18n'
+import { useI18n, sessionTypeLabel, type AppLanguage } from '../i18n'
 
 const LIST_SCROLL_KEY = 'bjj-dojo.sessions.scroll-y'
 
@@ -33,7 +33,7 @@ function SessionCard({
   icon: string
   locale?: string
   t: (text: string) => string
-  language: 'en' | 'es'
+  language: AppLanguage
   tapStats: { given: number; received: number }
   techniqueNames: string[]
 }) {
