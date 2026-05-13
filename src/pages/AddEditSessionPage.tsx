@@ -5,6 +5,7 @@ import {
   Plus, Check, X, Zap, Hand,
 } from 'lucide-react'
 import { db } from '../db/database'
+import { GOLD, DARK } from '../constants/themeColors'
 import { getCategoryMap } from '../db/categoryCache'
 import type { Category, Club, Session, SessionType, Technique, TapType } from '../types'
 import { SESSION_TYPE_LABELS } from '../types'
@@ -413,7 +414,7 @@ export default function AddEditSessionPage() {
                 onChange={e => setEnergy(Number(e.target.value))}
                 className="energy-slider w-full h-1 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #d4a017 0%, #d4a017 ${energyProgress}%, #3f3f46 ${energyProgress}%, #3f3f46 100%)`,
+                  background: `linear-gradient(to right, ${GOLD.DEFAULT} 0%, ${GOLD.DEFAULT} ${energyProgress}%, ${DARK.border} ${energyProgress}%, ${DARK.border} 100%)`,
                 }}
               />
               <div className="flex justify-between mt-1">
