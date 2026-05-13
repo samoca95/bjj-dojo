@@ -227,6 +227,15 @@ function validateTechniques(records: unknown[]): Technique[] {
       }
     }
     if (rec.isFavorite !== undefined && typeof rec.isFavorite !== 'boolean') throw new Error(`${ctx}: 'isFavorite' must be a boolean`)
+    if (rec.referenceLinks !== undefined) {
+      if (!Array.isArray(rec.referenceLinks)) throw new Error(`${ctx}: 'referenceLinks' must be an array`)
+      for (let j = 0; j < rec.referenceLinks.length; j++) {
+        const link = rec.referenceLinks[j] as { url?: unknown; label?: unknown } | null
+        if (!link || typeof link !== 'object') throw new Error(`${ctx}: 'referenceLinks[${j}]' must be an object`)
+        if (typeof link.url !== 'string' || !link.url.trim()) throw new Error(`${ctx}: 'referenceLinks[${j}].url' must be a non-empty string`)
+        if (link.label !== undefined && typeof link.label !== 'string') throw new Error(`${ctx}: 'referenceLinks[${j}].label' must be a string`)
+      }
+    }
     return rec as unknown as Technique
   })
 }

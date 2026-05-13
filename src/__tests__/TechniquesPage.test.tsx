@@ -129,9 +129,11 @@ describe('TechniquesPage — search and filter', () => {
     expect(screen.getByPlaceholderText('Search techniques…')).toBeInTheDocument()
   })
 
-  it('shows category filter chips', () => {
+  it('shows category filter chips when filters are opened', async () => {
     setupMocks()
+    const user = userEvent.setup()
     renderPage()
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
     expect(screen.getByText('All')).toBeInTheDocument()
     // Category names appear in both chips and technique rows — check at least one chip exists
     expect(screen.getAllByText('Guards').length).toBeGreaterThan(0)

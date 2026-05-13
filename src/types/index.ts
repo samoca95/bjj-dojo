@@ -10,6 +10,11 @@ export interface Category {
   icon?: string
 }
 
+export interface ReferenceLink {
+  url: string
+  label?: string
+}
+
 export interface Technique {
   id: number
   name: string
@@ -19,6 +24,7 @@ export interface Technique {
   isFavorite?: boolean
   categoryId: number
   youtubeUrl: string
+  referenceLinks?: ReferenceLink[]
   difficulty: Difficulty
   isCustom: boolean
 }
