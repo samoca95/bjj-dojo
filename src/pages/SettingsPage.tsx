@@ -30,6 +30,8 @@ import {
 export default function SettingsPage() {
   const navigate = useNavigate()
   const { language, setLanguage, t } = useI18n()
+  const appVersion = '1.0.0'
+  const githubRepoUrl = 'https://github.com/samoca95/bjj-dojo'
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
   const [telemetryCount, setTelemetryCount] = useState(0)
   const [goalInput, setGoalInput] = useState(String(getGoalMatTime()))
@@ -446,6 +448,25 @@ export default function SettingsPage() {
           >
             {language === 'es' ? 'Limpiar registros' : 'Clear logs'}
           </button>
+        </div>
+
+        <div className="px-1 pt-2 pb-4 text-center space-y-1">
+          <p className="text-xs text-zinc-500">
+            {language === 'es'
+              ? `Versión de la app: v${appVersion}`
+              : `App version: v${appVersion}`}
+          </p>
+          <p className="text-xs text-zinc-500">
+            {language === 'es' ? 'Desarrollado por: samoca95' : 'Developed by: samoca95'}
+          </p>
+          <a
+            href={githubRepoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-gold underline underline-offset-2 hover:text-gold-light"
+          >
+            github.com/samoca95/bjj-dojo
+          </a>
         </div>
       </div>
     </div>

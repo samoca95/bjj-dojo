@@ -104,4 +104,19 @@ describe('SettingsPage — theme mode', () => {
 
     expect(localStorage.getItem(HOME_SECTION_VISIBILITY_STORAGE_KEY)).toContain('"focus":false')
   })
+
+  it('shows app info and github link at the bottom', () => {
+    render(
+      <MemoryRouter>
+        <SettingsPage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('App version: v1.0.0')).toBeInTheDocument()
+    expect(screen.getByText('Developed by: samoca95')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'github.com/samoca95/bjj-dojo' })).toHaveAttribute(
+      'href',
+      'https://github.com/samoca95/bjj-dojo',
+    )
+  })
 })
