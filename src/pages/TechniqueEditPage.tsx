@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus, X } from 'lucide-react'
@@ -48,6 +48,13 @@ export default function TechniqueEditPage() {
   const [referenceLinks, setReferenceLinks] = useState<ReferenceLink[]>([])
   const [newLinkUrl, setNewLinkUrl] = useState('')
   const [newLinkLabel, setNewLinkLabel] = useState('')
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [pendingUndoTechnique, setPendingUndoTechnique] = useState<{
+    technique: Technique
+    connections: TechniqueConnection[]
+  } | null>(null)
+  const undoTimerRef = useRef<number | null>(null)
 
   const categories = useLiveQuery(
     () => getCategoryMap().then(m => [...m.values()]),
@@ -81,6 +88,10 @@ export default function TechniqueEditPage() {
       setConnections(techniqueConnections)
     })
   }, [id, isNew])
+
+  useEffect(() => () => {
+    if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current)
+  }, [])
 
   const handleSave = async () => {
     const payload = normalizeTechniquePayload({
@@ -180,18 +191,54 @@ export default function TechniqueEditPage() {
   }
 
   const handleDelete = async () => {
-    if (!id || isNew) return
-    if (!window.confirm(language === 'es'
-      ? '¿Eliminar esta técnica? Esta acción no se puede deshacer.'
-      : 'Delete this technique? This cannot be undone.')) return
+    if (!id || isNew || isDeleting) return
+    setIsDeleting(true)
     try {
-      await db.techniques.delete(Number(id))
-      await db.techniqueConnections.where('fromTechniqueId').equals(Number(id)).delete()
-      await db.techniqueConnections.where('toTechniqueId').equals(Number(id)).delete()
-      navigate('/techniques')
+      const techniqueId = Number(id)
+      const technique = await db.techniques.get(techniqueId)
+      if (!technique) return
+      const [outgoingConnections, incomingConnections] = await Promise.all([
+        db.techniqueConnections.where('fromTechniqueId').equals(techniqueId).toArray(),
+        db.techniqueConnections.where('toTechniqueId').equals(techniqueId).toArray(),
+      ])
+      await db.techniques.delete(techniqueId)
+      await db.techniqueConnections.where('fromTechniqueId').equals(techniqueId).delete()
+      await db.techniqueConnections.where('toTechniqueId').equals(techniqueId).delete()
+      const dedupedConnections = new Map<string, TechniqueConnection>()
+      for (const connection of [...outgoingConnections, ...incomingConnections]) {
+        dedupedConnections.set(
+          `${connection.fromTechniqueId}-${connection.toTechniqueId}`,
+          connection,
+        )
+      }
+      setPendingUndoTechnique({
+        technique,
+        connections: [...dedupedConnections.values()],
+      })
+      if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current)
+      undoTimerRef.current = window.setTimeout(() => {
+        setPendingUndoTechnique(null)
+        navigate('/techniques')
+      }, 5000)
+      setShowDeleteModal(false)
     } catch (err) {
       if (isQuotaError(err)) notifyQuotaError()
+    } finally {
+      setIsDeleting(false)
     }
+  }
+
+  const handleUndoDelete = async () => {
+    if (!pendingUndoTechnique) return
+    if (undoTimerRef.current !== null) {
+      window.clearTimeout(undoTimerRef.current)
+      undoTimerRef.current = null
+    }
+    await db.techniques.put(pendingUndoTechnique.technique)
+    if (pendingUndoTechnique.connections.length > 0) {
+      await db.techniqueConnections.bulkPut(pendingUndoTechnique.connections)
+    }
+    setPendingUndoTechnique(null)
   }
 
   const handleCancel = () => {
@@ -584,13 +631,60 @@ export default function TechniqueEditPage() {
         {/* Delete */}
         {!isNew && (
           <button
-            onClick={handleDelete}
+            onClick={() => setShowDeleteModal(true)}
             className="w-full mt-4 py-3 rounded-xl bg-red-900/30 text-red-400 text-sm font-semibold active:bg-red-900/50"
           >
-             {t('Delete Technique')}
-           </button>
+              {t('Delete Technique')}
+            </button>
         )}
       </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl bg-zinc-900 border border-zinc-800 p-4 space-y-4">
+            <h2 className="text-base font-bold text-zinc-100">
+              {language === 'es' ? 'Eliminar técnica' : 'Delete technique'}
+            </h2>
+            <div className="text-sm text-zinc-300 space-y-2">
+              <p>
+                {language === 'es'
+                  ? 'Se eliminará esta técnica:'
+                  : 'This technique will be deleted:'}
+              </p>
+              <p className="font-semibold text-zinc-100">{name.trim() || t('Unknown')}</p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-3 py-2 rounded-lg bg-zinc-800 text-zinc-200 text-sm font-semibold active:bg-zinc-700"
+              >
+                {t('Cancel')}
+              </button>
+              <button
+                onClick={() => void handleDelete()}
+                disabled={isDeleting}
+                className="px-3 py-2 rounded-lg bg-red-900/50 text-red-300 text-sm font-semibold disabled:opacity-60 active:bg-red-900/70"
+              >
+                {language === 'es' ? 'Eliminar' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingUndoTechnique && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
+          <span className="text-sm text-zinc-100">
+            {language === 'es' ? 'Técnica eliminada.' : 'Technique deleted.'}
+          </span>
+          <button
+            onClick={() => void handleUndoDelete()}
+            className="text-sm font-bold text-gold active:text-gold-light"
+          >
+            {language === 'es' ? 'DESHACER' : 'UNDO'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

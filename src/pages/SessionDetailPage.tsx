@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
@@ -6,7 +6,7 @@ import {
   Zap, Hand, Building2,
 } from 'lucide-react'
 import { db } from '../db/database'
-import type { Session, SessionTap, Technique } from '../types'
+import type { Session, SessionTap, SessionTechnique, Technique } from '../types'
 import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -34,6 +34,14 @@ export default function SessionDetailPage() {
   const { t, language, locale } = useI18n()
   const [session, setSession] = useState<Session | null>(null)
   const [sessionTypeIcons, setSessionTypeIcons] = useState(getSessionTypeIcons())
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [pendingUndoSession, setPendingUndoSession] = useState<{
+    session: Session & { id: number }
+    sessionTechniques: SessionTechnique[]
+    sessionTaps: SessionTap[]
+  } | null>(null)
+  const undoTimerRef = useRef<number | null>(null)
   const club = useLiveQuery(
     () => session?.clubId ? db.clubs.get(session.clubId) : undefined,
     [session?.clubId],
@@ -65,20 +73,57 @@ export default function SessionDetailPage() {
     return { taps, techMap: new Map(techs.map(t => [t.id, t.name])) }
   }, [id], { taps: [] as SessionTap[], techMap: new Map<number, string>() })
 
+  useEffect(() => () => {
+    if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current)
+  }, [])
+
   if (!session) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
     </div>
   )
 
-  const handleDelete = () => {
-    if (!window.confirm(language === 'es'
-      ? '¿Eliminar esta sesión? Esta acción no se puede deshacer.'
-      : 'Delete this session? This cannot be undone.')) return
-    db.sessions.delete(session.id!)
-    db.sessionTechniques.where('sessionId').equals(session.id!).delete()
-    db.sessionTaps.where('sessionId').equals(session.id!).delete()
-    navigate('/sessions')
+  const handleDelete = async () => {
+    if (!session?.id || isDeleting) return
+    setIsDeleting(true)
+    try {
+      const [sessionTechniques, sessionTaps] = await Promise.all([
+        db.sessionTechniques.where('sessionId').equals(session.id).toArray(),
+        db.sessionTaps.where('sessionId').equals(session.id).toArray(),
+      ])
+      await db.sessions.delete(session.id)
+      await db.sessionTechniques.where('sessionId').equals(session.id).delete()
+      await db.sessionTaps.where('sessionId').equals(session.id).delete()
+      setPendingUndoSession({
+        session: session as Session & { id: number },
+        sessionTechniques,
+        sessionTaps,
+      })
+      if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current)
+      undoTimerRef.current = window.setTimeout(() => {
+        setPendingUndoSession(null)
+        navigate('/sessions')
+      }, 5000)
+      setShowDeleteModal(false)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleUndoDelete = async () => {
+    if (!pendingUndoSession) return
+    if (undoTimerRef.current !== null) {
+      window.clearTimeout(undoTimerRef.current)
+      undoTimerRef.current = null
+    }
+    await db.sessions.put(pendingUndoSession.session)
+    if (pendingUndoSession.sessionTechniques.length > 0) {
+      await db.sessionTechniques.bulkPut(pendingUndoSession.sessionTechniques)
+    }
+    if (pendingUndoSession.sessionTaps.length > 0) {
+      await db.sessionTaps.bulkPut(pendingUndoSession.sessionTaps)
+    }
+    setPendingUndoSession(null)
   }
 
   const sessionTaps = tapData?.taps ?? []
@@ -97,7 +142,7 @@ export default function SessionDetailPage() {
         <button onClick={() => navigate(`/sessions/${session.id}/edit`)} className="p-2 text-gold active:text-gold-light">
           <Pencil size={20} strokeWidth={2} />
         </button>
-        <button onClick={handleDelete} className="p-2 text-red-500 active:text-red-400">
+        <button onClick={() => setShowDeleteModal(true)} className="p-2 text-red-500 active:text-red-400">
           <Trash2 size={20} strokeWidth={2} />
         </button>
       </div>
@@ -201,6 +246,67 @@ export default function SessionDetailPage() {
           </div>
         )}
       </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl bg-zinc-900 border border-zinc-800 p-4 space-y-4">
+            <h2 className="text-base font-bold text-zinc-100">
+              {language === 'es' ? 'Eliminar sesión' : 'Delete session'}
+            </h2>
+            <div className="text-sm text-zinc-300 space-y-2">
+              <p>
+                {language === 'es'
+                  ? 'Se eliminará esta sesión:'
+                  : 'This session will be deleted:'}
+              </p>
+              <p className="font-semibold text-zinc-100">{formatDate(session.date, locale)}</p>
+              <div>
+                <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">{t('TECHNIQUES PRACTICED')}</p>
+                {techniques.length === 0 ? (
+                  <p className="text-zinc-400">
+                    {language === 'es' ? 'Sin técnicas registradas.' : 'No techniques logged.'}
+                  </p>
+                ) : (
+                  <ul className="space-y-1 list-disc list-inside text-zinc-200">
+                    {techniques.map(technique => (
+                      <li key={technique.id}>{technique.name}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-3 py-2 rounded-lg bg-zinc-800 text-zinc-200 text-sm font-semibold active:bg-zinc-700"
+              >
+                {t('Cancel')}
+              </button>
+              <button
+                onClick={() => void handleDelete()}
+                disabled={isDeleting}
+                className="px-3 py-2 rounded-lg bg-red-900/50 text-red-300 text-sm font-semibold disabled:opacity-60 active:bg-red-900/70"
+              >
+                {language === 'es' ? 'Eliminar' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingUndoSession && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
+          <span className="text-sm text-zinc-100">
+            {language === 'es' ? 'Sesión eliminada.' : 'Session deleted.'}
+          </span>
+          <button
+            onClick={() => void handleUndoDelete()}
+            className="text-sm font-bold text-gold active:text-gold-light"
+          >
+            {language === 'es' ? 'DESHACER' : 'UNDO'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
