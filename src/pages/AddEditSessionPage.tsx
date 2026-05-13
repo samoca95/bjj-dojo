@@ -54,6 +54,7 @@ export default function AddEditSessionPage() {
   const [notes, setNotes] = useState('')
   const [energy, setEnergy] = useState(3)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [techNotes, setTechNotes] = useState<Map<number, string>>(new Map())
   const [taps, setTaps] = useState<LocalTap[]>([])
 
   const [showPicker, setShowPicker] = useState(false)
@@ -101,6 +102,11 @@ export default function AddEditSessionPage() {
       setEnergy(s.energyLevel)
       const sts = await db.sessionTechniques.where('sessionId').equals(Number(id)).toArray()
       setSelectedIds(new Set(sts.map(st => st.techniqueId)))
+      const notesMap = new Map<number, string>()
+      for (const st of sts) {
+        if (st.notes) notesMap.set(st.techniqueId, st.notes)
+      }
+      setTechNotes(notesMap)
 
       const storedTaps = await db.sessionTaps.where('sessionId').equals(Number(id)).toArray()
       const techIds = [...new Set(storedTaps.map(t => t.techniqueId))]
@@ -161,7 +167,10 @@ export default function AddEditSessionPage() {
       await runWithTelemetry('session.links_save_failed', async () => {
         if (selectedIds.size > 0) {
           await db.sessionTechniques.bulkAdd(
-            [...selectedIds].map(tid => ({ sessionId: sid, techniqueId: tid })),
+            [...selectedIds].map(tid => {
+              const note = techNotes.get(tid)
+              return note ? { sessionId: sid, techniqueId: tid, notes: note.trim().slice(0, VALIDATION_LIMITS.NOTE_MAX_LENGTH) } : { sessionId: sid, techniqueId: tid }
+            }),
           )
         }
         if (taps.length > 0) {
@@ -255,6 +264,17 @@ export default function AddEditSessionPage() {
   const removeTap = (uid: string) => {
     setTaps(prev => prev.filter(t => t.uid !== uid))
   }
+
+  const setTechNote = (tid: number, value: string) => {
+    setTechNotes(prev => {
+      const next = new Map(prev)
+      if (value) next.set(tid, value)
+      else next.delete(tid)
+      return next
+    })
+  }
+
+  const selectedTechniques = allTechniques?.filter(t => selectedIds.has(t.id)) ?? []
 
   const givenTaps = taps.filter(t => t.type === 'given')
   const receivedTaps = taps.filter(t => t.type === 'received')
@@ -443,6 +463,26 @@ export default function AddEditSessionPage() {
                  </span>
               )}
             </button>
+            {selectedTechniques.length > 0 && (
+              <div className="mt-2 space-y-2">
+                {selectedTechniques.map(tech => (
+                  <div key={tech.id} className="bg-zinc-900 rounded-xl px-4 py-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Zap size={14} className="text-gold shrink-0" strokeWidth={2} />
+                      <span className="text-sm text-zinc-100">{tech.name}</span>
+                    </div>
+                    <textarea
+                      value={techNotes.get(tech.id) ?? ''}
+                      onChange={e => setTechNote(tech.id, e.target.value)}
+                      placeholder={t('What clicked? What to fix?')}
+                      maxLength={VALIDATION_LIMITS.NOTE_MAX_LENGTH}
+                      rows={2}
+                      className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-zinc-100 text-xs outline-none focus:ring-1 focus:ring-gold placeholder-zinc-600 resize-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Taps / Submissions — after techniques */}

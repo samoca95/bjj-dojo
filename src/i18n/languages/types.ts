@@ -175,6 +175,7 @@ export type TranslationKey =
   | 'Watch on YouTube'
   | 'Wed'
   | 'Weekly goal'
+  | 'What clicked? What to fix?'
   | 'What did you work on? Any insights?'
   | 'White Belt'
   | 'Customize icons for each session type'

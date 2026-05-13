@@ -175,7 +175,10 @@ describe('AddEditSessionPage — technique picker', () => {
     renderPage()
     await user.click(screen.getByText('Add techniques…'))
     await user.click(screen.getByText('Armbar'))
-    await user.click(screen.getByText('Armbar')) // deselect
+    // After selecting, Armbar appears in both the picker list and the selected-techniques
+    // list below; click the last occurrence (in the picker) to deselect.
+    const armbarEls = screen.getAllByText('Armbar')
+    await user.click(armbarEls[armbarEls.length - 1])
     await user.click(screen.getByText(/Done/))
     expect(screen.queryByText('1 technique selected')).toBeNull()
     expect(screen.getByText('Add techniques…')).toBeInTheDocument()
