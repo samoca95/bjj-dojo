@@ -30,7 +30,7 @@ import {
 export default function SettingsPage() {
   const navigate = useNavigate()
   const { language, setLanguage, t } = useI18n()
-  const appVersion = '1.0.0'
+  const appVersion = __APP_VERSION__
   const githubRepoUrl = 'https://github.com/samoca95/bjj-dojo'
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
   const [telemetryCount, setTelemetryCount] = useState(0)
