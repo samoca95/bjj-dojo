@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, Github } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, GitFork } from 'lucide-react'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n, translate } from '../i18n'
@@ -452,7 +452,7 @@ export default function SettingsPage() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-gold underline underline-offset-2 hover:text-gold-light"
           >
-            <Github size={13} strokeWidth={2} />
+            <GitFork size={13} strokeWidth={2} />
             {t('Github repo')}
           </a>
         </div>

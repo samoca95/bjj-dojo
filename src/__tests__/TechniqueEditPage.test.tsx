@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import TechniqueEditPage from '../pages/TechniqueEditPage'
+import { UndoProvider, UndoSnackbar } from '../components/UndoContext'
 
 vi.mock('dexie-react-hooks', () => ({
   useLiveQuery: vi.fn(),
@@ -71,13 +72,16 @@ function renderNew() {
   let callIdx = 0
   mockUseLiveQuery.mockImplementation(() => callIdx++ % 2 === 0 ? sampleCategories : [])
   return render(
-    <MemoryRouter initialEntries={['/techniques/new/edit']}>
-      <Routes>
-        {/* literal path — no :id param captured, so id is undefined → isNew=true */}
-        <Route path="/techniques/new/edit" element={<TechniqueEditPage />} />
-        <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
-      </Routes>
-    </MemoryRouter>,
+    <UndoProvider>
+      <MemoryRouter initialEntries={['/techniques/new/edit']}>
+        <Routes>
+          {/* literal path — no :id param captured, so id is undefined → isNew=true */}
+          <Route path="/techniques/new/edit" element={<TechniqueEditPage />} />
+          <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
+        </Routes>
+      </MemoryRouter>
+      <UndoSnackbar />
+    </UndoProvider>,
   )
 }
 
@@ -87,14 +91,17 @@ function renderEdit(technique = sampleTechnique, initialEntries: string[] = [`/t
   let callIdx = 0
   mockUseLiveQuery.mockImplementation(() => callIdx++ % 2 === 0 ? sampleCategories : [])
   return render(
-    <MemoryRouter initialEntries={initialEntries}>
-      <Routes>
-        <Route path="/settings" element={<div data-testid="settings-page" />} />
-        <Route path="/techniques/:id/edit" element={<TechniqueEditPage />} />
-        <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
-        <Route path="/techniques" element={<div data-testid="techniques-list" />} />
-      </Routes>
-    </MemoryRouter>,
+    <UndoProvider>
+      <MemoryRouter initialEntries={initialEntries}>
+        <Routes>
+          <Route path="/settings" element={<div data-testid="settings-page" />} />
+          <Route path="/techniques/:id/edit" element={<TechniqueEditPage />} />
+          <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
+          <Route path="/techniques" element={<div data-testid="techniques-list" />} />
+        </Routes>
+      </MemoryRouter>
+      <UndoSnackbar />
+    </UndoProvider>,
   )
 }
 
