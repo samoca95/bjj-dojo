@@ -3,7 +3,9 @@ const DESCRIPTION_MAX_LENGTH = 2000
 const NAME_MAX_LENGTH = 120
 const CUE_MAX_LENGTH = 240
 const TAG_MAX_LENGTH = 24
+const IMAGE_URL_MAX_LENGTH = 500
 const DEFAULT_DURATION_MINUTES = 60
+const PLACEHOLDER_TEXT_MAX_LENGTH = 60
 
 export const VALIDATION_LIMITS = {
   NOTE_MAX_LENGTH,
@@ -12,6 +14,8 @@ export const VALIDATION_LIMITS = {
   CUE_MAX_LENGTH,
   TAG_MAX_LENGTH,
   DEFAULT_DURATION_MINUTES,
+  IMAGE_URL_MAX_LENGTH,
+  PLACEHOLDER_TEXT_MAX_LENGTH,
 }
 
 export function trimAndClamp(value: string, maxLength: number): string {
@@ -66,7 +70,7 @@ export function isValidYoutubeUrl(url: string): boolean {
 }
 
 export function isValidImageUrl(url: string): boolean {
-  if (!url) return true
+  if (!url) return false
   try {
     const parsed = new URL(url)
     return ['https:', 'http:'].includes(parsed.protocol)
@@ -76,7 +80,7 @@ export function isValidImageUrl(url: string): boolean {
 }
 
 export function defaultTechniqueImageUrl(name: string): string {
-  const text = encodeURIComponent(name.trim().slice(0, 60) || 'Technique')
+  const text = encodeURIComponent(name.trim().slice(0, PLACEHOLDER_TEXT_MAX_LENGTH) || 'Technique')
   return `https://placehold.co/600x360/18181b/eab308/png?text=${text}&font=montserrat`
 }
 
@@ -93,7 +97,7 @@ export function normalizeTechniquePayload(input: {
     description: trimAndClamp(input.description, DESCRIPTION_MAX_LENGTH),
     cues: input.cues.map(cue => trimAndClamp(cue, CUE_MAX_LENGTH)).filter(Boolean).slice(0, 20),
     youtubeUrl: trimAndClamp(input.youtubeUrl, 300),
-    imageUrl: trimAndClamp(input.imageUrl ?? '', 500),
+    imageUrl: trimAndClamp(input.imageUrl ?? '', IMAGE_URL_MAX_LENGTH),
     tags: sanitizeTags(input.tags ?? []),
   }
 }

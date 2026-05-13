@@ -96,7 +96,7 @@ export default function TechniqueEditPage() {
       window.alert(language === 'es' ? 'URL de YouTube inválida.' : 'Invalid YouTube URL.')
       return
     }
-    if (!isValidImageUrl(payload.imageUrl)) {
+    if (payload.imageUrl && !isValidImageUrl(payload.imageUrl)) {
       window.alert(language === 'es' ? 'URL de imagen inválida.' : 'Invalid image URL.')
       return
     }
@@ -238,6 +238,8 @@ export default function TechniqueEditPage() {
 
   const connectionOptions = allTechniques.filter(t => !id || t.id !== Number(id))
   const techniqueNameById = new Map(allTechniques.map(t => [t.id, t.name]))
+  const previewImageUrl = imageUrl.trim()
+  const showImagePreview = Boolean(previewImageUrl) && isValidImageUrl(previewImageUrl)
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -348,13 +350,13 @@ export default function TechniqueEditPage() {
             value={imageUrl}
             onChange={e => setImageUrl(e.target.value)}
             placeholder="https://…"
-            maxLength={500}
+            maxLength={VALIDATION_LIMITS.IMAGE_URL_MAX_LENGTH}
             className={`${inputCls} mt-2`}
           />
-          {imageUrl.trim() && (
+          {showImagePreview && (
             <div className="mt-2 overflow-hidden rounded-xl bg-zinc-900">
               <img
-                src={imageUrl.trim()}
+                src={previewImageUrl}
                 alt=""
                 loading="lazy"
                 className="w-full h-40 object-cover"
