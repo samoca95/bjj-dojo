@@ -219,8 +219,8 @@ export default function SessionsPage() {
 
   return (
     <div className="min-h-full bg-zinc-950">
-      <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-6 pt-12 pb-4 z-10">
-        <div className="flex items-center justify-between">
+      <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm z-10">
+        <div className="px-6 pt-12 pb-3 flex items-center justify-between gap-3">
           <h1 className="text-2xl font-bold text-zinc-100">{t('Sessions')}</h1>
           <div className="flex items-center gap-2">
             <select
@@ -250,21 +250,24 @@ export default function SessionsPage() {
             </button>
           </div>
         </div>
-        <div className="mt-3 relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder={t('Search sessions…')}
-            aria-label={t('Search sessions')}
-            className="w-full bg-zinc-900 rounded-xl pl-9 pr-3 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
-          />
+
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" strokeWidth={2} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder={t('Search sessions…')}
+              aria-label={t('Search sessions')}
+              className="w-full bg-zinc-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
+            />
+          </div>
         </div>
 
         {/* Collapsible filter panel */}
         {filterOpen && (
-          <div className="mt-3 bg-zinc-900 rounded-2xl p-3 space-y-3">
+          <div className="mx-4 mb-3 bg-zinc-900 rounded-2xl p-3 space-y-3">
             {/* Header row inside panel */}
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-400 tracking-widest">
