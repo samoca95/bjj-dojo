@@ -8,6 +8,7 @@ import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel, getCategoryName, getTechniqueDescription, getTechniqueCues } from '../i18n'
+import { defaultTechniqueImageUrl } from '../utils/validation'
 
 function ConnectedTechniqueRow({
   technique, badge, badgeCls, onClick,
@@ -77,6 +78,7 @@ export default function TechniqueDetailPage() {
   )
 
   const cues = getTechniqueCues(technique, language)
+  const imageSrc = (technique.imageUrl?.trim() || defaultTechniqueImageUrl(technique.name))
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -94,6 +96,15 @@ export default function TechniqueDetailPage() {
       <div className="px-4 space-y-4 pb-8">
         {/* Info card */}
         <div className="bg-zinc-900 rounded-2xl p-5">
+          <div className="mb-4 -mx-2 -mt-2 overflow-hidden rounded-xl bg-zinc-950">
+            <img
+              src={imageSrc}
+              alt={technique.name}
+              loading="lazy"
+              className="w-full h-44 sm:h-56 object-cover"
+              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+            />
+          </div>
           <div className="flex flex-wrap gap-2 mb-4">
             {category && (
               <span className="text-xs font-semibold px-2 py-1 rounded bg-gold/20 text-gold flex items-center gap-1.5">

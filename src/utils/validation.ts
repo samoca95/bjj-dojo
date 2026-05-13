@@ -65,11 +65,27 @@ export function isValidYoutubeUrl(url: string): boolean {
   }
 }
 
+export function isValidImageUrl(url: string): boolean {
+  if (!url) return true
+  try {
+    const parsed = new URL(url)
+    return ['https:', 'http:'].includes(parsed.protocol)
+  } catch {
+    return false
+  }
+}
+
+export function defaultTechniqueImageUrl(name: string): string {
+  const text = encodeURIComponent(name.trim().slice(0, 60) || 'Technique')
+  return `https://placehold.co/600x360/18181b/eab308/png?text=${text}&font=montserrat`
+}
+
 export function normalizeTechniquePayload(input: {
   name: string
   description: string
   cues: string[]
   youtubeUrl: string
+  imageUrl?: string
   tags?: string[]
 }) {
   return {
@@ -77,6 +93,7 @@ export function normalizeTechniquePayload(input: {
     description: trimAndClamp(input.description, DESCRIPTION_MAX_LENGTH),
     cues: input.cues.map(cue => trimAndClamp(cue, CUE_MAX_LENGTH)).filter(Boolean).slice(0, 20),
     youtubeUrl: trimAndClamp(input.youtubeUrl, 300),
+    imageUrl: trimAndClamp(input.imageUrl ?? '', 500),
     tags: sanitizeTags(input.tags ?? []),
   }
 }
