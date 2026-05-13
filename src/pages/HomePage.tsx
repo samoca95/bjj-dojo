@@ -41,7 +41,7 @@ function BeltDisplay({ color, stripes, beltLabel }: { color: BeltColor; stripes:
   return (
     <div className="overflow-hidden rounded-xl flex h-10 belt-outline">
       <div className={`flex-1 flex items-center px-5 gap-2 ${s.bg}`}>
-        <PlainLogo fill={logoFill} className="h-5 w-5 shrink-0" />
+        <PlainLogo fill={logoFill} className="h-10 w-10 shrink-0" />
         <span className={`text-xs font-bold tracking-widest uppercase ${s.text}`}>{beltLabel}</span>
       </div>
       {/* Tip with stripes */}

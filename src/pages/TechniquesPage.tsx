@@ -252,12 +252,6 @@ export default function TechniquesPage() {
 
   return (
     <div className="min-h-full bg-zinc-950">
-      <div className="pointer-events-none fixed inset-0 flex items-center justify-center" style={{ zIndex: 1 }}>
-        <PlainLogo
-          fill={theme === 'light' ? '#18181b' : '#ffffff'}
-          className="w-72 h-72 opacity-[0.04]"
-        />
-      </div>
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm z-10" ref={headerRef}>
         <div className="px-6 pt-12 pb-3 flex items-center justify-between gap-3">
           <h1 className="text-2xl font-bold text-zinc-100">{t('Techniques')}</h1>
