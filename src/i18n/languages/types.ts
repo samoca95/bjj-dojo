@@ -115,6 +115,7 @@ export type TranslationKey =
   | 'QUICK ACCESS'
   | 'Received'
   | 'Remove'
+  | 'Request a feature'
   | 'Reorder the sections on the home screen and hide the ones you do not want to see.'
   | 'Reset all pre-filled techniques?\nYour custom techniques will be preserved.'
   | 'Reset pre-filled techniques'

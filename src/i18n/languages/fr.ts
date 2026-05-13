@@ -100,6 +100,7 @@ const FR_TRANSLATIONS = {
   'No connections yet.': 'Aucune connexion pour le moment.',
   'Unknown technique': 'Technique inconnue',
   Remove: 'Retirer',
+  'Request a feature': 'Suggérer une fonctionnalité',
   'Select connected technique…': 'Sélectionner une technique connectée…',
   'Add Connection': 'Ajouter une connexion',
   'Delete Technique': 'Supprimer la technique',

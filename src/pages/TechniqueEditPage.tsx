@@ -269,8 +269,9 @@ export default function TechniqueEditPage() {
 
   const connectionOptions = allTechniques.filter(t => !id || t.id !== Number(id))
   const techniqueNameById = new Map(allTechniques.map(t => [t.id, t.name]))
-  const previewImageUrl = imageUrl.trim()
-  const showImagePreview = Boolean(previewImageUrl) && isValidImageUrl(previewImageUrl)
+  // Kept for future re-implementation (image input is currently hidden)
+  // const previewImageUrl = imageUrl.trim()
+  // const showImagePreview = Boolean(previewImageUrl) && isValidImageUrl(previewImageUrl)
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -373,7 +374,7 @@ export default function TechniqueEditPage() {
           />
         </div>
 
-        {/* Image URL */}
+        {/* Image URL input hidden — kept for future re-implementation
         <div>
           <label className="text-xs text-gold font-semibold tracking-wide">
             {language === 'es' ? 'URL DE IMAGEN' : 'IMAGE URL'}
@@ -399,6 +400,7 @@ export default function TechniqueEditPage() {
             </div>
           )}
         </div>
+        */}
 
         {/* Additional reference links */}
         <div>
