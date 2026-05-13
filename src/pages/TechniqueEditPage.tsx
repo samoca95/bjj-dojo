@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronLeft, Plus, X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
 import type { Category, ConnectionType, Difficulty, ReferenceLink, Technique, TechniqueConnection } from '../types'
@@ -248,16 +248,13 @@ export default function TechniqueEditPage() {
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 z-10 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
-          <ChevronLeft size={24} strokeWidth={2} />
-        </button>
-        <h1 className="flex-1 font-bold text-zinc-100">{isNew ? t('New Technique') : t('Edit Technique')}</h1>
         <button
           onClick={handleCancel}
-          className="text-zinc-400 font-semibold text-sm active:text-zinc-200 px-2"
+          className="text-zinc-400 font-semibold text-sm active:text-zinc-200"
         >
           {t('Cancel')}
         </button>
+        <h1 className="flex-1 font-bold text-zinc-100">{isNew ? t('New Technique') : t('Edit Technique')}</h1>
         <button
           onClick={handleSave}
           disabled={!name.trim()}

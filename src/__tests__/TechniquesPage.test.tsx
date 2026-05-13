@@ -43,8 +43,8 @@ const sampleCategories = [
 ]
 
 const sampleTechniques = [
-  { id: 401, name: 'Armbar', categoryId: 4, difficulty: 'BEGINNER' as const, isCustom: false, description: 'Classic armbar', cues: [], youtubeUrl: '' },
-  { id: 101, name: 'Closed Guard', categoryId: 1, difficulty: 'BEGINNER' as const, isCustom: false, description: 'Guard position', cues: [], youtubeUrl: '' },
+  { id: 401, name: 'Armbar', categoryId: 4, difficulty: 'BEGINNER' as const, isCustom: false, isFavorite: true, description: 'Classic armbar', cues: [], youtubeUrl: '' },
+  { id: 101, name: 'Closed Guard', categoryId: 1, difficulty: 'BEGINNER' as const, isCustom: false, isFavorite: false, description: 'Guard position', cues: [], youtubeUrl: '' },
 ]
 
 function setupMocks(categories = sampleCategories, techniques = sampleTechniques) {
@@ -71,6 +71,7 @@ function renderPage() {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  window.sessionStorage.clear()
 })
 
 afterEach(() => {
@@ -138,5 +139,27 @@ describe('TechniquesPage — search and filter', () => {
     // Category names appear in both chips and technique rows — check at least one chip exists
     expect(screen.getAllByText('Guards').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Submissions').length).toBeGreaterThan(0)
+  })
+
+  it('restores search, sort, and filter context from session storage', async () => {
+    window.sessionStorage.setItem('bjj-dojo.techniques.list-context', JSON.stringify({
+      search: 'arm',
+      categoryId: 4,
+      favoritesOnly: true,
+      difficultyFilter: 'BEGINNER',
+      sortBy: 'name_desc',
+    }))
+
+    setupMocks()
+    const user = userEvent.setup()
+    renderPage()
+
+    expect((screen.getByPlaceholderText('Search techniques…') as HTMLInputElement).value).toBe('arm')
+    expect((screen.getByRole('combobox', { name: 'Sort' }) as HTMLSelectElement).value).toBe('name_desc')
+
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
+    expect(screen.getByRole('button', { name: 'Submissions' }).className).toContain('bg-gold')
+    expect(screen.getByRole('button', { name: 'Favorites' }).className).toContain('bg-gold')
+    expect(screen.getByRole('button', { name: 'BEGINNER' }).className).toContain('bg-gold')
   })
 })
