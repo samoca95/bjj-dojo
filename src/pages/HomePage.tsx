@@ -419,7 +419,7 @@ export default function HomePage() {
               className="w-full bg-zinc-900 rounded-2xl p-5 flex items-center gap-4 text-left active:bg-zinc-800 transition-colors"
             >
               <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
-                <CalendarDays size={28} className="text-gold" strokeWidth={2} />
+                <CalendarDays size={28} className="text-gold" strokeWidth={1.5} />
               </div>
               <div className="flex-1">
                 <div className="font-semibold text-zinc-100">{t('Training Sessions')}</div>
@@ -433,7 +433,7 @@ export default function HomePage() {
               className="w-full bg-zinc-900 rounded-2xl p-5 flex items-center gap-4 text-left active:bg-zinc-800 transition-colors"
             >
               <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
-                <BookOpen size={28} className="text-gold" strokeWidth={2} />
+                <BookOpen size={28} className="text-gold" strokeWidth={1.5} />
               </div>
               <div className="flex-1">
                 <div className="font-semibold text-zinc-100">{t('Technique Library')}</div>
