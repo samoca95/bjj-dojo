@@ -259,6 +259,14 @@ export default function SettingsPage() {
               >
                 ES
               </button>
+              <button
+                onClick={() => setLanguage('fr')}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  language === 'fr' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
+                }`}
+              >
+                FR
+              </button>
             </div>
           </div>
         </div>
