@@ -180,6 +180,10 @@ export default function AddEditSessionPage() {
     }
   }
 
+  const handleCancel = () => {
+    navigate(-1)
+  }
+
   const filteredTechniques = (() => {
     const results = allTechniques?.filter(t => techniqueMatchesQuery(t, pickerSearch)) ?? []
     if (pickerSearch.trim()) {
@@ -265,6 +269,12 @@ export default function AddEditSessionPage() {
             <ChevronLeft size={24} strokeWidth={2} />
           </button>
           <h1 className="flex-1 font-bold text-zinc-100">{isEdit ? t('Edit Session') : t('Log Session')}</h1>
+          <button
+            onClick={handleCancel}
+            className="text-zinc-400 font-semibold text-sm active:text-zinc-200 px-2"
+          >
+            {t('Cancel')}
+          </button>
           <button
             onClick={handleSave}
             disabled={submitting}

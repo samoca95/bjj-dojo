@@ -5,13 +5,21 @@ import { FixedSizeList, type ListChildComponentProps } from 'react-window'
 import { Search, X, Plus, Star, SlidersHorizontal } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
-import type { Category, Technique } from '../types'
+import type { Category, Difficulty, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
-import { useI18n, getCategoryName, getTechniqueDescription } from '../i18n'
+import { useI18n, difficultyLabel, getCategoryName, getTechniqueDescription } from '../i18n'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 
 const ITEM_SIZE = 116 // card height (~104px) + gap (12px)
+const LIST_SCROLL_KEY = 'bjj-dojo.techniques.scroll-offset'
+const DIFFICULTY_ORDER: Record<Difficulty, number> = {
+  BEGINNER: 0,
+  INTERMEDIATE: 1,
+  ADVANCED: 2,
+  ELITE: 3,
+}
+const DIFFICULTIES: Difficulty[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'ELITE']
 
 // Adds bottom padding so the last card clears the bottom nav + FAB
 const ListInner = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
@@ -58,8 +66,11 @@ export default function TechniquesPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [categoryId, setCategoryId] = useState<number | null>(null)
   const [favoritesOnly, setFavoritesOnly] = useState(false)
-  const [tagFilter, setTagFilter] = useState<string | null>(null)
+  const [difficultyFilter, setDifficultyFilter] = useState<'all' | Difficulty>('all')
+  const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc' | 'level' | 'frequency'>('name_asc')
   const [filterOpen, setFilterOpen] = useState(false)
+  const scrollOffsetRef = useRef(0)
+  const [initialScrollOffset, setInitialScrollOffset] = useState(0)
 
   const headerRef = useRef<HTMLDivElement>(null)
   const [listHeight, setListHeight] = useState(() => window.innerHeight - 200)
@@ -84,6 +95,15 @@ export default function TechniquesPage() {
     return () => clearTimeout(timer)
   }, [search])
 
+  useEffect(() => {
+    const raw = window.sessionStorage.getItem(LIST_SCROLL_KEY)
+    if (!raw) return
+    const parsed = Number(raw)
+    if (!Number.isFinite(parsed) || parsed < 0) return
+    setInitialScrollOffset(parsed)
+    scrollOffsetRef.current = parsed
+  }, [])
+
   // P5: category data served from module-level cache; returns ordered Category[]
   const categories = useLiveQuery(
     () => getCategoryMap().then(m => [...m.values()]),
@@ -97,24 +117,46 @@ export default function TechniquesPage() {
         ? db.techniques.where('categoryId').equals(categoryId)
         : db.techniques.toCollection()
       const results = await q.sortBy('name')
+      const frequencyByTechniqueId = new Map<number, number>()
+      if (sortBy === 'frequency') {
+        const sessionTechniques = await db.sessionTechniques.toArray()
+        for (const st of sessionTechniques) {
+          frequencyByTechniqueId.set(st.techniqueId, (frequencyByTechniqueId.get(st.techniqueId) ?? 0) + 1)
+        }
+      }
       const filtered = results.filter(t => {
         if (debouncedSearch.trim() && !techniqueMatchesQuery(t, debouncedSearch)) return false
         if (favoritesOnly && !t.isFavorite) return false
-        if (tagFilter && !(t.tags ?? []).includes(tagFilter)) return false
+        if (difficultyFilter !== 'all' && t.difficulty !== difficultyFilter) return false
         return true
       })
-      if (debouncedSearch.trim()) {
-        filtered.sort((a, b) => techniqueScore(b, debouncedSearch) - techniqueScore(a, debouncedSearch))
+      const compareBySort = (a: Technique, b: Technique) => {
+        if (sortBy === 'name_desc') return b.name.localeCompare(a.name)
+        if (sortBy === 'level') {
+          const levelDelta = DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty]
+          return levelDelta !== 0 ? levelDelta : a.name.localeCompare(b.name)
+        }
+        if (sortBy === 'frequency') {
+          const freqDelta = (frequencyByTechniqueId.get(b.id) ?? 0) - (frequencyByTechniqueId.get(a.id) ?? 0)
+          return freqDelta !== 0 ? freqDelta : a.name.localeCompare(b.name)
+        }
+        return a.name.localeCompare(b.name)
       }
+      filtered.sort((a, b) => {
+        if (debouncedSearch.trim()) {
+          const scoreDelta = techniqueScore(b, debouncedSearch) - techniqueScore(a, debouncedSearch)
+          if (scoreDelta !== 0) return scoreDelta
+        }
+        return compareBySort(a, b)
+      })
       return filtered
     },
-    [debouncedSearch, categoryId, favoritesOnly, tagFilter],
+    [debouncedSearch, categoryId, favoritesOnly, difficultyFilter, sortBy],
     [] as Technique[],
   )
 
   const catMap = new Map(categories?.map(c => [c.id, getCategoryName(c, language)]))
   const catIconMap = new Map(categories?.map(c => [c.id, c.icon]))
-  const allTags = Array.from(new Set((techniques ?? []).flatMap(t => t.tags ?? []))).slice(0, 8)
 
   const renderRow = ({ index, style }: ListChildComponentProps) => {
     const technique = techniques![index]
@@ -125,7 +167,10 @@ export default function TechniquesPage() {
           categoryName={catMap.get(technique.categoryId) ?? ''}
           categoryIcon={catIconMap.get(technique.categoryId)}
           description={getTechniqueDescription(technique, language)}
-          onClick={() => navigate(`/techniques/${technique.id}`)}
+          onClick={() => {
+            window.sessionStorage.setItem(LIST_SCROLL_KEY, String(scrollOffsetRef.current))
+            navigate(`/techniques/${technique.id}`)
+          }}
           onToggleFavorite={() => {
             void db.techniques.update(technique.id, { isFavorite: !technique.isFavorite })
           }}
@@ -137,20 +182,33 @@ export default function TechniquesPage() {
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm z-10" ref={headerRef}>
-        <div className="px-6 pt-12 pb-3 flex items-center justify-between">
+        <div className="px-6 pt-12 pb-3 flex items-center justify-between gap-3">
           <h1 className="text-2xl font-bold text-zinc-100">{t('Techniques')}</h1>
-          <button
-            onClick={() => setFilterOpen(prev => !prev)}
-            className={`p-2 rounded-xl transition-colors relative ${
-              filterOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
-            }`}
-            aria-label={t('Filter')}
-          >
-            <SlidersHorizontal size={18} strokeWidth={2} />
-            {(categoryId !== null || favoritesOnly || tagFilter !== null) && !filterOpen && (
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value as 'name_asc' | 'name_desc' | 'level' | 'frequency')}
+              className="h-9 bg-zinc-800 rounded-xl px-2 text-xs text-zinc-200 outline-none focus:ring-2 focus:ring-gold"
+              aria-label={language === 'es' ? 'Ordenar' : 'Sort'}
+            >
+              <option value="name_asc">{language === 'es' ? 'Nombre (A-Z)' : 'Name (A-Z)'}</option>
+              <option value="name_desc">{language === 'es' ? 'Nombre (Z-A)' : 'Name (Z-A)'}</option>
+              <option value="level">{language === 'es' ? 'Nivel' : 'Level'}</option>
+              <option value="frequency">{language === 'es' ? 'Frecuencia' : 'Frequency'}</option>
+            </select>
+            <button
+              onClick={() => setFilterOpen(prev => !prev)}
+              className={`p-2 rounded-xl transition-colors relative ${
+                filterOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
+              }`}
+              aria-label={t('Filter')}
+            >
+              <SlidersHorizontal size={18} strokeWidth={2} />
+              {(categoryId !== null || favoritesOnly || difficultyFilter !== 'all') && !filterOpen && (
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Search */}
@@ -178,7 +236,7 @@ export default function TechniquesPage() {
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-400 tracking-widest">{t('FILTERS')}</span>
               <button
-                onClick={() => { setCategoryId(null); setFavoritesOnly(false); setTagFilter(null) }}
+                onClick={() => { setCategoryId(null); setFavoritesOnly(false); setDifficultyFilter('all') }}
                 className="text-xs text-zinc-500 active:text-zinc-300"
               >
                 {t('Clear')}
@@ -218,15 +276,26 @@ export default function TechniquesPage() {
                 <Star size={12} fill={favoritesOnly ? 'currentColor' : 'none'} />
                 {language === 'es' ? 'Favoritas' : 'Favorites'}
               </button>
-              {allTags.map(tag => (
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setDifficultyFilter('all')}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  difficultyFilter === 'all' ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+                }`}
+              >
+                {t('All')}
+              </button>
+              {DIFFICULTIES.map(d => (
                 <button
-                  key={tag}
-                  onClick={() => setTagFilter(prev => prev === tag ? null : tag)}
+                  key={d}
+                  onClick={() => setDifficultyFilter(d)}
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    tagFilter === tag ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
+                    difficultyFilter === d ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300'
                   }`}
                 >
-                  #{tag}
+                  {difficultyLabel(d, d, language)}
                 </button>
               ))}
             </div>
@@ -253,6 +322,10 @@ export default function TechniquesPage() {
         width="100%"
         innerElementType={ListInner}
         overscanCount={3}
+        initialScrollOffset={initialScrollOffset}
+        onScroll={({ scrollOffset }) => {
+          scrollOffsetRef.current = scrollOffset
+        }}
       >
         {renderRow}
       </FixedSizeList>

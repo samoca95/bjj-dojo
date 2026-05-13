@@ -80,8 +80,33 @@ export function isValidImageUrl(url: string): boolean {
 }
 
 export function defaultTechniqueImageUrl(name: string): string {
-  const text = encodeURIComponent(name.trim().slice(0, PLACEHOLDER_TEXT_MAX_LENGTH) || 'Technique')
-  return `https://placehold.co/600x360/18181b/eab308/png?text=${text}&font=montserrat`
+  const text = (name.trim().slice(0, PLACEHOLDER_TEXT_MAX_LENGTH) || 'Technique')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#18181b"/><stop offset="100%" stop-color="#27272a"/></linearGradient></defs><rect width="1200" height="720" fill="url(#g)"/><rect x="48" y="48" width="1104" height="624" rx="40" fill="none" stroke="#eab308" stroke-opacity="0.5" stroke-width="6"/><text x="600" y="352" fill="#eab308" font-family="Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="76" font-weight="700" text-anchor="middle">BJJ Dojo</text><text x="600" y="436" fill="#f4f4f5" font-family="Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="44" text-anchor="middle">${text}</text></svg>`
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+}
+
+export function normalizeTechniqueImageUrl(url: string): string {
+  const raw = url.trim()
+  if (!raw) return raw
+  try {
+    const parsed = new URL(raw)
+    if (parsed.hostname === 'upload.wikimedia.org' && parsed.pathname.includes('/thumb/')) {
+      const parts = parsed.pathname.split('/')
+      const thumbIndex = parts.findIndex(part => part === 'thumb')
+      const fileName = thumbIndex >= 0 ? parts[thumbIndex + 3] : ''
+      if (fileName) {
+        return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fileName)}?width=1200`
+      }
+    }
+  } catch {
+    return raw
+  }
+  return raw
 }
 
 export function normalizeTechniquePayload(input: {

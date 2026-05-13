@@ -134,7 +134,7 @@ describe('TechniquesPage — search and filter', () => {
     const user = userEvent.setup()
     renderPage()
     await user.click(screen.getByRole('button', { name: 'Filter' }))
-    expect(screen.getByText('All')).toBeInTheDocument()
+    expect(screen.getAllByText('All').length).toBeGreaterThan(0)
     // Category names appear in both chips and technique rows — check at least one chip exists
     expect(screen.getAllByText('Guards').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Submissions').length).toBeGreaterThan(0)
