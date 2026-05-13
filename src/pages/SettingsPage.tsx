@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, GitFork, Lightbulb, HandHeart } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, HandHeart, Lightbulb } from 'lucide-react'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n, translate } from '../i18n'
@@ -457,7 +457,7 @@ export default function SettingsPage() {
             {t('App version:')} {appVersionLabel}
           </p>
           <p className="text-xs text-zinc-500">
-            {t('Developed by:')} Samuel Molina Casino
+            {t('Developed by:')} samoca95
           </p>
           <a
             href={githubRepoUrl}
