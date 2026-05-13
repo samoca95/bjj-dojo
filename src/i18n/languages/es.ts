@@ -66,6 +66,7 @@ const ES_TRANSLATIONS = {
   Given: 'Aplicadas',
   Received: 'Recibidas',
   NOTES: 'NOTAS',
+  'What clicked? What to fix?': '¿Qué funcionó? ¿Qué mejorar?',
   'What did you work on? Any insights?': '¿Qué trabajaste? ¿Alguna observación?',
   'Select Techniques': 'Seleccionar Técnicas',
   'Select Technique — Tap Given': 'Seleccionar Técnica — Sumisión Aplicada',

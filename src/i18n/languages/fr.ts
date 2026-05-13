@@ -66,6 +66,7 @@ const FR_TRANSLATIONS = {
   Given: 'Réussies',
   Received: 'Subies',
   NOTES: 'NOTES',
+  'What clicked? What to fix?': 'Ce qui a cliqué ? Quoi corriger ?',
   'What did you work on? Any insights?': 'Sur quoi avez-vous travaillé ? Des observations ?',
   'Select Techniques': 'Sélectionner des techniques',
   'Select Technique — Tap Given': 'Sélectionner une technique — Soumission réussie',

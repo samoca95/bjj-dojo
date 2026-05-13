@@ -53,12 +53,14 @@ export default function SessionDetailPage() {
     return () => window.removeEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
   }, [])
 
-  const techniques = useLiveQuery(async () => {
+  const techniqueEntries = useLiveQuery(async () => {
     if (!id) return []
     const sts = await db.sessionTechniques.where('sessionId').equals(Number(id)).toArray()
     const ids = sts.map(st => st.techniqueId)
-    return db.techniques.where('id').anyOf(ids).sortBy('name')
-  }, [id], [] as Technique[])
+    const techs = await db.techniques.where('id').anyOf(ids).sortBy('name')
+    const notesMap = new Map(sts.map(st => [st.techniqueId, st.notes]))
+    return techs.map(tech => ({ technique: tech, notes: notesMap.get(tech.id) }))
+  }, [id], [] as { technique: Technique; notes: string | undefined }[])
 
   const tapData = useLiveQuery(async () => {
     if (!id) return { taps: [] as SessionTap[], techMap: new Map<number, string>() }
@@ -153,19 +155,24 @@ export default function SessionDetailPage() {
         {/* Techniques Practiced — before taps */}
         <div>
           <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">{t('TECHNIQUES PRACTICED')}</h2>
-          {techniques?.length === 0 ? (
+          {techniqueEntries?.length === 0 ? (
             <p className="text-sm text-zinc-500">{t('No techniques logged for this session.')}</p>
           ) : (
             <div className="space-y-2">
-              {techniques?.map(t => (
+              {techniqueEntries?.map(({ technique: tech, notes: techNote }) => (
                 <button
-                  key={t.id}
-                  onClick={() => navigate(`/techniques/${t.id}`)}
-                  className="w-full bg-zinc-900 rounded-xl px-4 py-3 flex items-center gap-3 text-left active:bg-zinc-800"
+                  key={tech.id}
+                  onClick={() => navigate(`/techniques/${tech.id}`)}
+                  className="w-full bg-zinc-900 rounded-xl px-4 py-3 flex items-start gap-3 text-left active:bg-zinc-800"
                 >
-                  <Zap size={16} className="text-gold shrink-0" strokeWidth={2} />
-                  <span className="flex-1 text-sm text-zinc-100">{t.name}</span>
-                  <ChevronRight size={16} className="text-zinc-600" strokeWidth={2} />
+                  <Zap size={16} className="text-gold shrink-0 mt-0.5" strokeWidth={2} />
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm text-zinc-100">{tech.name}</span>
+                    {techNote && (
+                      <span className="block text-xs text-zinc-400 mt-1 whitespace-pre-wrap">{techNote}</span>
+                    )}
+                  </span>
+                  <ChevronRight size={16} className="text-zinc-600 shrink-0 mt-0.5" strokeWidth={2} />
                 </button>
               ))}
             </div>
@@ -244,13 +251,13 @@ export default function SessionDetailPage() {
               <p className="font-semibold text-zinc-100">{formatDate(session.date, locale)}</p>
               <div>
                 <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">{t('TECHNIQUES PRACTICED')}</p>
-                {techniques.length === 0 ? (
+                {techniqueEntries.length === 0 ? (
                   <p className="text-zinc-400">
                     {language === 'es' ? 'Sin técnicas registradas.' : 'No techniques logged.'}
                   </p>
                 ) : (
                   <ul className="space-y-1 list-disc list-inside text-zinc-200">
-                    {techniques.map(technique => (
+                    {techniqueEntries.map(({ technique }) => (
                       <li key={technique.id}>{technique.name}</li>
                     ))}
                   </ul>

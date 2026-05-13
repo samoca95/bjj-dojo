@@ -290,6 +290,10 @@ function validateSessionTechniques(records: unknown[]): SessionTechnique[] {
     const rec = r as Record<string, unknown>
     if (!isPosInt(rec.sessionId)) throw new Error(`${ctx}: 'sessionId' must be a positive integer`)
     if (!isPosInt(rec.techniqueId)) throw new Error(`${ctx}: 'techniqueId' must be a positive integer`)
+    if (rec.notes !== undefined) {
+      if (typeof rec.notes !== 'string') throw new Error(`${ctx}: 'notes' must be a string`)
+      if (rec.notes.length > NOTE_MAX_LENGTH) throw new Error(`${ctx}: 'notes' exceeds ${NOTE_MAX_LENGTH} characters`)
+    }
     return rec as unknown as SessionTechnique
   })
 }

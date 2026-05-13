@@ -55,6 +55,7 @@ export interface Club {
 export interface SessionTechnique {
   sessionId: number
   techniqueId: number
+  notes?: string
 }
 
 export interface SessionTap {
