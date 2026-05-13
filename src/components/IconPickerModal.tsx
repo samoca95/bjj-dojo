@@ -43,8 +43,8 @@ export default function IconPickerModal({
   const showSuggested = tab === 'icons' && search.trim() === ''
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-[60] flex items-end">
-      <div className="bg-zinc-900 w-full rounded-t-3xl max-h-[calc(100dvh-0.5rem)] flex flex-col">
+    <div className="fixed inset-0 bg-black/80 z-[60] flex items-end pb-[calc(4rem+env(safe-area-inset-bottom))]">
+      <div className="bg-zinc-900 w-full rounded-t-3xl max-h-[calc(100dvh-4rem-env(safe-area-inset-bottom)-0.5rem)] flex flex-col">
         <div className="px-4 pt-4 pb-3 flex items-center gap-3 border-b border-zinc-800">
           <h2 className="flex-1 font-bold text-zinc-100">{title}</h2>
           <button

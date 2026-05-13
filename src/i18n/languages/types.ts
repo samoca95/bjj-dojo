@@ -66,6 +66,7 @@ export type TranslationKey =
   | 'Filter'
   | 'French'
   | 'Fri'
+  | 'Github repo'
   | 'Given'
   | 'Given submissions'
   | 'Good'

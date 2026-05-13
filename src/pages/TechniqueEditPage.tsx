@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus, X } from 'lucide-react'
@@ -11,6 +11,7 @@ import { useI18n, connectionTypeLabel, difficultyLabel } from '../i18n'
 import { isValidYoutubeUrl, isValidImageUrl, normalizeTechniquePayload, VALIDATION_LIMITS } from '../utils/validation'
 import { runWithTelemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
+import { useUndo } from '../components/UndoContext'
 
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
@@ -29,6 +30,7 @@ const CONNECTION_TYPES = Object.keys(CONNECTION_LABELS) as ConnectionType[]
 export default function TechniqueEditPage() {
   const navigate = useNavigate()
   const { language, t } = useI18n()
+  const { push: pushUndo } = useUndo()
   const { id } = useParams<{ id: string }>()
   const isNew = !id
 
@@ -50,11 +52,6 @@ export default function TechniqueEditPage() {
   const [newLinkLabel, setNewLinkLabel] = useState('')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [pendingUndoTechnique, setPendingUndoTechnique] = useState<{
-    technique: Technique
-    connections: TechniqueConnection[]
-  } | null>(null)
-  const undoTimerRef = useRef<number | null>(null)
 
   const categories = useLiveQuery(
     () => getCategoryMap().then(m => [...m.values()]),
@@ -88,10 +85,6 @@ export default function TechniqueEditPage() {
       setConnections(techniqueConnections)
     })
   }, [id, isNew])
-
-  useEffect(() => () => {
-    if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current)
-  }, [])
 
   const handleSave = async () => {
     const payload = normalizeTechniquePayload({
@@ -211,35 +204,21 @@ export default function TechniqueEditPage() {
           connection,
         )
       }
-      setPendingUndoTechnique({
-        technique,
-        connections: [...dedupedConnections.values()],
+      const savedConnections = [...dedupedConnections.values()]
+      pushUndo({
+        label: language === 'es' ? 'Técnica eliminada.' : 'Technique deleted.',
+        onUndo: async () => {
+          await db.techniques.put(technique)
+          if (savedConnections.length > 0) await db.techniqueConnections.bulkPut(savedConnections)
+        },
       })
-      if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current)
-      undoTimerRef.current = window.setTimeout(() => {
-        undoTimerRef.current = null
-        setPendingUndoTechnique(null)
-        navigate(-1)
-      }, 5000)
       setShowDeleteModal(false)
+      navigate(-1)
     } catch (err) {
       if (isQuotaError(err)) notifyQuotaError()
     } finally {
       setIsDeleting(false)
     }
-  }
-
-  const handleUndoDelete = async () => {
-    if (!pendingUndoTechnique) return
-    if (undoTimerRef.current !== null) {
-      window.clearTimeout(undoTimerRef.current)
-      undoTimerRef.current = null
-    }
-    await db.techniques.put(pendingUndoTechnique.technique)
-    if (pendingUndoTechnique.connections.length > 0) {
-      await db.techniqueConnections.bulkPut(pendingUndoTechnique.connections)
-    }
-    setPendingUndoTechnique(null)
   }
 
   const handleCancel = () => {
@@ -678,19 +657,6 @@ export default function TechniqueEditPage() {
         </div>
       )}
 
-      {pendingUndoTechnique && (
-        <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
-          <span className="text-sm text-zinc-100">
-            {language === 'es' ? 'Técnica eliminada.' : 'Technique deleted.'}
-          </span>
-          <button
-            onClick={() => void handleUndoDelete()}
-            className="text-sm font-bold text-gold active:text-gold-light"
-          >
-            {language === 'es' ? 'DESHACER' : 'UNDO'}
-          </button>
-        </div>
-      )}
     </div>
   )
 }
