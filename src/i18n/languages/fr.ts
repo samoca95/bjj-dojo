@@ -61,6 +61,7 @@ const FR_TRANSLATIONS = {
   'TECHNIQUES PRACTICED': 'TECHNIQUES PRATIQUÉES',
   'Add techniques…': 'Ajouter des techniques…',
   'TAPS / SUBMISSIONS': 'SOUMISSIONS',
+  'Github repo': 'Dépôt Github',
   Given: 'Réussies',
   Received: 'Subies',
   NOTES: 'NOTES',

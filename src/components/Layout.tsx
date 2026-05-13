@@ -6,8 +6,9 @@ import PwaUpdatePrompt from './PwaUpdatePrompt'
 import FirstLaunchSetupPrompt, { isInitialSetupRequired } from './FirstLaunchSetupPrompt'
 import OnboardingFlow, { isOnboardingRequired } from './OnboardingFlow'
 import QuotaErrorModal from './QuotaErrorModal'
+import { UndoProvider, UndoSnackbar } from './UndoContext'
 
-export default function Layout() {
+function LayoutInner() {
   const navigate = useNavigate()
   const [showInitialSetup, setShowInitialSetup] = useState(() => isInitialSetupRequired())
   const [showOnboarding, setShowOnboarding] = useState(
@@ -23,6 +24,7 @@ export default function Layout() {
       <BottomNav />
       <PwaUpdatePrompt />
       <QuotaErrorModal />
+      <UndoSnackbar />
       {showInitialSetup && (
         <FirstLaunchSetupPrompt
           onComplete={() => {
@@ -36,5 +38,13 @@ export default function Layout() {
         <OnboardingFlow onComplete={() => setShowOnboarding(false)} />
       )}
     </div>
+  )
+}
+
+export default function Layout() {
+  return (
+    <UndoProvider>
+      <LayoutInner />
+    </UndoProvider>
   )
 }

@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import SessionDetailPage from '../pages/SessionDetailPage'
+import { UndoProvider, UndoSnackbar } from '../components/UndoContext'
 
 vi.mock('dexie-react-hooks', () => ({
   useLiveQuery: vi.fn(),
@@ -85,15 +86,18 @@ function setupMocks(overrides?: {
 
 function renderPage(initialEntries: string[] = ['/sessions/1']) {
   return render(
-    <MemoryRouter initialEntries={initialEntries}>
-      <Routes>
-        <Route path="/" element={<div data-testid="home-page" />} />
-        <Route path="/sessions/:id" element={<SessionDetailPage />} />
-        <Route path="/sessions/:id/edit" element={<div data-testid="edit-page" />} />
-        <Route path="/sessions" element={<div data-testid="sessions-list" />} />
-        <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
-      </Routes>
-    </MemoryRouter>,
+    <UndoProvider>
+      <MemoryRouter initialEntries={initialEntries}>
+        <Routes>
+          <Route path="/" element={<div data-testid="home-page" />} />
+          <Route path="/sessions/:id" element={<SessionDetailPage />} />
+          <Route path="/sessions/:id/edit" element={<div data-testid="edit-page" />} />
+          <Route path="/sessions" element={<div data-testid="sessions-list" />} />
+          <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
+        </Routes>
+      </MemoryRouter>
+      <UndoSnackbar />
+    </UndoProvider>,
   )
 }
 

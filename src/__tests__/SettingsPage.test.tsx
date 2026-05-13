@@ -114,7 +114,7 @@ describe('SettingsPage — theme mode', () => {
 
     expect(screen.getByText('App version: v1.0.0')).toBeInTheDocument()
     expect(screen.getByText('Developed by: samoca95')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'github.com/samoca95/bjj-dojo' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /Github repo/i })).toHaveAttribute(
       'href',
       'https://github.com/samoca95/bjj-dojo',
     )

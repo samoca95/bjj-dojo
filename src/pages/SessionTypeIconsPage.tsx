@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Pencil } from 'lucide-react'
+import { ChevronLeft, Pencil, RotateCcw } from 'lucide-react'
 import type { SessionType } from '../types'
-import { SESSION_TYPE_LABELS } from '../types'
+import { SESSION_TYPE_LABELS, SESSION_TYPE_ICONS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import IconPickerModal from '../components/IconPickerModal'
 import { getSessionTypeIcons, saveSessionTypeIcons, type SessionTypeIconsMap } from '../utils/sessionTypeIcons'
@@ -32,21 +32,39 @@ export default function SessionTypeIconsPage() {
       </div>
 
       <div className="px-4 pb-6 space-y-3">
-        {SESSION_TYPES.map(sessionType => (
-          <button
-            key={sessionType}
-            onClick={() => setActiveSessionType(sessionType)}
-            className="w-full bg-zinc-900 rounded-2xl p-4 flex items-center gap-3 text-left active:bg-zinc-800 transition-colors"
-          >
-            <div className="w-11 h-11 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0">
-              <CategoryIcon value={sessionTypeIcons[sessionType]} size={20} className="text-gold" />
+        {SESSION_TYPES.map(sessionType => {
+          const isDefault = sessionTypeIcons[sessionType] === SESSION_TYPE_ICONS[sessionType]
+          return (
+            <div key={sessionType} className="bg-zinc-900 rounded-2xl p-4 flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0">
+                <CategoryIcon value={sessionTypeIcons[sessionType]} size={20} className="text-gold" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-zinc-100">{SESSION_TYPE_LABELS[sessionType]}</div>
+              </div>
+              {!isDefault && (
+                <button
+                  onClick={() => {
+                    const next = { ...sessionTypeIcons, [sessionType]: SESSION_TYPE_ICONS[sessionType] } as SessionTypeIconsMap
+                    setSessionTypeIcons(next)
+                    saveSessionTypeIcons(next)
+                  }}
+                  aria-label={language === 'es' ? 'Restablecer icono' : 'Reset icon'}
+                  className="p-2 text-zinc-500 active:text-zinc-200"
+                >
+                  <RotateCcw size={16} strokeWidth={2} />
+                </button>
+              )}
+              <button
+                onClick={() => setActiveSessionType(sessionType)}
+                aria-label={language === 'es' ? 'Editar icono' : 'Edit icon'}
+                className="p-2 text-zinc-600 active:text-zinc-200"
+              >
+                <Pencil size={18} strokeWidth={2} />
+              </button>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-zinc-100">{SESSION_TYPE_LABELS[sessionType]}</div>
-            </div>
-            <Pencil size={18} className="text-zinc-600" strokeWidth={2} />
-          </button>
-        ))}
+          )
+        })}
       </div>
 
       {activeSessionType && (

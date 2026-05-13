@@ -38,7 +38,7 @@ describe('IconPickerModal — structure', () => {
     const overlay = container.firstElementChild as HTMLElement
     const frame = overlay.firstElementChild as HTMLElement
     expect(overlay.className).toContain('z-[60]')
-    expect(frame.className).toContain('max-h-[calc(100dvh-0.5rem)]')
+    expect(frame.className).toContain('max-h-[calc(100dvh-4rem-env(safe-area-inset-bottom)-0.5rem)]')
   })
 })
 

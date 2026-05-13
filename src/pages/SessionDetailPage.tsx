@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
@@ -6,12 +6,13 @@ import {
   Zap, Hand, Building2,
 } from 'lucide-react'
 import { db } from '../db/database'
-import type { Session, SessionTap, SessionTechnique, Technique } from '../types'
+import type { Session, SessionTap, Technique } from '../types'
 import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT } from '../utils/sessionTypeIcons'
 import { sessionTypeLabel, useI18n } from '../i18n'
+import { useUndo } from '../components/UndoContext'
 
 function formatDate(epoch: number, locale?: string) {
   return new Date(epoch).toLocaleDateString(locale, {
@@ -32,16 +33,11 @@ export default function SessionDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { t, language, locale } = useI18n()
+  const { push: pushUndo } = useUndo()
   const [session, setSession] = useState<Session | null>(null)
   const [sessionTypeIcons, setSessionTypeIcons] = useState(getSessionTypeIcons())
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [pendingUndoSession, setPendingUndoSession] = useState<{
-    session: Session & { id: number }
-    sessionTechniques: SessionTechnique[]
-    sessionTaps: SessionTap[]
-  } | null>(null)
-  const undoTimerRef = useRef<number | null>(null)
   const club = useLiveQuery(
     () => session?.clubId ? db.clubs.get(session.clubId) : undefined,
     [session?.clubId],
@@ -73,9 +69,6 @@ export default function SessionDetailPage() {
     return { taps, techMap: new Map(techs.map(t => [t.id, t.name])) }
   }, [id], { taps: [] as SessionTap[], techMap: new Map<number, string>() })
 
-  useEffect(() => () => {
-    if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current)
-  }, [])
 
   if (!session) return (
     <div className="flex items-center justify-center min-h-screen">
@@ -94,37 +87,20 @@ export default function SessionDetailPage() {
       await db.sessions.delete(session.id)
       await db.sessionTechniques.where('sessionId').equals(session.id).delete()
       await db.sessionTaps.where('sessionId').equals(session.id).delete()
-      setPendingUndoSession({
-        session: session as Session & { id: number },
-        sessionTechniques,
-        sessionTaps,
+      const savedSession = session as Session & { id: number }
+      pushUndo({
+        label: language === 'es' ? 'Sesión eliminada.' : 'Session deleted.',
+        onUndo: async () => {
+          await db.sessions.put(savedSession)
+          if (sessionTechniques.length > 0) await db.sessionTechniques.bulkPut(sessionTechniques)
+          if (sessionTaps.length > 0) await db.sessionTaps.bulkPut(sessionTaps)
+        },
       })
-      if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current)
-      undoTimerRef.current = window.setTimeout(() => {
-        undoTimerRef.current = null
-        setPendingUndoSession(null)
-        navigate(-1)
-      }, 5000)
       setShowDeleteModal(false)
+      navigate(-1)
     } finally {
       setIsDeleting(false)
     }
-  }
-
-  const handleUndoDelete = async () => {
-    if (!pendingUndoSession) return
-    if (undoTimerRef.current !== null) {
-      window.clearTimeout(undoTimerRef.current)
-      undoTimerRef.current = null
-    }
-    await db.sessions.put(pendingUndoSession.session)
-    if (pendingUndoSession.sessionTechniques.length > 0) {
-      await db.sessionTechniques.bulkPut(pendingUndoSession.sessionTechniques)
-    }
-    if (pendingUndoSession.sessionTaps.length > 0) {
-      await db.sessionTaps.bulkPut(pendingUndoSession.sessionTaps)
-    }
-    setPendingUndoSession(null)
   }
 
   const sessionTaps = tapData?.taps ?? []
@@ -300,19 +276,6 @@ export default function SessionDetailPage() {
         </div>
       )}
 
-      {pendingUndoSession && (
-        <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
-          <span className="text-sm text-zinc-100">
-            {language === 'es' ? 'Sesión eliminada.' : 'Session deleted.'}
-          </span>
-          <button
-            onClick={() => void handleUndoDelete()}
-            className="text-sm font-bold text-gold active:text-gold-light"
-          >
-            {language === 'es' ? 'DESHACER' : 'UNDO'}
-          </button>
-        </div>
-      )}
     </div>
   )
 }

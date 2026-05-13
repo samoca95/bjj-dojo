@@ -61,6 +61,7 @@ const ES_TRANSLATIONS = {
   'TECHNIQUES PRACTICED': 'TÉCNICAS PRACTICADAS',
   'Add techniques…': 'Añadir técnicas…',
   'TAPS / SUBMISSIONS': 'SUMISIONES',
+  'Github repo': 'Repositorio en Github',
   Given: 'Aplicadas',
   Received: 'Recibidas',
   NOTES: 'NOTAS',
