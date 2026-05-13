@@ -30,8 +30,8 @@ const ListInner = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
 )
 ListInner.displayName = 'ListInner'
 
-function TechniqueRow({ technique, categoryName, categoryIcon, description, onClick, onToggleFavorite }: {
-  technique: Technique; categoryName: string; categoryIcon?: string; description: string; onClick: () => void; onToggleFavorite: () => void
+function TechniqueRow({ technique, categoryName, categoryIcon, description, practiceCount, onClick, onToggleFavorite }: {
+  technique: Technique; categoryName: string; categoryIcon?: string; description: string; practiceCount: number; onClick: () => void; onToggleFavorite: () => void
 }) {
   return (
     <div className="w-full bg-zinc-900 rounded-2xl p-4 flex gap-3 text-left">
@@ -42,6 +42,11 @@ function TechniqueRow({ technique, categoryName, categoryIcon, description, onCl
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold text-zinc-100 text-sm">{technique.name}</span>
           <DifficultyBadge difficulty={technique.difficulty} />
+          {practiceCount > 0 && (
+            <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300">
+              {practiceCount}×
+            </span>
+          )}
         </div>
         <div className="text-xs text-gold mt-0.5 flex items-center gap-1.5">
           <CategoryIcon value={categoryIcon} fallbackId={technique.categoryId} size={14} className="text-gold" />
@@ -156,18 +161,16 @@ export default function TechniquesPage() {
     [] as Category[],
   )
 
-  const techniques = useLiveQuery(
+  const queryResult = useLiveQuery(
     async () => {
       let q = categoryId
         ? db.techniques.where('categoryId').equals(categoryId)
         : db.techniques.toCollection()
       const results = await q.sortBy('name')
-      const frequencyByTechniqueId = new Map<number, number>()
-      if (sortBy === 'frequency') {
-        const sessionTechniques = await db.sessionTechniques.toArray()
-        for (const st of sessionTechniques) {
-          frequencyByTechniqueId.set(st.techniqueId, (frequencyByTechniqueId.get(st.techniqueId) ?? 0) + 1)
-        }
+      const sessionTechniques = await db.sessionTechniques.toArray()
+      const freqMap = new Map<number, number>()
+      for (const st of sessionTechniques) {
+        freqMap.set(st.techniqueId, (freqMap.get(st.techniqueId) ?? 0) + 1)
       }
       const filtered = results.filter(t => {
         if (debouncedSearch.trim() && !techniqueMatchesQuery(t, debouncedSearch)) return false
@@ -182,7 +185,7 @@ export default function TechniquesPage() {
           return levelDelta !== 0 ? levelDelta : a.name.localeCompare(b.name)
         }
         if (sortBy === 'frequency') {
-          const freqDelta = (frequencyByTechniqueId.get(b.id) ?? 0) - (frequencyByTechniqueId.get(a.id) ?? 0)
+          const freqDelta = (freqMap.get(b.id) ?? 0) - (freqMap.get(a.id) ?? 0)
           return freqDelta !== 0 ? freqDelta : a.name.localeCompare(b.name)
         }
         return a.name.localeCompare(b.name)
@@ -194,17 +197,20 @@ export default function TechniquesPage() {
         }
         return compareBySort(a, b)
       })
-      return filtered
+      return { items: filtered, freqMap }
     },
     [debouncedSearch, categoryId, favoritesOnly, difficultyFilter, sortBy],
-    [] as Technique[],
+    null as null | { items: Technique[]; freqMap: Map<number, number> },
   )
+
+  const techniques = queryResult?.items ?? []
+  const freqMap = queryResult?.freqMap ?? new Map<number, number>()
 
   const catMap = new Map(categories?.map(c => [c.id, getCategoryName(c, language)]))
   const catIconMap = new Map(categories?.map(c => [c.id, c.icon]))
 
   const renderRow = ({ index, style }: ListChildComponentProps) => {
-    const technique = techniques![index]
+    const technique = techniques[index]
     return (
       <div style={{ ...style, paddingLeft: 16, paddingRight: 16 }}>
         <TechniqueRow
@@ -212,6 +218,7 @@ export default function TechniquesPage() {
           categoryName={catMap.get(technique.categoryId) ?? ''}
           categoryIcon={catIconMap.get(technique.categoryId)}
           description={getTechniqueDescription(technique, language)}
+          practiceCount={freqMap.get(technique.id) ?? 0}
           onClick={() => {
             window.sessionStorage.setItem(
               LIST_CONTEXT_KEY,
@@ -359,9 +366,9 @@ export default function TechniquesPage() {
 
         <div className="px-6 pb-2">
           <span className="text-xs text-zinc-500">
-            {techniques?.length ?? 0}{' '}
+            {techniques.length}{' '}
             {(() => {
-              const count = techniques?.length ?? 0
+              const count = techniques.length
               if (language === 'es') return count === 1 ? 'técnica' : 'técnicas'
               return count === 1 ? 'technique' : 'techniques'
             })()}
@@ -372,7 +379,7 @@ export default function TechniquesPage() {
       {/* P4: windowed list — only visible cards are in the DOM */}
       <FixedSizeList
         height={listHeight}
-        itemCount={techniques?.length ?? 0}
+        itemCount={techniques.length}
         itemSize={ITEM_SIZE}
         width="100%"
         innerElementType={ListInner}
