@@ -217,6 +217,7 @@ export default function TechniqueEditPage() {
       })
       if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current)
       undoTimerRef.current = window.setTimeout(() => {
+        undoTimerRef.current = null
         setPendingUndoTechnique(null)
         navigate('/techniques')
       }, 5000)

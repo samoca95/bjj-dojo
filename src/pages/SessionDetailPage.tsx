@@ -101,6 +101,7 @@ export default function SessionDetailPage() {
       })
       if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current)
       undoTimerRef.current = window.setTimeout(() => {
+        undoTimerRef.current = null
         setPendingUndoSession(null)
         navigate('/sessions')
       }, 5000)

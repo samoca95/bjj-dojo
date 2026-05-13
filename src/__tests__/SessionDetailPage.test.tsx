@@ -150,7 +150,7 @@ describe('SessionDetailPage — structure', () => {
   it('shows technique names when techniques are present', async () => {
     setupMocks({ techniques: mockTechniques })
     renderPage()
-    await waitFor(() => expect(screen.getAllByText('Armbar').length).toBeGreaterThan(0))
+    await waitFor(() => expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument())
   })
 })
 
@@ -200,7 +200,7 @@ describe('SessionDetailPage — navigation', () => {
     setupMocks({ techniques: mockTechniques })
     const user = userEvent.setup()
     renderPage()
-    await waitFor(() => expect(screen.getAllByText('Armbar').length).toBeGreaterThan(0))
+    await waitFor(() => expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument())
     await user.click(screen.getByText('Armbar'))
     expect(screen.getByTestId('technique-detail')).toBeInTheDocument()
   })
@@ -212,14 +212,14 @@ describe('SessionDetailPage — delete flow', () => {
     const user = userEvent.setup()
     const confirmSpy = vi.spyOn(window, 'confirm')
     renderPage()
-    await waitFor(() => expect(screen.getAllByText('Armbar').length).toBeGreaterThan(0))
+    await waitFor(() => expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument())
 
     const deleteBtn = document.querySelector('button svg.lucide-trash-2')?.closest('button') as HTMLElement
     await user.click(deleteBtn)
 
     expect(screen.getByText('Delete session')).toBeInTheDocument()
     expect(screen.getByText('This session will be deleted:')).toBeInTheDocument()
-    expect(screen.getAllByText('Armbar').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument()
     expect(confirmSpy).not.toHaveBeenCalled()
   })
 
@@ -230,7 +230,7 @@ describe('SessionDetailPage — delete flow', () => {
     })
     const user = userEvent.setup()
     renderPage()
-    await waitFor(() => expect(screen.getAllByText('Armbar').length).toBeGreaterThan(0))
+    await waitFor(() => expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument())
 
     const deleteBtn = document.querySelector('button svg.lucide-trash-2')?.closest('button') as HTMLElement
     await user.click(deleteBtn)
