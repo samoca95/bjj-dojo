@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff } from 'lucide-react'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n } from '../i18n'
@@ -13,6 +13,8 @@ import { getGoalMatTime, setGoalMatTime, DEFAULT_WEEKLY_GOAL_MINUTES } from '../
 import {
   getHomeSectionOrder,
   setHomeSectionOrder,
+  getHomeSectionVisibility,
+  setHomeSectionVisibility,
   type HomeSectionId,
 } from '../utils/homeSectionOrder'
 import {
@@ -32,6 +34,7 @@ export default function SettingsPage() {
   const [telemetryCount, setTelemetryCount] = useState(0)
   const [goalInput, setGoalInput] = useState(String(getGoalMatTime()))
   const [sectionOrder, setSectionOrder] = useState<HomeSectionId[]>(getHomeSectionOrder)
+  const [sectionVisibility, setSectionVisibility] = useState(getHomeSectionVisibility)
   const [belt, setBelt] = useState<BeltColor>(getBeltColor)
   const [stripes, setStripes] = useState<number>(getBeltStripes)
 
@@ -42,6 +45,15 @@ export default function SettingsPage() {
     ;[next[index], next[target]] = [next[target], next[index]]
     setSectionOrder(next)
     setHomeSectionOrder(next)
+  }
+
+  const toggleSectionVisibility = (id: HomeSectionId) => {
+    const next = {
+      ...sectionVisibility,
+      [id]: !sectionVisibility[id],
+    }
+    setSectionVisibility(next)
+    setHomeSectionVisibility(next)
   }
 
   const sectionLabels: Record<HomeSectionId, string> = {
@@ -254,8 +266,8 @@ export default function SettingsPage() {
           </h2>
           <p className="text-xs text-zinc-500">
             {language === 'es'
-              ? 'Reordena las secciones de la pantalla principal.'
-              : 'Reorder the sections on the home screen.'}
+              ? 'Reordena las secciones de la pantalla principal y oculta las que no quieras ver.'
+              : 'Reorder the sections on the home screen and hide the ones you do not want to see.'}
           </p>
           <div className="space-y-2">
             {sectionOrder.map((id, index) => (
@@ -264,6 +276,13 @@ export default function SettingsPage() {
                 className="flex items-center gap-2 bg-zinc-800 rounded-xl px-3 py-2"
               >
                 <span className="flex-1 text-sm text-zinc-100">{sectionLabels[id]}</span>
+                <button
+                  onClick={() => toggleSectionVisibility(id)}
+                  aria-label={sectionVisibility[id] ? t('Hide section') : t('Show section')}
+                  className="p-1.5 rounded-lg text-zinc-300 active:bg-zinc-700"
+                >
+                  {sectionVisibility[id] ? <Eye size={16} strokeWidth={2} /> : <EyeOff size={16} strokeWidth={2} />}
+                </button>
                 <button
                   onClick={() => moveSection(index, -1)}
                   disabled={index === 0}
