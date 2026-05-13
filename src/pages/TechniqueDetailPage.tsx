@@ -127,6 +127,7 @@ export default function TechniqueDetailPage() {
       <div className="px-4 space-y-4 pb-8">
         {/* Info card */}
         <div className="bg-zinc-900 rounded-2xl p-5">
+          {/* Image display hidden — kept for future re-implementation
           <div className="mb-4 -mx-2 -mt-2 overflow-hidden rounded-xl bg-zinc-950">
             <img
               src={imageSrc}
@@ -146,6 +147,7 @@ export default function TechniqueDetailPage() {
               }}
             />
           </div>
+          */}
           <div className="flex flex-wrap gap-2 mb-4">
             {category && (
               <span className="text-xs font-semibold px-2 py-1 rounded bg-gold/20 text-gold flex items-center gap-1.5">

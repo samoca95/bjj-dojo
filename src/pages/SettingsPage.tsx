@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, GitFork } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, GitFork, Lightbulb } from 'lucide-react'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n, translate } from '../i18n'
@@ -438,6 +438,18 @@ export default function SettingsPage() {
           >
             {t('Clear logs')}
           </button>
+        </div>
+
+        <div className="px-4 pb-2">
+          <a
+            href={`${githubRepoUrl}/issues/new?labels=feature+request&template=feature_request.md`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-zinc-900 text-sm font-semibold text-gold border border-gold/20 active:bg-zinc-800"
+          >
+            <Lightbulb size={16} strokeWidth={2} />
+            {t('Request a feature')}
+          </a>
         </div>
 
         <div className="px-1 pt-2 pb-4 text-center space-y-1">

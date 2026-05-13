@@ -373,7 +373,7 @@ export default function TechniqueEditPage() {
           />
         </div>
 
-        {/* Image URL */}
+        {/* Image URL input hidden — kept for future re-implementation
         <div>
           <label className="text-xs text-gold font-semibold tracking-wide">
             {language === 'es' ? 'URL DE IMAGEN' : 'IMAGE URL'}
@@ -399,6 +399,7 @@ export default function TechniqueEditPage() {
             </div>
           )}
         </div>
+        */}
 
         {/* Additional reference links */}
         <div>
