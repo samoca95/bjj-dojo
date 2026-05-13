@@ -5,6 +5,7 @@ import { CalendarDays, BookOpen, ChevronRight, Flame, Crosshair, Zap, Hand } fro
 import { db } from '../db/database'
 import { useI18n } from '../i18n'
 import ErrorBoundary from '../components/ErrorBoundary'
+import { BELT } from '../constants/themeColors'
 import { getGoalMatTime } from '../utils/goalMatTime'
 import { getFocusTechniqueIds, setFocusTechniqueIds } from '../utils/focusTechniques'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
@@ -37,7 +38,7 @@ const BELT_STYLES: Record<BeltColor, { bg: string; text: string; activeStripe: s
 function BeltDisplay({ color, stripes, beltLabel }: { color: BeltColor; stripes: number; beltLabel: string }) {
   const s = BELT_STYLES[color]
   const tipClass = color === 'black' ? 'bg-red-700' : 'bg-belt-black'
-  const logoFill = color === 'black' ? '#b91c1c' : '#18181b'
+  const logoFill = color === 'black' ? BELT.redTip : BELT.black
   return (
     <div className="overflow-hidden rounded-xl flex h-10 belt-outline">
       <div className={`flex-1 flex items-center px-5 gap-2 ${s.bg}`}>

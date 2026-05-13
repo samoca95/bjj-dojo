@@ -4,6 +4,9 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Mirror of src/constants/themeColors.ts — keep these in sync.
+        // Hex values are needed here (not CSS vars) so Tailwind opacity modifiers
+        // like `bg-gold/20` work.
         gold: {
           DEFAULT: '#d4a017',
           light: '#ffcc44',
