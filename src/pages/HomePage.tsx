@@ -378,11 +378,47 @@ export default function HomePage() {
     />
   )
 
+  const quickAccessSection = (
+    <section key="quickAccess">
+      <h2 className="text-xs font-semibold tracking-widest text-gold mb-3 px-1">{t('QUICK ACCESS')}</h2>
+      <div className="space-y-3">
+        <button
+          onClick={() => navigate('/sessions')}
+          className="w-full bg-zinc-900 rounded-2xl p-5 flex items-center gap-4 text-left active:bg-zinc-800 transition-colors"
+        >
+          <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
+            <CalendarDays size={28} className="text-gold" strokeWidth={1.5} />
+          </div>
+          <div className="flex-1">
+            <div className="font-semibold text-zinc-100">{t('Training Sessions')}</div>
+            <div className="text-sm text-zinc-400">{t('Log and review your mat time')}</div>
+          </div>
+          <ChevronRight size={20} className="text-zinc-600" strokeWidth={2} />
+        </button>
+
+        <button
+          onClick={() => navigate('/techniques')}
+          className="w-full bg-zinc-900 rounded-2xl p-5 flex items-center gap-4 text-left active:bg-zinc-800 transition-colors"
+        >
+          <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
+            <BookOpen size={28} className="text-gold" strokeWidth={1.5} />
+          </div>
+          <div className="flex-1">
+            <div className="font-semibold text-zinc-100">{t('Technique Library')}</div>
+            <div className="text-sm text-zinc-400">{t('60+ techniques with YouTube refs')}</div>
+          </div>
+          <ChevronRight size={20} className="text-zinc-600" strokeWidth={2} />
+        </button>
+      </div>
+    </section>
+  )
+
   const sectionMap: Record<HomeSectionId, ReactNode> = {
     focus: <ErrorBoundary key="focus" fallback={retry => <SectionErrorCard onRetry={retry} />}>{focusSection}</ErrorBoundary>,
     trending: <ErrorBoundary key="trending" fallback={retry => <SectionErrorCard onRetry={retry} />}>{trendingSection}</ErrorBoundary>,
     stats: <ErrorBoundary key="stats" fallback={retry => <SectionErrorCard onRetry={retry} />}>{statsSection}</ErrorBoundary>,
     calendar: <ErrorBoundary key="calendar" fallback={retry => <SectionErrorCard onRetry={retry} />}>{calendarSection}</ErrorBoundary>,
+    quickAccess: <ErrorBoundary key="quickAccess" fallback={retry => <SectionErrorCard onRetry={retry} />}>{quickAccessSection}</ErrorBoundary>,
   }
 
   const beltLabelKeys: Record<BeltColor, 'White Belt' | 'Blue Belt' | 'Purple Belt' | 'Brown Belt' | 'Black Belt'> = {
@@ -409,40 +445,6 @@ export default function HomePage() {
       <div className="px-4 space-y-6 pb-6">
         <BeltDisplay color={beltColor} stripes={beltStripes} beltLabel={beltLabel} />
         {sectionOrder.filter(id => sectionVisibility[id]).map(id => sectionMap[id])}
-
-        {/* Quick access */}
-        <section>
-          <h2 className="text-xs font-semibold tracking-widest text-gold mb-3 px-1">{t('QUICK ACCESS')}</h2>
-          <div className="space-y-3">
-            <button
-              onClick={() => navigate('/sessions')}
-              className="w-full bg-zinc-900 rounded-2xl p-5 flex items-center gap-4 text-left active:bg-zinc-800 transition-colors"
-            >
-              <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
-                <CalendarDays size={28} className="text-gold" strokeWidth={1.5} />
-              </div>
-              <div className="flex-1">
-                <div className="font-semibold text-zinc-100">{t('Training Sessions')}</div>
-                <div className="text-sm text-zinc-400">{t('Log and review your mat time')}</div>
-              </div>
-              <ChevronRight size={20} className="text-zinc-600" strokeWidth={2} />
-            </button>
-
-            <button
-              onClick={() => navigate('/techniques')}
-              className="w-full bg-zinc-900 rounded-2xl p-5 flex items-center gap-4 text-left active:bg-zinc-800 transition-colors"
-            >
-              <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
-                <BookOpen size={28} className="text-gold" strokeWidth={1.5} />
-              </div>
-              <div className="flex-1">
-                <div className="font-semibold text-zinc-100">{t('Technique Library')}</div>
-                <div className="text-sm text-zinc-400">{t('60+ techniques with YouTube refs')}</div>
-              </div>
-              <ChevronRight size={20} className="text-zinc-600" strokeWidth={2} />
-            </button>
-          </div>
-        </section>
       </div>
     </div>
   )

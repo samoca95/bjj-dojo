@@ -1,19 +1,20 @@
-export type HomeSectionId = 'focus' | 'trending' | 'stats' | 'calendar'
+export type HomeSectionId = 'focus' | 'trending' | 'stats' | 'calendar' | 'quickAccess'
 export type HomeSectionVisibility = Record<HomeSectionId, boolean>
 
 export const HOME_SECTION_ORDER_STORAGE_KEY = 'bjj-dojo:home-section-order'
 export const HOME_SECTION_VISIBILITY_STORAGE_KEY = 'bjj-dojo:home-section-visibility'
 export const HOME_SECTION_ORDER_UPDATED_EVENT = 'bjj-dojo:home-section-order-updated'
 
-export const DEFAULT_HOME_SECTION_ORDER: HomeSectionId[] = ['focus', 'trending', 'stats', 'calendar']
+export const DEFAULT_HOME_SECTION_ORDER: HomeSectionId[] = ['focus', 'trending', 'stats', 'calendar', 'quickAccess']
 export const DEFAULT_HOME_SECTION_VISIBILITY: HomeSectionVisibility = {
   focus: true,
   trending: true,
   stats: true,
   calendar: true,
+  quickAccess: true,
 }
 
-const ALL: HomeSectionId[] = ['focus', 'trending', 'stats', 'calendar']
+const ALL: HomeSectionId[] = ['focus', 'trending', 'stats', 'calendar', 'quickAccess']
 
 function sanitize(values: unknown): HomeSectionId[] {
   if (!Array.isArray(values)) return DEFAULT_HOME_SECTION_ORDER

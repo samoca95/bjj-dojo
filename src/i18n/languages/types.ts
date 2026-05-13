@@ -111,6 +111,7 @@ export type TranslationKey =
   | 'Pre-filled techniques were reset successfully.'
   | 'Previous month'
   | 'Purple Belt'
+  | 'PRACTICE SESSIONS'
   | 'QUICK ACCESS'
   | 'Received'
   | 'Remove'
