@@ -79,9 +79,6 @@ function SessionCard({
             {techniqueNames.join(' · ')}
           </p>
         )}
-        {session.notes && techniqueNames.length === 0 && (
-          <p className="text-xs text-zinc-500 mt-1 truncate">{session.notes}</p>
-        )}
       </div>
       <EnergyDots level={session.energyLevel} />
     </button>
@@ -165,12 +162,14 @@ export default function SessionsPage() {
     if (searchTokens.length > 0) {
       const sessionId = session.id ?? -1
       const clubName = session.clubId !== null && session.clubId !== undefined ? clubMap.get(session.clubId) : ''
+      const tapStats = sessionMeta.tapStatsBySessionId?.get(sessionId) ?? { given: 0, received: 0 }
       const searchable = [
         session.notes,
         clubName,
         session.sessionType,
         SESSION_TYPE_LABELS[session.sessionType],
         sessionMeta.searchTextBySessionId?.get(sessionId) ?? '',
+        `given ${tapStats.given} received ${tapStats.received}`,
       ].join(' ').toLowerCase()
       const matches = searchTokens.every(token => searchable.includes(token))
       if (!matches) return false

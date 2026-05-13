@@ -80,11 +80,11 @@ function setupTapSessionMocks() {
 
 function setupMixedDateSessionMocks() {
   const now = Date.now()
-  const responses = [
-    [
-      { ...mockSession, id: 1, date: now, notes: 'Recent session' },
-      { ...mockSession, id: 2, date: now - 120 * 24 * 60 * 60 * 1000, notes: 'Old session' },
-    ],
+    const responses = [
+      [
+        { ...mockSession, id: 1, date: now, durationMinutes: 90, notes: 'Recent session' },
+        { ...mockSession, id: 2, date: now - 120 * 24 * 60 * 60 * 1000, durationMinutes: 45, notes: 'Old session' },
+      ],
     [],
     {
       techniqueNamesBySessionId: new Map([[1, []], [2, []]]),
@@ -139,13 +139,13 @@ describe('SessionsPage', () => {
     setupSessionMocks()
     renderSessionsPage()
     expect(screen.getByText('90 min')).toBeInTheDocument()
-    expect(screen.getByText(/Worked on guard/)).toBeInTheDocument()
+    expect(screen.queryByText(/Worked on guard/)).not.toBeInTheDocument()
   })
 
   it('shows given and received tap stats with green zap and red hand icons', () => {
     setupTapSessionMocks()
     renderSessionsPage()
-    const sessionCard = screen.getByText(/Worked on guard/).closest('button')
+    const sessionCard = screen.getByText('90 min').closest('button')
 
     expect(sessionCard).not.toBeNull()
     expect(within(sessionCard!).getByText('2')).toBeInTheDocument()
@@ -168,8 +168,8 @@ describe('SessionsPage', () => {
   it('shows all sessions by default before selecting a day range', () => {
     setupMixedDateSessionMocks()
     renderSessionsPage()
-    expect(screen.getByText('Recent session')).toBeInTheDocument()
-    expect(screen.getByText('Old session')).toBeInTheDocument()
+    expect(screen.getByText('90 min')).toBeInTheDocument()
+    expect(screen.getByText('45 min')).toBeInTheDocument()
   })
 
   it('filters sessions when a day range is selected', async () => {
@@ -180,8 +180,8 @@ describe('SessionsPage', () => {
     await user.click(screen.getByLabelText('Filter'))
     await user.click(screen.getByRole('button', { name: '30d' }))
 
-    expect(screen.getByText('Recent session')).toBeInTheDocument()
-    expect(screen.queryByText('Old session')).not.toBeInTheDocument()
+    expect(screen.getByText('90 min')).toBeInTheDocument()
+    expect(screen.queryByText('45 min')).not.toBeInTheDocument()
   })
 
   it('filters sessions by search query across notes and techniques', async () => {
@@ -192,6 +192,19 @@ describe('SessionsPage', () => {
     await user.type(screen.getByLabelText('Search sessions'), 'knee cut')
 
     expect(screen.getByText('Knee cut pass')).toBeInTheDocument()
-    expect(screen.queryByText('Competition prep')).not.toBeInTheDocument()
+    expect(screen.queryByText('Armbar')).not.toBeInTheDocument()
+  })
+
+  it('filters sessions by given and received taps', async () => {
+    setupTapSessionMocks()
+    const user = userEvent.setup()
+    renderSessionsPage()
+
+    await user.type(screen.getByLabelText('Search sessions'), 'given 2')
+    expect(screen.getByText('90 min')).toBeInTheDocument()
+
+    await user.clear(screen.getByLabelText('Search sessions'))
+    await user.type(screen.getByLabelText('Search sessions'), 'received 3')
+    expect(screen.queryByText('90 min')).not.toBeInTheDocument()
   })
 })
