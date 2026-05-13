@@ -160,6 +160,6 @@ describe('TechniquesPage — search and filter', () => {
     await user.click(screen.getByRole('button', { name: 'Filter' }))
     expect(screen.getByRole('button', { name: 'Submissions' }).className).toContain('bg-gold')
     expect(screen.getByRole('button', { name: 'Favorites' }).className).toContain('bg-gold')
-    expect(screen.getByRole('button', { name: 'Beginner' }).className).toContain('bg-gold')
+    expect(screen.getByRole('button', { name: 'BEGINNER' }).className).toContain('bg-gold')
   })
 })
