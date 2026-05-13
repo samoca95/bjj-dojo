@@ -81,14 +81,15 @@ function renderNew() {
   )
 }
 
-function renderEdit(technique = sampleTechnique) {
+function renderEdit(technique = sampleTechnique, initialEntries: string[] = [`/techniques/${technique.id}/edit`]) {
   mocks.get.mockResolvedValue(technique)
   // Alternate: odd calls → categories, even calls → allTechniques ([])
   let callIdx = 0
   mockUseLiveQuery.mockImplementation(() => callIdx++ % 2 === 0 ? sampleCategories : [])
   return render(
-    <MemoryRouter initialEntries={[`/techniques/${technique.id}/edit`]}>
+    <MemoryRouter initialEntries={initialEntries}>
       <Routes>
+        <Route path="/settings" element={<div data-testid="settings-page" />} />
         <Route path="/techniques/:id/edit" element={<TechniqueEditPage />} />
         <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
         <Route path="/techniques" element={<div data-testid="techniques-list" />} />
@@ -245,4 +246,17 @@ describe('TechniqueEditPage — edit existing technique', () => {
       expect(mocks.put).toHaveBeenCalled()
     })
   })
+
+  it('returns to previous window after delete timeout', async () => {
+    const user = userEvent.setup()
+    renderEdit(sampleTechnique, ['/settings', `/techniques/${sampleTechnique.id}/edit`])
+    await waitFor(() => expect(screen.getByText('Delete Technique')).toBeInTheDocument())
+
+    await user.click(screen.getByText('Delete Technique'))
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await waitFor(() => expect(screen.getByText('Technique deleted.')).toBeInTheDocument())
+
+    await new Promise(resolve => setTimeout(resolve, 5100))
+    await waitFor(() => expect(screen.getByTestId('settings-page')).toBeInTheDocument())
+  }, 12000)
 })

@@ -103,7 +103,7 @@ export default function SessionDetailPage() {
       undoTimerRef.current = window.setTimeout(() => {
         undoTimerRef.current = null
         setPendingUndoSession(null)
-        navigate('/sessions')
+        navigate(-1)
       }, 5000)
       setShowDeleteModal(false)
     } finally {
