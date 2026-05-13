@@ -1,4 +1,3 @@
-import type { ConnectionType, Difficulty, SessionType } from '../../types'
 import type { LanguagePack, TranslationKey } from './types'
 
 const FR_TRANSLATIONS = {
@@ -41,8 +40,10 @@ const FR_TRANSLATIONS = {
   English: 'Anglais',
   Spanish: 'Espagnol',
   French: 'Français',
-  'No sessions yet': 'Aucune session pour le moment',
+  'Search…': 'Rechercher…',
+  'SESSION TYPE ICONS': 'ICÔNES DE TYPE DE SESSION',
   'Tap + to log your first training': 'Touchez + pour enregistrer votre premier entraînement',
+  'No sessions yet': 'Aucune session pour le moment',
   DATE: 'DATE',
   DURATION: 'DURÉE',
   'SESSION TYPE': 'TYPE DE SESSION',

@@ -40,6 +40,8 @@ const ES_TRANSLATIONS = {
   Language: 'Idioma',
   English: 'Inglés',
   Spanish: 'Español',
+  'Search…': 'Buscar…',
+  'SESSION TYPE ICONS': 'ICONOS DE TIPO DE SESIÓN',
   'No sessions yet': 'Aún no hay sesiones',
   'Tap + to log your first training': 'Pulsa + para registrar tu primer entrenamiento',
   DATE: 'FECHA',

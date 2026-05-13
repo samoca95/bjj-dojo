@@ -385,7 +385,10 @@ export default function HomePage() {
     calendar: <ErrorBoundary key="calendar" fallback={retry => <SectionErrorCard onRetry={retry} />}>{calendarSection}</ErrorBoundary>,
   }
 
-  const beltLabel = t(`${beltColor.charAt(0).toUpperCase() + beltColor.slice(1)} Belt`)
+  const beltLabelKeys: Record<BeltColor, 'White Belt' | 'Blue Belt' | 'Purple Belt' | 'Brown Belt' | 'Black Belt'> = {
+    white: 'White Belt', blue: 'Blue Belt', purple: 'Purple Belt', brown: 'Brown Belt', black: 'Black Belt',
+  }
+  const beltLabel = t(beltLabelKeys[beltColor])
 
   return (
     <div className="min-h-full bg-zinc-950">
