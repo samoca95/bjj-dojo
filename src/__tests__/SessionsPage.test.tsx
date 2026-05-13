@@ -191,7 +191,7 @@ describe('SessionsPage', () => {
 
     await user.type(screen.getByLabelText('Search sessions'), 'knee cut')
 
-    expect(screen.getByText('Guard passing rounds')).toBeInTheDocument()
+    expect(screen.getByText('Knee cut pass')).toBeInTheDocument()
     expect(screen.queryByText('Competition prep')).not.toBeInTheDocument()
   })
 })
