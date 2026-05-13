@@ -10,47 +10,6 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel, getCategoryName, getTechniqueDescription, getTechniqueCues } from '../i18n'
 import { defaultTechniqueImageUrl } from '../utils/validation'
 
-function TechniqueHero({
-  technique,
-  category,
-}: { technique: Technique; category?: Category }) {
-  if (technique.imageUrl?.trim()) {
-    return (
-      <div className="bg-zinc-900 rounded-2xl overflow-hidden">
-        <img
-          src={technique.imageUrl}
-          alt={technique.name}
-          loading="lazy"
-          className="w-full aspect-[16/9] object-cover bg-zinc-950"
-          onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-        />
-      </div>
-    )
-  }
-  return (
-    <div className="relative bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-2xl overflow-hidden border border-zinc-800">
-      <div className="aspect-[16/9] flex items-center justify-center">
-        <div className="absolute inset-0 opacity-10 flex items-center justify-center">
-          <CategoryIcon
-            value={category?.icon}
-            fallbackId={category?.id ?? 1}
-            size={220}
-            className="text-gold"
-          />
-        </div>
-        <div className="relative w-20 h-20 rounded-2xl bg-gold/15 flex items-center justify-center">
-          <CategoryIcon
-            value={category?.icon}
-            fallbackId={category?.id ?? 1}
-            size={44}
-            className="text-gold"
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function ConnectedTechniqueRow({
   technique, badge, badgeCls, onClick,
 }: { technique: Technique; badge: string; badgeCls: string; onClick: () => void }) {
@@ -119,7 +78,8 @@ export default function TechniqueDetailPage() {
   )
 
   const cues = getTechniqueCues(technique, language)
-  const imageSrc = (technique.imageUrl?.trim() || defaultTechniqueImageUrl(technique.name))
+  const fallbackImageSrc = defaultTechniqueImageUrl(technique.name)
+  const imageSrc = (technique.imageUrl?.trim() || fallbackImageSrc)
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -135,9 +95,6 @@ export default function TechniqueDetailPage() {
       </div>
 
       <div className="px-4 space-y-4 pb-8">
-        {/* Hero visual — image if provided, otherwise a stylized category banner */}
-        <TechniqueHero technique={technique} category={category} />
-
         {/* Info card */}
         <div className="bg-zinc-900 rounded-2xl p-5">
           <div className="mb-4 -mx-2 -mt-2 overflow-hidden rounded-xl bg-zinc-950">
@@ -146,7 +103,14 @@ export default function TechniqueDetailPage() {
               alt={technique.name}
               loading="lazy"
               className="w-full h-44 sm:h-56 object-cover"
-              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+              onError={e => {
+                const image = e.currentTarget as HTMLImageElement
+                if (image.src !== fallbackImageSrc) {
+                  image.src = fallbackImageSrc
+                  return
+                }
+                image.style.display = 'none'
+              }}
             />
           </div>
           <div className="flex flex-wrap gap-2 mb-4">
