@@ -24,6 +24,7 @@ export interface Technique {
   isFavorite?: boolean
   categoryId: number
   youtubeUrl: string
+  imageUrl?: string
   referenceLinks?: ReferenceLink[]
   difficulty: Difficulty
   isCustom: boolean

@@ -35,6 +35,7 @@ export default function TechniqueEditPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
   const [difficulty, setDifficulty] = useState<Difficulty>('BEGINNER')
   const [categoryId, setCategoryId] = useState<number>(1)
   const [cues, setCues] = useState<string[]>([])
@@ -66,6 +67,7 @@ export default function TechniqueEditPage() {
       setName(t.name)
       setDescription(t.description)
       setYoutubeUrl(t.youtubeUrl)
+      setImageUrl(t.imageUrl ?? '')
       setDifficulty(t.difficulty)
       setCategoryId(t.categoryId)
       setCues(t.cues ?? [])
@@ -93,6 +95,16 @@ export default function TechniqueEditPage() {
       window.alert(language === 'es' ? 'URL de YouTube inválida.' : 'Invalid YouTube URL.')
       return
     }
+    const trimmedImageUrl = imageUrl.trim()
+    if (trimmedImageUrl) {
+      try {
+        const parsed = new URL(trimmedImageUrl)
+        if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('bad protocol')
+      } catch {
+        window.alert(language === 'es' ? 'URL de imagen inválida.' : 'Invalid image URL.')
+        return
+      }
+    }
     const cleanedReferenceLinks: ReferenceLink[] = referenceLinks
       .map(link => ({
         url: link.url.trim(),
@@ -118,6 +130,7 @@ export default function TechniqueEditPage() {
           name: payload.name,
           description: payload.description,
           youtubeUrl: payload.youtubeUrl,
+          imageUrl: trimmedImageUrl || undefined,
           difficulty,
           categoryId,
           cues: payload.cues,
@@ -142,6 +155,7 @@ export default function TechniqueEditPage() {
           name: payload.name,
           description: payload.description,
           youtubeUrl: payload.youtubeUrl,
+          imageUrl: trimmedImageUrl || undefined,
           difficulty,
           categoryId,
           cues: payload.cues,
@@ -326,6 +340,29 @@ export default function TechniqueEditPage() {
             placeholder="https://youtube.com/watch?v=…"
             className={`${inputCls} mt-2`}
           />
+        </div>
+
+        {/* Image URL */}
+        <div>
+          <label className="text-xs text-gold font-semibold tracking-wide">
+            {language === 'es' ? 'URL DE IMAGEN' : 'IMAGE URL'}
+          </label>
+          <input
+            type="url"
+            inputMode="url"
+            value={imageUrl}
+            onChange={e => setImageUrl(e.target.value)}
+            placeholder="https://…/image.jpg"
+            className={`${inputCls} mt-2`}
+          />
+          {imageUrl.trim() && (
+            <img
+              src={imageUrl.trim()}
+              alt=""
+              className="mt-2 w-full aspect-[16/9] object-cover rounded-xl bg-zinc-900"
+              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+            />
+          )}
         </div>
 
         {/* Additional reference links */}
