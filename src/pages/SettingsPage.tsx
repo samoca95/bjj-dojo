@@ -77,6 +77,7 @@ export default function SettingsPage() {
     trending: t('TRENDING'),
     stats: t('YOUR STATS'),
     calendar: t('TRAINING CALENDAR'),
+    quickAccess: t('QUICK ACCESS'),
   }
   const importRef = useRef<HTMLInputElement>(null)
 

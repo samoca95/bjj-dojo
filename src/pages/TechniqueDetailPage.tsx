@@ -1,9 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom'
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Pencil, Star, ExternalLink } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowRight, ArrowLeft, Pencil, Star, ExternalLink } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
-import type { Category, Technique } from '../types'
+import type { Category, Session, Technique } from '../types'
 import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -25,11 +26,28 @@ function ConnectedTechniqueRow({
   )
 }
 
+function CollapsibleHeading({ label, open, onToggle }: { label: string; open: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center justify-between text-left"
+    >
+      <span className="text-xs font-semibold tracking-widest text-gold">{label}</span>
+      {open
+        ? <ChevronUp size={14} className="text-gold shrink-0" strokeWidth={2} />
+        : <ChevronDown size={14} className="text-gold shrink-0" strokeWidth={2} />
+      }
+    </button>
+  )
+}
+
 export default function TechniqueDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { language, t } = useI18n()
   const numId = Number(id)
+  const [connectionsOpen, setConnectionsOpen] = useState(true)
+  const [practiceSessionsOpen, setPracticeSessionsOpen] = useState(true)
 
   const technique = useLiveQuery(() => db.techniques.get(numId), [numId])
   // P5: use cached map — no per-categoryId re-query when only the technique changes
@@ -54,6 +72,14 @@ export default function TechniqueDetailPage() {
       technique: await db.techniques.get(c.fromTechniqueId),
       connectionType: c.connectionType,
     })))
+  }, [numId], [])
+
+  const practiceSessions = useLiveQuery(async () => {
+    const sts = await db.sessionTechniques.where('techniqueId').equals(numId).toArray()
+    const sessionIds = [...new Set(sts.map(st => st.sessionId))]
+    if (sessionIds.length === 0) return []
+    const sessions = await db.sessions.where('id').anyOf(sessionIds).toArray()
+    return sessions.sort((a, b) => b.date - a.date) as Session[]
   }, [numId], [])
 
   const recommendations = useLiveQuery(async () => {
@@ -205,52 +231,92 @@ export default function TechniqueDetailPage() {
 
         {/* Connections */}
         {((connectionsFrom?.length ?? 0) > 0 || (connectionsTo?.length ?? 0) > 0) && (
-          <div>
-             <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">{t('TECHNIQUE CONNECTIONS')}</h2>
+          <div className="space-y-3">
+            <div className="px-1">
+              <CollapsibleHeading
+                label={t('TECHNIQUE CONNECTIONS')}
+                open={connectionsOpen}
+                onToggle={() => setConnectionsOpen(prev => !prev)}
+              />
+            </div>
+            {connectionsOpen && (
+              <>
+                {connectionsFrom && connectionsFrom.length > 0 && (
+                  <div className="bg-zinc-900 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <ArrowRight size={16} className="text-gold" strokeWidth={2} />
+                      <span className="font-semibold text-zinc-100 text-sm">{t('Leads To / Follow-ups')}</span>
+                    </div>
+                    <div className="space-y-2">
+                      {connectionsFrom.map(({ technique: t, connectionType }, i) =>
+                        t ? (
+                          <ConnectedTechniqueRow
+                            key={i}
+                            technique={t}
+                            badge={connectionTypeLabel(connectionType, CONNECTION_LABELS[connectionType], language)}
+                            badgeCls={CONNECTION_COLORS[connectionType]}
+                            onClick={() => navigate(`/techniques/${t.id}`)}
+                          />
+                        ) : null,
+                      )}
+                    </div>
+                  </div>
+                )}
+                {connectionsTo && connectionsTo.length > 0 && (
+                  <div className="bg-zinc-900 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <ArrowLeft size={16} className="text-gold" strokeWidth={2} />
+                      <span className="font-semibold text-zinc-100 text-sm">{t('Can Be Set Up From')}</span>
+                    </div>
+                    <div className="space-y-2">
+                      {connectionsTo.map(({ technique: t, connectionType }, i) =>
+                        t ? (
+                          <ConnectedTechniqueRow
+                            key={i}
+                            technique={t}
+                            badge={connectionTypeLabel(connectionType, CONNECTION_LABELS[connectionType], language)}
+                            badgeCls={CONNECTION_COLORS[connectionType]}
+                            onClick={() => navigate(`/techniques/${t.id}`)}
+                          />
+                        ) : null,
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 
-        {connectionsFrom && connectionsFrom.length > 0 && (
-          <div className="bg-zinc-900 rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <ArrowRight size={16} className="text-gold" strokeWidth={2} />
-               <span className="font-semibold text-zinc-100 text-sm">{t('Leads To / Follow-ups')}</span>
+        {/* Practice sessions */}
+        {(practiceSessions?.length ?? 0) > 0 && (
+          <div className="space-y-3">
+            <div className="px-1">
+              <CollapsibleHeading
+                label={t('PRACTICE SESSIONS')}
+                open={practiceSessionsOpen}
+                onToggle={() => setPracticeSessionsOpen(prev => !prev)}
+              />
             </div>
-            <div className="space-y-2">
-              {connectionsFrom.map(({ technique: t, connectionType }, i) =>
-                t ? (
-                  <ConnectedTechniqueRow
-                    key={i}
-                    technique={t}
-                     badge={connectionTypeLabel(connectionType, CONNECTION_LABELS[connectionType], language)}
-                    badgeCls={CONNECTION_COLORS[connectionType]}
-                    onClick={() => navigate(`/techniques/${t.id}`)}
-                  />
-                ) : null,
-              )}
-            </div>
-          </div>
-        )}
-
-        {connectionsTo && connectionsTo.length > 0 && (
-          <div className="bg-zinc-900 rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <ArrowLeft size={16} className="text-gold" strokeWidth={2} />
-               <span className="font-semibold text-zinc-100 text-sm">{t('Can Be Set Up From')}</span>
-            </div>
-            <div className="space-y-2">
-              {connectionsTo.map(({ technique: t, connectionType }, i) =>
-                t ? (
-                  <ConnectedTechniqueRow
-                    key={i}
-                    technique={t}
-                     badge={connectionTypeLabel(connectionType, CONNECTION_LABELS[connectionType], language)}
-                    badgeCls={CONNECTION_COLORS[connectionType]}
-                    onClick={() => navigate(`/techniques/${t.id}`)}
-                  />
-                ) : null,
-              )}
-            </div>
+            {practiceSessionsOpen && (
+              <div className="bg-zinc-900 rounded-2xl p-4">
+                <div className="space-y-2">
+                  {practiceSessions!.map(session => (
+                    <button
+                      key={session.id}
+                      onClick={() => navigate(`/sessions/${session.id}`)}
+                      className="w-full flex items-center gap-3 bg-zinc-950 rounded-xl px-3 py-2.5 text-left active:bg-zinc-800 transition-colors"
+                    >
+                      <span className="flex-1 text-sm text-zinc-100">
+                        {new Date(session.date).toLocaleDateString(language === 'en' ? 'en-GB' : language, { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                      <span className="text-xs text-zinc-500">{session.durationMinutes}min</span>
+                      <ChevronRight size={15} className="text-zinc-600 shrink-0" strokeWidth={2} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
