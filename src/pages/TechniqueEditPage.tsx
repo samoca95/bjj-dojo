@@ -194,6 +194,10 @@ export default function TechniqueEditPage() {
     }
   }
 
+  const handleCancel = () => {
+    navigate(-1)
+  }
+
   const addCue = () => {
     const trimmed = newCue.trim()
     if (!trimmed) return
@@ -248,6 +252,12 @@ export default function TechniqueEditPage() {
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <h1 className="flex-1 font-bold text-zinc-100">{isNew ? t('New Technique') : t('Edit Technique')}</h1>
+        <button
+          onClick={handleCancel}
+          className="text-zinc-400 font-semibold text-sm active:text-zinc-200 px-2"
+        >
+          {t('Cancel')}
+        </button>
         <button
           onClick={handleSave}
           disabled={!name.trim()}

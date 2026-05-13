@@ -8,7 +8,7 @@ import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel, getCategoryName, getTechniqueDescription, getTechniqueCues } from '../i18n'
-import { defaultTechniqueImageUrl } from '../utils/validation'
+import { defaultTechniqueImageUrl, normalizeTechniqueImageUrl } from '../utils/validation'
 
 function ConnectedTechniqueRow({
   technique, badge, badgeCls, onClick,
@@ -79,7 +79,11 @@ export default function TechniqueDetailPage() {
 
   const cues = getTechniqueCues(technique, language)
   const fallbackImageSrc = defaultTechniqueImageUrl(technique.name)
-  const imageSrc = (technique.imageUrl?.trim() || fallbackImageSrc)
+  const originalImageSrc = technique.imageUrl?.trim() ?? ''
+  const normalizedImageSrc = originalImageSrc ? normalizeTechniqueImageUrl(originalImageSrc) : ''
+  const imageCandidates = [normalizedImageSrc, originalImageSrc, fallbackImageSrc]
+    .filter((value, index, arr) => Boolean(value) && arr.indexOf(value) === index)
+  const imageSrc = imageCandidates[0]
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -101,13 +105,15 @@ export default function TechniqueDetailPage() {
             <img
               src={imageSrc}
               alt={technique.name}
-              loading="lazy"
+              loading="eager"
               className="w-full h-44 sm:h-56 object-cover"
               onError={e => {
                 const image = e.currentTarget as HTMLImageElement
-                if (image.dataset.fallbackApplied !== 'true') {
-                  image.dataset.fallbackApplied = 'true'
-                  image.src = fallbackImageSrc
+                const currentIndex = Number(image.dataset.candidateIndex ?? '0')
+                const nextIndex = currentIndex + 1
+                if (nextIndex < imageCandidates.length) {
+                  image.dataset.candidateIndex = String(nextIndex)
+                  image.src = imageCandidates[nextIndex]
                   return
                 }
                 image.style.display = 'none'

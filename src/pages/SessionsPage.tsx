@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { CalendarDays, Hand, Plus, SlidersHorizontal, Zap } from 'lucide-react'
@@ -9,6 +9,8 @@ import EnergyDots from '../components/EnergyDots'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT } from '../utils/sessionTypeIcons'
 import { useI18n, sessionTypeLabel } from '../i18n'
+
+const LIST_SCROLL_KEY = 'bjj-dojo.sessions.scroll-y'
 
 function formatDate(epoch: number, locale?: string) {
   return new Date(epoch).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })
@@ -94,6 +96,7 @@ export default function SessionsPage() {
   const [clubFilter, setClubFilter] = useState<'all' | number>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | SessionType>('all')
   const [daysFilter, setDaysFilter] = useState<'all' | 30 | 90 | 365>('all')
+  const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'duration' | 'taps_total' | 'taps_given' | 'taps_received'>('date_desc')
   const sessions = useLiveQuery(
     () => db.sessions.orderBy('date').reverse().toArray(),
     [],
@@ -141,6 +144,25 @@ export default function SessionsPage() {
     if (clubFilter !== 'all' && session.clubId !== clubFilter) return false
     return true
   })
+  const sortedVisibleSessions = [...visibleSessions].sort((a, b) => {
+    const tapsA = sessionMeta.tapStatsBySessionId.get(a.id ?? -1) ?? { given: 0, received: 0 }
+    const tapsB = sessionMeta.tapStatsBySessionId.get(b.id ?? -1) ?? { given: 0, received: 0 }
+    if (sortBy === 'date_asc') return a.date - b.date
+    if (sortBy === 'duration') return b.durationMinutes - a.durationMinutes || b.date - a.date
+    if (sortBy === 'taps_total') {
+      const totalDelta = (tapsB.given + tapsB.received) - (tapsA.given + tapsA.received)
+      return totalDelta !== 0 ? totalDelta : b.date - a.date
+    }
+    if (sortBy === 'taps_given') {
+      const givenDelta = tapsB.given - tapsA.given
+      return givenDelta !== 0 ? givenDelta : b.date - a.date
+    }
+    if (sortBy === 'taps_received') {
+      const receivedDelta = tapsB.received - tapsA.received
+      return receivedDelta !== 0 ? receivedDelta : b.date - a.date
+    }
+    return b.date - a.date
+  })
 
   useEffect(() => {
     const sync = () => setSessionTypeIcons(getSessionTypeIcons())
@@ -148,23 +170,52 @@ export default function SessionsPage() {
     return () => window.removeEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
   }, [])
 
+  useLayoutEffect(() => {
+    const raw = window.sessionStorage.getItem(LIST_SCROLL_KEY)
+    if (!raw) return
+    const parsed = Number(raw)
+    if (!Number.isFinite(parsed) || parsed < 0) return
+    window.requestAnimationFrame(() => {
+      try {
+        window.scrollTo(0, parsed)
+      } catch {
+        return
+      }
+    })
+  }, [])
+
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-6 pt-12 pb-4 z-10">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-zinc-100">{t('Sessions')}</h1>
-          <button
-            onClick={() => setFilterOpen(prev => !prev)}
-            className={`p-2 rounded-xl transition-colors relative ${
-              filterOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
-            }`}
-            aria-label={t('Filter')}
-          >
-            <SlidersHorizontal size={18} strokeWidth={2} />
-            {(typeFilter !== 'all' || clubFilter !== 'all' || daysFilter !== 'all') && !filterOpen && (
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value as 'date_desc' | 'date_asc' | 'duration' | 'taps_total' | 'taps_given' | 'taps_received')}
+              className="h-9 bg-zinc-800 rounded-xl px-2 text-xs text-zinc-200 outline-none focus:ring-2 focus:ring-gold"
+              aria-label={language === 'es' ? 'Ordenar' : 'Sort'}
+            >
+              <option value="date_desc">{language === 'es' ? 'Fecha (más reciente)' : 'Date (newest)'}</option>
+              <option value="date_asc">{language === 'es' ? 'Fecha (más antigua)' : 'Date (oldest)'}</option>
+              <option value="duration">{language === 'es' ? 'Duración' : 'Duration'}</option>
+              <option value="taps_total">{language === 'es' ? 'Taps (total)' : 'Taps (total)'}</option>
+              <option value="taps_given">{language === 'es' ? 'Taps dados' : 'Taps (given)'}</option>
+              <option value="taps_received">{language === 'es' ? 'Taps recibidos' : 'Taps (received)'}</option>
+            </select>
+            <button
+              onClick={() => setFilterOpen(prev => !prev)}
+              className={`p-2 rounded-xl transition-colors relative ${
+                filterOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
+              }`}
+              aria-label={t('Filter')}
+            >
+              <SlidersHorizontal size={18} strokeWidth={2} />
+              {(typeFilter !== 'all' || clubFilter !== 'all' || daysFilter !== 'all') && !filterOpen && (
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Collapsible filter panel */}
@@ -250,7 +301,7 @@ export default function SessionsPage() {
       </div>
 
         <div className="px-4 pb-4 space-y-3">
-          {visibleSessions.length === 0 ? (
+          {sortedVisibleSessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
             <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center">
               <CalendarDays size={32} className="text-zinc-600" strokeWidth={2} />
@@ -260,7 +311,7 @@ export default function SessionsPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {visibleSessions.map(s => (
+              {sortedVisibleSessions.map(s => (
                 <SessionCard
                   key={s.id}
                   session={s}
@@ -271,7 +322,10 @@ export default function SessionsPage() {
                   tapStats={sessionMeta.tapStatsBySessionId.get(s.id ?? -1) ?? { given: 0, received: 0 }}
                   techniqueNames={sessionMeta.techniqueNamesBySessionId.get(s.id ?? -1) ?? []}
                   clubName={s.clubId !== null && s.clubId !== undefined ? clubMap.get(s.clubId) : undefined}
-                  onClick={() => navigate(`/sessions/${s.id}`)}
+                  onClick={() => {
+                    window.sessionStorage.setItem(LIST_SCROLL_KEY, String(window.scrollY))
+                    navigate(`/sessions/${s.id}`)
+                  }}
                 />
               ))}
             </div>
