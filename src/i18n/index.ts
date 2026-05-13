@@ -1,11 +1,25 @@
+/**
+ * i18n module — internationalisation for BJJ Dojo.
+ *
+ * ## Adding a new language
+ * 1. Add the code to AppLanguage: `export type AppLanguage = 'en' | 'es' | 'fr' | 'de'`
+ * 2. Create `src/i18n/languages/de.ts` implementing LanguagePack:
+ *    - `translations` must satisfy `Record<TranslationKey, string>` (compile-time
+ *      coverage check — TypeScript will error on any missing key)
+ *    - Add `categoryContent` and `techniqueContent` for localised technique text
+ *    - Export a `DE_LANGUAGE_PACK` and add `satisfies LanguagePack` at the bottom
+ * 3. Import and register it in `LANGUAGE_PACKS` below
+ * 4. Add a button for the new language in `SettingsPage` and `FirstLaunchSetupPrompt`
+ */
 import { useEffect, useMemo, useState } from 'react'
 import type { Category, ConnectionType, Difficulty, SessionType, Technique } from '../types'
 import { EN_LANGUAGE_PACK } from './languages/en'
 import { ES_LANGUAGE_PACK } from './languages/es'
 import { FR_LANGUAGE_PACK } from './languages/fr'
-import type { LanguagePack } from './languages/types'
+import type { LanguagePack, TranslationKey } from './languages/types'
 
 export type AppLanguage = 'en' | 'es' | 'fr'
+export type { TranslationKey }
 
 export const APP_LANGUAGE_STORAGE_KEY = 'bjj-dojo:language'
 export const APP_LANGUAGE_UPDATED_EVENT = 'bjj-dojo:language-updated'
@@ -32,7 +46,7 @@ export function setAppLanguage(language: AppLanguage) {
   window.dispatchEvent(new CustomEvent(APP_LANGUAGE_UPDATED_EVENT))
 }
 
-export function translate(text: string, language: AppLanguage): string {
+export function translate(text: TranslationKey, language: AppLanguage): string {
   if (language === 'en') return text
   const pack = getLanguagePack(language)
   return pack.translations[text] ?? text
@@ -112,7 +126,7 @@ export function useI18n() {
   const api = useMemo(() => ({
     language,
     setLanguage: (next: AppLanguage) => setAppLanguage(next),
-    t: (text: string) => translate(text, language),
+    t: (text: TranslationKey) => translate(text, language),
     locale: getLanguagePack(language).locale,
   }), [language])
 

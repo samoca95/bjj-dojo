@@ -1,7 +1,7 @@
 import type { ConnectionType, Difficulty, SessionType } from '../../types'
-import type { LanguagePack } from './types'
+import type { LanguagePack, TranslationKey } from './types'
 
-export const ES_TRANSLATIONS: Record<string, string> = {
+const ES_TRANSLATIONS = {
   Home: 'Inicio',
   Sessions: 'Sesiones',
   Techniques: 'Técnicas',
@@ -150,7 +150,39 @@ export const ES_TRANSLATIONS: Record<string, string> = {
   'Your device storage is full. Export a backup to free up space.': 'El almacenamiento del dispositivo está lleno. Exporta un respaldo para liberar espacio.',
   'Export backup': 'Exportar respaldo',
   Dismiss: 'Cerrar',
-}
+  // Settings section headings & labels
+  'YOUR BELT': 'TU CINTURÓN',
+  'THEME & LANGUAGE': 'TEMA E IDIOMA',
+  Theme: 'Tema',
+  Dark: 'Oscuro',
+  Stripes: 'Grados',
+  'HOME SECTION ORDER': 'ORDEN DEL INICIO',
+  'Reorder the sections on the home screen and hide the ones you do not want to see.':
+    'Reordena las secciones de la pantalla principal y oculta las que no quieras ver.',
+  'WEEKLY MAT TIME GOAL': 'META SEMANAL DE TATAMI',
+  'Default:': 'Predeterminado:',
+  'Reset pre-filled techniques': 'Restablecer técnicas predefinidas',
+  'Only pre-filled techniques and links are reset; custom techniques are kept.':
+    'Solo se reinician técnicas y conexiones predefinidas; las personalizadas no se eliminan.',
+  'BACKUP & RECOVERY': 'RESPALDO Y RECUPERACIÓN',
+  'Export JSON': 'Exportar JSON',
+  'Import JSON': 'Importar JSON',
+  'Use export/import to recover your data if browser storage is lost.':
+    'Usa exportar/importar para recuperar tus datos si el almacenamiento del navegador se pierde.',
+  'LOCAL LOGGING': 'REGISTRO LOCAL',
+  'Logged events:': 'Eventos registrados:',
+  'Clear logs': 'Limpiar registros',
+  'App version:': 'Versión de la app:',
+  'Developed by:': 'Desarrollado por:',
+  French: 'Francés',
+  // Alert messages
+  'Backup imported successfully.': 'Respaldo importado correctamente.',
+  'Could not import backup.': 'No se pudo importar el respaldo.',
+  'Reset all pre-filled techniques?\nYour custom techniques will be preserved.':
+    '¿Restablecer todas las técnicas predefinidas?\nTus técnicas personalizadas no se eliminarán.',
+  'Pre-filled techniques were reset successfully.': 'Técnicas predefinidas restablecidas correctamente.',
+  'Could not reset techniques.': 'No se pudo restablecer.',
+} satisfies Record<TranslationKey, string>
 
 export const ES_CATEGORY_CONTENT: Record<number, { name: string; description: string }> = {
   1: { name: 'Guardias', description: 'Posiciones sobre tu espalda controlando al oponente' },
@@ -498,4 +530,4 @@ export const ES_LANGUAGE_PACK: LanguagePack = {
   sessionTypes: ES_SESSION_TYPES,
   connectionTypes: ES_CONNECTION_TYPES,
   locale: 'es-ES',
-}
+} satisfies LanguagePack
