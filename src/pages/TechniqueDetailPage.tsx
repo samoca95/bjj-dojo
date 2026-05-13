@@ -105,7 +105,8 @@ export default function TechniqueDetailPage() {
               className="w-full h-44 sm:h-56 object-cover"
               onError={e => {
                 const image = e.currentTarget as HTMLImageElement
-                if (image.src !== fallbackImageSrc) {
+                if (image.dataset.fallbackApplied !== 'true') {
+                  image.dataset.fallbackApplied = 'true'
                   image.src = fallbackImageSrc
                   return
                 }
