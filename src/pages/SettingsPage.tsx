@@ -250,11 +250,12 @@ export default function SettingsPage() {
                 <button
                   key={code}
                   onClick={() => setLanguage(code)}
+                  aria-label={label}
                   className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors flex items-center gap-1 ${
                     language === code ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
                   }`}
                 >
-                  <span>{flag}</span>
+                  <span aria-hidden="true">{flag}</span>
                   <span>{label}</span>
                 </button>
               ))}

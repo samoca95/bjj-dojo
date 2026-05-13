@@ -148,11 +148,12 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
               <button
                 key={code}
                 onClick={() => setLanguage(code)}
+                aria-label={label}
                 className={`flex-1 rounded-md px-2 py-2 text-xs font-semibold transition-colors flex items-center justify-center gap-1 ${
                   language === code ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
                 }`}
               >
-                <span>{flag}</span>
+                <span aria-hidden="true">{flag}</span>
                 <span>{label}</span>
               </button>
             ))}
