@@ -269,8 +269,9 @@ export default function TechniqueEditPage() {
 
   const connectionOptions = allTechniques.filter(t => !id || t.id !== Number(id))
   const techniqueNameById = new Map(allTechniques.map(t => [t.id, t.name]))
-  const previewImageUrl = imageUrl.trim()
-  const showImagePreview = Boolean(previewImageUrl) && isValidImageUrl(previewImageUrl)
+  // Kept for future re-implementation (image input is currently hidden)
+  // const previewImageUrl = imageUrl.trim()
+  // const showImagePreview = Boolean(previewImageUrl) && isValidImageUrl(previewImageUrl)
 
   return (
     <div className="min-h-full bg-zinc-950">

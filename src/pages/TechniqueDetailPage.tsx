@@ -9,7 +9,7 @@ import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, connectionTypeLabel, getCategoryName, getTechniqueDescription, getTechniqueCues } from '../i18n'
-import { defaultTechniqueImageUrl, normalizeTechniqueImageUrl } from '../utils/validation'
+// import { defaultTechniqueImageUrl, normalizeTechniqueImageUrl } from '../utils/validation' // kept for future image re-implementation
 
 function ConnectedTechniqueRow({
   technique, badge, badgeCls, onClick,
@@ -104,12 +104,13 @@ export default function TechniqueDetailPage() {
   )
 
   const cues = getTechniqueCues(technique, language)
-  const fallbackImageSrc = defaultTechniqueImageUrl(technique.name)
-  const originalImageSrc = technique.imageUrl?.trim() ?? ''
-  const normalizedImageSrc = originalImageSrc ? normalizeTechniqueImageUrl(originalImageSrc) : ''
-  const imageCandidates = [normalizedImageSrc, originalImageSrc, fallbackImageSrc]
-    .filter((value, index, arr) => Boolean(value) && arr.indexOf(value) === index)
-  const imageSrc = imageCandidates[0]
+  // Image vars kept for future re-implementation (image display is currently hidden)
+  // const fallbackImageSrc = defaultTechniqueImageUrl(technique.name)
+  // const originalImageSrc = technique.imageUrl?.trim() ?? ''
+  // const normalizedImageSrc = originalImageSrc ? normalizeTechniqueImageUrl(originalImageSrc) : ''
+  // const imageCandidates = [normalizedImageSrc, originalImageSrc, fallbackImageSrc]
+  //   .filter((value, index, arr) => Boolean(value) && arr.indexOf(value) === index)
+  // const imageSrc = imageCandidates[0]
 
   return (
     <div className="min-h-full bg-zinc-950">
