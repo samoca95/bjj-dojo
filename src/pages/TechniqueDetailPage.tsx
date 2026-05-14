@@ -42,23 +42,29 @@ function CollapsibleHeading({ label, open, onToggle }: { label: string; open: bo
   )
 }
 
+const CONNECTION_TYPE_DESCRIPTIONS: Record<'en' | 'es' | 'fr', Record<ConnectionType, string>> = {
+  en: {
+    FOLLOW_UP: 'Natural next attack or finish from this position.',
+    COUNTER: "Response that shuts down or punishes the opponent's action.",
+    SETUP: 'Entry or preparation that creates the opening for the technique.',
+    TRANSITION: 'Smooth change between related positions or controls.',
+  },
+  es: {
+    FOLLOW_UP: 'Siguiente ataque o finalización natural desde esta posición.',
+    COUNTER: 'Respuesta para neutralizar o castigar la acción del oponente.',
+    SETUP: 'Entrada o preparación que crea la oportunidad para la técnica.',
+    TRANSITION: 'Cambio fluido entre posiciones o controles relacionados.',
+  },
+  fr: {
+    FOLLOW_UP: 'Attaque ou finalisation naturelle qui suit cette position.',
+    COUNTER: "Réponse pour neutraliser ou punir l'action de l'adversaire.",
+    SETUP: "Entrée ou préparation qui crée l'ouverture pour la technique.",
+    TRANSITION: 'Passage fluide entre des positions ou contrôles liés.',
+  },
+}
+
 function connectionTypeDescription(type: ConnectionType, language: 'en' | 'es' | 'fr'): string {
-  if (language === 'es') {
-    if (type === 'FOLLOW_UP') return 'Siguiente ataque o finalización natural desde esta posición.'
-    if (type === 'COUNTER') return 'Respuesta para neutralizar o castigar la acción del oponente.'
-    if (type === 'SETUP') return 'Entrada o preparación que crea la oportunidad para la técnica.'
-    return 'Cambio fluido entre posiciones o controles relacionados.'
-  }
-  if (language === 'fr') {
-    if (type === 'FOLLOW_UP') return 'Attaque ou finalisation naturelle qui suit cette position.'
-    if (type === 'COUNTER') return "Réponse pour neutraliser ou punir l'action de l'adversaire."
-    if (type === 'SETUP') return "Entrée ou préparation qui crée l'ouverture pour la technique."
-    return 'Passage fluide entre des positions ou contrôles liés.'
-  }
-  if (type === 'FOLLOW_UP') return 'Natural next attack or finish from this position.'
-  if (type === 'COUNTER') return "Response that shuts down or punishes the opponent's action."
-  if (type === 'SETUP') return 'Entry or preparation that creates the opening for the technique.'
-  return 'Smooth change between related positions or controls.'
+  return CONNECTION_TYPE_DESCRIPTIONS[language][type]
 }
 
 export default function TechniqueDetailPage() {

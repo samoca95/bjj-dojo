@@ -18,6 +18,8 @@ import {
 
 const NODE_RADIUS = 14
 const LABEL_FONT_SIZE = 12
+const MIN_PINCH_ZOOM_FACTOR = 0.35
+const MAX_PINCH_ZOOM_FACTOR = 3.2
 const EDGE_COLORS: Record<ConnectionType, string> = {
   FOLLOW_UP: '#fcd34d',
   COUNTER: '#fca5a5',
@@ -163,7 +165,7 @@ export default function TechniqueGraphPage() {
       const currentDistance = Math.max(Math.hypot(a.x - b.x, a.y - b.y), 1)
       const centerX = (a.x + b.x) / 2
       const centerY = (a.y + b.y) / 2
-      const factor = Math.min(3.2, Math.max(0.35, pinch.startDistance / currentDistance))
+      const factor = Math.min(MAX_PINCH_ZOOM_FACTOR, Math.max(MIN_PINCH_ZOOM_FACTOR, pinch.startDistance / currentDistance))
       didPanRef.current = true
       setView(zoomAtClientPoint(pinch.startView, factor, pinch, centerX, centerY))
       return
