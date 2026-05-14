@@ -11,7 +11,7 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, difficultyLabel, getCategoryName, getTechniqueDescription } from '../i18n'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 
-const ITEM_SIZE = 128 // fixed row height including constant vertical spacing
+const ITEM_SIZE = 116 // card height (~104px) + gap (12px)
 const LIST_SCROLL_KEY = 'bjj-dojo.techniques.scroll-offset'
 const LIST_CONTEXT_KEY = 'bjj-dojo.techniques.list-context'
 const DIFFICULTY_ORDER: Record<Difficulty, number> = {
@@ -39,10 +39,8 @@ function TechniqueRow({ technique, categoryName, categoryIcon, description, prac
         onClick={onClick}
         className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity"
       >
-        <span className="block font-semibold text-zinc-100 text-sm leading-snug line-clamp-2 min-h-[2.5rem]">
-          {technique.name}
-        </span>
-        <div className="flex items-center gap-2 flex-wrap mt-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold text-zinc-100 text-sm">{technique.name}</span>
           <DifficultyBadge difficulty={technique.difficulty} />
           {practiceCount > 0 && (
             <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300">
