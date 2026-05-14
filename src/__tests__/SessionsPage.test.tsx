@@ -161,8 +161,8 @@ describe('SessionsPage', () => {
 
     const fab = document.querySelector('button[class*="fixed bottom-20"]') as HTMLElement
     expect(fab).not.toBeNull()
-    expect(fab.className).toContain('w-12')
-    expect(fab.className).toContain('h-12')
+    expect(fab.className).toContain('w-10')
+    expect(fab.className).toContain('h-10')
     expect(fab.className).not.toContain('shadow')
     await user.click(fab)
     expect(screen.getByTestId('new-session-page')).toBeInTheDocument()
