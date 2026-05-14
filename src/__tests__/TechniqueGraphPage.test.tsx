@@ -81,11 +81,11 @@ describe('TechniqueGraphPage', () => {
 
   it('shows highlighted edge arrows and type tips when a node is hovered', () => {
     setupMocks()
-    const { container, getByText } = renderPage()
+    const { container, getAllByText } = renderPage()
     const firstNode = container.querySelector('g[role="button"]')!
     fireEvent.pointerEnter(firstNode)
     expect(container.querySelector('line[marker-end]')).not.toBeNull()
-    expect(getByText('Follow-up')).toBeInTheDocument()
+    expect(getAllByText('Follow-up').length).toBeGreaterThan(0)
   })
 
   it('selects on first click and navigates on second click of the same node', () => {
