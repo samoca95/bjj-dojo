@@ -70,6 +70,7 @@ function MeasuredTechniqueRow({
   index,
   style,
   onHeightChange,
+  techniqueId,
   technique,
   categoryName,
   categoryIcon,
@@ -80,7 +81,8 @@ function MeasuredTechniqueRow({
 }: {
   index: number
   style: React.CSSProperties
-  onHeightChange: (index: number, height: number) => void
+  techniqueId: number
+  onHeightChange: (index: number, techniqueId: number, height: number) => void
   technique: Technique
   categoryName: string
   categoryIcon?: string
@@ -96,7 +98,7 @@ function MeasuredTechniqueRow({
     if (!element) return
 
     const measure = () => {
-      onHeightChange(index, element.getBoundingClientRect().height)
+      onHeightChange(index, techniqueId, element.getBoundingClientRect().height)
     }
 
     measure()
@@ -108,6 +110,7 @@ function MeasuredTechniqueRow({
     return () => observer.disconnect()
   }, [
     index,
+    techniqueId,
     onHeightChange,
     technique.id,
     technique.isFavorite,
@@ -301,27 +304,36 @@ export default function TechniquesPage() {
   const catIconMap = new Map(categories?.map(c => [c.id, c.icon]))
 
   useEffect(() => {
-    rowHeightsRef.current = {}
+    const nextHeights = Object.fromEntries(
+      techniques
+        .map(technique => {
+          const cachedHeight = rowHeightsRef.current[technique.id]
+          return cachedHeight === undefined ? null : [technique.id, cachedHeight]
+        })
+        .filter((entry): entry is [number, number] => entry !== null),
+    )
+    rowHeightsRef.current = nextHeights
     listRef.current?.resetAfterIndex?.(0)
   }, [techniques])
 
-  const handleRowHeightChange = useCallback((index: number, height: number) => {
+  const handleRowHeightChange = useCallback((index: number, techniqueId: number, height: number) => {
     const nextSize = Math.ceil(height) + ROW_GAP
-    if (rowHeightsRef.current[index] === nextSize) return
-    rowHeightsRef.current[index] = nextSize
+    if (rowHeightsRef.current[techniqueId] === nextSize) return
+    rowHeightsRef.current[techniqueId] = nextSize
     listRef.current?.resetAfterIndex?.(index)
   }, [])
 
   const renderRow = ({ index, style }: ListChildComponentProps) => {
     const technique = techniques[index]
     return (
-      <MeasuredTechniqueRow
-        index={index}
-        style={style}
-        onHeightChange={handleRowHeightChange}
-        technique={technique}
-        categoryName={catMap.get(technique.categoryId) ?? ''}
-        categoryIcon={catIconMap.get(technique.categoryId)}
+        <MeasuredTechniqueRow
+          index={index}
+          style={style}
+          onHeightChange={handleRowHeightChange}
+          techniqueId={technique.id}
+          technique={technique}
+          categoryName={catMap.get(technique.categoryId) ?? ''}
+          categoryIcon={catIconMap.get(technique.categoryId)}
         description={getTechniqueDescription(technique, language)}
         practiceCount={freqMap.get(technique.id) ?? 0}
         onClick={() => {
@@ -491,7 +503,7 @@ export default function TechniquesPage() {
         ref={listRef}
         height={listHeight}
         itemCount={techniques.length}
-        itemSize={index => rowHeightsRef.current[index] ?? DEFAULT_ITEM_SIZE}
+        itemSize={index => rowHeightsRef.current[techniques[index]?.id] ?? DEFAULT_ITEM_SIZE}
         estimatedItemSize={DEFAULT_ITEM_SIZE}
         width="100%"
         innerElementType={ListInner}
