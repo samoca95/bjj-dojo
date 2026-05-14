@@ -108,6 +108,26 @@ export class BJJDatabase extends Dexie {
         if (normalized.length > 0) await this.techniques.bulkPut(normalized)
       })
     })
+    this.version(7).stores({
+      categories: 'id, name',
+      techniques: 'id, categoryId, name',
+      techniqueConnections: '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+      sessions: '++id, date, clubId',
+      sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
+      sessionTaps: '++id, sessionId, techniqueId',
+      clubs: '++id, sortOrder, name',
+      drillPlans: '++id, name, createdAt',
+    }).upgrade(async () => {
+      await this.transaction('rw', [this.techniques], async () => {
+        // Backfill canonical aliases onto existing prefilled techniques, preserving user edits.
+        const all = await this.techniques.toArray() as Technique[]
+        const byId = new Map(prefilledTechniques.map(t => [t.id, t]))
+        const updates = all
+          .filter(t => t.isCustom === false && byId.has(t.id))
+          .map(t => ({ ...t, aliases: byId.get(t.id)!.aliases ?? [] }))
+        if (updates.length > 0) await this.techniques.bulkPut(updates)
+      })
+    })
 
     // Populate on first creation — registered here so every instance gets it
     // (including isolated test instances).
