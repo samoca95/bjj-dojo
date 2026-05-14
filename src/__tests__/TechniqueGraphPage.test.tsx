@@ -53,6 +53,19 @@ const GRAPH_VIEW_KEY = 'bjj-dojo.techniques.graph-view'
 beforeEach(() => {
   vi.clearAllMocks()
   window.sessionStorage.clear()
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(() => ({
+      matches: false,
+      media: '',
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
 })
 afterEach(() => vi.restoreAllMocks())
 
@@ -86,6 +99,35 @@ describe('TechniqueGraphPage', () => {
     fireEvent.pointerEnter(firstNode)
     expect(container.querySelector('line[marker-end]')).not.toBeNull()
     expect(getAllByText('Follow-up').length).toBeGreaterThan(0)
+  })
+
+  it('uses a uniform colour for non-highlighted edges', () => {
+    setupMocks()
+    const { container } = renderPage()
+    const edges = container.querySelectorAll('line')
+    expect(edges.length).toBeGreaterThan(0)
+    for (const edge of edges) {
+      expect(edge.getAttribute('stroke')).toBe('#52525b')
+    }
+  })
+
+  it('hides the highlighted white/black type box on touch screens', () => {
+    vi.mocked(window.matchMedia).mockImplementation(() => ({
+      matches: true,
+      media: '(hover: none), (pointer: coarse)',
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
+    setupMocks()
+    const { container, queryByText } = renderPage()
+    const firstNode = container.querySelector('g[role="button"]')!
+    fireEvent.click(firstNode)
+    expect(queryByText('Follow-up')).toBeNull()
+    expect(container.querySelector('line[marker-end]')).not.toBeNull()
   })
 
   it('selects on first click and navigates on second click of the same node', () => {

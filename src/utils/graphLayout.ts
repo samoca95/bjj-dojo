@@ -27,22 +27,106 @@ export function forceDirectedLayout(
 ): Map<number, GraphNodePosition> {
   const iterations = options?.iterations ?? 300
   const k = options?.spacing ?? 56
-  const n = nodeIds.length
   const pos = new Map<number, GraphNodePosition>()
-  if (n === 0) return pos
-  if (n === 1) {
+  if (nodeIds.length === 0) return pos
+  if (nodeIds.length === 1) {
     pos.set(nodeIds[0], { x: 0, y: 0 })
     return pos
   }
 
-  // Deterministic initial placement on a circle.
+  const idSet = new Set(nodeIds)
+  const validEdges = edges.filter(e => idSet.has(e.from) && idSet.has(e.to) && e.from !== e.to)
+  const adjacency = new Map<number, Set<number>>()
+  nodeIds.forEach(id => adjacency.set(id, new Set()))
+  for (const edge of validEdges) {
+    adjacency.get(edge.from)?.add(edge.to)
+    adjacency.get(edge.to)?.add(edge.from)
+  }
+
+  const components: number[][] = []
+  const seen = new Set<number>()
+  for (const id of nodeIds) {
+    if (seen.has(id)) continue
+    const queue = [id]
+    const component: number[] = []
+    seen.add(id)
+    while (queue.length > 0) {
+      const current = queue.shift()!
+      component.push(current)
+      for (const next of adjacency.get(current) ?? []) {
+        if (seen.has(next)) continue
+        seen.add(next)
+        queue.push(next)
+      }
+    }
+    component.sort((a, b) => a - b)
+    components.push(component)
+  }
+  components.sort((a, b) => b.length - a.length || a[0] - b[0])
+
+  const componentGap = k * 2
+  const componentLayouts: Array<{ ids: number[]; positions: Map<number, GraphNodePosition>; minX: number; maxX: number; minY: number; maxY: number }> = []
+  for (const ids of components) {
+    const componentSet = new Set(ids)
+    const componentEdges = validEdges.filter(edge => componentSet.has(edge.from) && componentSet.has(edge.to))
+    const componentPositions = runForceLayout(ids, componentEdges, iterations, k)
+    const bounds = computeBounds(componentPositions)
+    componentLayouts.push({ ids, positions: componentPositions, ...bounds })
+  }
+
+  const totalArea = componentLayouts.reduce((sum, c) => {
+    const width = Math.max(c.maxX - c.minX, k)
+    const height = Math.max(c.maxY - c.minY, k)
+    return sum + width * height
+  }, 0)
+  const targetRowWidth = Math.max(Math.sqrt(totalArea) * 1.4, k * 6)
+
+  let cursorX = 0
+  let cursorY = 0
+  let rowHeight = 0
+  for (const component of componentLayouts) {
+    const width = Math.max(component.maxX - component.minX, k)
+    const height = Math.max(component.maxY - component.minY, k)
+    if (cursorX > 0 && cursorX + width > targetRowWidth) {
+      cursorX = 0
+      cursorY += rowHeight + componentGap
+      rowHeight = 0
+    }
+    const offsetX = cursorX - component.minX
+    const offsetY = cursorY - component.minY
+    for (const id of component.ids) {
+      const p = component.positions.get(id)!
+      pos.set(id, { x: p.x + offsetX, y: p.y + offsetY })
+    }
+    cursorX += width + componentGap
+    rowHeight = Math.max(rowHeight, height)
+  }
+
+  const allBounds = computeBounds(pos)
+  const centerX = (allBounds.minX + allBounds.maxX) / 2
+  const centerY = (allBounds.minY + allBounds.maxY) / 2
+  for (const p of pos.values()) {
+    p.x -= centerX
+    p.y -= centerY
+  }
+
+  return pos
+}
+
+function runForceLayout(
+  nodeIds: number[],
+  edges: LayoutEdge[],
+  iterations: number,
+  k: number,
+): Map<number, GraphNodePosition> {
+  const n = nodeIds.length
+  const pos = new Map<number, GraphNodePosition>()
+  if (n === 0) return pos
+
   nodeIds.forEach((id, i) => {
     const angle = (i / n) * 2 * Math.PI
     pos.set(id, { x: Math.cos(angle) * k * 3, y: Math.sin(angle) * k * 3 })
   })
-
-  const idSet = new Set(nodeIds)
-  const validEdges = edges.filter(e => idSet.has(e.from) && idSet.has(e.to) && e.from !== e.to)
 
   let temp = k * 4
   const cooling = Math.pow(0.05, 1 / iterations) // anneal down to ~5% of starting temp
@@ -78,7 +162,7 @@ export function forceDirectedLayout(
     }
 
     // Attraction along edges.
-    for (const edge of validEdges) {
+    for (const edge of edges) {
       const a = pos.get(edge.from)!
       const b = pos.get(edge.to)!
       let dx = a.x - b.x
@@ -113,6 +197,25 @@ export function forceDirectedLayout(
   }
 
   return pos
+}
+
+function computeBounds(positions: Map<number, GraphNodePosition>): {
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+} {
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  for (const { x, y } of positions.values()) {
+    if (x < minX) minX = x
+    if (y < minY) minY = y
+    if (x > maxX) maxX = x
+    if (y > maxY) maxY = y
+  }
+  return { minX, maxX, minY, maxY }
 }
 
 /**

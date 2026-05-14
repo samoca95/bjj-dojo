@@ -20,6 +20,7 @@ const NODE_RADIUS = 14
 const LABEL_FONT_SIZE = 12
 const MIN_PINCH_ZOOM_FACTOR = 0.35
 const MAX_PINCH_ZOOM_FACTOR = 3.2
+const DEFAULT_EDGE_COLOR = '#52525b'
 const EDGE_COLORS: Record<ConnectionType, string> = {
   FOLLOW_UP: '#fcd34d',
   COUNTER: '#fca5a5',
@@ -110,6 +111,28 @@ export default function TechniqueGraphPage() {
   const didPanRef = useRef(false)
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null)
   const [hoveredNodeId, setHoveredNodeId] = useState<number | null>(null)
+  const [isTouchGraph, setIsTouchGraph] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return (
+      (typeof window.matchMedia === 'function' && window.matchMedia('(hover: none), (pointer: coarse)').matches) ||
+      navigator.maxTouchPoints > 0
+    )
+  })
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return
+    const mediaQuery = window.matchMedia('(hover: none), (pointer: coarse)')
+    const update = () => {
+      setIsTouchGraph(mediaQuery.matches || navigator.maxTouchPoints > 0)
+    }
+    update()
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', update)
+      return () => mediaQuery.removeEventListener('change', update)
+    }
+    mediaQuery.addListener(update)
+    return () => mediaQuery.removeListener(update)
+  }, [])
 
   const activeNodeId = hoveredNodeId ?? selectedNodeId
   const highlightedNodeIds = useMemo(() => {
@@ -257,22 +280,31 @@ export default function TechniqueGraphPage() {
                 if (!a || !b) return null
                 const highlighted = activeNodeId !== null && (c.fromTechniqueId === activeNodeId || c.toTechniqueId === activeNodeId)
                 const typeLabel = connectionTypeLabel(c.connectionType, CONNECTION_LABELS[c.connectionType], language)
-                const edgeColor = EDGE_COLORS[c.connectionType]
+                const edgeColor = highlighted ? EDGE_COLORS[c.connectionType] : DEFAULT_EDGE_COLOR
+                const dx = b.x - a.x
+                const dy = b.y - a.y
+                const dist = Math.max(Math.hypot(dx, dy), 0.001)
+                const sourcePad = NODE_RADIUS + (highlighted ? 4.5 : 0.75)
+                const targetPad = NODE_RADIUS + (highlighted ? 4.5 : 0.75)
+                const x1 = a.x + (dx / dist) * sourcePad
+                const y1 = a.y + (dy / dist) * sourcePad
+                const x2 = b.x - (dx / dist) * targetPad
+                const y2 = b.y - (dy / dist) * targetPad
                 const midX = (a.x + b.x) / 2
                 const midY = (a.y + b.y) / 2
                 return (
                   <g key={`${c.fromTechniqueId}-${c.toTechniqueId}`}>
                     <line
-                      x1={a.x}
-                      y1={a.y}
-                      x2={b.x}
-                      y2={b.y}
+                      x1={x1}
+                      y1={y1}
+                      x2={x2}
+                      y2={y2}
                       stroke={edgeColor}
                       strokeWidth={highlighted ? 2.4 : 1.8}
-                      strokeOpacity={highlighted ? 0.98 : 0.62}
+                      strokeOpacity={highlighted ? 0.98 : 0.56}
                       markerEnd={highlighted ? `url(#tg-arrow-${c.connectionType})` : undefined}
                     />
-                    {highlighted && (
+                    {highlighted && !isTouchGraph && (
                       <text
                         x={midX}
                         y={midY - 3}
@@ -304,8 +336,8 @@ export default function TechniqueGraphPage() {
                     tabIndex={0}
                     className="cursor-pointer"
                     onClick={() => activateNode(tech.id)}
-                    onPointerEnter={() => setHoveredNodeId(tech.id)}
-                    onPointerLeave={() => setHoveredNodeId(prev => (prev === tech.id ? null : prev))}
+                    onPointerEnter={isTouchGraph ? undefined : () => setHoveredNodeId(tech.id)}
+                    onPointerLeave={isTouchGraph ? undefined : () => setHoveredNodeId(prev => (prev === tech.id ? null : prev))}
                     onKeyDown={e => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault()
