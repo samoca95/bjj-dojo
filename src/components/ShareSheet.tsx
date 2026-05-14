@@ -1,25 +1,67 @@
-import { useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from 'react'
 import {
-  X, Share2, Download, Camera, Image as ImageIcon, Copy, FileText,
-  Loader2, Check, MessageCircle, Send, Palette, Award, QrCode, RotateCcw, Move,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+  type ReactNode,
+} from 'react'
+import {
+  X,
+  Share2,
+  Download,
+  Camera,
+  Image as ImageIcon,
+  Copy,
+  FileText,
+  Loader2,
+  Check,
+  MessageCircle,
+  Send,
+  Palette,
+  Award,
+  QrCode,
+  RotateCcw,
+  Move,
   ChevronDown,
 } from 'lucide-react'
 import type { SessionExportData } from '../utils/exportSession'
 import {
-  exportSession, buildShareCaption, shareSessionImage,
-  openWhatsAppShare, openTwitterShare, copyToClipboard, downloadBlob,
+  exportSession,
+  buildShareCaption,
+  shareSessionImage,
+  openWhatsAppShare,
+  openTwitterShare,
+  copyToClipboard,
+  downloadBlob,
 } from '../utils/exportSession'
 import {
-  renderShareCard, loadShareImage, clampTransform, getShareCardTheme,
-  SHARE_CARD_THEMES, DEFAULT_TRANSFORM,
-  type ShareCardFormat, type BackgroundTransform, type ShareCardOptions,
+  renderShareCard,
+  loadShareImage,
+  clampTransform,
+  getShareCardTheme,
+  SHARE_CARD_THEMES,
+  DEFAULT_TRANSFORM,
+  type ShareCardFormat,
+  type BackgroundTransform,
+  type ShareCardOptions,
 } from '../utils/shareCard'
 import {
-  APP_URL, getShareThemeId, setShareThemeId, getShareFormat, setShareFormat,
-  getShareShowBelt, setShareShowBelt, getShareShowQr, setShareShowQr,
+  APP_URL,
+  getShareThemeId,
+  setShareThemeId,
+  getShareFormat,
+  setShareFormat,
+  getShareShowBelt,
+  setShareShowBelt,
+  getShareShowQr,
+  setShareShowQr,
 } from '../utils/sharePreferences'
 import {
-  getUserName, setUserName, getUserNamePrompted, setUserNamePrompted,
+  getUserName,
+  setUserName,
+  getUserNamePrompted,
+  setUserNamePrompted,
   MAX_USER_NAME_LENGTH,
 } from '../utils/userName'
 import { getBeltColor, getBeltStripes, type BeltColor } from '../utils/beltRank'
@@ -104,7 +146,8 @@ const LABELS: Record<AppLanguage, ShareSheetLabels> = {
     imageError: 'Could not load that image',
     customPhoto: 'Custom photo added',
     namePromptTitle: 'Add your name?',
-    namePromptBody: 'It will appear on your shared session cards. You can change it later in Settings.',
+    namePromptBody:
+      'It will appear on your shared session cards. You can change it later in Settings.',
     skip: 'Skip',
     saveContinue: 'Save & continue',
   },
@@ -143,7 +186,8 @@ const LABELS: Record<AppLanguage, ShareSheetLabels> = {
     imageError: 'No se pudo cargar la imagen',
     customPhoto: 'Foto personalizada añadida',
     namePromptTitle: '¿Añadir tu nombre?',
-    namePromptBody: 'Aparecerá en tus tarjetas de sesión compartidas. Puedes cambiarlo luego en Ajustes.',
+    namePromptBody:
+      'Aparecerá en tus tarjetas de sesión compartidas. Puedes cambiarlo luego en Ajustes.',
     skip: 'Omitir',
     saveContinue: 'Guardar y continuar',
   },
@@ -182,16 +226,35 @@ const LABELS: Record<AppLanguage, ShareSheetLabels> = {
     imageError: 'Impossible de charger cette image',
     customPhoto: 'Photo personnalisée ajoutée',
     namePromptTitle: 'Ajouter votre nom ?',
-    namePromptBody: 'Il apparaîtra sur vos cartes de session partagées. Modifiable plus tard dans les réglages.',
+    namePromptBody:
+      'Il apparaîtra sur vos cartes de session partagées. Modifiable plus tard dans les réglages.',
     skip: 'Ignorer',
     saveContinue: 'Enregistrer et continuer',
   },
 }
 
 const BELT_LABELS: Record<AppLanguage, Record<BeltColor, string>> = {
-  en: { white: 'White', blue: 'Blue', purple: 'Purple', brown: 'Brown', black: 'Black' },
-  es: { white: 'Blanco', blue: 'Azul', purple: 'Morado', brown: 'Marrón', black: 'Negro' },
-  fr: { white: 'Blanche', blue: 'Bleue', purple: 'Violette', brown: 'Marron', black: 'Noire' },
+  en: {
+    white: 'White',
+    blue: 'Blue',
+    purple: 'Purple',
+    brown: 'Brown',
+    black: 'Black',
+  },
+  es: {
+    white: 'Blanco',
+    blue: 'Azul',
+    purple: 'Morado',
+    brown: 'Marrón',
+    black: 'Negro',
+  },
+  fr: {
+    white: 'Blanche',
+    blue: 'Bleue',
+    purple: 'Violette',
+    brown: 'Marron',
+    black: 'Noire',
+  },
 }
 
 interface Props {
@@ -203,7 +266,9 @@ interface Props {
 
 function Toggle({ on }: { on: boolean }) {
   return (
-    <span className={`relative w-11 h-6 rounded-full shrink-0 transition-colors ${on ? 'bg-gold' : 'bg-zinc-700'}`}>
+    <span
+      className={`relative w-11 h-6 rounded-full shrink-0 transition-colors ${on ? 'bg-gold' : 'bg-zinc-700'}`}
+    >
       <span
         className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
           on ? 'translate-x-5' : 'translate-x-0'
@@ -214,7 +279,10 @@ function Toggle({ on }: { on: boolean }) {
 }
 
 function CollapsibleSection({
-  icon, title, summary, children,
+  icon,
+  title,
+  summary,
+  children,
 }: {
   icon: ReactNode
   title: string
@@ -225,13 +293,17 @@ function CollapsibleSection({
   return (
     <div className="rounded-xl bg-zinc-800/40 border border-zinc-800">
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-2.5 px-3 py-3 text-left"
         aria-expanded={open}
       >
         <span className="text-gold shrink-0">{icon}</span>
-        <span className="flex-1 text-sm font-semibold text-zinc-200">{title}</span>
-        {summary && !open && <span className="text-xs text-gold-light">{summary}</span>}
+        <span className="flex-1 text-sm font-semibold text-zinc-200">
+          {title}
+        </span>
+        {summary && !open && (
+          <span className="text-xs text-gold-light">{summary}</span>
+        )}
         <ChevronDown
           size={16}
           strokeWidth={2}
@@ -251,7 +323,8 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
 
   const [format, setFormat] = useState<ShareCardFormat>(getShareFormat)
   const [background, setBackground] = useState<CanvasImageSource | null>(null)
-  const [transform, setTransform] = useState<BackgroundTransform>(DEFAULT_TRANSFORM)
+  const [transform, setTransform] =
+    useState<BackgroundTransform>(DEFAULT_TRANSFORM)
   const [themeId, setThemeId] = useState(getShareThemeId)
   const [showBelt, setShowBelt] = useState(getShareShowBelt)
   const [showQr, setShowQr] = useState(getShareShowQr)
@@ -261,7 +334,9 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
   const [rendering, setRendering] = useState(true)
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
-  const [namePromptFor, setNamePromptFor] = useState<null | 'share' | 'save'>(null)
+  const [namePromptFor, setNamePromptFor] = useState<null | 'share' | 'save'>(
+    null,
+  )
   const [namePromptValue, setNamePromptValue] = useState('')
 
   const [beltColor] = useState(getBeltColor)
@@ -273,29 +348,52 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
   const galleryInputRef = useRef<HTMLInputElement>(null)
   const transformRef = useRef(transform)
   const dragRef = useRef<{ x: number; y: number } | null>(null)
-  const throttleRef = useRef<{ last: number; timer: number }>({ last: 0, timer: 0 })
+  const throttleRef = useRef<{ last: number; timer: number }>({
+    last: 0,
+    timer: 0,
+  })
 
   const theme = useMemo(() => getShareCardTheme(themeId), [themeId])
   const belt = useMemo(
-    () => (showBelt ? { color: beltColor, stripes: beltStripes, name: name.trim() || undefined } : null),
+    () =>
+      showBelt
+        ? {
+            color: beltColor,
+            stripes: beltStripes,
+            name: name.trim() || undefined,
+          }
+        : null,
     [showBelt, beltColor, beltStripes, name],
   )
   const qrUrl = showQr ? APP_URL : null
   const caption = buildShareCaption(sessionData, language)
 
-  useEffect(() => { transformRef.current = transform }, [transform])
-  useEffect(() => { setShareThemeId(themeId) }, [themeId])
-  useEffect(() => { setShareShowBelt(showBelt) }, [showBelt])
-  useEffect(() => { setShareShowQr(showQr) }, [showQr])
+  useEffect(() => {
+    transformRef.current = transform
+  }, [transform])
+  useEffect(() => {
+    setShareThemeId(themeId)
+  }, [themeId])
+  useEffect(() => {
+    setShareShowBelt(showBelt)
+  }, [showBelt])
+  useEffect(() => {
+    setShareShowQr(showQr)
+  }, [showQr])
 
   useEffect(() => {
     let cancelled = false
     setRendering(true)
     renderShareCard(sessionData, language, locale, {
-      format, theme, background, backgroundTransform: transform, belt, qrUrl,
+      format,
+      theme,
+      background,
+      backgroundTransform: transform,
+      belt,
+      qrUrl,
       pixelScale: PREVIEW_SCALE,
     })
-      .then(blob => {
+      .then((blob) => {
         if (cancelled) return
         const url = URL.createObjectURL(blob)
         if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
@@ -306,13 +404,28 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
       .catch(() => {
         if (!cancelled) setRendering(false)
       })
-    return () => { cancelled = true }
-  }, [sessionData, language, locale, format, background, transform, theme, belt, qrUrl])
+    return () => {
+      cancelled = true
+    }
+  }, [
+    sessionData,
+    language,
+    locale,
+    format,
+    background,
+    transform,
+    theme,
+    belt,
+    qrUrl,
+  ])
 
-  useEffect(() => () => {
-    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
-    window.clearTimeout(throttleRef.current.timer)
-  }, [])
+  useEffect(
+    () => () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
+      window.clearTimeout(throttleRef.current.timer)
+    },
+    [],
+  )
 
   const showToast = (msg: string) => {
     setToast(msg)
@@ -339,7 +452,13 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
 
   /** Render options at full export resolution. */
   const exportOptions = (): ShareCardOptions => ({
-    format, theme, background, backgroundTransform: transform, belt, qrUrl, pixelScale: 1,
+    format,
+    theme,
+    background,
+    backgroundTransform: transform,
+    belt,
+    qrUrl,
+    pixelScale: 1,
   })
 
   const handleFile = async (file: File | undefined) => {
@@ -374,7 +493,9 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
     const dy = (e.clientY - dragRef.current.y) * ratio
     dragRef.current = { x: e.clientX, y: e.clientY }
     const t = transformRef.current
-    commitTransform(clampTransform(background, format, { ...t, x: t.x + dx, y: t.y + dy }))
+    commitTransform(
+      clampTransform(background, format, { ...t, x: t.x + dx, y: t.y + dy }),
+    )
   }
   const onPointerUp = () => {
     if (!dragRef.current) return
@@ -384,14 +505,24 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
 
   const handleZoom = (value: number) => {
     if (!background) return
-    commitTransform(clampTransform(background, format, { ...transformRef.current, scale: value }))
+    commitTransform(
+      clampTransform(background, format, {
+        ...transformRef.current,
+        scale: value,
+      }),
+    )
   }
 
   const doShare = async (opts: ShareCardOptions) => {
     setBusy(true)
     try {
       const blob = await renderShareCard(sessionData, language, locale, opts)
-      const result = await shareSessionImage(blob, sessionData.session, caption, language)
+      const result = await shareSessionImage(
+        blob,
+        sessionData.session,
+        caption,
+        language,
+      )
       if (result.method === 'download') showToast(L.savedHint)
     } catch {
       showToast(L.shareError)
@@ -445,7 +576,10 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
       setUserName(trimmed)
       setName(trimmed)
       setShowBelt(true)
-      opts = { ...opts, belt: { color: beltColor, stripes: beltStripes, name: trimmed } }
+      opts = {
+        ...opts,
+        belt: { color: beltColor, stripes: beltStripes, name: trimmed },
+      }
     }
     if (action === 'share') void doShare(opts)
     else if (action === 'save') void doSave(opts)
@@ -479,7 +613,7 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={L.title}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-zinc-900 border border-zinc-800"
       >
         <div className="sticky top-0 bg-zinc-900/95 backdrop-blur-sm flex items-center gap-3 px-4 py-3 border-b border-zinc-800 z-10">
@@ -512,7 +646,9 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
                 alt={L.title}
                 draggable={false}
                 className="w-full h-auto max-h-[48dvh] object-contain pointer-events-none select-none"
-                style={{ aspectRatio: format === 'square' ? '1 / 1' : '9 / 16' }}
+                style={{
+                  aspectRatio: format === 'square' ? '1 / 1' : '9 / 16',
+                }}
               />
             )}
             {rendering && (
@@ -531,7 +667,7 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
 
           {/* Format toggle */}
           <div className="grid grid-cols-2 gap-2">
-            {(['square', 'story'] as const).map(f => (
+            {(['square', 'story'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => handleSelectFormat(f)}
@@ -553,7 +689,7 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
               {L.theme}
             </div>
             <div className="flex gap-2">
-              {SHARE_CARD_THEMES.map(th => (
+              {SHARE_CARD_THEMES.map((th) => (
                 <button
                   key={th.id}
                   onClick={() => setThemeId(th.id)}
@@ -562,9 +698,14 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
                   className={`flex-1 h-11 rounded-lg border-2 flex items-center justify-center transition-colors ${
                     themeId === th.id ? 'border-white' : 'border-zinc-700'
                   }`}
-                  style={{ background: `linear-gradient(135deg, ${th.gradient[0]}, ${th.gradient[1]})` }}
+                  style={{
+                    background: `linear-gradient(135deg, ${th.gradient[0]}, ${th.gradient[1]})`,
+                  }}
                 >
-                  <span className="block w-3.5 h-3.5 rounded-full" style={{ background: th.accent }} />
+                  <span
+                    className="block w-3.5 h-3.5 rounded-full"
+                    style={{ background: th.accent }}
+                  />
                 </button>
               ))}
             </div>
@@ -602,7 +743,7 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
                     max={3}
                     step={0.01}
                     value={transform.scale}
-                    onChange={e => handleZoom(Number(e.target.value))}
+                    onChange={(e) => handleZoom(Number(e.target.value))}
                     className="flex-1 accent-gold"
                     aria-label={L.zoom}
                   />
@@ -615,7 +756,10 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
                   </button>
                 </div>
                 <button
-                  onClick={() => { setBackground(null); setTransform(DEFAULT_TRANSFORM) }}
+                  onClick={() => {
+                    setBackground(null)
+                    setTransform(DEFAULT_TRANSFORM)
+                  }}
                   className="w-full py-2 rounded-lg bg-zinc-800/60 text-xs font-semibold text-zinc-400 active:bg-zinc-700"
                 >
                   {L.removePhoto}
@@ -628,14 +772,20 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
               accept="image/*"
               capture="environment"
               className="hidden"
-              onChange={e => { void handleFile(e.target.files?.[0]); e.target.value = '' }}
+              onChange={(e) => {
+                void handleFile(e.target.files?.[0])
+                e.target.value = ''
+              }}
             />
             <input
               ref={galleryInputRef}
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={e => { void handleFile(e.target.files?.[0]); e.target.value = '' }}
+              onChange={(e) => {
+                void handleFile(e.target.files?.[0])
+                e.target.value = ''
+              }}
             />
           </CollapsibleSection>
 
@@ -643,13 +793,19 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
           <CollapsibleSection
             icon={<Award size={16} strokeWidth={2} />}
             title={L.beltSection}
-            summary={showBelt ? (name.trim() || BELT_LABELS[language][beltColor]) : undefined}
+            summary={
+              showBelt
+                ? name.trim() || BELT_LABELS[language][beltColor]
+                : undefined
+            }
           >
             <button
-              onClick={() => setShowBelt(v => !v)}
+              onClick={() => setShowBelt((v) => !v)}
               className="w-full flex items-center gap-3 py-1 text-left"
             >
-              <span className="flex-1 text-sm font-semibold text-zinc-200">{L.beltBranding}</span>
+              <span className="flex-1 text-sm font-semibold text-zinc-200">
+                {L.beltBranding}
+              </span>
               <Toggle on={showBelt} />
             </button>
             {showBelt && (
@@ -658,12 +814,13 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
                   type="text"
                   value={name}
                   maxLength={MAX_USER_NAME_LENGTH}
-                  onChange={e => updateName(e.target.value)}
+                  onChange={(e) => updateName(e.target.value)}
                   placeholder={L.namePlaceholder}
                   className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500"
                 />
                 <p className="text-xs text-zinc-500">
-                  {L.beltHint}: {BELT_LABELS[language][beltColor]} · {beltStripes} {L.stripes}
+                  {L.beltHint}: {BELT_LABELS[language][beltColor]} ·{' '}
+                  {beltStripes} {L.stripes}
                 </p>
               </div>
             )}
@@ -676,10 +833,12 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
             summary={showQr ? L.on : undefined}
           >
             <button
-              onClick={() => setShowQr(v => !v)}
+              onClick={() => setShowQr((v) => !v)}
               className="w-full flex items-center gap-3 py-1 text-left"
             >
-              <span className="flex-1 text-sm font-semibold text-zinc-200">{L.qrHint}</span>
+              <span className="flex-1 text-sm font-semibold text-zinc-200">
+                {L.qrHint}
+              </span>
               <Toggle on={showQr} />
             </button>
           </CollapsibleSection>
@@ -691,7 +850,11 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
               disabled={busy || rendering}
               className="flex items-center justify-center gap-2 py-3 rounded-lg bg-gold text-zinc-950 text-sm font-bold active:bg-gold-light disabled:opacity-50"
             >
-              {busy ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} strokeWidth={2.5} />}
+              {busy ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Share2 size={16} strokeWidth={2.5} />
+              )}
               {L.share}
             </button>
             <button
@@ -710,7 +873,11 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
               onClick={() => openWhatsAppShare(caption)}
               className="flex flex-col items-center gap-1 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 active:bg-zinc-700"
             >
-              <MessageCircle size={18} strokeWidth={2} className="text-green-400" />
+              <MessageCircle
+                size={18}
+                strokeWidth={2}
+                className="text-green-400"
+              />
               {L.whatsapp}
             </button>
             <button
@@ -754,21 +921,25 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
             onClick={() => resolveNamePrompt(false)}
           >
             <div
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
               aria-label={L.namePromptTitle}
               className="w-full max-w-xs bg-zinc-900 border border-zinc-700 rounded-2xl p-4 space-y-3"
             >
               <h3 className="font-bold text-zinc-100">{L.namePromptTitle}</h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">{L.namePromptBody}</p>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                {L.namePromptBody}
+              </p>
               <input
                 type="text"
                 autoFocus
                 value={namePromptValue}
                 maxLength={MAX_USER_NAME_LENGTH}
-                onChange={e => setNamePromptValue(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') resolveNamePrompt(true) }}
+                onChange={(e) => setNamePromptValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') resolveNamePrompt(true)
+                }}
                 placeholder={L.namePlaceholder}
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500"
               />

@@ -1,6 +1,17 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Minus, Plus, HandHeart, Lightbulb, Bug, Target, SlidersVertical, DatabaseZap } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Minus,
+  Plus,
+  HandHeart,
+  Lightbulb,
+  Bug,
+  Target,
+  SlidersVertical,
+  DatabaseZap,
+} from 'lucide-react'
 import { PlainLogo } from '../components/PlainLogo'
 import { themeFill } from '../constants/themeColors'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -20,7 +31,11 @@ import {
   MAX_STRIPES,
   type BeltColor,
 } from '../utils/beltRank'
-import { getUserName, setUserName, MAX_USER_NAME_LENGTH } from '../utils/userName'
+import {
+  getUserName,
+  setUserName,
+  MAX_USER_NAME_LENGTH,
+} from '../utils/userName'
 import type { AppLanguage } from '../i18n'
 
 const BELT_ABBREV: Record<AppLanguage, Record<BeltColor, string>> = {
@@ -39,7 +54,9 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const { language, setLanguage, t } = useI18n()
   const appVersion = __APP_VERSION__
-  const appVersionLabel = appVersion.startsWith('v') ? appVersion : `v${appVersion}`
+  const appVersionLabel = appVersion.startsWith('v')
+    ? appVersion
+    : `v${appVersion}`
   const githubRepoUrl = 'https://github.com/samoca95/bjj-dojo'
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
   const [belt, setBelt] = useState<BeltColor>(getBeltColor)
@@ -55,7 +72,9 @@ export default function SettingsPage() {
 
   const handleExportBackup = async () => {
     const backup = await exportDatabaseBackup(db, language)
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: 'application/json',
+    })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
@@ -86,14 +105,16 @@ export default function SettingsPage() {
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 z-10 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 -ml-2 text-zinc-400 active:text-zinc-100"
+        >
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <h1 className="flex-1 font-bold text-zinc-100">{t('Settings')}</h1>
       </div>
 
       <div className="px-4 pb-6 space-y-4">
-
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-4">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
             {t('YOUR BELT')}
@@ -105,34 +126,41 @@ export default function SettingsPage() {
               type="text"
               value={name}
               maxLength={MAX_USER_NAME_LENGTH}
-              onChange={e => updateName(e.target.value)}
+              onChange={(e) => updateName(e.target.value)}
               placeholder={t('Your name')}
               className="mt-1.5 w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
             />
           </div>
           {/* Belt color picker */}
           <div className="grid grid-cols-5 gap-1.5">
-            {BELT_COLORS.map(color => {
+            {BELT_COLORS.map((color) => {
               const isSelected = belt === color
               const swatchClass: Record<BeltColor, string> = {
-                white:  'bg-zinc-100',
-                blue:   'bg-blue-600',
+                white: 'bg-zinc-100',
+                blue: 'bg-blue-600',
                 purple: 'bg-purple-600',
-                brown:  'bg-amber-800',
-                black:  'bg-belt-black',
+                brown: 'bg-amber-800',
+                black: 'bg-belt-black',
               }
               return (
                 <button
                   key={color}
-                  onClick={() => { setBelt(color); setBeltColor(color) }}
+                  onClick={() => {
+                    setBelt(color)
+                    setBeltColor(color)
+                  }}
                   className={`relative rounded-xl py-2.5 flex items-center justify-center transition-all ${swatchClass[color]} ${
-                    isSelected ? 'ring-2 ring-gold' : 'ring-2 ring-white/40 opacity-60 active:opacity-100'
+                    isSelected
+                      ? 'ring-2 ring-gold'
+                      : 'ring-2 ring-white/40 opacity-60 active:opacity-100'
                   }`}
                   aria-label={color}
                 >
-                  <span className={`text-[10px] font-bold tracking-wide uppercase ${
-                    color === 'white' ? 'text-zinc-700' : 'text-white'
-                  }`}>
+                  <span
+                    className={`text-[10px] font-bold tracking-wide uppercase ${
+                      color === 'white' ? 'text-zinc-700' : 'text-white'
+                    }`}
+                  >
                     {BELT_ABBREV[language][color]}
                   </span>
                 </button>
@@ -141,12 +169,14 @@ export default function SettingsPage() {
           </div>
           {/* Stripe counter */}
           <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-zinc-400">
-              {t('Stripes')}
-            </span>
+            <span className="text-xs text-zinc-400">{t('Stripes')}</span>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => { const n = Math.max(0, stripes - 1); setStripes(n); setBeltStripes(n) }}
+                onClick={() => {
+                  const n = Math.max(0, stripes - 1)
+                  setStripes(n)
+                  setBeltStripes(n)
+                }}
                 disabled={stripes === 0}
                 className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 disabled:text-zinc-600 active:bg-zinc-700"
               >
@@ -156,7 +186,11 @@ export default function SettingsPage() {
                 {Array.from({ length: MAX_STRIPES }).map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => { const n = i + 1 === stripes ? i : i + 1; setStripes(n); setBeltStripes(n) }}
+                    onClick={() => {
+                      const n = i + 1 === stripes ? i : i + 1
+                      setStripes(n)
+                      setBeltStripes(n)
+                    }}
                     className={`h-7 w-4 rounded-sm transition-colors ${
                       i < stripes ? 'bg-gold' : 'bg-zinc-700'
                     }`}
@@ -165,7 +199,11 @@ export default function SettingsPage() {
                 ))}
               </div>
               <button
-                onClick={() => { const n = Math.min(MAX_STRIPES, stripes + 1); setStripes(n); setBeltStripes(n) }}
+                onClick={() => {
+                  const n = Math.min(MAX_STRIPES, stripes + 1)
+                  setStripes(n)
+                  setBeltStripes(n)
+                }}
                 disabled={stripes === MAX_STRIPES}
                 className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 disabled:text-zinc-600 active:bg-zinc-700"
               >
@@ -183,17 +221,27 @@ export default function SettingsPage() {
             <span className="text-sm text-zinc-300">{t('Theme')}</span>
             <div className="flex bg-zinc-800 rounded-lg p-0.5 gap-0.5">
               <button
-                onClick={() => { setTheme('black'); setAppTheme('black') }}
+                onClick={() => {
+                  setTheme('black')
+                  setAppTheme('black')
+                }}
                 className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  theme === 'black' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
+                  theme === 'black'
+                    ? 'bg-gold text-black'
+                    : 'text-zinc-400 active:text-zinc-200'
                 }`}
               >
                 {t('Dark')}
               </button>
               <button
-                onClick={() => { setTheme('light'); setAppTheme('light') }}
+                onClick={() => {
+                  setTheme('light')
+                  setAppTheme('light')
+                }}
                 className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  theme === 'light' ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
+                  theme === 'light'
+                    ? 'bg-gold text-black'
+                    : 'text-zinc-400 active:text-zinc-200'
                 }`}
               >
                 {t('Light')}
@@ -209,7 +257,9 @@ export default function SettingsPage() {
                   onClick={() => setLanguage(code)}
                   aria-label={label}
                   className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors flex items-center gap-1 ${
-                    language === code ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
+                    language === code
+                      ? 'bg-gold text-black'
+                      : 'text-zinc-400 active:text-zinc-200'
                   }`}
                 >
                   <span aria-hidden="true">{flag}</span>
@@ -222,7 +272,11 @@ export default function SettingsPage() {
 
         <div className="bg-zinc-900 rounded-2xl p-2 space-y-1">
           <div className="px-3 pt-2 pb-1 text-xs text-gold font-semibold tracking-widest">
-            {language === 'es' ? 'AJUSTES AVANZADOS' : language === 'fr' ? 'RACCOURCIS DES RÉGLAGES' : 'SETTINGS SHORTCUTS'}
+            {language === 'es'
+              ? 'AJUSTES AVANZADOS'
+              : language === 'fr'
+                ? 'RACCOURCIS DES RÉGLAGES'
+                : 'SETTINGS SHORTCUTS'}
           </div>
           <button
             onClick={() => navigate('/session-type-icons')}
@@ -232,10 +286,18 @@ export default function SettingsPage() {
               <CategoryIcon value="swords" size={18} className="text-gold" />
             </div>
             <div className="bg-zinc-900 flex-1">
-              <div className="text-sm font-semibold text-zinc-100">{t('Session type')}</div>
-              <div className="text-xs text-zinc-500">{t('Customize icons for each session type')}</div>
+              <div className="text-sm font-semibold text-zinc-100">
+                {t('Session type')}
+              </div>
+              <div className="text-xs text-zinc-500">
+                {t('Customize icons for each session type')}
+              </div>
             </div>
-            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+            <ChevronRight
+              size={16}
+              className="text-zinc-600 shrink-0"
+              strokeWidth={2}
+            />
           </button>
           <button
             onClick={() => navigate('/categories')}
@@ -245,10 +307,18 @@ export default function SettingsPage() {
               <CategoryIcon value="shield" size={18} className="text-gold" />
             </div>
             <div className="bg-zinc-900 flex-1">
-              <div className="text-sm font-semibold text-zinc-100">{t('Categories')}</div>
-              <div className="text-xs text-zinc-500">{t('Manage technique categories and icons')}</div>
+              <div className="text-sm font-semibold text-zinc-100">
+                {t('Categories')}
+              </div>
+              <div className="text-xs text-zinc-500">
+                {t('Manage technique categories and icons')}
+              </div>
             </div>
-            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+            <ChevronRight
+              size={16}
+              className="text-zinc-600 shrink-0"
+              strokeWidth={2}
+            />
           </button>
           <button
             onClick={() => navigate('/clubs')}
@@ -258,10 +328,18 @@ export default function SettingsPage() {
               <CategoryIcon value="map-pin" size={18} className="text-gold" />
             </div>
             <div className="bg-zinc-900 flex-1">
-              <div className="text-sm font-semibold text-zinc-100">{t('Clubs')}</div>
-              <div className="text-xs text-zinc-500">{t('Manage your training locations')}</div>
+              <div className="text-sm font-semibold text-zinc-100">
+                {t('Clubs')}
+              </div>
+              <div className="text-xs text-zinc-500">
+                {t('Manage your training locations')}
+              </div>
             </div>
-            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+            <ChevronRight
+              size={16}
+              className="text-zinc-600 shrink-0"
+              strokeWidth={2}
+            />
           </button>
           <button
             onClick={() => navigate('/settings/goals')}
@@ -272,13 +350,25 @@ export default function SettingsPage() {
             </div>
             <div className="bg-zinc-900 flex-1">
               <div className="text-sm font-semibold text-zinc-100">
-                {language === 'es' ? 'Objetivos' : language === 'fr' ? 'Objectifs' : 'Goals'}
+                {language === 'es'
+                  ? 'Objetivos'
+                  : language === 'fr'
+                    ? 'Objectifs'
+                    : 'Goals'}
               </div>
               <div className="text-xs text-zinc-500">
-                {language === 'es' ? 'Meta semanal y próximos objetivos' : language === 'fr' ? 'Objectif hebdomadaire et prochains objectifs' : 'Weekly goal and upcoming goals'}
+                {language === 'es'
+                  ? 'Meta semanal y próximos objetivos'
+                  : language === 'fr'
+                    ? 'Objectif hebdomadaire et prochains objectifs'
+                    : 'Weekly goal and upcoming goals'}
               </div>
             </div>
-            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+            <ChevronRight
+              size={16}
+              className="text-zinc-600 shrink-0"
+              strokeWidth={2}
+            />
           </button>
           <button
             onClick={() => navigate('/settings/home-sections')}
@@ -288,12 +378,20 @@ export default function SettingsPage() {
               <SlidersVertical size={18} className="text-gold" />
             </div>
             <div className="bg-zinc-900 flex-1">
-              <div className="text-sm font-semibold text-zinc-100">{t('HOME SECTION ORDER')}</div>
+              <div className="text-sm font-semibold text-zinc-100">
+                {t('HOME SECTION ORDER')}
+              </div>
               <div className="text-xs text-zinc-500">
-                {t('Reorder the sections on the home screen and hide the ones you do not want to see.')}
+                {t(
+                  'Reorder the sections on the home screen and hide the ones you do not want to see.',
+                )}
               </div>
             </div>
-            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+            <ChevronRight
+              size={16}
+              className="text-zinc-600 shrink-0"
+              strokeWidth={2}
+            />
           </button>
           <button
             onClick={() => navigate('/settings/dev')}
@@ -304,13 +402,25 @@ export default function SettingsPage() {
             </div>
             <div className="bg-zinc-900 flex-1">
               <div className="text-sm font-semibold text-zinc-100">
-                {language === 'es' ? 'Ajustes de desarrollo' : language === 'fr' ? 'Réglages développeur' : 'Dev settings'}
+                {language === 'es'
+                  ? 'Ajustes de desarrollo'
+                  : language === 'fr'
+                    ? 'Réglages développeur'
+                    : 'Dev settings'}
               </div>
               <div className="text-xs text-zinc-500">
-                {language === 'es' ? 'Registro local y herramientas de diagnóstico' : language === 'fr' ? 'Journal local et outils de diagnostic' : 'Local logging and diagnostics tools'}
+                {language === 'es'
+                  ? 'Registro local y herramientas de diagnóstico'
+                  : language === 'fr'
+                    ? 'Journal local et outils de diagnostic'
+                    : 'Local logging and diagnostics tools'}
               </div>
             </div>
-            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+            <ChevronRight
+              size={16}
+              className="text-zinc-600 shrink-0"
+              strokeWidth={2}
+            />
           </button>
           <button
             onClick={() => navigate('/settings/data-reset')}
@@ -321,13 +431,25 @@ export default function SettingsPage() {
             </div>
             <div className="bg-zinc-900 flex-1">
               <div className="text-sm font-semibold text-zinc-100">
-                {language === 'es' ? 'Datos y reinicio' : language === 'fr' ? 'Données et réinitialisation' : 'Data & reset'}
+                {language === 'es'
+                  ? 'Datos y reinicio'
+                  : language === 'fr'
+                    ? 'Données et réinitialisation'
+                    : 'Data & reset'}
               </div>
               <div className="text-xs text-zinc-500">
-                {language === 'es' ? 'Opciones de reinicio predefinido y completo' : language === 'fr' ? 'Options de réinitialisation préremplie et complète' : 'Pre-filled and full reset options'}
+                {language === 'es'
+                  ? 'Opciones de reinicio predefinido y completo'
+                  : language === 'fr'
+                    ? 'Options de réinitialisation préremplie et complète'
+                    : 'Pre-filled and full reset options'}
               </div>
             </div>
-            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+            <ChevronRight
+              size={16}
+              className="text-zinc-600 shrink-0"
+              strokeWidth={2}
+            />
           </button>
         </div>
 
@@ -354,14 +476,16 @@ export default function SettingsPage() {
             type="file"
             accept="application/json"
             className="hidden"
-            onChange={event => {
+            onChange={(event) => {
               const file = event.target.files?.[0]
               if (file) void handleImportBackup(file)
               event.currentTarget.value = ''
             }}
           />
           <p className="text-xs text-zinc-500">
-            {t('Use export/import to recover your data if browser storage is lost.')}
+            {t(
+              'Use export/import to recover your data if browser storage is lost.',
+            )}
           </p>
         </div>
 
@@ -387,9 +511,7 @@ export default function SettingsPage() {
           <p className="text-xs text-zinc-500">
             {t('App version:')} {appVersionLabel}
           </p>
-          <p className="text-xs text-zinc-500">
-            {t('Developed by:')} samoca95
-          </p>
+          <p className="text-xs text-zinc-500">{t('Developed by:')} samoca95</p>
           <a
             href={githubRepoUrl}
             target="_blank"

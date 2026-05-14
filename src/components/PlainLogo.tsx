@@ -6,11 +6,7 @@ interface PlainLogoProps extends SVGProps<SVGSVGElement> {
 
 export function PlainLogo({ fill = 'currentColor', ...props }: PlainLogoProps) {
   return (
-    <svg
-      viewBox="0 0 2048 2048"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
+    <svg viewBox="0 0 2048 2048" xmlns="http://www.w3.org/2000/svg" {...props}>
       <g transform="translate(3.4156701e-6,-72.269853)">
         <path
           fill={fill}

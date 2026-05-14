@@ -15,7 +15,7 @@ export async function getCategoryMap(): Promise<Map<number, Category>> {
     return _cache
   }
   const cats = await db.categories.orderBy('name').toArray()
-  _cache = new Map(cats.map(c => [c.id, c]))
+  _cache = new Map(cats.map((c) => [c.id, c]))
   return _cache
 }
 

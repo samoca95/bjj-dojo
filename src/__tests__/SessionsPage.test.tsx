@@ -25,7 +25,10 @@ function renderSessionsPage() {
     <MemoryRouter initialEntries={['/sessions']}>
       <Routes>
         <Route path="/sessions" element={<SessionsPage />} />
-        <Route path="/sessions/new" element={<div data-testid="new-session-page" />} />
+        <Route
+          path="/sessions/new"
+          element={<div data-testid="new-session-page" />}
+        />
       </Routes>
     </MemoryRouter>,
   )
@@ -80,15 +83,33 @@ function setupTapSessionMocks() {
 
 function setupMixedDateSessionMocks() {
   const now = Date.now()
-    const responses = [
-      [
-        { ...mockSession, id: 1, date: now, durationMinutes: 90, notes: 'Recent session' },
-        { ...mockSession, id: 2, date: now - 120 * 24 * 60 * 60 * 1000, durationMinutes: 45, notes: 'Old session' },
-      ],
+  const responses = [
+    [
+      {
+        ...mockSession,
+        id: 1,
+        date: now,
+        durationMinutes: 90,
+        notes: 'Recent session',
+      },
+      {
+        ...mockSession,
+        id: 2,
+        date: now - 120 * 24 * 60 * 60 * 1000,
+        durationMinutes: 45,
+        notes: 'Old session',
+      },
+    ],
     [],
     {
-      techniqueNamesBySessionId: new Map([[1, []], [2, []]]),
-      tapStatsBySessionId: new Map([[1, { given: 0, received: 0 }], [2, { given: 0, received: 0 }]]),
+      techniqueNamesBySessionId: new Map([
+        [1, []],
+        [2, []],
+      ]),
+      tapStatsBySessionId: new Map([
+        [1, { given: 0, received: 0 }],
+        [2, { given: 0, received: 0 }],
+      ]),
     },
   ]
   let call = 0
@@ -104,9 +125,18 @@ function setupSearchSessionMocks() {
     ],
     [],
     {
-      techniqueNamesBySessionId: new Map([[1, ['Knee cut pass']], [2, ['Armbar']]]),
-      tapStatsBySessionId: new Map([[1, { given: 0, received: 0 }], [2, { given: 0, received: 0 }]]),
-      searchTextBySessionId: new Map([[1, 'knee cut pass pressure passing'], [2, 'armbar submission mechanics']]),
+      techniqueNamesBySessionId: new Map([
+        [1, ['Knee cut pass']],
+        [2, ['Armbar']],
+      ]),
+      tapStatsBySessionId: new Map([
+        [1, { given: 0, received: 0 }],
+        [2, { given: 0, received: 0 }],
+      ]),
+      searchTextBySessionId: new Map([
+        [1, 'knee cut pass pressure passing'],
+        [2, 'armbar submission mechanics'],
+      ]),
     },
   ]
   let call = 0
@@ -132,7 +162,9 @@ describe('SessionsPage', () => {
     setupEmptyMocks()
     renderSessionsPage()
     expect(screen.getByText('No sessions yet')).toBeInTheDocument()
-    expect(screen.getByText('Tap + to log your first training')).toBeInTheDocument()
+    expect(
+      screen.getByText('Tap + to log your first training'),
+    ).toBeInTheDocument()
   })
 
   it('renders a session card when sessions exist', () => {

@@ -1,5 +1,10 @@
 export type Difficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'ELITE'
-export type SessionType = 'GI' | 'NOGI' | 'OPEN_MAT' | 'COMPETITION' | 'DRILLING'
+export type SessionType =
+  | 'GI'
+  | 'NOGI'
+  | 'OPEN_MAT'
+  | 'COMPETITION'
+  | 'DRILLING'
 export type ConnectionType = 'FOLLOW_UP' | 'COUNTER' | 'SETUP' | 'TRANSITION'
 export type TapType = 'given' | 'received'
 

@@ -3,14 +3,18 @@ import { useState } from 'react'
 import BottomNav from './BottomNav'
 import OfflineNotice from './OfflineNotice'
 import PwaUpdatePrompt from './PwaUpdatePrompt'
-import FirstLaunchSetupPrompt, { isInitialSetupRequired } from './FirstLaunchSetupPrompt'
+import FirstLaunchSetupPrompt, {
+  isInitialSetupRequired,
+} from './FirstLaunchSetupPrompt'
 import OnboardingFlow, { isOnboardingRequired } from './OnboardingFlow'
 import QuotaErrorModal from './QuotaErrorModal'
 import { UndoProvider, UndoSnackbar } from './UndoContext'
 
 function LayoutInner() {
   const navigate = useNavigate()
-  const [showInitialSetup, setShowInitialSetup] = useState(() => isInitialSetupRequired())
+  const [showInitialSetup, setShowInitialSetup] = useState(() =>
+    isInitialSetupRequired(),
+  )
   const [showOnboarding, setShowOnboarding] = useState(
     () => !isInitialSetupRequired() && isOnboardingRequired(),
   )

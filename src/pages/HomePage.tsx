@@ -1,13 +1,24 @@
 import { useEffect, useState, useMemo, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, BookOpen, ChevronRight, Flame, Crosshair, Zap, Hand } from 'lucide-react'
+import {
+  CalendarDays,
+  BookOpen,
+  ChevronRight,
+  Flame,
+  Crosshair,
+  Zap,
+  Hand,
+} from 'lucide-react'
 import { db } from '../db/database'
 import { useI18n } from '../i18n'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { BELT } from '../constants/themeColors'
 import { getGoalMatTime } from '../utils/goalMatTime'
-import { getFocusTechniqueIds, setFocusTechniqueIds } from '../utils/focusTechniques'
+import {
+  getFocusTechniqueIds,
+  setFocusTechniqueIds,
+} from '../utils/focusTechniques'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 import TrainingCalendar from '../components/TrainingCalendar'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -28,15 +39,51 @@ import jujitsuKanjiHorizontal from '../../icons/jujitsu_kanji_horizontal.svg'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-const BELT_STYLES: Record<BeltColor, { bg: string; text: string; activeStripe: string; dimStripe: string }> = {
-  white:  { bg: 'bg-zinc-100',   text: 'text-zinc-900', activeStripe: 'bg-white', dimStripe: 'bg-transparent border border-zinc-400/70' },
-  blue:   { bg: 'bg-blue-600',   text: 'text-white',    activeStripe: 'bg-white', dimStripe: 'bg-transparent border border-zinc-400/60' },
-  purple: { bg: 'bg-purple-600', text: 'text-white',    activeStripe: 'bg-white', dimStripe: 'bg-transparent border border-zinc-400/60' },
-  brown:  { bg: 'bg-amber-800',  text: 'text-white',    activeStripe: 'bg-white', dimStripe: 'bg-transparent border border-zinc-400/60' },
-  black:  { bg: 'bg-belt-black', text: 'text-white',    activeStripe: 'bg-white', dimStripe: 'bg-transparent border border-red-300/40' },
+const BELT_STYLES: Record<
+  BeltColor,
+  { bg: string; text: string; activeStripe: string; dimStripe: string }
+> = {
+  white: {
+    bg: 'bg-zinc-100',
+    text: 'text-zinc-900',
+    activeStripe: 'bg-white',
+    dimStripe: 'bg-transparent border border-zinc-400/70',
+  },
+  blue: {
+    bg: 'bg-blue-600',
+    text: 'text-white',
+    activeStripe: 'bg-white',
+    dimStripe: 'bg-transparent border border-zinc-400/60',
+  },
+  purple: {
+    bg: 'bg-purple-600',
+    text: 'text-white',
+    activeStripe: 'bg-white',
+    dimStripe: 'bg-transparent border border-zinc-400/60',
+  },
+  brown: {
+    bg: 'bg-amber-800',
+    text: 'text-white',
+    activeStripe: 'bg-white',
+    dimStripe: 'bg-transparent border border-zinc-400/60',
+  },
+  black: {
+    bg: 'bg-belt-black',
+    text: 'text-white',
+    activeStripe: 'bg-white',
+    dimStripe: 'bg-transparent border border-red-300/40',
+  },
 }
 
-function BeltDisplay({ color, stripes, beltLabel }: { color: BeltColor; stripes: number; beltLabel: string }) {
+function BeltDisplay({
+  color,
+  stripes,
+  beltLabel,
+}: {
+  color: BeltColor
+  stripes: number
+  beltLabel: string
+}) {
   const s = BELT_STYLES[color]
   const tipClass = color === 'black' ? 'bg-red-700' : 'bg-belt-black'
   const logoFill = color === 'black' ? BELT.redTip : BELT.black
@@ -44,7 +91,11 @@ function BeltDisplay({ color, stripes, beltLabel }: { color: BeltColor; stripes:
     <div className="overflow-hidden rounded-xl flex h-10 belt-outline">
       <div className={`flex-1 flex items-center px-5 gap-2 ${s.bg}`}>
         <PlainLogo fill={logoFill} className="h-10 w-10 shrink-0" />
-        <span className={`text-xs font-bold tracking-widest uppercase ${s.text}`}>{beltLabel}</span>
+        <span
+          className={`text-xs font-bold tracking-widest uppercase ${s.text}`}
+        >
+          {beltLabel}
+        </span>
       </div>
       {/* Tip with stripes */}
       <div className={`flex items-center gap-2 px-4 ${tipClass}`}>
@@ -79,12 +130,22 @@ function SectionErrorCard({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center justify-between">
       <span className="text-sm text-zinc-400">{t('Section unavailable')}</span>
-      <button onClick={onRetry} className="text-xs font-semibold text-gold">{t('Try again')}</button>
+      <button onClick={onRetry} className="text-xs font-semibold text-gold">
+        {t('Try again')}
+      </button>
     </div>
   )
 }
 
-function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function StatCard({
+  label,
+  value,
+  sub,
+}: {
+  label: string
+  value: string
+  sub?: string
+}) {
   return (
     <div className="bg-zinc-900 rounded-2xl px-4 py-3 flex flex-col gap-1">
       <span className="text-xl font-bold text-zinc-100">{value}</span>
@@ -99,9 +160,13 @@ export default function HomePage() {
   const { t } = useI18n()
   const [focusPickerOpen, setFocusPickerOpen] = useState(false)
   const [focusPickerSearch, setFocusPickerSearch] = useState('')
-  const [focusTechniqueIds, setFocusTechniqueIdsState] = useState<number[]>(getFocusTechniqueIds)
-  const [sectionOrder, setSectionOrder] = useState<HomeSectionId[]>(getHomeSectionOrder)
-  const [sectionVisibility, setSectionVisibility] = useState(getHomeSectionVisibility)
+  const [focusTechniqueIds, setFocusTechniqueIdsState] =
+    useState<number[]>(getFocusTechniqueIds)
+  const [sectionOrder, setSectionOrder] =
+    useState<HomeSectionId[]>(getHomeSectionOrder)
+  const [sectionVisibility, setSectionVisibility] = useState(
+    getHomeSectionVisibility,
+  )
   const [beltColor, setBeltColorState] = useState<BeltColor>(getBeltColor)
   const [beltStripes, setBeltStripesState] = useState<number>(getBeltStripes)
 
@@ -143,13 +208,17 @@ export default function HomePage() {
     [sessions],
   )
 
-  const tapCounts = useLiveQuery(async () => {
-    const taps = await db.sessionTaps.toArray()
-    return {
-      given: taps.filter(t => t.type === 'given').length,
-      received: taps.filter(t => t.type === 'received').length,
-    }
-  }, [], { given: 0, received: 0 })
+  const tapCounts = useLiveQuery(
+    async () => {
+      const taps = await db.sessionTaps.toArray()
+      return {
+        given: taps.filter((t) => t.type === 'given').length,
+        received: taps.filter((t) => t.type === 'received').length,
+      }
+    },
+    [],
+    { given: 0, received: 0 },
+  )
   const weeklySessions = useLiveQuery(
     () => db.sessions.where('date').aboveOrEqual(weekStart).toArray(),
     [weekStart],
@@ -160,34 +229,50 @@ export default function HomePage() {
     [],
     [],
   )
-  const tapCountsBySessionId = useLiveQuery(async () => {
-    const taps = await db.sessionTaps.toArray()
-    const counts = new Map<number, number>()
-    for (const tap of taps) {
-      if (tap.type !== 'given') continue
-      counts.set(tap.sessionId, (counts.get(tap.sessionId) ?? 0) + 1)
-    }
-    return counts
-  }, [], new Map<number, number>())
-  const techniques = useLiveQuery(() => db.techniques.orderBy('name').toArray(), [], [])
-  const givenTapCountsByTechniqueId = useLiveQuery(async () => {
-    const taps = await db.sessionTaps.toArray()
-    const counts = new Map<number, number>()
-    for (const tap of taps) {
-      if (tap.type !== 'given') continue
-      counts.set(tap.techniqueId, (counts.get(tap.techniqueId) ?? 0) + 1)
-    }
-    return counts
-  }, [], new Map<number, number>())
-  const receivedTapCountsByTechniqueId = useLiveQuery(async () => {
-    const taps = await db.sessionTaps.toArray()
-    const counts = new Map<number, number>()
-    for (const tap of taps) {
-      if (tap.type !== 'received') continue
-      counts.set(tap.techniqueId, (counts.get(tap.techniqueId) ?? 0) + 1)
-    }
-    return counts
-  }, [], new Map<number, number>())
+  const tapCountsBySessionId = useLiveQuery(
+    async () => {
+      const taps = await db.sessionTaps.toArray()
+      const counts = new Map<number, number>()
+      for (const tap of taps) {
+        if (tap.type !== 'given') continue
+        counts.set(tap.sessionId, (counts.get(tap.sessionId) ?? 0) + 1)
+      }
+      return counts
+    },
+    [],
+    new Map<number, number>(),
+  )
+  const techniques = useLiveQuery(
+    () => db.techniques.orderBy('name').toArray(),
+    [],
+    [],
+  )
+  const givenTapCountsByTechniqueId = useLiveQuery(
+    async () => {
+      const taps = await db.sessionTaps.toArray()
+      const counts = new Map<number, number>()
+      for (const tap of taps) {
+        if (tap.type !== 'given') continue
+        counts.set(tap.techniqueId, (counts.get(tap.techniqueId) ?? 0) + 1)
+      }
+      return counts
+    },
+    [],
+    new Map<number, number>(),
+  )
+  const receivedTapCountsByTechniqueId = useLiveQuery(
+    async () => {
+      const taps = await db.sessionTaps.toArray()
+      const counts = new Map<number, number>()
+      for (const tap of taps) {
+        if (tap.type !== 'received') continue
+        counts.set(tap.techniqueId, (counts.get(tap.techniqueId) ?? 0) + 1)
+      }
+      return counts
+    },
+    [],
+    new Map<number, number>(),
+  )
   const timeLabel = useMemo(() => {
     const h = Math.floor(totalMinutes / 60)
     const m = totalMinutes % 60
@@ -204,36 +289,48 @@ export default function HomePage() {
 
   const { last5TapCounts, avgTaps5, maxTaps5 } = useMemo(() => {
     const sorted = [...(recentSessions ?? [])].sort((a, b) => a.date - b.date)
-    const last5TapCounts = sorted.map(s => tapCountsBySessionId.get(s.id ?? -1) ?? 0)
-    const avgTaps5 = last5TapCounts.length === 0
-      ? 0
-      : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
+    const last5TapCounts = sorted.map(
+      (s) => tapCountsBySessionId.get(s.id ?? -1) ?? 0,
+    )
+    const avgTaps5 =
+      last5TapCounts.length === 0
+        ? 0
+        : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
     const maxTaps5 = Math.max(...last5TapCounts, 1)
     return { last5TapCounts, avgTaps5, maxTaps5 }
   }, [recentSessions, tapCountsBySessionId])
   const focusTechniques = useMemo(
-    () => (techniques ?? []).filter(t => focusTechniqueIds.includes(t.id)),
+    () => (techniques ?? []).filter((t) => focusTechniqueIds.includes(t.id)),
     [techniques, focusTechniqueIds],
   )
 
   const filteredPickerTechniques = useMemo(() => {
-    const results = (techniques ?? []).filter(t => techniqueMatchesQuery(t, focusPickerSearch))
+    const results = (techniques ?? []).filter((t) =>
+      techniqueMatchesQuery(t, focusPickerSearch),
+    )
     if (focusPickerSearch.trim()) {
-      return [...results].sort((a, b) => techniqueScore(b, focusPickerSearch) - techniqueScore(a, focusPickerSearch))
+      return [...results].sort(
+        (a, b) =>
+          techniqueScore(b, focusPickerSearch) -
+          techniqueScore(a, focusPickerSearch),
+      )
     }
     return results
   }, [techniques, focusPickerSearch])
 
   const trainingWeekStreak = useMemo(() => {
     const weekStarts = Array.from(
-      new Set((sessions ?? []).map(s => startOfWeek(s.date))),
+      new Set((sessions ?? []).map((s) => startOfWeek(s.date))),
     ).sort((a, b) => b - a)
     let streak = 0
     if (weekStarts.length > 0) {
       const firstWeek = weekStarts[0]
       if (firstWeek === currentWeekStart || firstWeek === previousWeekStart) {
         for (let index = 0; index < weekStarts.length; index += 1) {
-          if (index === 0) { streak += 1; continue }
+          if (index === 0) {
+            streak += 1
+            continue
+          }
           if (weekStarts[index] !== weekStarts[index - 1] - 7 * DAY_MS) break
           streak += 1
         }
@@ -244,12 +341,23 @@ export default function HomePage() {
 
   const statsSection = (
     <section key="stats">
-      <h2 className="text-xs font-semibold tracking-widest text-gold mb-3 px-1">{t('YOUR STATS')}</h2>
+      <h2 className="text-xs font-semibold tracking-widest text-gold mb-3 px-1">
+        {t('YOUR STATS')}
+      </h2>
       <div className="grid grid-cols-2 gap-3">
         <StatCard label={t('Sessions')} value={String(sessionCount ?? 0)} />
-        <StatCard label={t('Mat Time')} value={totalMinutes > 0 ? timeLabel : '0m'} />
-        <StatCard label={t('Taps Given')} value={String(tapCounts?.given ?? 0)} />
-        <StatCard label={t('Taps Received')} value={String(tapCounts?.received ?? 0)} />
+        <StatCard
+          label={t('Mat Time')}
+          value={totalMinutes > 0 ? timeLabel : '0m'}
+        />
+        <StatCard
+          label={t('Taps Given')}
+          value={String(tapCounts?.given ?? 0)}
+        />
+        <StatCard
+          label={t('Taps Received')}
+          value={String(tapCounts?.received ?? 0)}
+        />
       </div>
     </section>
   )
@@ -273,7 +381,9 @@ export default function HomePage() {
                 <div
                   key={i}
                   className="w-2 rounded-sm bg-blue-400/60"
-                  style={{ height: `${Math.max(3, Math.round((count / maxTaps5) * 24))}px` }}
+                  style={{
+                    height: `${Math.max(3, Math.round((count / maxTaps5) * 24))}px`,
+                  }}
                 />
               ))}
             </div>
@@ -282,14 +392,19 @@ export default function HomePage() {
         <div className="bg-zinc-900 rounded-2xl px-4 py-3">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-zinc-400">{t('Weekly goal')}</span>
-              <span className="flex items-center gap-1 text-xs font-semibold text-orange-400">
-                <Flame size={13} fill="currentColor" strokeWidth={0} />
-                <span>{trainingWeekStreak}</span>
-                <span className="text-[10px] uppercase tracking-wide">{t('w.')}</span>
+            <span className="flex items-center gap-1 text-xs font-semibold text-orange-400">
+              <Flame size={13} fill="currentColor" strokeWidth={0} />
+              <span>{trainingWeekStreak}</span>
+              <span className="text-[10px] uppercase tracking-wide">
+                {t('w.')}
               </span>
+            </span>
           </div>
           <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-            <div className="h-full bg-gold" style={{ width: `${weeklyGoalPct}%` }} />
+            <div
+              className="h-full bg-gold"
+              style={{ width: `${weeklyGoalPct}%` }}
+            />
           </div>
         </div>
       </div>
@@ -299,10 +414,12 @@ export default function HomePage() {
   const focusSection = (
     <section key="focus" className="space-y-3">
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-xs font-semibold tracking-widest text-gold">{t('FOCUS TECHNIQUES')}</h2>
+        <h2 className="text-xs font-semibold tracking-widest text-gold">
+          {t('FOCUS TECHNIQUES')}
+        </h2>
         <button
           onClick={() => {
-            setFocusPickerOpen(prev => !prev)
+            setFocusPickerOpen((prev) => !prev)
             setFocusPickerSearch('')
           }}
           className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
@@ -317,25 +434,27 @@ export default function HomePage() {
           <input
             type="text"
             value={focusPickerSearch}
-            onChange={e => setFocusPickerSearch(e.target.value)}
+            onChange={(e) => setFocusPickerSearch(e.target.value)}
             placeholder={t('Search…')}
             className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600 mb-2"
           />
           <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1">
-            {filteredPickerTechniques.map(technique => {
+            {filteredPickerTechniques.map((technique) => {
               const selected = focusTechniqueIds.includes(technique.id)
               return (
                 <button
                   key={technique.id}
                   onClick={() => {
                     const next = selected
-                      ? focusTechniqueIds.filter(id => id !== technique.id)
+                      ? focusTechniqueIds.filter((id) => id !== technique.id)
                       : [...focusTechniqueIds, technique.id]
                     setFocusTechniqueIds(next)
                     setFocusTechniqueIdsState(next)
                   }}
                   className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                    selected ? 'bg-gold text-black font-semibold' : 'bg-zinc-800 text-zinc-200'
+                    selected
+                      ? 'bg-gold text-black font-semibold'
+                      : 'bg-zinc-800 text-zinc-200'
                   }`}
                 >
                   {technique.name}
@@ -351,12 +470,21 @@ export default function HomePage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {focusTechniques.map(technique => (
-            <div key={technique.id} className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center justify-between">
+          {focusTechniques.map((technique) => (
+            <div
+              key={technique.id}
+              className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center justify-between"
+            >
               <div className="flex items-center gap-2 min-w-0">
                 <Crosshair size={14} className="text-gold shrink-0" />
-                <span className="text-sm font-semibold text-zinc-100 truncate">{technique.name}</span>
-                <CategoryIcon fallbackId={technique.categoryId} size={14} className="text-gold shrink-0" />
+                <span className="text-sm font-semibold text-zinc-100 truncate">
+                  {technique.name}
+                </span>
+                <CategoryIcon
+                  fallbackId={technique.categoryId}
+                  size={14}
+                  className="text-gold shrink-0"
+                />
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <span className="flex items-center gap-1 text-xs text-red-400">
@@ -379,13 +507,17 @@ export default function HomePage() {
     <TrainingCalendar
       key="calendar"
       sessions={sessions ?? []}
-      onDayClick={epoch => navigate('/sessions/new', { state: { date: epoch } })}
+      onDayClick={(epoch) =>
+        navigate('/sessions/new', { state: { date: epoch } })
+      }
     />
   )
 
   const quickAccessSection = (
     <section key="quickAccess">
-      <h2 className="text-xs font-semibold tracking-widest text-gold mb-3 px-1">{t('QUICK ACCESS')}</h2>
+      <h2 className="text-xs font-semibold tracking-widest text-gold mb-3 px-1">
+        {t('QUICK ACCESS')}
+      </h2>
       <div className="space-y-3">
         <button
           onClick={() => navigate('/sessions')}
@@ -395,8 +527,12 @@ export default function HomePage() {
             <CalendarDays size={28} className="text-gold" strokeWidth={1.5} />
           </div>
           <div className="flex-1">
-            <div className="font-semibold text-zinc-100">{t('Training Sessions')}</div>
-            <div className="text-sm text-zinc-400">{t('Log and review your mat time')}</div>
+            <div className="font-semibold text-zinc-100">
+              {t('Training Sessions')}
+            </div>
+            <div className="text-sm text-zinc-400">
+              {t('Log and review your mat time')}
+            </div>
           </div>
           <ChevronRight size={20} className="text-zinc-600" strokeWidth={2} />
         </button>
@@ -409,8 +545,12 @@ export default function HomePage() {
             <BookOpen size={28} className="text-gold" strokeWidth={1.5} />
           </div>
           <div className="flex-1">
-            <div className="font-semibold text-zinc-100">{t('Technique Library')}</div>
-            <div className="text-sm text-zinc-400">{t('60+ techniques with YouTube refs')}</div>
+            <div className="font-semibold text-zinc-100">
+              {t('Technique Library')}
+            </div>
+            <div className="text-sm text-zinc-400">
+              {t('60+ techniques with YouTube refs')}
+            </div>
           </div>
           <ChevronRight size={20} className="text-zinc-600" strokeWidth={2} />
         </button>
@@ -419,15 +559,57 @@ export default function HomePage() {
   )
 
   const sectionMap: Record<HomeSectionId, ReactNode> = {
-    focus: <ErrorBoundary key="focus" fallback={retry => <SectionErrorCard onRetry={retry} />}>{focusSection}</ErrorBoundary>,
-    trending: <ErrorBoundary key="trending" fallback={retry => <SectionErrorCard onRetry={retry} />}>{trendingSection}</ErrorBoundary>,
-    stats: <ErrorBoundary key="stats" fallback={retry => <SectionErrorCard onRetry={retry} />}>{statsSection}</ErrorBoundary>,
-    calendar: <ErrorBoundary key="calendar" fallback={retry => <SectionErrorCard onRetry={retry} />}>{calendarSection}</ErrorBoundary>,
-    quickAccess: <ErrorBoundary key="quickAccess" fallback={retry => <SectionErrorCard onRetry={retry} />}>{quickAccessSection}</ErrorBoundary>,
+    focus: (
+      <ErrorBoundary
+        key="focus"
+        fallback={(retry) => <SectionErrorCard onRetry={retry} />}
+      >
+        {focusSection}
+      </ErrorBoundary>
+    ),
+    trending: (
+      <ErrorBoundary
+        key="trending"
+        fallback={(retry) => <SectionErrorCard onRetry={retry} />}
+      >
+        {trendingSection}
+      </ErrorBoundary>
+    ),
+    stats: (
+      <ErrorBoundary
+        key="stats"
+        fallback={(retry) => <SectionErrorCard onRetry={retry} />}
+      >
+        {statsSection}
+      </ErrorBoundary>
+    ),
+    calendar: (
+      <ErrorBoundary
+        key="calendar"
+        fallback={(retry) => <SectionErrorCard onRetry={retry} />}
+      >
+        {calendarSection}
+      </ErrorBoundary>
+    ),
+    quickAccess: (
+      <ErrorBoundary
+        key="quickAccess"
+        fallback={(retry) => <SectionErrorCard onRetry={retry} />}
+      >
+        {quickAccessSection}
+      </ErrorBoundary>
+    ),
   }
 
-  const beltLabelKeys: Record<BeltColor, 'White Belt' | 'Blue Belt' | 'Purple Belt' | 'Brown Belt' | 'Black Belt'> = {
-    white: 'White Belt', blue: 'Blue Belt', purple: 'Purple Belt', brown: 'Brown Belt', black: 'Black Belt',
+  const beltLabelKeys: Record<
+    BeltColor,
+    'White Belt' | 'Blue Belt' | 'Purple Belt' | 'Brown Belt' | 'Black Belt'
+  > = {
+    white: 'White Belt',
+    blue: 'Blue Belt',
+    purple: 'Purple Belt',
+    brown: 'Brown Belt',
+    black: 'Black Belt',
   }
   const beltLabel = t(beltLabelKeys[beltColor])
 
@@ -436,20 +618,33 @@ export default function HomePage() {
       {/* Header */}
       <div className="px-6 pt-12 pb-8 bg-gradient-to-b from-zinc-900 to-zinc-950">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-3xl font-black tracking-widest text-gold">BJJ DOJO</h1>
+          <h1 className="text-3xl font-black tracking-widest text-gold">
+            BJJ DOJO
+          </h1>
           <img
             src={jujitsuKanjiHorizontal}
             alt="Jiu-jitsu kanji"
             className="h-7 w-auto shrink-0 opacity-90"
-            style={{ filter: 'brightness(0) saturate(100%) invert(68%) sepia(7%) saturate(315%) hue-rotate(202deg) brightness(90%) contrast(88%)' }}
+            style={{
+              filter:
+                'brightness(0) saturate(100%) invert(68%) sepia(7%) saturate(315%) hue-rotate(202deg) brightness(90%) contrast(88%)',
+            }}
           />
         </div>
-        <p className="text-zinc-400 text-sm mt-1">{t('Track your journey on the mats')}</p>
+        <p className="text-zinc-400 text-sm mt-1">
+          {t('Track your journey on the mats')}
+        </p>
       </div>
 
       <div className="px-4 space-y-6 pb-6">
-        <BeltDisplay color={beltColor} stripes={beltStripes} beltLabel={beltLabel} />
-        {sectionOrder.filter(id => sectionVisibility[id]).map(id => sectionMap[id])}
+        <BeltDisplay
+          color={beltColor}
+          stripes={beltStripes}
+          beltLabel={beltLabel}
+        />
+        {sectionOrder
+          .filter((id) => sectionVisibility[id])
+          .map((id) => sectionMap[id])}
       </div>
     </div>
   )

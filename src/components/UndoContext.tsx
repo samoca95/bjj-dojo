@@ -1,4 +1,10 @@
-import { createContext, useContext, useRef, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { useI18n } from '../i18n'
 
 interface UndoEntry {
@@ -25,14 +31,20 @@ export function UndoProvider({ children }: { children: ReactNode }) {
   const timerRef = useRef<number | null>(null)
 
   const dismiss = () => {
-    if (timerRef.current !== null) { window.clearTimeout(timerRef.current); timerRef.current = null }
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
     setCurrent(null)
   }
 
   const push = (entry: UndoEntry, timeoutMs = 5000) => {
     if (timerRef.current !== null) window.clearTimeout(timerRef.current)
     setCurrent(entry)
-    timerRef.current = window.setTimeout(() => { timerRef.current = null; setCurrent(null) }, timeoutMs)
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null
+      setCurrent(null)
+    }, timeoutMs)
   }
 
   const execute = () => {
@@ -68,9 +80,12 @@ export function UndoSnackbar() {
         onClick={execute}
         className="text-sm font-bold text-gold active:text-gold-light shrink-0"
       >
-        {language === 'es' ? 'DESHACER' : language === 'fr' ? 'ANNULER' : 'UNDO'}
+        {language === 'es'
+          ? 'DESHACER'
+          : language === 'fr'
+            ? 'ANNULER'
+            : 'UNDO'}
       </button>
     </div>
   )
 }
-

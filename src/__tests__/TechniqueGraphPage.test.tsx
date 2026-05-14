@@ -9,9 +9,36 @@ import { useLiveQuery } from 'dexie-react-hooks'
 const mockUseLiveQuery = vi.mocked(useLiveQuery)
 
 const techniques: Technique[] = [
-  { id: 101, name: 'Closed Guard', categoryId: 1, difficulty: 'BEGINNER', isCustom: false, description: '', cues: [], youtubeUrl: '' },
-  { id: 401, name: 'Armbar', categoryId: 4, difficulty: 'BEGINNER', isCustom: false, description: '', cues: [], youtubeUrl: '' },
-  { id: 402, name: 'Triangle', categoryId: 4, difficulty: 'INTERMEDIATE', isCustom: false, description: '', cues: [], youtubeUrl: '' },
+  {
+    id: 101,
+    name: 'Closed Guard',
+    categoryId: 1,
+    difficulty: 'BEGINNER',
+    isCustom: false,
+    description: '',
+    cues: [],
+    youtubeUrl: '',
+  },
+  {
+    id: 401,
+    name: 'Armbar',
+    categoryId: 4,
+    difficulty: 'BEGINNER',
+    isCustom: false,
+    description: '',
+    cues: [],
+    youtubeUrl: '',
+  },
+  {
+    id: 402,
+    name: 'Triangle',
+    categoryId: 4,
+    difficulty: 'INTERMEDIATE',
+    isCustom: false,
+    description: '',
+    cues: [],
+    youtubeUrl: '',
+  },
 ]
 
 const connections: TechniqueConnection[] = [
@@ -24,7 +51,10 @@ const catMap = new Map<number, Category>([
   [4, { id: 4, name: 'Submissions', description: '' }],
 ])
 
-function setupMocks(opts?: { techniques?: Technique[]; connections?: TechniqueConnection[] }) {
+function setupMocks(opts?: {
+  techniques?: Technique[]
+  connections?: TechniqueConnection[]
+}) {
   const techs = opts?.techniques ?? techniques
   const conns = opts?.connections ?? connections
   let call = 0
@@ -42,7 +72,10 @@ function renderPage() {
     <MemoryRouter initialEntries={['/techniques/graph']}>
       <Routes>
         <Route path="/techniques/graph" element={<TechniqueGraphPage />} />
-        <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
+        <Route
+          path="/techniques/:id"
+          element={<div data-testid="technique-detail" />}
+        />
       </Routes>
     </MemoryRouter>,
   )
@@ -98,8 +131,9 @@ describe('TechniqueGraphPage', () => {
     const firstNode = container.querySelector('g[role="button"]')!
     fireEvent.pointerEnter(firstNode)
     expect(container.querySelector('line[marker-end]')).not.toBeNull()
-    const highlightedTypeLabels = [...container.querySelectorAll('text')]
-      .filter(node => node.textContent?.trim() === 'Follow-up')
+    const highlightedTypeLabels = [
+      ...container.querySelectorAll('text'),
+    ].filter((node) => node.textContent?.trim() === 'Follow-up')
     expect(highlightedTypeLabels).toHaveLength(0)
   })
 
@@ -107,14 +141,25 @@ describe('TechniqueGraphPage', () => {
     setupMocks({
       techniques: [
         ...techniques,
-        { id: 999, name: 'Knee Slice', categoryId: 1, difficulty: 'BEGINNER', isCustom: false, description: '', cues: [], youtubeUrl: '' },
+        {
+          id: 999,
+          name: 'Knee Slice',
+          categoryId: 1,
+          difficulty: 'BEGINNER',
+          isCustom: false,
+          description: '',
+          cues: [],
+          youtubeUrl: '',
+        },
       ],
       connections,
     })
     const { container } = renderPage()
     const firstNode = container.querySelector('g[role="button"]')!
     fireEvent.pointerEnter(firstNode)
-    expect(container.querySelectorAll('g[role="button"][opacity="0.26"]')).toHaveLength(1)
+    expect(
+      container.querySelectorAll('g[role="button"][opacity="0.26"]'),
+    ).toHaveLength(1)
   })
 
   it('uses a uniform colour for non-highlighted edges', () => {
@@ -142,8 +187,9 @@ describe('TechniqueGraphPage', () => {
     const { container } = renderPage()
     const firstNode = container.querySelector('g[role="button"]')!
     fireEvent.click(firstNode)
-    const highlightedTypeLabels = [...container.querySelectorAll('text')]
-      .filter(node => node.textContent?.trim() === 'Follow-up')
+    const highlightedTypeLabels = [
+      ...container.querySelectorAll('text'),
+    ].filter((node) => node.textContent?.trim() === 'Follow-up')
     expect(highlightedTypeLabels).toHaveLength(0)
     expect(container.querySelector('line[marker-end]')).not.toBeNull()
   })
@@ -219,7 +265,9 @@ describe('TechniqueGraphPage', () => {
     window.sessionStorage.setItem(GRAPH_VIEW_KEY, JSON.stringify(saved))
     setupMocks()
     const { container } = renderPage()
-    expect(container.querySelector('svg[role="img"]')?.getAttribute('viewBox')).toBe('10 20 300 400')
+    expect(
+      container.querySelector('svg[role="img"]')?.getAttribute('viewBox'),
+    ).toBe('10 20 300 400')
   })
 
   it('persists the current view to session storage', () => {

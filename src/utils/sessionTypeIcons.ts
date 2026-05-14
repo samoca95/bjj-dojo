@@ -2,7 +2,8 @@ import type { SessionType } from '../types'
 import { SESSION_TYPE_ICONS } from '../types'
 
 export const SESSION_TYPE_ICONS_STORAGE_KEY = 'bjj-dojo.session-type-icons'
-export const SESSION_TYPE_ICONS_UPDATED_EVENT = 'bjj-dojo:session-type-icons-updated'
+export const SESSION_TYPE_ICONS_UPDATED_EVENT =
+  'bjj-dojo:session-type-icons-updated'
 
 export type SessionTypeIconsMap = Record<SessionType, string>
 
@@ -20,7 +21,10 @@ export function getSessionTypeIcons(): SessionTypeIconsMap {
       GI: coerceIcon(parsed.GI, SESSION_TYPE_ICONS.GI),
       NOGI: coerceIcon(parsed.NOGI, SESSION_TYPE_ICONS.NOGI),
       OPEN_MAT: coerceIcon(parsed.OPEN_MAT, SESSION_TYPE_ICONS.OPEN_MAT),
-      COMPETITION: coerceIcon(parsed.COMPETITION, SESSION_TYPE_ICONS.COMPETITION),
+      COMPETITION: coerceIcon(
+        parsed.COMPETITION,
+        SESSION_TYPE_ICONS.COMPETITION,
+      ),
       DRILLING: coerceIcon(parsed.DRILLING, SESSION_TYPE_ICONS.DRILLING),
     }
   } catch {
@@ -30,6 +34,9 @@ export function getSessionTypeIcons(): SessionTypeIconsMap {
 
 export function saveSessionTypeIcons(icons: SessionTypeIconsMap) {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(SESSION_TYPE_ICONS_STORAGE_KEY, JSON.stringify(icons))
+  window.localStorage.setItem(
+    SESSION_TYPE_ICONS_STORAGE_KEY,
+    JSON.stringify(icons),
+  )
   window.dispatchEvent(new Event(SESSION_TYPE_ICONS_UPDATED_EVENT))
 }

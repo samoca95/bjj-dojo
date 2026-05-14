@@ -30,18 +30,26 @@ function truncate(text: string, max: number): string {
 }
 
 export default function ConnectionGraph({
-  centerName, centerCategoryId, connections, onSelect, connectionTypeName,
+  centerName,
+  centerCategoryId,
+  connections,
+  onSelect,
+  connectionTypeName,
 }: ConnectionGraphProps) {
   // Merge duplicate neighbours (a technique may be linked by several connections/directions).
-  const neighbourMap = new Map<number, {
-    technique: Technique
-    types: ConnectionType[]
-    directions: Set<'from' | 'to'>
-  }>()
+  const neighbourMap = new Map<
+    number,
+    {
+      technique: Technique
+      types: ConnectionType[]
+      directions: Set<'from' | 'to'>
+    }
+  >()
   for (const conn of connections) {
     const existing = neighbourMap.get(conn.technique.id)
     if (existing) {
-      if (!existing.types.includes(conn.connectionType)) existing.types.push(conn.connectionType)
+      if (!existing.types.includes(conn.connectionType))
+        existing.types.push(conn.connectionType)
       existing.directions.add(conn.direction)
     } else {
       neighbourMap.set(conn.technique.id, {
@@ -62,7 +70,7 @@ export default function ConnectionGraph({
   const R = 96
   const centerR = 32
   const nodeR = n > 8 ? 13 : 16
-  const usedTypes = [...new Set(connections.map(c => c.connectionType))]
+  const usedTypes = [...new Set(connections.map((c) => c.connectionType))]
 
   return (
     <div className="bg-zinc-900 rounded-2xl p-4">
@@ -73,7 +81,7 @@ export default function ConnectionGraph({
         aria-label="Technique connection graph"
       >
         <defs>
-          {usedTypes.map(type => (
+          {usedTypes.map((type) => (
             <marker
               key={type}
               id={`cg-arrow-${type}`}
@@ -128,7 +136,13 @@ export default function ConnectionGraph({
           stroke={categoryColor(centerCategoryId)}
           strokeWidth={3}
         />
-        <circle cx={cx} cy={cy} r={centerR - 6} fill={categoryColor(centerCategoryId)} fillOpacity={0.2} />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={centerR - 6}
+          fill={categoryColor(centerCategoryId)}
+          fillOpacity={0.2}
+        />
         <text
           x={cx}
           y={cy}
@@ -161,15 +175,28 @@ export default function ConnectionGraph({
               tabIndex={0}
               className="cursor-pointer"
               onClick={() => onSelect(nb.technique.id)}
-              onKeyDown={e => {
+              onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
                   onSelect(nb.technique.id)
                 }
               }}
             >
-              <circle cx={x} cy={y} r={nodeR} fill="#18181b" stroke={nodeColor} strokeWidth={2} />
-              <circle cx={x} cy={y} r={nodeR - 5} fill={nodeColor} fillOpacity={0.3} />
+              <circle
+                cx={x}
+                cy={y}
+                r={nodeR}
+                fill="#18181b"
+                stroke={nodeColor}
+                strokeWidth={2}
+              />
+              <circle
+                cx={x}
+                cy={y}
+                r={nodeR - 5}
+                fill={nodeColor}
+                fillOpacity={0.3}
+              />
               <text
                 x={labelX}
                 y={labelY}
@@ -188,8 +215,11 @@ export default function ConnectionGraph({
 
       {/* Legend */}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-2 px-1">
-        {usedTypes.map(type => (
-          <span key={type} className="flex items-center gap-1.5 text-xs text-zinc-400">
+        {usedTypes.map((type) => (
+          <span
+            key={type}
+            className="flex items-center gap-1.5 text-xs text-zinc-400"
+          >
             <span
               className="w-2.5 h-2.5 rounded-full shrink-0"
               style={{ backgroundColor: GRAPH_COLORS[type] }}

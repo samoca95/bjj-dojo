@@ -14,6 +14,14 @@ export default mergeConfig(
         reporter: ['text', 'lcov'],
         include: ['src/**'],
         exclude: ['src/test/**'],
+        // Floor set just below the current baseline so it catches regressions
+        // without breaking CI on minor variance. Raise as coverage improves.
+        thresholds: {
+          statements: 45,
+          branches: 40,
+          functions: 38,
+          lines: 47,
+        },
       },
     },
   }),

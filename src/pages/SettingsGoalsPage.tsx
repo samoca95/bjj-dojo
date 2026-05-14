@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { useI18n } from '../i18n'
-import { getGoalMatTime, setGoalMatTime, DEFAULT_WEEKLY_GOAL_MINUTES } from '../utils/goalMatTime'
+import {
+  getGoalMatTime,
+  setGoalMatTime,
+  DEFAULT_WEEKLY_GOAL_MINUTES,
+} from '../utils/goalMatTime'
 
 export default function SettingsGoalsPage() {
   const navigate = useNavigate()
@@ -21,18 +25,29 @@ export default function SettingsGoalsPage() {
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 z-10 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 -ml-2 text-zinc-400 active:text-zinc-100"
+        >
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <h1 className="flex-1 font-bold text-zinc-100">
-          {language === 'es' ? 'Objetivos' : language === 'fr' ? 'Objectifs' : 'Goals'}
+          {language === 'es'
+            ? 'Objetivos'
+            : language === 'fr'
+              ? 'Objectifs'
+              : 'Goals'}
         </h1>
       </div>
 
       <div className="px-4 pb-6 space-y-4">
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {language === 'es' ? 'SEGUIMIENTO' : language === 'fr' ? 'SUIVI' : 'TRACKING'}
+            {language === 'es'
+              ? 'SEGUIMIENTO'
+              : language === 'fr'
+                ? 'SUIVI'
+                : 'TRACKING'}
           </h2>
           <p className="text-xs text-zinc-500">
             {language === 'es'
@@ -52,7 +67,7 @@ export default function SettingsGoalsPage() {
               type="number"
               inputMode="numeric"
               value={goalInput}
-              onChange={e => setGoalInput(e.target.value)}
+              onChange={(e) => setGoalInput(e.target.value)}
               onBlur={handleGoalSave}
               min={1}
               max={10080}

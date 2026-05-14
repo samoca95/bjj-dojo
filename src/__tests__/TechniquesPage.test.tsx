@@ -11,10 +11,15 @@ vi.mock('dexie-react-hooks', () => ({
 
 vi.mock('../db/database', () => ({
   db: {
-    categories: { orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })), count: vi.fn().mockResolvedValue(0) },
+    categories: {
+      orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
+      count: vi.fn().mockResolvedValue(0),
+    },
     techniques: {
       toCollection: vi.fn(() => ({ sortBy: vi.fn().mockResolvedValue([]) })),
-      where: vi.fn(() => ({ equals: vi.fn(() => ({ sortBy: vi.fn().mockResolvedValue([]) })) })),
+      where: vi.fn(() => ({
+        equals: vi.fn(() => ({ sortBy: vi.fn().mockResolvedValue([]) })),
+      })),
     },
   },
 }))
@@ -25,15 +30,19 @@ vi.mock('../db/categoryCache', () => ({
 
 // Render all items without virtualization — tests care about content, not windowing
 vi.mock('react-window', () => ({
-  VariableSizeList: forwardRef<HTMLDivElement, {
-    children: (props: { index: number; style: React.CSSProperties }) => React.ReactNode
-    itemCount: number
-  }>(({ children, itemCount }, ref) => (
+  VariableSizeList: forwardRef<
+    HTMLDivElement,
+    {
+      children: (props: {
+        index: number
+        style: React.CSSProperties
+      }) => React.ReactNode
+      itemCount: number
+    }
+  >(({ children, itemCount }, ref) => (
     <div ref={ref}>
       {Array.from({ length: itemCount }, (_, i) => (
-        <div key={i}>
-          {children({ index: i, style: {} })}
-        </div>
+        <div key={i}>{children({ index: i, style: {} })}</div>
       ))}
     </div>
   )),
@@ -48,11 +57,34 @@ const sampleCategories = [
 ]
 
 const sampleTechniques = [
-  { id: 401, name: 'Armbar', categoryId: 4, difficulty: 'BEGINNER' as const, isCustom: false, isFavorite: true, description: 'Classic armbar', cues: [], youtubeUrl: '' },
-  { id: 101, name: 'Closed Guard', categoryId: 1, difficulty: 'BEGINNER' as const, isCustom: false, isFavorite: false, description: 'Guard position', cues: [], youtubeUrl: '' },
+  {
+    id: 401,
+    name: 'Armbar',
+    categoryId: 4,
+    difficulty: 'BEGINNER' as const,
+    isCustom: false,
+    isFavorite: true,
+    description: 'Classic armbar',
+    cues: [],
+    youtubeUrl: '',
+  },
+  {
+    id: 101,
+    name: 'Closed Guard',
+    categoryId: 1,
+    difficulty: 'BEGINNER' as const,
+    isCustom: false,
+    isFavorite: false,
+    description: 'Guard position',
+    cues: [],
+    youtubeUrl: '',
+  },
 ]
 
-function setupMocks(categories = sampleCategories, techniques = sampleTechniques) {
+function setupMocks(
+  categories = sampleCategories,
+  techniques = sampleTechniques,
+) {
   // TechniquesPage calls useLiveQuery twice per render:
   // 1st: categories with [] deps
   // 2nd: techniques+freqMap with non-empty deps — returns { items, freqMap }
@@ -67,9 +99,18 @@ function renderPage() {
     <MemoryRouter initialEntries={['/techniques']}>
       <Routes>
         <Route path="/techniques" element={<TechniquesPage />} />
-        <Route path="/techniques/new/edit" element={<div data-testid="new-technique-page" />} />
-        <Route path="/techniques/graph" element={<div data-testid="technique-graph-page" />} />
-        <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
+        <Route
+          path="/techniques/new/edit"
+          element={<div data-testid="new-technique-page" />}
+        />
+        <Route
+          path="/techniques/graph"
+          element={<div data-testid="technique-graph-page" />}
+        />
+        <Route
+          path="/techniques/:id"
+          element={<div data-testid="technique-detail" />}
+        />
       </Routes>
     </MemoryRouter>,
   )
@@ -120,7 +161,9 @@ describe('TechniquesPage — structure', () => {
     setupMocks()
     const user = userEvent.setup()
     renderPage()
-    const graphButton = screen.getByRole('button', { name: 'Open technique graph' })
+    const graphButton = screen.getByRole('button', {
+      name: 'Open technique graph',
+    })
     expect(graphButton.className).toContain('w-10')
     expect(graphButton.className).toContain('h-10')
     expect(graphButton.className).not.toContain('shadow')
@@ -147,7 +190,9 @@ describe('TechniquesPage — search and filter', () => {
   it('renders search input', () => {
     setupMocks()
     renderPage()
-    expect(screen.getByPlaceholderText('Search techniques…')).toBeInTheDocument()
+    expect(
+      screen.getByPlaceholderText('Search techniques…'),
+    ).toBeInTheDocument()
   })
 
   it('shows category filter chips when filters are opened', async () => {
@@ -162,24 +207,39 @@ describe('TechniquesPage — search and filter', () => {
   })
 
   it('restores search, sort, and filter context from session storage', async () => {
-    window.sessionStorage.setItem('bjj-dojo.techniques.list-context', JSON.stringify({
-      search: 'arm',
-      categoryId: 4,
-      favoritesOnly: true,
-      difficultyFilter: 'BEGINNER',
-      sortBy: 'name_desc',
-    }))
+    window.sessionStorage.setItem(
+      'bjj-dojo.techniques.list-context',
+      JSON.stringify({
+        search: 'arm',
+        categoryId: 4,
+        favoritesOnly: true,
+        difficultyFilter: 'BEGINNER',
+        sortBy: 'name_desc',
+      }),
+    )
 
     setupMocks()
     const user = userEvent.setup()
     renderPage()
 
-    expect((screen.getByPlaceholderText('Search techniques…') as HTMLInputElement).value).toBe('arm')
-    expect((screen.getByRole('combobox', { name: 'Sort' }) as HTMLSelectElement).value).toBe('name_desc')
+    expect(
+      (screen.getByPlaceholderText('Search techniques…') as HTMLInputElement)
+        .value,
+    ).toBe('arm')
+    expect(
+      (screen.getByRole('combobox', { name: 'Sort' }) as HTMLSelectElement)
+        .value,
+    ).toBe('name_desc')
 
     await user.click(screen.getByRole('button', { name: 'Filter' }))
-    expect(screen.getByRole('button', { name: 'Submissions' }).className).toContain('bg-gold')
-    expect(screen.getByRole('button', { name: 'Favorites' }).className).toContain('bg-gold')
-    expect(screen.getByRole('button', { name: 'BEGINNER' }).className).toContain('bg-gold')
+    expect(
+      screen.getByRole('button', { name: 'Submissions' }).className,
+    ).toContain('bg-gold')
+    expect(
+      screen.getByRole('button', { name: 'Favorites' }).className,
+    ).toContain('bg-gold')
+    expect(
+      screen.getByRole('button', { name: 'BEGINNER' }).className,
+    ).toContain('bg-gold')
   })
 })

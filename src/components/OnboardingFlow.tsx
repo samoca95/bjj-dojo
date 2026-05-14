@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, Home, Share2, Sparkles, X } from 'lucide-react'
+import {
+  BookOpen,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Home,
+  Share2,
+  Sparkles,
+  X,
+} from 'lucide-react'
 import { db } from '../db/database'
 import { getAppLanguage, type AppLanguage } from '../i18n'
 
@@ -41,13 +50,15 @@ const SLIDES: Record<AppLanguage, Slide[]> = {
       icon: 'sessions',
       title: 'Open a session',
       body: 'Tap any session to see its details — duration, taps, techniques, notes, and energy level.',
-      route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
+      route: ({ dummySessionId }) =>
+        dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
     },
     {
       icon: 'share',
       title: 'Share a session',
       body: 'Tap the share icon on any session to export a clean summary — perfect for sending to a coach or training partner.',
-      route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
+      route: ({ dummySessionId }) =>
+        dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
     },
     {
       icon: 'techniques',
@@ -64,7 +75,7 @@ const SLIDES: Record<AppLanguage, Slide[]> = {
     {
       icon: 'home',
       title: 'See your progress',
-      body: 'Your Home tab shows weekly mat time, streaks, and focus techniques. That\'s it — enjoy the mats!',
+      body: "Your Home tab shows weekly mat time, streaks, and focus techniques. That's it — enjoy the mats!",
       route: () => '/',
     },
   ],
@@ -84,13 +95,15 @@ const SLIDES: Record<AppLanguage, Slide[]> = {
       icon: 'sessions',
       title: 'Abre una sesión',
       body: 'Toca cualquier sesión para ver sus detalles: duración, sumisiones, técnicas, notas y energía.',
-      route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
+      route: ({ dummySessionId }) =>
+        dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
     },
     {
       icon: 'share',
       title: 'Comparte una sesión',
       body: 'Toca el icono de compartir en cualquier sesión para exportar un resumen — ideal para enviárselo a tu profe o compañero de entrenamiento.',
-      route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
+      route: ({ dummySessionId }) =>
+        dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
     },
     {
       icon: 'techniques',
@@ -127,13 +140,15 @@ const SLIDES: Record<AppLanguage, Slide[]> = {
       icon: 'sessions',
       title: 'Ouvrez une session',
       body: 'Touchez une session pour voir les détails : durée, soumissions, techniques, notes et niveau d’énergie.',
-      route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
+      route: ({ dummySessionId }) =>
+        dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
     },
     {
       icon: 'share',
       title: 'Partagez une session',
       body: 'Touchez l’icône de partage sur n’importe quelle session pour exporter un résumé — parfait à envoyer à votre coach ou partenaire d’entraînement.',
-      route: ({ dummySessionId }) => dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
+      route: ({ dummySessionId }) =>
+        dummySessionId ? `/sessions/${dummySessionId}` : '/sessions',
     },
     {
       icon: 'techniques',
@@ -156,12 +171,15 @@ const SLIDES: Record<AppLanguage, Slide[]> = {
   ],
 }
 
-const ONBOARDING_ACTION_LABELS: Record<AppLanguage, {
-  skip: string
-  back: string
-  done: string
-  next: string
-}> = {
+const ONBOARDING_ACTION_LABELS: Record<
+  AppLanguage,
+  {
+    skip: string
+    back: string
+    done: string
+    next: string
+  }
+> = {
   en: { skip: 'Skip', back: 'Back', done: 'Done', next: 'Next' },
   es: { skip: 'Saltar', back: 'Atrás', done: 'Listo', next: 'Siguiente' },
   fr: { skip: 'Ignorer', back: 'Retour', done: 'Terminer', next: 'Suivant' },
@@ -169,21 +187,26 @@ const ONBOARDING_ACTION_LABELS: Record<AppLanguage, {
 
 function ICON({ name, size = 28 }: { name: Slide['icon']; size?: number }) {
   if (name === 'sparkles') return <Sparkles size={size} className="text-gold" />
-  if (name === 'sessions') return <CalendarDays size={size} className="text-gold" />
-  if (name === 'techniques') return <BookOpen size={size} className="text-gold" />
+  if (name === 'sessions')
+    return <CalendarDays size={size} className="text-gold" />
+  if (name === 'techniques')
+    return <BookOpen size={size} className="text-gold" />
   if (name === 'share') return <Share2 size={size} className="text-gold" />
   return <Home size={size} className="text-gold" />
 }
 
-async function createDummySession(language: AppLanguage): Promise<number | null> {
+async function createDummySession(
+  language: AppLanguage,
+): Promise<number | null> {
   try {
     const existing = window.localStorage.getItem(DUMMY_SESSION_STORAGE_KEY)
     if (existing) return Number(existing)
-    const notes = language === 'es'
-      ? 'Sesión de ejemplo — se borrará al terminar el recorrido.'
-      : language === 'fr'
-        ? 'Session exemple — elle sera supprimée à la fin du guide.'
-        : 'Sample session — will be removed when the tour ends.'
+    const notes =
+      language === 'es'
+        ? 'Sesión de ejemplo — se borrará al terminar el recorrido.'
+        : language === 'fr'
+          ? 'Session exemple — elle sera supprimée à la fin du guide.'
+          : 'Sample session — will be removed when the tour ends.'
     const id = await db.sessions.add({
       date: Date.now(),
       durationMinutes: 60,
@@ -229,7 +252,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   useEffect(() => {
     if (dummyCreatedRef.current) return
     dummyCreatedRef.current = true
-    void createDummySession(language).then(id => setDummySessionId(id))
+    void createDummySession(language).then((id) => setDummySessionId(id))
   }, [language])
 
   useEffect(() => {
@@ -264,7 +287,9 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
       <div
         className={`fixed inset-x-0 z-[90] px-4 pointer-events-none ${
-          isFirst ? 'inset-y-0 flex items-center justify-center' : 'bottom-16 pb-4'
+          isFirst
+            ? 'inset-y-0 flex items-center justify-center'
+            : 'bottom-16 pb-4'
         }`}
       >
         <div
@@ -283,8 +308,15 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <div className="w-20 h-20 rounded-2xl bg-gold/15 ring-1 ring-gold/30 flex items-center justify-center mb-4">
                 <ICON name={slide.icon} size={44} />
               </div>
-              <h2 id="onboarding-title" className="font-bold text-zinc-50 text-xl">{slide.title}</h2>
-              <p className="text-sm text-zinc-300 mt-2 leading-relaxed max-w-sm">{slide.body}</p>
+              <h2
+                id="onboarding-title"
+                className="font-bold text-zinc-50 text-xl"
+              >
+                {slide.title}
+              </h2>
+              <p className="text-sm text-zinc-300 mt-2 leading-relaxed max-w-sm">
+                {slide.body}
+              </p>
             </div>
           ) : (
             <div className="flex items-start gap-3">
@@ -292,8 +324,15 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 <ICON name={slide.icon} />
               </div>
               <div className="flex-1 min-w-0">
-                <h2 id="onboarding-title" className="font-bold text-zinc-50 text-base">{slide.title}</h2>
-                <p className="text-sm text-zinc-300 mt-1 leading-relaxed">{slide.body}</p>
+                <h2
+                  id="onboarding-title"
+                  className="font-bold text-zinc-50 text-base"
+                >
+                  {slide.title}
+                </h2>
+                <p className="text-sm text-zinc-300 mt-1 leading-relaxed">
+                  {slide.body}
+                </p>
               </div>
               <button
                 onClick={() => void finish(true)}
@@ -319,7 +358,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <div className="flex items-center gap-2">
               {!isFirst && (
                 <button
-                  onClick={() => setIndex(i => Math.max(0, i - 1))}
+                  onClick={() => setIndex((i) => Math.max(0, i - 1))}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-200 text-xs font-semibold active:bg-zinc-700"
                   aria-label={ONBOARDING_ACTION_LABELS[language].back}
                 >
@@ -344,7 +383,9 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 </button>
               ) : (
                 <button
-                  onClick={() => setIndex(i => Math.min(slides.length - 1, i + 1))}
+                  onClick={() =>
+                    setIndex((i) => Math.min(slides.length - 1, i + 1))
+                  }
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gold text-black text-xs font-bold active:bg-gold-light"
                 >
                   {ONBOARDING_ACTION_LABELS[language].next}

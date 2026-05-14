@@ -2,7 +2,7 @@ name: Deploy PWA to GitHub Pages
 
 on:
   push:
-    branches: ["main", "claude/bjj-logging-app-27Eek"]
+    branches: ['main', 'claude/bjj-logging-app-27Eek']
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -24,7 +24,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
 
       - name: Install dependencies
         run: npm install
@@ -32,7 +32,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          GITHUB_ACTIONS: "true"
+          GITHUB_ACTIONS: 'true'
 
       - uses: actions/configure-pages@v4
 

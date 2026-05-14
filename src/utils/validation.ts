@@ -74,10 +74,12 @@ export function isValidYoutubeUrl(url: string): boolean {
     const parsed = new URL(url)
     if (!['https:', 'http:'].includes(parsed.protocol)) return false
     const host = parsed.hostname.toLowerCase()
-    return host === 'youtube.com'
-      || host === 'www.youtube.com'
-      || host === 'm.youtube.com'
-      || host === 'youtu.be'
+    return (
+      host === 'youtube.com' ||
+      host === 'www.youtube.com' ||
+      host === 'm.youtube.com' ||
+      host === 'youtu.be'
+    )
   } catch {
     return false
   }
@@ -94,7 +96,9 @@ export function isValidImageUrl(url: string): boolean {
 }
 
 export function defaultTechniqueImageUrl(name: string): string {
-  const text = (name.trim().slice(0, PLACEHOLDER_TEXT_MAX_LENGTH) || 'Technique')
+  const text = (
+    name.trim().slice(0, PLACEHOLDER_TEXT_MAX_LENGTH) || 'Technique'
+  )
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -109,9 +113,12 @@ export function normalizeTechniqueImageUrl(url: string): string {
   if (!raw) return raw
   try {
     const parsed = new URL(raw)
-    if (parsed.hostname === 'upload.wikimedia.org' && parsed.pathname.includes('/thumb/')) {
+    if (
+      parsed.hostname === 'upload.wikimedia.org' &&
+      parsed.pathname.includes('/thumb/')
+    ) {
       const parts = parsed.pathname.split('/')
-      const thumbIndex = parts.findIndex(part => part === 'thumb')
+      const thumbIndex = parts.findIndex((part) => part === 'thumb')
       const fileName = thumbIndex >= 0 ? parts[thumbIndex + 3] : ''
       if (fileName) {
         return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fileName)}?width=1200`
@@ -136,7 +143,10 @@ export function normalizeTechniquePayload(input: {
     name: trimAndClamp(input.name, NAME_MAX_LENGTH),
     aliases: sanitizeAliases(input.aliases ?? []),
     description: trimAndClamp(input.description, DESCRIPTION_MAX_LENGTH),
-    cues: input.cues.map(cue => trimAndClamp(cue, CUE_MAX_LENGTH)).filter(Boolean).slice(0, 20),
+    cues: input.cues
+      .map((cue) => trimAndClamp(cue, CUE_MAX_LENGTH))
+      .filter(Boolean)
+      .slice(0, 20),
     youtubeUrl: trimAndClamp(input.youtubeUrl, 300),
     imageUrl: trimAndClamp(input.imageUrl ?? '', IMAGE_URL_MAX_LENGTH),
     tags: sanitizeTags(input.tags ?? []),

@@ -1,48 +1,96 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowRight, ArrowLeft, Pencil, Star, ExternalLink } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  ArrowRight,
+  ArrowLeft,
+  Pencil,
+  Star,
+  ExternalLink,
+} from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
 import type { Category, ConnectionType, Session, Technique } from '../types'
 import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
-import ConnectionGraph, { type GraphConnection } from '../components/ConnectionGraph'
-import { useI18n, connectionTypeLabel, getCategoryName, getTechniqueDescription, getTechniqueCues } from '../i18n'
+import ConnectionGraph, {
+  type GraphConnection,
+} from '../components/ConnectionGraph'
+import {
+  useI18n,
+  connectionTypeLabel,
+  getCategoryName,
+  getTechniqueDescription,
+  getTechniqueCues,
+} from '../i18n'
 // import { defaultTechniqueImageUrl, normalizeTechniqueImageUrl } from '../utils/validation' // kept for future image re-implementation
 
 function ConnectedTechniqueRow({
-  technique, badge, badgeCls, onClick,
-}: { technique: Technique; badge: string; badgeCls: string; onClick: () => void }) {
+  technique,
+  badge,
+  badgeCls,
+  onClick,
+}: {
+  technique: Technique
+  badge: string
+  badgeCls: string
+  onClick: () => void
+}) {
   return (
     <button
       onClick={onClick}
       className="w-full flex items-center gap-3 bg-zinc-950 rounded-xl px-3 py-3 text-left active:bg-zinc-800 transition-colors"
     >
-      <span className={`text-xs font-semibold px-2 py-0.5 rounded shrink-0 ${badgeCls}`}>{badge}</span>
+      <span
+        className={`text-xs font-semibold px-2 py-0.5 rounded shrink-0 ${badgeCls}`}
+      >
+        {badge}
+      </span>
       <span className="flex-1 text-sm text-zinc-100">{technique.name}</span>
-      <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+      <ChevronRight
+        size={16}
+        className="text-zinc-600 shrink-0"
+        strokeWidth={2}
+      />
     </button>
   )
 }
 
-function CollapsibleHeading({ label, open, onToggle }: { label: string; open: boolean; onToggle: () => void }) {
+function CollapsibleHeading({
+  label,
+  open,
+  onToggle,
+}: {
+  label: string
+  open: boolean
+  onToggle: () => void
+}) {
   return (
     <button
       onClick={onToggle}
       className="w-full flex items-center justify-between text-left"
     >
-      <span className="text-xs font-semibold tracking-widest text-gold">{label}</span>
-      {open
-        ? <ChevronUp size={14} className="text-gold shrink-0" strokeWidth={2} />
-        : <ChevronDown size={14} className="text-gold shrink-0" strokeWidth={2} />
-      }
+      <span className="text-xs font-semibold tracking-widest text-gold">
+        {label}
+      </span>
+      {open ? (
+        <ChevronUp size={14} className="text-gold shrink-0" strokeWidth={2} />
+      ) : (
+        <ChevronDown size={14} className="text-gold shrink-0" strokeWidth={2} />
+      )}
     </button>
   )
 }
 
-const CONNECTION_TYPE_DESCRIPTIONS: Record<'en' | 'es' | 'fr', Record<ConnectionType, string>> = {
+const CONNECTION_TYPE_DESCRIPTIONS: Record<
+  'en' | 'es' | 'fr',
+  Record<ConnectionType, string>
+> = {
   en: {
     FOLLOW_UP: 'Natural next attack or finish from this position.',
     COUNTER: "Response that shuts down or punishes the opponent's action.",
@@ -63,7 +111,10 @@ const CONNECTION_TYPE_DESCRIPTIONS: Record<'en' | 'es' | 'fr', Record<Connection
   },
 }
 
-function connectionTypeDescription(type: ConnectionType, language: 'en' | 'es' | 'fr'): string {
+function connectionTypeDescription(
+  type: ConnectionType,
+  language: 'en' | 'es' | 'fr',
+): string {
   return CONNECTION_TYPE_DESCRIPTIONS[language][type]
 }
 
@@ -73,91 +124,177 @@ export default function TechniqueDetailPage() {
   const { language, t } = useI18n()
   const numId = Number(id)
   const [connectionsOpen, setConnectionsOpen] = useState(true)
-  const [connectionsView, setConnectionsView] = useState<'graph' | 'list'>('graph')
+  const [connectionsView, setConnectionsView] = useState<'graph' | 'list'>(
+    'graph',
+  )
   const [practiceSessionsOpen, setPracticeSessionsOpen] = useState(true)
 
   const technique = useLiveQuery(() => db.techniques.get(numId), [numId])
   // P5: use cached map — no per-categoryId re-query when only the technique changes
-  const catMap = useLiveQuery(() => getCategoryMap(), [], new Map<number, Category>())
-  const category = technique ? catMap?.get(technique.categoryId) : undefined
-  const sessionCount = useLiveQuery(async () => {
-    const sts = await db.sessionTechniques.where('techniqueId').equals(numId).toArray()
-    return new Set(sts.map(st => st.sessionId)).size
-  }, [numId], 0)
-
-  const connectionsFrom = useLiveQuery(async () => {
-    const conns = await db.techniqueConnections.where('fromTechniqueId').equals(numId).toArray()
-    return Promise.all(conns.map(async c => ({
-      technique: await db.techniques.get(c.toTechniqueId),
-      connectionType: c.connectionType,
-    })))
-  }, [numId], [])
-
-  const connectionsTo = useLiveQuery(async () => {
-    const conns = await db.techniqueConnections.where('toTechniqueId').equals(numId).toArray()
-    return Promise.all(conns.map(async c => ({
-      technique: await db.techniques.get(c.fromTechniqueId),
-      connectionType: c.connectionType,
-    })))
-  }, [numId], [])
-
-  const practiceSessions = useLiveQuery(async () => {
-    const sts = await db.sessionTechniques.where('techniqueId').equals(numId).toArray()
-    const sessionIds = [...new Set(sts.map(st => st.sessionId))]
-    if (sessionIds.length === 0) return []
-    const sessions = await db.sessions.where('id').anyOf(sessionIds).toArray()
-    return sessions.sort((a, b) => b.date - a.date) as Session[]
-  }, [numId], [])
-
-  const practiceSessionNotes = useLiveQuery(async () => {
-    const sts = await db.sessionTechniques.where('techniqueId').equals(numId).toArray()
-    const noted = sts.filter(st => st.notes?.trim())
-    if (noted.length === 0) return []
-    const sessions = await db.sessions.where('id').anyOf(noted.map(st => st.sessionId)).toArray()
-    const sessionById = new Map(sessions.map(session => [session.id, session]))
-    return noted
-      .map(st => {
-        const session = sessionById.get(st.sessionId)
-        if (!session) return null
-        return {
-          sessionId: st.sessionId,
-          date: session.date,
-          note: st.notes!.trim(),
-        }
-      })
-      .filter((entry): entry is { sessionId: number; date: number; note: string } => Boolean(entry))
-      .sort((a, b) => b.date - a.date)
-  }, [numId], [])
-
-  const recommendations = useLiveQuery(async () => {
-    const edges = await db.techniqueConnections.where('fromTechniqueId').equals(numId).toArray()
-    if (edges.length === 0) return []
-    const targets = await db.techniques.where('id').anyOf(edges.map(edge => edge.toTechniqueId)).toArray()
-    const sessionTechniques = await db.sessionTechniques.where('techniqueId').anyOf(targets.map(target => target.id)).toArray()
-    const usage = new Map<number, number>()
-    for (const item of sessionTechniques) {
-      usage.set(item.techniqueId, (usage.get(item.techniqueId) ?? 0) + 1)
-    }
-    return targets
-      .map(target => ({ technique: target, usage: usage.get(target.id) ?? 0 }))
-      .sort((a, b) => b.usage - a.usage)
-      .slice(0, 3)
-  }, [numId], [])
-
-  if (!technique) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-    </div>
+  const catMap = useLiveQuery(
+    () => getCategoryMap(),
+    [],
+    new Map<number, Category>(),
   )
+  const category = technique ? catMap?.get(technique.categoryId) : undefined
+  const sessionCount = useLiveQuery(
+    async () => {
+      const sts = await db.sessionTechniques
+        .where('techniqueId')
+        .equals(numId)
+        .toArray()
+      return new Set(sts.map((st) => st.sessionId)).size
+    },
+    [numId],
+    0,
+  )
+
+  const connectionsFrom = useLiveQuery(
+    async () => {
+      const conns = await db.techniqueConnections
+        .where('fromTechniqueId')
+        .equals(numId)
+        .toArray()
+      return Promise.all(
+        conns.map(async (c) => ({
+          technique: await db.techniques.get(c.toTechniqueId),
+          connectionType: c.connectionType,
+        })),
+      )
+    },
+    [numId],
+    [],
+  )
+
+  const connectionsTo = useLiveQuery(
+    async () => {
+      const conns = await db.techniqueConnections
+        .where('toTechniqueId')
+        .equals(numId)
+        .toArray()
+      return Promise.all(
+        conns.map(async (c) => ({
+          technique: await db.techniques.get(c.fromTechniqueId),
+          connectionType: c.connectionType,
+        })),
+      )
+    },
+    [numId],
+    [],
+  )
+
+  const practiceSessions = useLiveQuery(
+    async () => {
+      const sts = await db.sessionTechniques
+        .where('techniqueId')
+        .equals(numId)
+        .toArray()
+      const sessionIds = [...new Set(sts.map((st) => st.sessionId))]
+      if (sessionIds.length === 0) return []
+      const sessions = await db.sessions.where('id').anyOf(sessionIds).toArray()
+      return sessions.sort((a, b) => b.date - a.date) as Session[]
+    },
+    [numId],
+    [],
+  )
+
+  const practiceSessionNotes = useLiveQuery(
+    async () => {
+      const sts = await db.sessionTechniques
+        .where('techniqueId')
+        .equals(numId)
+        .toArray()
+      const noted = sts.filter((st) => st.notes?.trim())
+      if (noted.length === 0) return []
+      const sessions = await db.sessions
+        .where('id')
+        .anyOf(noted.map((st) => st.sessionId))
+        .toArray()
+      const sessionById = new Map(
+        sessions.map((session) => [session.id, session]),
+      )
+      return noted
+        .map((st) => {
+          const session = sessionById.get(st.sessionId)
+          if (!session) return null
+          return {
+            sessionId: st.sessionId,
+            date: session.date,
+            note: st.notes!.trim(),
+          }
+        })
+        .filter(
+          (entry): entry is { sessionId: number; date: number; note: string } =>
+            Boolean(entry),
+        )
+        .sort((a, b) => b.date - a.date)
+    },
+    [numId],
+    [],
+  )
+
+  const recommendations = useLiveQuery(
+    async () => {
+      const edges = await db.techniqueConnections
+        .where('fromTechniqueId')
+        .equals(numId)
+        .toArray()
+      if (edges.length === 0) return []
+      const targets = await db.techniques
+        .where('id')
+        .anyOf(edges.map((edge) => edge.toTechniqueId))
+        .toArray()
+      const sessionTechniques = await db.sessionTechniques
+        .where('techniqueId')
+        .anyOf(targets.map((target) => target.id))
+        .toArray()
+      const usage = new Map<number, number>()
+      for (const item of sessionTechniques) {
+        usage.set(item.techniqueId, (usage.get(item.techniqueId) ?? 0) + 1)
+      }
+      return targets
+        .map((target) => ({
+          technique: target,
+          usage: usage.get(target.id) ?? 0,
+        }))
+        .sort((a, b) => b.usage - a.usage)
+        .slice(0, 3)
+    },
+    [numId],
+    [],
+  )
+
+  if (!technique)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
 
   const cues = getTechniqueCues(technique, language)
 
   const graphConnections: GraphConnection[] = [
-    ...(connectionsFrom ?? []).flatMap(c =>
-      c.technique ? [{ technique: c.technique, connectionType: c.connectionType, direction: 'from' as const }] : [],
+    ...(connectionsFrom ?? []).flatMap((c) =>
+      c.technique
+        ? [
+            {
+              technique: c.technique,
+              connectionType: c.connectionType,
+              direction: 'from' as const,
+            },
+          ]
+        : [],
     ),
-    ...(connectionsTo ?? []).flatMap(c =>
-      c.technique ? [{ technique: c.technique, connectionType: c.connectionType, direction: 'to' as const }] : [],
+    ...(connectionsTo ?? []).flatMap((c) =>
+      c.technique
+        ? [
+            {
+              technique: c.technique,
+              connectionType: c.connectionType,
+              direction: 'to' as const,
+            },
+          ]
+        : [],
     ),
   ]
   // Image vars kept for future re-implementation (image display is currently hidden)
@@ -172,16 +309,24 @@ export default function TechniqueDetailPage() {
     <div className="min-h-full bg-zinc-950">
       {/* Header */}
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 z-10 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 -ml-2 text-zinc-400 active:text-zinc-100"
+        >
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <div className="flex-1 min-w-0">
           <h1 className="font-bold text-zinc-100 truncate">{technique.name}</h1>
           {(technique.aliases?.length ?? 0) > 0 && (
-            <p className="text-xs text-zinc-500 truncate">{technique.aliases!.join(' · ')}</p>
+            <p className="text-xs text-zinc-500 truncate">
+              {technique.aliases!.join(' · ')}
+            </p>
           )}
         </div>
-        <button onClick={() => navigate(`/techniques/${numId}/edit`)} className="p-2 text-gold active:text-gold-light">
+        <button
+          onClick={() => navigate(`/techniques/${numId}/edit`)}
+          className="p-2 text-gold active:text-gold-light"
+        >
           <Pencil size={20} strokeWidth={2} />
         </button>
       </div>
@@ -213,7 +358,12 @@ export default function TechniqueDetailPage() {
           <div className="flex flex-wrap gap-2 mb-4">
             {category && (
               <span className="text-xs font-semibold px-2 py-1 rounded bg-gold/20 text-gold flex items-center gap-1.5">
-                <CategoryIcon value={category.icon} fallbackId={category.id} size={12} className="text-gold" />
+                <CategoryIcon
+                  value={category.icon}
+                  fallbackId={category.id}
+                  size={12}
+                  className="text-gold"
+                />
                 {getCategoryName(category, language)}
               </span>
             )}
@@ -226,15 +376,21 @@ export default function TechniqueDetailPage() {
             )}
             {(sessionCount ?? 0) > 0 && (
               <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-900/40 text-blue-300">
-                 {language === 'es' ? 'Practicada' : 'Practiced'} {sessionCount}×
-               </span>
+                {language === 'es' ? 'Practicada' : 'Practiced'} {sessionCount}×
+              </span>
             )}
           </div>
-          <p className="text-sm text-zinc-300 leading-relaxed">{getTechniqueDescription(technique, language)}</p>
+          <p className="text-sm text-zinc-300 leading-relaxed">
+            {getTechniqueDescription(technique, language)}
+          </p>
           {(practiceSessionNotes?.length ?? 0) > 0 && (
             <div className="mt-4 space-y-2">
               <div className="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase">
-                {language === 'es' ? 'Desde sesiones' : language === 'fr' ? 'Depuis les sessions' : 'From sessions'}
+                {language === 'es'
+                  ? 'Desde sesiones'
+                  : language === 'fr'
+                    ? 'Depuis les sessions'
+                    : 'From sessions'}
               </div>
               <div className="space-y-2">
                 {practiceSessionNotes!.map(({ sessionId, date, note }) => (
@@ -244,9 +400,14 @@ export default function TechniqueDetailPage() {
                     className="w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-left active:bg-zinc-800/80 transition-colors"
                   >
                     <div className="text-[11px] text-zinc-500 mb-1">
-                      {new Date(date).toLocaleDateString(language === 'en' ? 'en-GB' : language, { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {new Date(date).toLocaleDateString(
+                        language === 'en' ? 'en-GB' : language,
+                        { day: 'numeric', month: 'short', year: 'numeric' },
+                      )}
                     </div>
-                    <div className="text-sm text-zinc-300 leading-snug whitespace-pre-wrap">{note}</div>
+                    <div className="text-sm text-zinc-300 leading-snug whitespace-pre-wrap">
+                      {note}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -254,8 +415,13 @@ export default function TechniqueDetailPage() {
           )}
           {(technique.tags?.length ?? 0) > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
-              {(technique.tags ?? []).map(tag => (
-                <span key={tag} className="text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-300">#{tag}</span>
+              {(technique.tags ?? []).map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-300"
+                >
+                  #{tag}
+                </span>
               ))}
             </div>
           )}
@@ -264,12 +430,16 @@ export default function TechniqueDetailPage() {
         {/* Coaching cues */}
         {cues.length > 0 && (
           <div className="bg-zinc-900 rounded-2xl p-5">
-             <div className="text-xs font-semibold tracking-widest text-gold mb-3">{t('COACHING CUES')}</div>
+            <div className="text-xs font-semibold tracking-widest text-gold mb-3">
+              {t('COACHING CUES')}
+            </div>
             <ul className="space-y-2">
               {cues.map((cue, i) => (
                 <li key={i} className="flex items-start gap-2.5">
                   <span className="text-gold text-xs mt-1 shrink-0">▸</span>
-                  <span className="text-sm text-zinc-200 leading-snug">{cue}</span>
+                  <span className="text-sm text-zinc-200 leading-snug">
+                    {cue}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -285,7 +455,7 @@ export default function TechniqueDetailPage() {
             className="flex items-center justify-center gap-2 w-full bg-red-700 hover:bg-red-600 active:bg-red-800 rounded-2xl py-3.5 font-semibold text-white transition-colors"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
             </svg>
             {t('Watch on YouTube')}
           </a>
@@ -307,7 +477,9 @@ export default function TechniqueDetailPage() {
                   className="flex items-center gap-2 bg-zinc-950 rounded-xl px-3 py-2.5 text-sm text-zinc-100 active:bg-zinc-800"
                 >
                   <ExternalLink size={14} className="text-gold shrink-0" />
-                  <span className="flex-1 truncate">{link.label?.trim() || link.url}</span>
+                  <span className="flex-1 truncate">
+                    {link.label?.trim() || link.url}
+                  </span>
                 </a>
               ))}
             </div>
@@ -315,19 +487,20 @@ export default function TechniqueDetailPage() {
         )}
 
         {/* Connections */}
-        {((connectionsFrom?.length ?? 0) > 0 || (connectionsTo?.length ?? 0) > 0) && (
+        {((connectionsFrom?.length ?? 0) > 0 ||
+          (connectionsTo?.length ?? 0) > 0) && (
           <div className="space-y-3">
             <div className="px-1">
               <CollapsibleHeading
                 label={t('TECHNIQUE CONNECTIONS')}
                 open={connectionsOpen}
-                onToggle={() => setConnectionsOpen(prev => !prev)}
+                onToggle={() => setConnectionsOpen((prev) => !prev)}
               />
             </div>
             {connectionsOpen && (
               <>
                 <div className="flex gap-1 bg-zinc-900 rounded-xl p-1">
-                  {(['graph', 'list'] as const).map(view => (
+                  {(['graph', 'list'] as const).map((view) => (
                     <button
                       key={view}
                       onClick={() => setConnectionsView(view)}
@@ -346,64 +519,102 @@ export default function TechniqueDetailPage() {
                     centerName={technique.name}
                     centerCategoryId={technique.categoryId}
                     connections={graphConnections}
-                    onSelect={tid => navigate(`/techniques/${tid}`)}
-                    connectionTypeName={ct => connectionTypeLabel(ct, CONNECTION_LABELS[ct], language)}
+                    onSelect={(tid) => navigate(`/techniques/${tid}`)}
+                    connectionTypeName={(ct) =>
+                      connectionTypeLabel(ct, CONNECTION_LABELS[ct], language)
+                    }
                   />
                 )}
                 {connectionsView === 'list' && (
-                <>
-                {connectionsFrom && connectionsFrom.length > 0 && (
-                  <div className="bg-zinc-900 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <ArrowRight size={16} className="text-gold" strokeWidth={2} />
-                      <span className="font-semibold text-zinc-100 text-sm">{t('Leads To / Follow-ups')}</span>
-                    </div>
-                    <div className="space-y-2">
-                      {connectionsFrom.map(({ technique: t, connectionType }, i) =>
-                        t ? (
-                          <ConnectedTechniqueRow
-                            key={i}
-                            technique={t}
-                            badge={connectionTypeLabel(connectionType, CONNECTION_LABELS[connectionType], language)}
-                            badgeCls={CONNECTION_COLORS[connectionType]}
-                            onClick={() => navigate(`/techniques/${t.id}`)}
+                  <>
+                    {connectionsFrom && connectionsFrom.length > 0 && (
+                      <div className="bg-zinc-900 rounded-2xl p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <ArrowRight
+                            size={16}
+                            className="text-gold"
+                            strokeWidth={2}
                           />
-                        ) : null,
-                      )}
-                    </div>
-                  </div>
-                )}
-                {connectionsTo && connectionsTo.length > 0 && (
-                  <div className="bg-zinc-900 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <ArrowLeft size={16} className="text-gold" strokeWidth={2} />
-                      <span className="font-semibold text-zinc-100 text-sm">{t('Can Be Set Up From')}</span>
-                    </div>
-                    <div className="space-y-2">
-                      {connectionsTo.map(({ technique: t, connectionType }, i) =>
-                        t ? (
-                          <ConnectedTechniqueRow
-                            key={i}
-                            technique={t}
-                            badge={connectionTypeLabel(connectionType, CONNECTION_LABELS[connectionType], language)}
-                            badgeCls={CONNECTION_COLORS[connectionType]}
-                            onClick={() => navigate(`/techniques/${t.id}`)}
+                          <span className="font-semibold text-zinc-100 text-sm">
+                            {t('Leads To / Follow-ups')}
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          {connectionsFrom.map(
+                            ({ technique: t, connectionType }, i) =>
+                              t ? (
+                                <ConnectedTechniqueRow
+                                  key={i}
+                                  technique={t}
+                                  badge={connectionTypeLabel(
+                                    connectionType,
+                                    CONNECTION_LABELS[connectionType],
+                                    language,
+                                  )}
+                                  badgeCls={CONNECTION_COLORS[connectionType]}
+                                  onClick={() =>
+                                    navigate(`/techniques/${t.id}`)
+                                  }
+                                />
+                              ) : null,
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {connectionsTo && connectionsTo.length > 0 && (
+                      <div className="bg-zinc-900 rounded-2xl p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <ArrowLeft
+                            size={16}
+                            className="text-gold"
+                            strokeWidth={2}
                           />
-                        ) : null,
-                      )}
-                    </div>
-                  </div>
-                )}
-                </>
+                          <span className="font-semibold text-zinc-100 text-sm">
+                            {t('Can Be Set Up From')}
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          {connectionsTo.map(
+                            ({ technique: t, connectionType }, i) =>
+                              t ? (
+                                <ConnectedTechniqueRow
+                                  key={i}
+                                  technique={t}
+                                  badge={connectionTypeLabel(
+                                    connectionType,
+                                    CONNECTION_LABELS[connectionType],
+                                    language,
+                                  )}
+                                  badgeCls={CONNECTION_COLORS[connectionType]}
+                                  onClick={() =>
+                                    navigate(`/techniques/${t.id}`)
+                                  }
+                                />
+                              ) : null,
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
                 <div className="bg-zinc-900 rounded-2xl p-3">
                   <div className="space-y-1.5">
-                    {(['FOLLOW_UP', 'SETUP', 'COUNTER', 'TRANSITION'] as const).map(type => (
+                    {(
+                      ['FOLLOW_UP', 'SETUP', 'COUNTER', 'TRANSITION'] as const
+                    ).map((type) => (
                       <div key={type} className="text-xs text-zinc-300">
-                        <span className={`inline-flex mr-1.5 rounded px-1.5 py-0.5 font-semibold ${CONNECTION_COLORS[type]}`}>
-                          {connectionTypeLabel(type, CONNECTION_LABELS[type], language)}
+                        <span
+                          className={`inline-flex mr-1.5 rounded px-1.5 py-0.5 font-semibold ${CONNECTION_COLORS[type]}`}
+                        >
+                          {connectionTypeLabel(
+                            type,
+                            CONNECTION_LABELS[type],
+                            language,
+                          )}
                         </span>
-                        <span className="text-zinc-400">{connectionTypeDescription(type, language)}</span>
+                        <span className="text-zinc-400">
+                          {connectionTypeDescription(type, language)}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -420,23 +631,32 @@ export default function TechniqueDetailPage() {
               <CollapsibleHeading
                 label={t('PRACTICE SESSIONS')}
                 open={practiceSessionsOpen}
-                onToggle={() => setPracticeSessionsOpen(prev => !prev)}
+                onToggle={() => setPracticeSessionsOpen((prev) => !prev)}
               />
             </div>
             {practiceSessionsOpen && (
               <div className="bg-zinc-900 rounded-2xl p-4">
                 <div className="space-y-2">
-                  {practiceSessions!.map(session => (
+                  {practiceSessions!.map((session) => (
                     <button
                       key={session.id}
                       onClick={() => navigate(`/sessions/${session.id}`)}
                       className="w-full flex items-center gap-3 bg-zinc-950 rounded-xl px-3 py-2.5 text-left active:bg-zinc-800 transition-colors"
                     >
                       <span className="flex-1 text-sm text-zinc-100">
-                        {new Date(session.date).toLocaleDateString(language === 'en' ? 'en-GB' : language, { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {new Date(session.date).toLocaleDateString(
+                          language === 'en' ? 'en-GB' : language,
+                          { day: 'numeric', month: 'short', year: 'numeric' },
+                        )}
                       </span>
-                      <span className="text-xs text-zinc-500">{session.durationMinutes}min</span>
-                      <ChevronRight size={15} className="text-zinc-600 shrink-0" strokeWidth={2} />
+                      <span className="text-xs text-zinc-500">
+                        {session.durationMinutes}min
+                      </span>
+                      <ChevronRight
+                        size={15}
+                        className="text-zinc-600 shrink-0"
+                        strokeWidth={2}
+                      />
                     </button>
                   ))}
                 </div>
@@ -448,16 +668,20 @@ export default function TechniqueDetailPage() {
         {(recommendations?.length ?? 0) > 0 && (
           <div className="bg-zinc-900 rounded-2xl p-4">
             <div className="text-xs font-semibold tracking-widest text-gold mb-3">
-              {language === 'es' ? 'SIGUIENTES RECOMENDADAS' : 'RECOMMENDED NEXT'}
+              {language === 'es'
+                ? 'SIGUIENTES RECOMENDADAS'
+                : 'RECOMMENDED NEXT'}
             </div>
             <div className="space-y-2">
-              {recommendations?.map(item => (
+              {recommendations?.map((item) => (
                 <button
                   key={item.technique.id}
                   onClick={() => navigate(`/techniques/${item.technique.id}`)}
                   className="w-full bg-zinc-950 rounded-xl px-3 py-2.5 flex items-center gap-2 text-left active:bg-zinc-800"
                 >
-                  <span className="flex-1 text-sm text-zinc-100">{item.technique.name}</span>
+                  <span className="flex-1 text-sm text-zinc-100">
+                    {item.technique.name}
+                  </span>
                   <span className="text-xs text-zinc-500">{item.usage}×</span>
                   <ChevronRight size={15} className="text-zinc-600" />
                 </button>

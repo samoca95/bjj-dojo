@@ -30,10 +30,14 @@ describe('Layout', () => {
     )
 
     render(<RouterProvider router={router} />)
-    expect(screen.getByRole('heading', { name: 'Sessions Page' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Sessions Page' }),
+    ).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Start' }))
 
-    expect(await screen.findByRole('heading', { name: 'Home Page' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Home Page' }),
+    ).toBeInTheDocument()
   })
 })

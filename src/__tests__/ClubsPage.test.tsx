@@ -38,7 +38,10 @@ function renderPage(state?: unknown) {
     <MemoryRouter initialEntries={[{ pathname: '/clubs', state }]}>
       <Routes>
         <Route path="/clubs" element={<ClubsPage />} />
-        <Route path="/sessions/new" element={<div data-testid="session-log-page" />} />
+        <Route
+          path="/sessions/new"
+          element={<div data-testid="session-log-page" />}
+        />
       </Routes>
     </MemoryRouter>,
   )
@@ -54,14 +57,19 @@ describe('ClubsPage — return flow', () => {
     const user = userEvent.setup()
     renderPage({ returnTo: '/sessions/new' })
 
-    await user.type(screen.getByPlaceholderText('e.g. Main Dojo'), 'New Academy')
+    await user.type(
+      screen.getByPlaceholderText('e.g. Main Dojo'),
+      'New Academy',
+    )
     await user.click(screen.getByText('Add Club'))
 
     expect(await screen.findByTestId('session-log-page')).toBeInTheDocument()
   })
 
   it('returns to session log after editing a club when return context is provided', async () => {
-    mockUseLiveQuery.mockReturnValue([{ id: 7, name: 'Original Name', sortOrder: 1 }])
+    mockUseLiveQuery.mockReturnValue([
+      { id: 7, name: 'Original Name', sortOrder: 1 },
+    ])
     const user = userEvent.setup()
     renderPage({ returnTo: '/sessions/new' })
 

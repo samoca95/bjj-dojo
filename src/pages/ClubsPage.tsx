@@ -14,7 +14,10 @@ export default function ClubsPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { language, t } = useI18n()
-  const returnContext = location.state as { returnTo?: string; returnState?: unknown } | null
+  const returnContext = location.state as {
+    returnTo?: string
+    returnState?: unknown
+  } | null
   const returnTo = returnContext?.returnTo
   const returnState = returnContext?.returnState
 
@@ -39,7 +42,8 @@ export default function ClubsPage() {
     if (!name) return
     try {
       const last = await db.clubs.orderBy('sortOrder').last()
-      const sortOrder = typeof last?.sortOrder === 'number' ? last.sortOrder + 1 : 1
+      const sortOrder =
+        typeof last?.sortOrder === 'number' ? last.sortOrder + 1 : 1
       await db.clubs.add({ name, sortOrder })
       setNewClubName('')
       if (returnTo) navigate(returnTo, { state: returnState })
@@ -66,9 +70,10 @@ export default function ClubsPage() {
 
   const handleDelete = async (club: Club) => {
     if (!club.id) return
-    const message = language === 'es'
-      ? `¿Eliminar ${club.name}?\nLas sesiones conservarán sus datos pero ya no quedarán asociadas a esta academia.`
-      : `Delete ${club.name}?\nSessions will keep their data but will no longer be associated with this club.`
+    const message =
+      language === 'es'
+        ? `¿Eliminar ${club.name}?\nLas sesiones conservarán sus datos pero ya no quedarán asociadas a esta academia.`
+        : `Delete ${club.name}?\nSessions will keep their data but will no longer be associated with this club.`
     if (!window.confirm(message)) return
     try {
       await db.sessions.where('clubId').equals(club.id).modify({ clubId: null })
@@ -100,7 +105,10 @@ export default function ClubsPage() {
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 z-10 flex items-center gap-3">
-        <button onClick={navigateBack} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
+        <button
+          onClick={navigateBack}
+          className="p-2 -ml-2 text-zinc-400 active:text-zinc-100"
+        >
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <h1 className="flex-1 font-bold text-zinc-100">{t('Clubs')}</h1>
@@ -108,11 +116,13 @@ export default function ClubsPage() {
 
       <div className="px-4 space-y-4 pb-6">
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <label className="text-xs text-gold font-semibold tracking-wide">{t('ADD CLUB')}</label>
+          <label className="text-xs text-gold font-semibold tracking-wide">
+            {t('ADD CLUB')}
+          </label>
           <input
             type="text"
             value={newClubName}
-            onChange={e => setNewClubName(e.target.value)}
+            onChange={(e) => setNewClubName(e.target.value)}
             placeholder={t('e.g. Main Dojo')}
             className={inputCls}
           />
@@ -125,17 +135,22 @@ export default function ClubsPage() {
         </div>
 
         {clubs?.length === 0 ? (
-          <div className="text-sm text-zinc-500 text-center py-8">{t('No clubs yet. Add one above.')}</div>
+          <div className="text-sm text-zinc-500 text-center py-8">
+            {t('No clubs yet. Add one above.')}
+          </div>
         ) : (
           <div className="space-y-3">
             {clubs?.map((club, index) => (
-              <div key={club.id} className="bg-zinc-900 rounded-2xl p-4 space-y-3">
+              <div
+                key={club.id}
+                className="bg-zinc-900 rounded-2xl p-4 space-y-3"
+              >
                 {editingId === club.id ? (
                   <>
                     <input
                       type="text"
                       value={editingName}
-                      onChange={e => setEditingName(e.target.value)}
+                      onChange={(e) => setEditingName(e.target.value)}
                       className={inputCls}
                     />
                     <div className="flex gap-2">
@@ -146,7 +161,10 @@ export default function ClubsPage() {
                         {t('Save')}
                       </button>
                       <button
-                        onClick={() => { setEditingId(null); setEditingName('') }}
+                        onClick={() => {
+                          setEditingId(null)
+                          setEditingName('')
+                        }}
                         className="flex-1 bg-zinc-800 text-zinc-300 font-semibold py-2 rounded-xl active:bg-zinc-700"
                       >
                         {t('Cancel')}
@@ -157,8 +175,12 @@ export default function ClubsPage() {
                   <>
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
-                        <div className="font-semibold text-zinc-100">{club.name}</div>
-                        <div className="text-xs text-zinc-500">{t('Order')} {index + 1}</div>
+                        <div className="font-semibold text-zinc-100">
+                          {club.name}
+                        </div>
+                        <div className="text-xs text-zinc-500">
+                          {t('Order')} {index + 1}
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <button
