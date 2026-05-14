@@ -62,6 +62,33 @@ describe('forceDirectedLayout', () => {
     expect(Number.isFinite(pos.get(1)!.x)).toBe(true)
     expect(Number.isFinite(pos.get(2)!.y)).toBe(true)
   })
+
+  it('packs disconnected groups close together without overlapping group bounds', () => {
+    const ids = [1, 2, 3, 4, 5, 6]
+    const edges = [
+      { from: 1, to: 2 },
+      { from: 2, to: 3 },
+      { from: 4, to: 5 },
+      { from: 5, to: 6 },
+    ]
+    const pos = forceDirectedLayout(ids, edges)
+    const groupA = [1, 2, 3].map(id => pos.get(id)!)
+    const groupB = [4, 5, 6].map(id => pos.get(id)!)
+    const bounds = (group: GraphNodePosition[]) => ({
+      minX: Math.min(...group.map(p => p.x)),
+      maxX: Math.max(...group.map(p => p.x)),
+      minY: Math.min(...group.map(p => p.y)),
+      maxY: Math.max(...group.map(p => p.y)),
+    })
+    const a = bounds(groupA)
+    const b = bounds(groupB)
+    const overlapsX = a.minX <= b.maxX && b.minX <= a.maxX
+    const overlapsY = a.minY <= b.maxY && b.minY <= a.maxY
+    expect(overlapsX && overlapsY).toBe(false)
+    const centreA = { x: (a.minX + a.maxX) / 2, y: (a.minY + a.maxY) / 2 }
+    const centreB = { x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 }
+    expect(dist(centreA, centreB)).toBeLessThan(500)
+  })
 })
 
 describe('computeViewBox', () => {

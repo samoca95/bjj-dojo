@@ -389,9 +389,9 @@ export default function SessionsPage() {
       {/* FAB */}
       <button
         onClick={() => navigate('/sessions/new')}
-        className="fixed bottom-20 right-4 w-14 h-14 bg-gold rounded-full flex items-center justify-center shadow-lg shadow-gold/30 active:bg-gold-light transition-colors z-40"
+        className="fixed bottom-20 right-4 w-10 h-10 bg-gold rounded-full flex items-center justify-center active:bg-gold-light transition-colors z-40"
       >
-        <Plus size={28} className="text-black" strokeWidth={2.5} />
+        <Plus size={18} className="text-black" strokeWidth={2.2} />
       </button>
     </div>
   )

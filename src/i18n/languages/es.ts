@@ -166,6 +166,7 @@ const ES_TRANSLATIONS = {
   Dismiss: 'Cerrar',
   // Settings section headings & labels
   'YOUR BELT': 'TU CINTURÓN',
+  'Your name': 'Tu nombre',
   'THEME & LANGUAGE': 'TEMA E IDIOMA',
   Theme: 'Tema',
   Dark: 'Oscuro',

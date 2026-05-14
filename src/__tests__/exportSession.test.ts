@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import {
   buildSessionText,
   buildSessionHtml,
+  buildShareCaption,
   exportSession,
   type SessionExportData,
 } from '../utils/exportSession'
@@ -145,6 +146,52 @@ describe('buildSessionHtml', () => {
     )
     expect(html).not.toContain('<img src=x')
     expect(html).toContain('&lt;img src=x')
+  })
+})
+
+describe('buildShareCaption', () => {
+  it('summarises duration, type and drilled techniques', () => {
+    const caption = buildShareCaption(baseData, 'en')
+    expect(caption).toContain('90 min Gi session')
+    expect(caption).toContain('Drilled: Armbar')
+    expect(caption).toContain('#bjj')
+  })
+
+  it('appends the club when present', () => {
+    const caption = buildShareCaption({ ...baseData, clubName: 'Main Dojo' }, 'en')
+    expect(caption).toContain('at Main Dojo')
+  })
+
+  it('caps the technique list at three names and counts the rest', () => {
+    const caption = buildShareCaption(
+      {
+        ...baseData,
+        techniques: [
+          { technique: makeTechnique(1, 'Armbar') },
+          { technique: makeTechnique(2, 'Triangle') },
+          { technique: makeTechnique(3, 'Kimura') },
+          { technique: makeTechnique(4, 'Omoplata') },
+          { technique: makeTechnique(5, 'Ezekiel') },
+        ],
+      },
+      'en',
+    )
+    expect(caption).toContain('Armbar, Triangle, Kimura +2')
+  })
+
+  it('mentions submissions landed only when there are given taps', () => {
+    expect(buildShareCaption(baseData, 'en')).not.toContain('landed')
+    const withTaps = buildShareCaption(
+      { ...baseData, givenTaps: [{ techniqueName: 'Armbar' }] },
+      'en',
+    )
+    expect(withTaps).toContain('1 submission landed')
+  })
+
+  it('localises the caption for non-English languages', () => {
+    const caption = buildShareCaption(baseData, 'es')
+    expect(caption).toContain('Sesión de Gi de 90 min')
+    expect(caption).toContain('Técnicas: Armbar')
   })
 })
 

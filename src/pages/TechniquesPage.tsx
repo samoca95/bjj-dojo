@@ -259,13 +259,6 @@ export default function TechniquesPage() {
               <option value="frequency">{language === 'es' ? 'Frecuencia' : 'Frequency'}</option>
             </select>
             <button
-              onClick={() => navigate('/techniques/graph')}
-              className="p-2 rounded-xl bg-zinc-800 text-zinc-300 active:bg-zinc-700 transition-colors"
-              aria-label={t('Open technique graph')}
-            >
-              <Waypoints size={18} strokeWidth={2} />
-            </button>
-            <button
               onClick={() => setFilterOpen(prev => !prev)}
               className={`p-2 rounded-xl transition-colors relative ${
                 filterOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
@@ -279,7 +272,6 @@ export default function TechniquesPage() {
             </button>
           </div>
         </div>
-
         {/* Search */}
         <div className="px-4 pb-3">
           <div className="relative">
@@ -371,7 +363,7 @@ export default function TechniquesPage() {
           </div>
         )}
 
-        <div className="px-6 pb-2">
+        <div className="px-6 pb-2 flex items-center justify-between gap-3">
           <span className="text-xs text-zinc-500">
             {techniques.length}{' '}
             {(() => {
@@ -380,6 +372,13 @@ export default function TechniquesPage() {
               return count === 1 ? 'technique' : 'techniques'
             })()}
           </span>
+          <button
+            onClick={() => navigate('/techniques/new/edit')}
+            aria-label={language === 'es' ? 'Nueva técnica' : language === 'fr' ? 'Nouvelle technique' : 'New technique'}
+            className="w-10 h-10 rounded-full bg-zinc-800 text-gold flex items-center justify-center active:bg-zinc-700 transition-colors"
+          >
+            <Plus size={18} strokeWidth={2.2} />
+          </button>
         </div>
       </div>
 
@@ -399,13 +398,12 @@ export default function TechniquesPage() {
       >
         {renderRow}
       </FixedSizeList>
-
-      {/* FAB */}
       <button
-        onClick={() => navigate('/techniques/new/edit')}
-        className="fixed bottom-20 right-4 w-14 h-14 bg-gold rounded-full flex items-center justify-center shadow-lg shadow-gold/30 active:bg-gold-light transition-colors z-40"
+        onClick={() => navigate('/techniques/graph')}
+        aria-label={t('Open technique graph')}
+        className="fixed bottom-20 right-4 w-10 h-10 rounded-full bg-gold text-black active:bg-gold-light flex items-center justify-center transition-colors z-40"
       >
-        <Plus size={28} className="text-black" strokeWidth={2.5} />
+        <Waypoints size={18} strokeWidth={2.2} />
       </button>
     </div>
   )

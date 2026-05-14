@@ -167,6 +167,7 @@ const FR_TRANSLATIONS = {
   Dismiss: 'Fermer',
   // Settings section headings & labels
   'YOUR BELT': 'VOTRE CEINTURE',
+  'Your name': 'Votre nom',
   'THEME & LANGUAGE': 'THÈME & LANGUE',
   Theme: 'Thème',
   Dark: 'Sombre',

@@ -63,6 +63,7 @@ function renderPage() {
       <Routes>
         <Route path="/techniques" element={<TechniquesPage />} />
         <Route path="/techniques/new/edit" element={<div data-testid="new-technique-page" />} />
+        <Route path="/techniques/graph" element={<div data-testid="technique-graph-page" />} />
         <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
       </Routes>
     </MemoryRouter>,
@@ -92,20 +93,34 @@ describe('TechniquesPage — structure', () => {
     expect(screen.getByText('Closed Guard')).toBeInTheDocument()
   })
 
-  it('renders FAB button to add a technique', () => {
+  it('renders direct new-technique button opposite to the technique counter', () => {
     setupMocks()
     renderPage()
-    const fab = document.querySelector('button[class*="fixed bottom-20"]') as HTMLElement
-    expect(fab).not.toBeNull()
+    const addButton = screen.getByRole('button', { name: 'New technique' })
+    expect(addButton).toBeInTheDocument()
+    expect(addButton.className).toContain('w-10')
+    expect(addButton.className).toContain('h-10')
+    expect(addButton.className).not.toContain('shadow')
   })
 
-  it('FAB navigates to new technique page', async () => {
+  it('new-technique button navigates to new technique page', async () => {
     setupMocks()
     const user = userEvent.setup()
     renderPage()
-    const fab = document.querySelector('button[class*="fixed bottom-20"]') as HTMLElement
-    await user.click(fab)
+    await user.click(screen.getByRole('button', { name: 'New technique' }))
     expect(screen.getByTestId('new-technique-page')).toBeInTheDocument()
+  })
+
+  it('bottom-right graph button opens the global graph page', async () => {
+    setupMocks()
+    const user = userEvent.setup()
+    renderPage()
+    const graphButton = screen.getByRole('button', { name: 'Open technique graph' })
+    expect(graphButton.className).toContain('w-10')
+    expect(graphButton.className).toContain('h-10')
+    expect(graphButton.className).not.toContain('shadow')
+    await user.click(graphButton)
+    expect(screen.getByTestId('technique-graph-page')).toBeInTheDocument()
   })
 
   it('shows technique count', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, fireEvent } from '@testing-library/react'
+import { render, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import TechniqueGraphPage from '../pages/TechniqueGraphPage'
 import type { Category, Technique, TechniqueConnection } from '../types'
@@ -53,6 +53,19 @@ const GRAPH_VIEW_KEY = 'bjj-dojo.techniques.graph-view'
 beforeEach(() => {
   vi.clearAllMocks()
   window.sessionStorage.clear()
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(() => ({
+      matches: false,
+      media: '',
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
 })
 afterEach(() => vi.restoreAllMocks())
 
@@ -79,10 +92,112 @@ describe('TechniqueGraphPage', () => {
     expect(container.querySelectorAll('line')).toHaveLength(2)
   })
 
-  it('navigates to the technique detail page when a node is clicked', () => {
+  it('shows highlighted edge arrows when a node is hovered', () => {
     setupMocks()
-    const { container, getByTestId } = renderPage()
-    fireEvent.click(container.querySelector('g[role="button"]')!)
+    const { container } = renderPage()
+    const firstNode = container.querySelector('g[role="button"]')!
+    fireEvent.pointerEnter(firstNode)
+    expect(container.querySelector('line[marker-end]')).not.toBeNull()
+    const highlightedTypeLabels = [...container.querySelectorAll('text')]
+      .filter(node => node.textContent?.trim() === 'Follow-up')
+    expect(highlightedTypeLabels).toHaveLength(0)
+  })
+
+  it('dims non-highlighted techniques when a node is highlighted', () => {
+    setupMocks({
+      techniques: [
+        ...techniques,
+        { id: 999, name: 'Knee Slice', categoryId: 1, difficulty: 'BEGINNER', isCustom: false, description: '', cues: [], youtubeUrl: '' },
+      ],
+      connections,
+    })
+    const { container } = renderPage()
+    const firstNode = container.querySelector('g[role="button"]')!
+    fireEvent.pointerEnter(firstNode)
+    expect(container.querySelectorAll('g[role="button"][opacity="0.26"]')).toHaveLength(1)
+  })
+
+  it('uses a uniform colour for non-highlighted edges', () => {
+    setupMocks()
+    const { container } = renderPage()
+    const edges = container.querySelectorAll('line')
+    expect(edges.length).toBeGreaterThan(0)
+    for (const edge of edges) {
+      expect(edge.getAttribute('stroke')).toBe('#52525b')
+    }
+  })
+
+  it('does not render highlighted white/black type boxes on touch screens', () => {
+    vi.mocked(window.matchMedia).mockImplementation(() => ({
+      matches: true,
+      media: '(hover: none), (pointer: coarse)',
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
+    setupMocks()
+    const { container } = renderPage()
+    const firstNode = container.querySelector('g[role="button"]')!
+    fireEvent.click(firstNode)
+    const highlightedTypeLabels = [...container.querySelectorAll('text')]
+      .filter(node => node.textContent?.trim() === 'Follow-up')
+    expect(highlightedTypeLabels).toHaveLength(0)
+    expect(container.querySelector('line[marker-end]')).not.toBeNull()
+  })
+
+  it('supports wheel zoom on laptop input devices', async () => {
+    setupMocks()
+    const { container } = renderPage()
+    const svg = container.querySelector('svg[role="img"]')!
+    vi.spyOn(svg, 'getBoundingClientRect').mockReturnValue({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      width: 1000,
+      height: 800,
+      right: 1000,
+      bottom: 800,
+      toJSON: () => ({}),
+    } as DOMRect)
+    const before = svg.getAttribute('viewBox')
+    fireEvent.wheel(svg, { deltaY: -120, clientX: 200, clientY: 200 })
+    await waitFor(() => {
+      const after = svg.getAttribute('viewBox')
+      expect(after).not.toBeNull()
+      expect(after).not.toBe(before)
+    })
+  })
+
+  it('navigates on first click of a node on non-touch screens', () => {
+    setupMocks()
+    const { container, getByTestId, queryByTestId } = renderPage()
+    const firstNode = container.querySelector('g[role="button"]')!
+    fireEvent.click(firstNode)
+    expect(getByTestId('technique-detail')).toBeInTheDocument()
+    expect(queryByTestId('technique-detail')).not.toBeNull()
+  })
+
+  it('selects on first tap and navigates on second tap of the same node on touch screens', () => {
+    vi.mocked(window.matchMedia).mockImplementation(() => ({
+      matches: true,
+      media: '(hover: none), (pointer: coarse)',
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
+    setupMocks()
+    const { container, getByTestId, queryByTestId } = renderPage()
+    const firstNode = container.querySelector('g[role="button"]')!
+    fireEvent.click(firstNode)
+    expect(queryByTestId('technique-detail')).toBeNull()
+    fireEvent.click(firstNode)
     expect(getByTestId('technique-detail')).toBeInTheDocument()
   })
 
