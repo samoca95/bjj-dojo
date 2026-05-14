@@ -96,7 +96,11 @@ describe('TechniquesPage — structure', () => {
   it('renders direct new-technique button opposite to the technique counter', () => {
     setupMocks()
     renderPage()
-    expect(screen.getByRole('button', { name: 'New technique' })).toBeInTheDocument()
+    const addButton = screen.getByRole('button', { name: 'New technique' })
+    expect(addButton).toBeInTheDocument()
+    expect(addButton.className).toContain('w-12')
+    expect(addButton.className).toContain('h-12')
+    expect(addButton.className).not.toContain('shadow')
   })
 
   it('new-technique button navigates to new technique page', async () => {
@@ -111,7 +115,11 @@ describe('TechniquesPage — structure', () => {
     setupMocks()
     const user = userEvent.setup()
     renderPage()
-    await user.click(screen.getByRole('button', { name: 'Open technique graph' }))
+    const graphButton = screen.getByRole('button', { name: 'Open technique graph' })
+    expect(graphButton.className).toContain('w-12')
+    expect(graphButton.className).toContain('h-12')
+    expect(graphButton.className).not.toContain('shadow')
+    await user.click(graphButton)
     expect(screen.getByTestId('technique-graph-page')).toBeInTheDocument()
   })
 

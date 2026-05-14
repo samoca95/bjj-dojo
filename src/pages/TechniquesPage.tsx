@@ -375,9 +375,9 @@ export default function TechniquesPage() {
           <button
             onClick={() => navigate('/techniques/new/edit')}
             aria-label={language === 'es' ? 'Nueva técnica' : language === 'fr' ? 'Nouvelle technique' : 'New technique'}
-            className="w-14 h-14 rounded-full bg-zinc-800 text-gold flex items-center justify-center shadow-md shadow-black/40 active:bg-zinc-700 transition-colors"
+            className="w-12 h-12 rounded-full bg-zinc-800 text-gold flex items-center justify-center active:bg-zinc-700 transition-colors"
           >
-            <Plus size={24} strokeWidth={2.6} />
+            <Plus size={20} strokeWidth={2.6} />
           </button>
         </div>
       </div>
@@ -401,9 +401,9 @@ export default function TechniquesPage() {
       <button
         onClick={() => navigate('/techniques/graph')}
         aria-label={t('Open technique graph')}
-        className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-gold text-black active:bg-gold-light flex items-center justify-center shadow-lg shadow-gold/30 transition-colors z-40"
+        className="fixed bottom-20 right-4 w-12 h-12 rounded-full bg-gold text-black active:bg-gold-light flex items-center justify-center transition-colors z-40"
       >
-        <Waypoints size={24} strokeWidth={2.4} />
+        <Waypoints size={20} strokeWidth={2.4} />
       </button>
     </div>
   )
