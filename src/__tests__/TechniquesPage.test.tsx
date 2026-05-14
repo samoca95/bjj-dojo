@@ -24,7 +24,7 @@ vi.mock('../db/categoryCache', () => ({
 
 // Render all items without virtualization — tests care about content, not windowing
 vi.mock('react-window', () => ({
-  FixedSizeList: ({ children, itemCount }: {
+  VariableSizeList: ({ children, itemCount }: {
     children: (props: { index: number; style: React.CSSProperties }) => React.ReactNode
     itemCount: number
   }) => (
