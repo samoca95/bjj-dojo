@@ -1,6 +1,8 @@
 import type { ConnectionType, Technique } from '../types'
+import { categoryColor } from '../utils/categoryColor'
 
-/** SVG-friendly colours per connection type (the CONNECTION_COLORS map holds Tailwind classes). */
+/** SVG-friendly colours per connection type — used for the edges (the
+ *  CONNECTION_COLORS map in types holds Tailwind classes, not raw colours). */
 const GRAPH_COLORS: Record<ConnectionType, string> = {
   FOLLOW_UP: '#fcd34d',
   COUNTER: '#fca5a5',
@@ -17,6 +19,7 @@ export interface GraphConnection {
 
 interface ConnectionGraphProps {
   centerName: string
+  centerCategoryId: number
   connections: GraphConnection[]
   onSelect: (id: number) => void
   connectionTypeName: (type: ConnectionType) => string
@@ -27,7 +30,7 @@ function truncate(text: string, max: number): string {
 }
 
 export default function ConnectionGraph({
-  centerName, connections, onSelect, connectionTypeName,
+  centerName, centerCategoryId, connections, onSelect, connectionTypeName,
 }: ConnectionGraphProps) {
   // Merge duplicate neighbours (a technique may be linked by several connections/directions).
   const neighbourMap = new Map<number, {
@@ -97,7 +100,7 @@ export default function ConnectionGraph({
           const y1 = cy + uy * centerR
           const x2 = x - ux * nodeR
           const y2 = y - uy * nodeR
-          const color = GRAPH_COLORS[nb.types[0]]
+          const edgeColor = GRAPH_COLORS[nb.types[0]]
           const hasFrom = nb.directions.has('from')
           const hasTo = nb.directions.has('to')
           return (
@@ -107,7 +110,7 @@ export default function ConnectionGraph({
               y1={y1}
               x2={x2}
               y2={y2}
-              stroke={color}
+              stroke={edgeColor}
               strokeWidth={1.75}
               strokeOpacity={0.7}
               markerEnd={hasFrom ? `url(#cg-arrow-${nb.types[0]})` : undefined}
@@ -116,8 +119,16 @@ export default function ConnectionGraph({
           )
         })}
 
-        {/* Center node */}
-        <circle cx={cx} cy={cy} r={centerR} fill="#18181b" stroke="#d4a017" strokeWidth={2} />
+        {/* Center node — coloured by its category */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={centerR}
+          fill="#18181b"
+          stroke={categoryColor(centerCategoryId)}
+          strokeWidth={3}
+        />
+        <circle cx={cx} cy={cy} r={centerR - 6} fill={categoryColor(centerCategoryId)} fillOpacity={0.2} />
         <text
           x={cx}
           y={cy}
@@ -138,7 +149,7 @@ export default function ConnectionGraph({
           const y = cy + R * Math.sin(angle)
           const ux = Math.cos(angle)
           const uy = Math.sin(angle)
-          const color = GRAPH_COLORS[nb.types[0]]
+          const nodeColor = categoryColor(nb.technique.categoryId)
           const labelX = x + ux * (nodeR + 6)
           const labelY = y + uy * (nodeR + 6)
           const anchor = ux > 0.3 ? 'start' : ux < -0.3 ? 'end' : 'middle'
@@ -157,8 +168,8 @@ export default function ConnectionGraph({
                 }
               }}
             >
-              <circle cx={x} cy={y} r={nodeR} fill="#18181b" stroke={color} strokeWidth={2} />
-              <circle cx={x} cy={y} r={nodeR - 5} fill={color} fillOpacity={0.25} />
+              <circle cx={x} cy={y} r={nodeR} fill="#18181b" stroke={nodeColor} strokeWidth={2} />
+              <circle cx={x} cy={y} r={nodeR - 5} fill={nodeColor} fillOpacity={0.3} />
               <text
                 x={labelX}
                 y={labelY}

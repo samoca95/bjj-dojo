@@ -1,15 +1,16 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, fireEvent } from '@testing-library/react'
 import ConnectionGraph, { type GraphConnection } from '../components/ConnectionGraph'
+import { categoryColor } from '../utils/categoryColor'
 import type { ConnectionType, Technique } from '../types'
 
-function makeTechnique(id: number, name: string): Technique {
+function makeTechnique(id: number, name: string, categoryId = 1): Technique {
   return {
     id,
     name,
     description: '',
     cues: [],
-    categoryId: 1,
+    categoryId,
     youtubeUrl: '',
     difficulty: 'BEGINNER',
     isCustom: false,
@@ -21,8 +22,9 @@ function conn(
   name: string,
   connectionType: ConnectionType,
   direction: 'from' | 'to',
+  categoryId = 1,
 ): GraphConnection {
-  return { technique: makeTechnique(id, name), connectionType, direction }
+  return { technique: makeTechnique(id, name, categoryId), connectionType, direction }
 }
 
 const typeName = (t: ConnectionType) => t
@@ -32,6 +34,7 @@ describe('ConnectionGraph', () => {
     const { container } = render(
       <ConnectionGraph
         centerName="Closed Guard"
+        centerCategoryId={1}
         connections={[]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
@@ -44,6 +47,7 @@ describe('ConnectionGraph', () => {
     const { container } = render(
       <ConnectionGraph
         centerName="Mount"
+        centerCategoryId={1}
         connections={[conn(2, 'Armbar', 'FOLLOW_UP', 'from')]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
@@ -56,6 +60,7 @@ describe('ConnectionGraph', () => {
     const { container } = render(
       <ConnectionGraph
         centerName="Closed Guard"
+        centerCategoryId={1}
         connections={[
           conn(2, 'Armbar', 'FOLLOW_UP', 'from'),
           conn(3, 'Triangle', 'FOLLOW_UP', 'from'),
@@ -71,6 +76,7 @@ describe('ConnectionGraph', () => {
     const { container } = render(
       <ConnectionGraph
         centerName="Closed Guard"
+        centerCategoryId={1}
         connections={[
           conn(2, 'Armbar', 'FOLLOW_UP', 'from'),
           conn(2, 'Armbar', 'COUNTER', 'to'),
@@ -87,6 +93,7 @@ describe('ConnectionGraph', () => {
     const { container } = render(
       <ConnectionGraph
         centerName="Closed Guard"
+        centerCategoryId={1}
         connections={[conn(42, 'Armbar', 'FOLLOW_UP', 'from')]}
         onSelect={onSelect}
         connectionTypeName={typeName}
@@ -101,6 +108,7 @@ describe('ConnectionGraph', () => {
     const { container } = render(
       <ConnectionGraph
         centerName="Closed Guard"
+        centerCategoryId={1}
         connections={[conn(7, 'Armbar', 'FOLLOW_UP', 'from')]}
         onSelect={onSelect}
         connectionTypeName={typeName}
@@ -114,6 +122,7 @@ describe('ConnectionGraph', () => {
     const { getByText, queryByText } = render(
       <ConnectionGraph
         centerName="Closed Guard"
+        centerCategoryId={1}
         connections={[
           conn(2, 'Armbar', 'FOLLOW_UP', 'from'),
           conn(3, 'Scissor Sweep', 'SETUP', 'to'),
@@ -133,6 +142,7 @@ describe('ConnectionGraph', () => {
     const { container } = render(
       <ConnectionGraph
         centerName="Closed Guard"
+        centerCategoryId={1}
         connections={[conn(2, longName, 'FOLLOW_UP', 'from')]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
@@ -149,6 +159,7 @@ describe('ConnectionGraph', () => {
     const { container } = render(
       <ConnectionGraph
         centerName="Closed Guard"
+        centerCategoryId={1}
         connections={[conn(2, 'Armbar', 'FOLLOW_UP', 'from')]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
@@ -163,6 +174,7 @@ describe('ConnectionGraph', () => {
     const { container } = render(
       <ConnectionGraph
         centerName="Closed Guard"
+        centerCategoryId={1}
         connections={[conn(2, 'Armbar', 'COUNTER', 'to')]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
@@ -177,6 +189,7 @@ describe('ConnectionGraph', () => {
     const { container } = render(
       <ConnectionGraph
         centerName="Closed Guard"
+        centerCategoryId={1}
         connections={[
           conn(2, 'Armbar', 'FOLLOW_UP', 'from'),
           conn(3, 'Triangle', 'COUNTER', 'to'),
@@ -187,5 +200,23 @@ describe('ConnectionGraph', () => {
       />,
     )
     expect(container.querySelectorAll('line')).toHaveLength(3)
+  })
+
+  it('colours nodes by the category of their technique', () => {
+    const { container } = render(
+      <ConnectionGraph
+        centerName="Closed Guard"
+        centerCategoryId={3}
+        connections={[conn(2, 'Armbar', 'FOLLOW_UP', 'from', 4)]}
+        onSelect={vi.fn()}
+        connectionTypeName={typeName}
+      />,
+    )
+    // First <circle> is the centre node, stroked with its category colour.
+    const centre = container.querySelector('svg > circle')!
+    expect(centre.getAttribute('stroke')).toBe(categoryColor(3))
+    // The neighbour node circle is stroked with its own category colour.
+    const neighbourCircle = container.querySelector('g[role="button"] circle')!
+    expect(neighbourCircle.getAttribute('stroke')).toBe(categoryColor(4))
   })
 })

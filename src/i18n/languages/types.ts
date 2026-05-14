@@ -98,6 +98,7 @@ export type TranslationKey =
   | 'New Technique'
   | 'Next month'
   | 'No clubs yet. Add one above.'
+  | 'No connections to display'
   | 'No connections yet.'
   | 'No focus techniques selected'
   | 'No matching sessions'
@@ -108,6 +109,7 @@ export type TranslationKey =
   | 'Tap + to log your first training'
   | 'Notes'
   | 'Only pre-filled techniques and links are reset; custom techniques are kept.'
+  | 'Open technique graph'
   | 'Order'
   | 'Paste or type an emoji'
   | 'Peak'
@@ -122,6 +124,7 @@ export type TranslationKey =
   | 'Reorder the sections on the home screen and hide the ones you do not want to see.'
   | 'Reset all pre-filled techniques?\nYour custom techniques will be preserved.'
   | 'Reset pre-filled techniques'
+  | 'Reset view'
   | 'SESSION TYPE'
   | 'TAPS / SUBMISSIONS'
   | 'TECHNIQUE CONNECTIONS'
@@ -161,6 +164,7 @@ export type TranslationKey =
   | 'Taps Given'
   | 'Taps Received'
   | 'Taps / Submissions'
+  | 'Technique Graph'
   | 'Technique Library'
   | 'Technique name'
   | 'Techniques'
@@ -190,6 +194,8 @@ export type TranslationKey =
   | 'min'
   | 'w.'
   | 'weeks'
+  | 'Zoom in'
+  | 'Zoom out'
 
 export interface LanguagePack {
   /**

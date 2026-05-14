@@ -273,6 +273,7 @@ export default function TechniqueDetailPage() {
                 {connectionsView === 'graph' && (
                   <ConnectionGraph
                     centerName={technique.name}
+                    centerCategoryId={technique.categoryId}
                     connections={graphConnections}
                     onSelect={tid => navigate(`/techniques/${tid}`)}
                     connectionTypeName={ct => connectionTypeLabel(ct, CONNECTION_LABELS[ct], language)}
