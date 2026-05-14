@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   ChevronLeft, Pencil, Trash2, ChevronRight,
-  Zap, Hand, Building2,
+  Zap, Hand, Building2, Share2,
 } from 'lucide-react'
 import { db } from '../db/database'
 import type { Session, SessionTap, Technique } from '../types'
@@ -13,6 +13,7 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT } from '../utils/sessionTypeIcons'
 import { sessionTypeLabel, useI18n } from '../i18n'
 import { useUndo } from '../components/UndoContext'
+import { exportSession } from '../utils/exportSession'
 
 function formatDate(epoch: number, locale?: string) {
   return new Date(epoch).toLocaleDateString(locale, {
@@ -38,6 +39,7 @@ export default function SessionDetailPage() {
   const [sessionTypeIcons, setSessionTypeIcons] = useState(getSessionTypeIcons())
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const club = useLiveQuery(
     () => session?.clubId ? db.clubs.get(session.clubId) : undefined,
     [session?.clubId],
@@ -110,6 +112,26 @@ export default function SessionDetailPage() {
   const givenTaps = sessionTaps.filter(t => t.type === 'given')
   const receivedTaps = sessionTaps.filter(t => t.type === 'received')
 
+  const handleExport = async () => {
+    if (!session || isExporting) return
+    setIsExporting(true)
+    try {
+      await exportSession(
+        {
+          session,
+          clubName: club?.name,
+          techniques: (techniqueEntries ?? []).map(({ technique, notes }) => ({ technique, notes })),
+          givenTaps: givenTaps.map(tap => ({ techniqueName: tapTechniqueMap.get(tap.techniqueId) ?? t('Unknown') })),
+          receivedTaps: receivedTaps.map(tap => ({ techniqueName: tapTechniqueMap.get(tap.techniqueId) ?? t('Unknown') })),
+        },
+        language,
+        locale,
+      )
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <div className="min-h-full bg-zinc-950">
       {/* Header */}
@@ -118,6 +140,15 @@ export default function SessionDetailPage() {
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <h1 className="flex-1 font-bold text-zinc-100 truncate">{formatDate(session.date, locale)}</h1>
+        <button
+          onClick={() => void handleExport()}
+          disabled={isExporting}
+          className="p-2 text-gold active:text-gold-light disabled:opacity-50"
+          aria-label={t('Export session')}
+          title={t('Export session')}
+        >
+          <Share2 size={20} strokeWidth={2} />
+        </button>
         <button onClick={() => navigate(`/sessions/${session.id}/edit`)} className="p-2 text-gold active:text-gold-light">
           <Pencil size={20} strokeWidth={2} />
         </button>
