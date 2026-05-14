@@ -1,24 +1,16 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, HandHeart, Lightbulb, Bug } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Minus, Plus, HandHeart, Lightbulb, Bug, Target, SlidersVertical, DatabaseZap } from 'lucide-react'
 import { PlainLogo } from '../components/PlainLogo'
 import { themeFill } from '../constants/themeColors'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getAppTheme, setAppTheme, type AppTheme } from '../utils/theme'
 import { useI18n, translate } from '../i18n'
-import { db, exportDatabaseBackup, importDatabaseBackup, resetPrefilledTechniques } from '../db/database'
+import { db, exportDatabaseBackup, importDatabaseBackup } from '../db/database'
 import { invalidateCategoryCache } from '../db/categoryCache'
 import { setAppLanguage } from '../i18n'
 import { telemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
-import { getGoalMatTime, setGoalMatTime, DEFAULT_WEEKLY_GOAL_MINUTES } from '../utils/goalMatTime'
-import {
-  getHomeSectionOrder,
-  setHomeSectionOrder,
-  getHomeSectionVisibility,
-  setHomeSectionVisibility,
-  type HomeSectionId,
-} from '../utils/homeSectionOrder'
 import {
   getBeltColor,
   setBeltColor,
@@ -30,15 +22,6 @@ import {
 } from '../utils/beltRank'
 import { getUserName, setUserName, MAX_USER_NAME_LENGTH } from '../utils/userName'
 import type { AppLanguage } from '../i18n'
-
-function clearPrefixedStorage(storage: Storage, prefix: string) {
-  const keys: string[] = []
-  for (let index = 0; index < storage.length; index += 1) {
-    const key = storage.key(index)
-    if (key?.startsWith(prefix)) keys.push(key)
-  }
-  keys.forEach(key => storage.removeItem(key))
-}
 
 const BELT_ABBREV: Record<AppLanguage, Record<BeltColor, string>> = {
   en: { white: 'Wht', blue: 'Blu', purple: 'Pur', brown: 'Brn', black: 'Blk' },
@@ -59,13 +42,8 @@ export default function SettingsPage() {
   const appVersionLabel = appVersion.startsWith('v') ? appVersion : `v${appVersion}`
   const githubRepoUrl = 'https://github.com/samoca95/bjj-dojo'
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
-  const [goalInput, setGoalInput] = useState(String(getGoalMatTime()))
-  const [sectionOrder, setSectionOrder] = useState<HomeSectionId[]>(getHomeSectionOrder)
-  const [sectionVisibility, setSectionVisibility] = useState(getHomeSectionVisibility)
   const [belt, setBelt] = useState<BeltColor>(getBeltColor)
   const [stripes, setStripes] = useState<number>(getBeltStripes)
-  const [showResetModal, setShowResetModal] = useState(false)
-  const [isResetting, setIsResetting] = useState(false)
   const [name, setName] = useState<string>(getUserName)
 
   const updateName = (value: string) => {
@@ -73,41 +51,7 @@ export default function SettingsPage() {
     setUserName(value)
   }
 
-  const moveSection = (index: number, delta: number) => {
-    const next = [...sectionOrder]
-    const target = index + delta
-    if (target < 0 || target >= next.length) return
-    ;[next[index], next[target]] = [next[target], next[index]]
-    setSectionOrder(next)
-    setHomeSectionOrder(next)
-  }
-
-  const toggleSectionVisibility = (id: HomeSectionId) => {
-    const next = {
-      ...sectionVisibility,
-      [id]: !sectionVisibility[id],
-    }
-    setSectionVisibility(next)
-    setHomeSectionVisibility(next)
-  }
-
-  const sectionLabels: Record<HomeSectionId, string> = {
-    focus: t('FOCUS TECHNIQUES'),
-    trending: t('TRENDING'),
-    stats: t('YOUR STATS'),
-    calendar: t('TRAINING CALENDAR'),
-    quickAccess: t('QUICK ACCESS'),
-  }
   const importRef = useRef<HTMLInputElement>(null)
-
-  const handleGoalSave = () => {
-    const n = Number(goalInput)
-    if (n > 0 && Number.isFinite(n)) {
-      setGoalMatTime(Math.round(n))
-    } else {
-      setGoalInput(String(getGoalMatTime()))
-    }
-  }
 
   const handleExportBackup = async () => {
     const backup = await exportDatabaseBackup(db, language)
@@ -135,45 +79,6 @@ export default function SettingsPage() {
         notifyQuotaError()
       } else {
         window.alert(t('Could not import backup.'))
-      }
-    }
-  }
-
-  const handleFullReset = async () => {
-    if (isResetting) return
-    setIsResetting(true)
-    try {
-      db.close()
-      await db.delete()
-      invalidateCategoryCache()
-      clearPrefixedStorage(window.localStorage, 'bjj-dojo')
-      clearPrefixedStorage(window.sessionStorage, 'bjj-dojo')
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations()
-        await Promise.all(registrations.map(registration => registration.unregister()))
-      }
-      if ('caches' in window) {
-        const cacheKeys = await window.caches.keys()
-        await Promise.all(cacheKeys.map(key => window.caches.delete(key)))
-      }
-      window.location.reload()
-    } catch (error) {
-      telemetry.error('app.reset_failed', error)
-      setIsResetting(false)
-      window.alert(language === 'es' ? 'No se pudo reiniciar la aplicación.' : language === 'fr' ? 'Impossible de réinitialiser l’application.' : 'Could not reset the app.')
-    }
-  }
-
-  const handleResetPrefilled = async () => {
-    if (!window.confirm(t('Reset all pre-filled techniques?\nYour custom techniques will be preserved.'))) return
-    try {
-      await resetPrefilledTechniques()
-      window.alert(t('Pre-filled techniques were reset successfully.'))
-    } catch (err) {
-      if (isQuotaError(err)) {
-        notifyQuotaError()
-      } else {
-        window.alert(t('Could not reset techniques.'))
       }
     }
   }
@@ -315,49 +220,10 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {t('HOME SECTION ORDER')}
-          </h2>
-          <p className="text-xs text-zinc-500">
-            {t('Reorder the sections on the home screen and hide the ones you do not want to see.')}
-          </p>
-          <div className="space-y-2">
-            {sectionOrder.map((id, index) => (
-              <div
-                key={id}
-                className="flex items-center gap-2 bg-zinc-800 rounded-xl px-3 py-2"
-              >
-                <span className="flex-1 text-sm text-zinc-100">{sectionLabels[id]}</span>
-                <button
-                  onClick={() => toggleSectionVisibility(id)}
-                  aria-label={sectionVisibility[id] ? t('Hide section') : t('Show section')}
-                  className="p-1.5 rounded-lg text-zinc-300 active:bg-zinc-700"
-                >
-                  {sectionVisibility[id] ? <Eye size={16} strokeWidth={2} /> : <EyeOff size={16} strokeWidth={2} />}
-                </button>
-                <button
-                  onClick={() => moveSection(index, -1)}
-                  disabled={index === 0}
-                  aria-label={t('Move up')}
-                  className="p-1.5 rounded-lg text-zinc-300 disabled:text-zinc-600 active:bg-zinc-700"
-                >
-                  <ArrowUp size={16} strokeWidth={2} />
-                </button>
-                <button
-                  onClick={() => moveSection(index, 1)}
-                  disabled={index === sectionOrder.length - 1}
-                  aria-label={t('Move down')}
-                  className="p-1.5 rounded-lg text-zinc-300 disabled:text-zinc-600 active:bg-zinc-700"
-                >
-                  <ArrowDown size={16} strokeWidth={2} />
-                </button>
-              </div>
-            ))}
+        <div className="bg-zinc-900 rounded-2xl p-2 space-y-1">
+          <div className="px-3 pt-2 pb-1 text-xs text-gold font-semibold tracking-widest">
+            {language === 'es' ? 'AJUSTES AVANZADOS' : language === 'fr' ? 'RACCOURCIS DES RÉGLAGES' : 'SETTINGS SHORTCUTS'}
           </div>
-        </div>
-
-        <div className="bg-zinc-900 rounded-2xl p-2">
           <button
             onClick={() => navigate('/session-type-icons')}
             className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-900"
@@ -398,6 +264,38 @@ export default function SettingsPage() {
             <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
           </button>
           <button
+            onClick={() => navigate('/settings/goals')}
+            className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-900"
+          >
+            <div className="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+              <Target size={18} className="text-gold" />
+            </div>
+            <div className="bg-zinc-900 flex-1">
+              <div className="text-sm font-semibold text-zinc-100">
+                {language === 'es' ? 'Objetivos' : language === 'fr' ? 'Objectifs' : 'Goals'}
+              </div>
+              <div className="text-xs text-zinc-500">
+                {language === 'es' ? 'Meta semanal y próximos objetivos' : language === 'fr' ? 'Objectif hebdomadaire et prochains objectifs' : 'Weekly goal and upcoming goals'}
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+          </button>
+          <button
+            onClick={() => navigate('/settings/home-sections')}
+            className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-900"
+          >
+            <div className="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+              <SlidersVertical size={18} className="text-gold" />
+            </div>
+            <div className="bg-zinc-900 flex-1">
+              <div className="text-sm font-semibold text-zinc-100">{t('HOME SECTION ORDER')}</div>
+              <div className="text-xs text-zinc-500">
+                {t('Reorder the sections on the home screen and hide the ones you do not want to see.')}
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+          </button>
+          <button
             onClick={() => navigate('/settings/dev')}
             className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-900"
           >
@@ -414,46 +312,23 @@ export default function SettingsPage() {
             </div>
             <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
           </button>
-        </div>
-
-        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {t('WEEKLY MAT TIME GOAL')}
-          </h2>
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              inputMode="numeric"
-              value={goalInput}
-              onChange={e => setGoalInput(e.target.value)}
-              onBlur={handleGoalSave}
-              min={1}
-              max={10080}
-              className="flex-1 bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
-            />
-            <span className="text-sm text-zinc-400">{t('min')}</span>
-            <button
-              onClick={handleGoalSave}
-              className="rounded-xl bg-gold text-black text-sm font-semibold px-4 py-2.5 active:bg-gold-light"
-            >
-              {t('Save')}
-            </button>
-          </div>
-          <p className="text-xs text-zinc-500">
-            {t('Default:')} {DEFAULT_WEEKLY_GOAL_MINUTES} {t('min')}
-          </p>
-        </div>
-
-        <div className="bg-zinc-900 rounded-2xl p-4">
           <button
-            onClick={handleResetPrefilled}
-            className="w-full rounded-xl bg-red-900/50 text-red-200 text-sm font-semibold py-2.5 active:bg-red-900"
+            onClick={() => navigate('/settings/data-reset')}
+            className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-900"
           >
-            {t('Reset pre-filled techniques')}
+            <div className="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+              <DatabaseZap size={18} className="text-gold" />
+            </div>
+            <div className="bg-zinc-900 flex-1">
+              <div className="text-sm font-semibold text-zinc-100">
+                {language === 'es' ? 'Datos y reinicio' : language === 'fr' ? 'Données et réinitialisation' : 'Data & reset'}
+              </div>
+              <div className="text-xs text-zinc-500">
+                {language === 'es' ? 'Opciones de reinicio predefinido y completo' : language === 'fr' ? 'Options de réinitialisation préremplie et complète' : 'Pre-filled and full reset options'}
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
           </button>
-          <p className="text-xs text-zinc-500 mt-2">
-            {t('Only pre-filled techniques and links are reset; custom techniques are kept.')}
-          </p>
         </div>
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
@@ -488,25 +363,6 @@ export default function SettingsPage() {
           <p className="text-xs text-zinc-500">
             {t('Use export/import to recover your data if browser storage is lost.')}
           </p>
-        </div>
-
-        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <div className="text-xs text-gold font-semibold tracking-widest">
-            {language === 'es' ? 'REINICIO COMPLETO' : language === 'fr' ? 'RÉINITIALISATION COMPLÈTE' : 'FULL RESET'}
-          </div>
-          <p className="text-xs text-zinc-500">
-            {language === 'es'
-              ? 'Borra todos los datos locales, elimina la caché de la app y vuelve al estado inicial con la última versión desplegada.'
-              : language === 'fr'
-                ? 'Efface toutes les données locales, supprime le cache de l’app et revient à l’état initial avec la dernière version déployée.'
-                : 'Deletes all local data, clears the app cache, and restores a first-time state with the latest deployed version.'}
-          </p>
-          <button
-            onClick={() => setShowResetModal(true)}
-            className="w-full rounded-xl bg-red-900/50 text-red-200 text-sm font-semibold py-2.5 active:bg-red-900"
-          >
-            {language === 'es' ? 'Reiniciar y actualizar la app' : language === 'fr' ? 'Réinitialiser et mettre à jour l’app' : 'Reset & update app'}
-          </button>
         </div>
 
         <div className="px-4 pb-2">
@@ -545,55 +401,6 @@ export default function SettingsPage() {
           </a>
         </div>
       </div>
-      {showResetModal && (
-        <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-2xl bg-zinc-900 border border-zinc-800 p-4 space-y-4">
-            <div className="space-y-2">
-              <h2 className="text-base font-bold text-zinc-100">
-                {language === 'es' ? 'Reiniciar y actualizar la app' : language === 'fr' ? 'Réinitialiser et mettre à jour l’app' : 'Reset & update app'}
-              </h2>
-              <p className="text-sm text-zinc-300">
-                {language === 'es'
-                  ? 'Esto eliminará tus sesiones, técnicas personalizadas, ajustes, caché y datos locales. Puedes exportar una copia antes de continuar.'
-                  : language === 'fr'
-                    ? 'Cela supprimera vos sessions, techniques personnalisées, réglages, cache et données locales. Vous pouvez exporter une copie avant de continuer.'
-                    : 'This will delete your sessions, custom techniques, settings, cache, and local data. You can export a backup before continuing.'}
-              </p>
-            </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <button
-                onClick={() => void handleExportBackup()}
-                className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 active:bg-zinc-700"
-              >
-                {t('Export JSON')}
-              </button>
-              <button
-                onClick={() => setShowResetModal(false)}
-                className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 active:bg-zinc-700"
-              >
-                {t('Cancel')}
-              </button>
-            </div>
-            <button
-              onClick={() => void handleFullReset()}
-              disabled={isResetting}
-              className="w-full rounded-xl bg-red-900/60 text-red-100 text-sm font-semibold py-2.5 disabled:opacity-60 active:bg-red-900"
-            >
-              {isResetting
-                ? language === 'es'
-                  ? 'Reiniciando…'
-                  : language === 'fr'
-                    ? 'Réinitialisation…'
-                    : 'Resetting…'
-                : language === 'es'
-                  ? 'Confirmar reinicio completo'
-                  : language === 'fr'
-                    ? 'Confirmer la réinitialisation complète'
-                    : 'Confirm full reset'}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

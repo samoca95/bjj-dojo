@@ -15,6 +15,9 @@ const CategoriesPage = lazy(() => import('./pages/CategoriesPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const DevSettingsPage = lazy(() => import('./pages/DevSettingsPage'))
 const SessionTypeIconsPage = lazy(() => import('./pages/SessionTypeIconsPage'))
+const SettingsGoalsPage = lazy(() => import('./pages/SettingsGoalsPage'))
+const SettingsHomeSectionsPage = lazy(() => import('./pages/SettingsHomeSectionsPage'))
+const SettingsDataResetPage = lazy(() => import('./pages/SettingsDataResetPage'))
 
 const router = createHashRouter([
   {
@@ -34,6 +37,9 @@ const router = createHashRouter([
       { path: '/categories', element: <CategoriesPage /> },
       { path: '/session-type-icons', element: <SessionTypeIconsPage /> },
       { path: '/settings', element: <SettingsPage /> },
+      { path: '/settings/goals', element: <SettingsGoalsPage /> },
+      { path: '/settings/home-sections', element: <SettingsHomeSectionsPage /> },
+      { path: '/settings/data-reset', element: <SettingsDataResetPage /> },
       { path: '/settings/dev', element: <DevSettingsPage /> },
     ],
   },
