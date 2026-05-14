@@ -9,7 +9,7 @@ import type { Category, Difficulty, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, difficultyLabel, getCategoryName, getTechniqueDescription } from '../i18n'
-import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
+import { techniqueMatchesQuery, techniqueScore, getMatchingAlias } from '../utils/fuzzySearch'
 
 const ROW_GAP = 12
 const DEFAULT_ITEM_SIZE = 116 // estimated card height (~104px) + fixed gap (12px)
@@ -31,8 +31,8 @@ const ListInner = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
 )
 ListInner.displayName = 'ListInner'
 
-function TechniqueRow({ technique, categoryName, categoryIcon, description, practiceCount, onClick, onToggleFavorite }: {
-  technique: Technique; categoryName: string; categoryIcon?: string; description: string; practiceCount: number; onClick: () => void; onToggleFavorite: () => void
+function TechniqueRow({ technique, categoryName, categoryIcon, description, practiceCount, matchingAlias, onClick, onToggleFavorite }: {
+  technique: Technique; categoryName: string; categoryIcon?: string; description: string; practiceCount: number; matchingAlias?: string; onClick: () => void; onToggleFavorite: () => void
 }) {
   return (
     <div className="w-full bg-zinc-900 rounded-2xl p-4 flex gap-3 text-left">
@@ -49,6 +49,9 @@ function TechniqueRow({ technique, categoryName, categoryIcon, description, prac
             </span>
           )}
         </div>
+        {matchingAlias && (
+          <p className="text-xs text-zinc-400 mt-0.5">→ {matchingAlias}</p>
+        )}
         <div className="text-xs text-gold mt-0.5 flex items-center gap-1.5">
           <CategoryIcon value={categoryIcon} fallbackId={technique.categoryId} size={14} className="text-gold" />
           <span>{categoryName}</span>
@@ -76,6 +79,7 @@ function MeasuredTechniqueRow({
   categoryIcon,
   description,
   practiceCount,
+  matchingAlias,
   onClick,
   onToggleFavorite,
 }: {
@@ -88,6 +92,7 @@ function MeasuredTechniqueRow({
   categoryIcon?: string
   description: string
   practiceCount: number
+  matchingAlias?: string
   onClick: () => void
   onToggleFavorite: () => void
 }) {
@@ -119,6 +124,7 @@ function MeasuredTechniqueRow({
     categoryIcon,
     description,
     practiceCount,
+    matchingAlias,
   ])
 
   return (
@@ -130,6 +136,7 @@ function MeasuredTechniqueRow({
           categoryIcon={categoryIcon}
           description={description}
           practiceCount={practiceCount}
+          matchingAlias={matchingAlias}
           onClick={onClick}
           onToggleFavorite={onToggleFavorite}
         />
@@ -335,6 +342,7 @@ export default function TechniquesPage() {
           categoryIcon={catIconMap.get(technique.categoryId)}
         description={getTechniqueDescription(technique, language)}
         practiceCount={freqMap.get(technique.id) ?? 0}
+        matchingAlias={getMatchingAlias(technique, debouncedSearch) ?? undefined}
         onClick={() => {
           window.sessionStorage.setItem(
             LIST_CONTEXT_KEY,
