@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowRight, ArrowLeft, Pencil, Star, ExternalLink } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
-import type { Category, Session, Technique } from '../types'
+import type { Category, ConnectionType, Session, Technique } from '../types'
 import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -40,6 +40,25 @@ function CollapsibleHeading({ label, open, onToggle }: { label: string; open: bo
       }
     </button>
   )
+}
+
+function connectionTypeDescription(type: ConnectionType, language: 'en' | 'es' | 'fr'): string {
+  if (language === 'es') {
+    if (type === 'FOLLOW_UP') return 'Siguiente ataque o finalización natural desde esta posición.'
+    if (type === 'COUNTER') return 'Respuesta para neutralizar o castigar la acción del oponente.'
+    if (type === 'SETUP') return 'Entrada o preparación que crea la oportunidad para la técnica.'
+    return 'Cambio fluido entre posiciones o controles relacionados.'
+  }
+  if (language === 'fr') {
+    if (type === 'FOLLOW_UP') return 'Attaque ou finalisation naturelle qui suit cette position.'
+    if (type === 'COUNTER') return "Réponse pour neutraliser ou punir l'action de l'adversaire."
+    if (type === 'SETUP') return "Entrée ou préparation qui crée l'ouverture pour la technique."
+    return 'Passage fluide entre des positions ou contrôles liés.'
+  }
+  if (type === 'FOLLOW_UP') return 'Natural next attack or finish from this position.'
+  if (type === 'COUNTER') return "Response that shuts down or punishes the opponent's action."
+  if (type === 'SETUP') return 'Entry or preparation that creates the opening for the technique.'
+  return 'Smooth change between related positions or controls.'
 }
 
 export default function TechniqueDetailPage() {
@@ -269,6 +288,18 @@ export default function TechniqueDetailPage() {
                       {view === 'graph' ? t('Graph') : t('List')}
                     </button>
                   ))}
+                </div>
+                <div className="bg-zinc-900 rounded-2xl p-3">
+                  <div className="space-y-1.5">
+                    {(['FOLLOW_UP', 'SETUP', 'COUNTER', 'TRANSITION'] as const).map(type => (
+                      <div key={type} className="text-xs text-zinc-300">
+                        <span className={`inline-flex mr-1.5 rounded px-1.5 py-0.5 font-semibold ${CONNECTION_COLORS[type]}`}>
+                          {connectionTypeLabel(type, CONNECTION_LABELS[type], language)}
+                        </span>
+                        <span className="text-zinc-400">{connectionTypeDescription(type, language)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 {connectionsView === 'graph' && (
                   <ConnectionGraph
