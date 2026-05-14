@@ -175,7 +175,12 @@ export default function TechniqueDetailPage() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
-        <h1 className="flex-1 font-bold text-zinc-100 truncate">{technique.name}</h1>
+        <div className="flex-1 min-w-0">
+          <h1 className="font-bold text-zinc-100 truncate">{technique.name}</h1>
+          {(technique.aliases?.length ?? 0) > 0 && (
+            <p className="text-xs text-zinc-500 truncate">{technique.aliases!.join(' · ')}</p>
+          )}
+        </div>
         <button onClick={() => navigate(`/techniques/${numId}/edit`)} className="p-2 text-gold active:text-gold-light">
           <Pencil size={20} strokeWidth={2} />
         </button>
