@@ -8,6 +8,7 @@ import type { Category, Session, Technique } from '../types'
 import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
+import ConnectionGraph, { type GraphConnection } from '../components/ConnectionGraph'
 import { useI18n, connectionTypeLabel, getCategoryName, getTechniqueDescription, getTechniqueCues } from '../i18n'
 // import { defaultTechniqueImageUrl, normalizeTechniqueImageUrl } from '../utils/validation' // kept for future image re-implementation
 
@@ -47,6 +48,7 @@ export default function TechniqueDetailPage() {
   const { language, t } = useI18n()
   const numId = Number(id)
   const [connectionsOpen, setConnectionsOpen] = useState(true)
+  const [connectionsView, setConnectionsView] = useState<'graph' | 'list'>('graph')
   const [practiceSessionsOpen, setPracticeSessionsOpen] = useState(true)
 
   const technique = useLiveQuery(() => db.techniques.get(numId), [numId])
@@ -104,6 +106,15 @@ export default function TechniqueDetailPage() {
   )
 
   const cues = getTechniqueCues(technique, language)
+
+  const graphConnections: GraphConnection[] = [
+    ...(connectionsFrom ?? []).flatMap(c =>
+      c.technique ? [{ technique: c.technique, connectionType: c.connectionType, direction: 'from' as const }] : [],
+    ),
+    ...(connectionsTo ?? []).flatMap(c =>
+      c.technique ? [{ technique: c.technique, connectionType: c.connectionType, direction: 'to' as const }] : [],
+    ),
+  ]
   // Image vars kept for future re-implementation (image display is currently hidden)
   // const fallbackImageSrc = defaultTechniqueImageUrl(technique.name)
   // const originalImageSrc = technique.imageUrl?.trim() ?? ''
@@ -244,6 +255,31 @@ export default function TechniqueDetailPage() {
             </div>
             {connectionsOpen && (
               <>
+                <div className="flex gap-1 bg-zinc-900 rounded-xl p-1">
+                  {(['graph', 'list'] as const).map(view => (
+                    <button
+                      key={view}
+                      onClick={() => setConnectionsView(view)}
+                      className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-colors ${
+                        connectionsView === view
+                          ? 'bg-zinc-800 text-gold'
+                          : 'text-zinc-500 active:text-zinc-300'
+                      }`}
+                    >
+                      {view === 'graph' ? t('Graph') : t('List')}
+                    </button>
+                  ))}
+                </div>
+                {connectionsView === 'graph' && (
+                  <ConnectionGraph
+                    centerName={technique.name}
+                    connections={graphConnections}
+                    onSelect={tid => navigate(`/techniques/${tid}`)}
+                    connectionTypeName={ct => connectionTypeLabel(ct, CONNECTION_LABELS[ct], language)}
+                  />
+                )}
+                {connectionsView === 'list' && (
+                <>
                 {connectionsFrom && connectionsFrom.length > 0 && (
                   <div className="bg-zinc-900 rounded-2xl p-4">
                     <div className="flex items-center gap-2 mb-3">
@@ -285,6 +321,8 @@ export default function TechniqueDetailPage() {
                       )}
                     </div>
                   </div>
+                )}
+                </>
                 )}
               </>
             )}

@@ -108,6 +108,8 @@ const FR_TRANSLATIONS = {
   'Watch on YouTube': 'Regarder sur YouTube',
   'Leads To / Follow-ups': 'Mène à / Suites',
   'Can Be Set Up From': 'Peut être préparé depuis',
+  Graph: 'Graphe',
+  List: 'Liste',
   Clear: 'Effacer',
   Filter: 'Filtrer',
   FILTERS: 'FILTRES',

@@ -108,6 +108,8 @@ const ES_TRANSLATIONS = {
   'Watch on YouTube': 'Ver en YouTube',
   'Leads To / Follow-ups': 'Conduce a / Seguimientos',
   'Can Be Set Up From': 'Puede iniciarse desde',
+  Graph: 'Gráfico',
+  List: 'Lista',
   Clear: 'Limpiar',
   Filter: 'Filtrar',
   FILTERS: 'FILTROS',
