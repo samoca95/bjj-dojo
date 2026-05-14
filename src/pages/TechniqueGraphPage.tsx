@@ -23,6 +23,8 @@ const MAX_PINCH_ZOOM_FACTOR = 3.2
 const WHEEL_ZOOM_SENSITIVITY = 0.0015
 const WHEEL_PINCH_ZOOM_SENSITIVITY = 0.0025
 const DEFAULT_EDGE_COLOR = '#52525b'
+const DIMMED_NODE_OPACITY = 0.26
+const DIMMED_EDGE_OPACITY = 0.14
 const EDGE_COLORS: Record<ConnectionType, string> = {
   FOLLOW_UP: '#fcd34d',
   COUNTER: '#fca5a5',
@@ -136,6 +138,10 @@ export default function TechniqueGraphPage() {
     return () => mediaQuery.removeListener(update)
   }, [])
 
+  useEffect(() => {
+    if (!isTouchGraph) setSelectedNodeId(null)
+  }, [isTouchGraph])
+
   const activeNodeId = hoveredNodeId ?? selectedNodeId
   const highlightedNodeIds = useMemo(() => {
     const ids = new Set<number>()
@@ -239,7 +245,7 @@ export default function TechniqueGraphPage() {
     setView(zoomAtClientPoint(view, factor, wheelPinchState, e.clientX, e.clientY))
   }
 
-  const activateNode = (id: number) => {
+  const activateTouchNode = (id: number) => {
     if (didPanRef.current) return
     setSelectedNodeId(prev => {
       if (prev === id) {
@@ -300,6 +306,7 @@ export default function TechniqueGraphPage() {
                 const b = positions.get(c.toTechniqueId)
                 if (!a || !b) return null
                 const highlighted = activeNodeId !== null && (c.fromTechniqueId === activeNodeId || c.toTechniqueId === activeNodeId)
+                const dimmed = activeNodeId !== null && !highlighted
                 const typeLabel = connectionTypeLabel(c.connectionType, CONNECTION_LABELS[c.connectionType], language)
                 const edgeColor = highlighted ? EDGE_COLORS[c.connectionType] : DEFAULT_EDGE_COLOR
                 const dx = b.x - a.x
@@ -320,10 +327,10 @@ export default function TechniqueGraphPage() {
                       y2={y2}
                       stroke={edgeColor}
                       strokeWidth={highlighted ? 2.4 : 1.8}
-                      strokeOpacity={highlighted ? 0.98 : 0.56}
+                      strokeOpacity={dimmed ? DIMMED_EDGE_OPACITY : highlighted ? 0.98 : 0.56}
                       markerEnd={highlighted ? `url(#tg-arrow-${c.connectionType})` : undefined}
                     />
-                    <title>{typeLabel}</title>
+                    {!isTouchGraph && <title>{typeLabel}</title>}
                   </g>
                 )
               })}
@@ -334,21 +341,31 @@ export default function TechniqueGraphPage() {
                 if (!p) return null
                 const color = categoryColor(tech.categoryId)
                 const highlighted = highlightedNodeIds.has(tech.id)
+                const dimmed = activeNodeId !== null && !highlighted
                 return (
                   <g
                     key={tech.id}
                     role="button"
                     tabIndex={0}
                     className="cursor-pointer"
-                    onClick={() => activateNode(tech.id)}
+                    opacity={dimmed ? DIMMED_NODE_OPACITY : 1}
+                    onClick={() => {
+                      if (didPanRef.current) return
+                      if (isTouchGraph) {
+                        activateTouchNode(tech.id)
+                        return
+                      }
+                      navigate(`/techniques/${tech.id}`)
+                    }}
                     onPointerEnter={isTouchGraph ? undefined : () => setHoveredNodeId(tech.id)}
                     onPointerLeave={isTouchGraph ? undefined : () => setHoveredNodeId(prev => (prev === tech.id ? null : prev))}
                     onKeyDown={e => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault()
-                        activateNode(tech.id)
+                        navigate(`/techniques/${tech.id}`)
                       }
                     }}
+                    aria-label={tech.name}
                   >
                     {highlighted && (
                       <circle cx={p.x} cy={p.y} r={NODE_RADIUS + 4.5} fill="none" stroke={color} strokeWidth={3} />
@@ -362,11 +379,12 @@ export default function TechniqueGraphPage() {
                         textAnchor="middle"
                         fontSize={LABEL_FONT_SIZE}
                         fill="#d4d4d8"
+                        fillOpacity={dimmed ? 0 : 1}
                       >
                         {truncate(tech.name, 22)}
                       </text>
                     )}
-                    <title>{tech.name}</title>
+                    {!isTouchGraph && <title>{tech.name}</title>}
                   </g>
                 )
               })}

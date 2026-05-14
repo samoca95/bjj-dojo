@@ -103,6 +103,20 @@ describe('TechniqueGraphPage', () => {
     expect(highlightedTypeLabels).toHaveLength(0)
   })
 
+  it('dims non-highlighted techniques when a node is highlighted', () => {
+    setupMocks({
+      techniques: [
+        ...techniques,
+        { id: 999, name: 'Knee Slice', categoryId: 1, difficulty: 'BEGINNER', isCustom: false, description: '', cues: [], youtubeUrl: '' },
+      ],
+      connections,
+    })
+    const { container } = renderPage()
+    const firstNode = container.querySelector('g[role="button"]')!
+    fireEvent.pointerEnter(firstNode)
+    expect(container.querySelectorAll('g[role="button"][opacity="0.26"]')).toHaveLength(1)
+  })
+
   it('uses a uniform colour for non-highlighted edges', () => {
     setupMocks()
     const { container } = renderPage()
@@ -158,7 +172,26 @@ describe('TechniqueGraphPage', () => {
     })
   })
 
-  it('selects on first click and navigates on second click of the same node', () => {
+  it('navigates on first click of a node on non-touch screens', () => {
+    setupMocks()
+    const { container, getByTestId, queryByTestId } = renderPage()
+    const firstNode = container.querySelector('g[role="button"]')!
+    fireEvent.click(firstNode)
+    expect(getByTestId('technique-detail')).toBeInTheDocument()
+    expect(queryByTestId('technique-detail')).not.toBeNull()
+  })
+
+  it('selects on first tap and navigates on second tap of the same node on touch screens', () => {
+    vi.mocked(window.matchMedia).mockImplementation(() => ({
+      matches: true,
+      media: '(hover: none), (pointer: coarse)',
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
     setupMocks()
     const { container, getByTestId, queryByTestId } = renderPage()
     const firstNode = container.querySelector('g[role="button"]')!
