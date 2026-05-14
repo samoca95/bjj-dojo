@@ -40,13 +40,13 @@ const sampleCategories = [
   { id: 4, name: 'Submissions', description: 'test', icon: 'target' },
 ]
 
-// AddEditSessionPage calls useLiveQuery 3 times per render, always in the same
-// order: [0] allTechniques, [1] clubs, [2] categories.
+// AddEditSessionPage calls useLiveQuery 4 times per render, always in the same
+// order: [0] allTechniques, [1] sessionTechniqueNotes, [2] clubs, [3] categories.
 // Use a cycling implementation so all renders get consistent data.
 function setupMocks() {
-  const responses = [sampleTechniques, [], sampleCategories]
+  const responses = [sampleTechniques, new Map(), [], sampleCategories]
   let call = 0
-  mockUseLiveQuery.mockImplementation(() => responses[call++ % 3])
+  mockUseLiveQuery.mockImplementation(() => responses[call++ % 4])
 }
 
 function ClubsStateProbe() {
