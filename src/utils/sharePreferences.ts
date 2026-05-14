@@ -1,3 +1,5 @@
+import type { ShareCardFormat } from './shareCard'
+
 /**
  * Persisted preferences for the session share card. These are only consumed by
  * the share sheet, so a simple localStorage getter/setter pair is enough — no
@@ -8,9 +10,9 @@
 export const APP_URL = 'https://samoca95.github.io/bjj-dojo/'
 
 const THEME_KEY = 'bjj-dojo:share-theme'
+const FORMAT_KEY = 'bjj-dojo:share-format'
 const SHOW_BELT_KEY = 'bjj-dojo:share-show-belt'
 const SHOW_QR_KEY = 'bjj-dojo:share-show-qr'
-const NAME_KEY = 'bjj-dojo:share-name'
 
 function getString(key: string, fallback: string): string {
   if (typeof window === 'undefined') return fallback
@@ -35,6 +37,13 @@ export function setShareThemeId(id: string) {
   setItem(THEME_KEY, id)
 }
 
+export function getShareFormat(): ShareCardFormat {
+  return getString(FORMAT_KEY, 'square') === 'story' ? 'story' : 'square'
+}
+export function setShareFormat(format: ShareCardFormat) {
+  setItem(FORMAT_KEY, format)
+}
+
 export function getShareShowBelt(): boolean {
   return getBool(SHOW_BELT_KEY, false)
 }
@@ -47,11 +56,4 @@ export function getShareShowQr(): boolean {
 }
 export function setShareShowQr(value: boolean) {
   setItem(SHOW_QR_KEY, String(value))
-}
-
-export function getShareName(): string {
-  return getString(NAME_KEY, '').slice(0, 40)
-}
-export function setShareName(value: string) {
-  setItem(NAME_KEY, value.slice(0, 40))
 }

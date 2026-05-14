@@ -99,6 +99,11 @@ export interface ShareCardOptions {
   belt?: ShareCardBelt | null
   /** When set, a scannable QR code linking to the app is drawn in the footer. */
   qrUrl?: string | null
+  /**
+   * Output resolution multiplier (1 = full 1080px export). The share sheet
+   * renders previews at a fraction of this for snappy, interactive updates.
+   */
+  pixelScale?: number
 }
 
 const DIMENSIONS: Record<ShareCardFormat, { w: number; h: number }> = {
@@ -416,11 +421,16 @@ export async function renderShareCard(
   const { w, h } = DIMENSIONS[options.format]
   const { session, clubName, techniques, givenTaps, receivedTaps } = data
 
+  const pixelScale = options.pixelScale && options.pixelScale > 0 ? options.pixelScale : 1
   const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
+  canvas.width = Math.round(w * pixelScale)
+  canvas.height = Math.round(h * pixelScale)
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Canvas 2D context unavailable')
+  // Draw in logical 1080-wide coordinates; the transform scales to the
+  // requested output resolution. measureText is unaffected by the transform,
+  // so all layout maths stay in logical units.
+  if (pixelScale !== 1) ctx.scale(pixelScale, pixelScale)
 
   const PAD = 88
   const qrSize = 156

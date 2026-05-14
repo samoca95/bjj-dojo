@@ -28,6 +28,7 @@ import {
   MAX_STRIPES,
   type BeltColor,
 } from '../utils/beltRank'
+import { getUserName, setUserName, MAX_USER_NAME_LENGTH } from '../utils/userName'
 import type { AppLanguage } from '../i18n'
 
 const BELT_ABBREV: Record<AppLanguage, Record<BeltColor, string>> = {
@@ -55,6 +56,12 @@ export default function SettingsPage() {
   const [sectionVisibility, setSectionVisibility] = useState(getHomeSectionVisibility)
   const [belt, setBelt] = useState<BeltColor>(getBeltColor)
   const [stripes, setStripes] = useState<number>(getBeltStripes)
+  const [name, setName] = useState<string>(getUserName)
+
+  const updateName = (value: string) => {
+    setName(value)
+    setUserName(value)
+  }
 
   const moveSection = (index: number, delta: number) => {
     const next = [...sectionOrder]
@@ -156,6 +163,18 @@ export default function SettingsPage() {
           <h2 className="text-xs text-gold font-semibold tracking-widest">
             {t('YOUR BELT')}
           </h2>
+          {/* Display name */}
+          <div>
+            <label className="text-xs text-zinc-400">{t('NAME')}</label>
+            <input
+              type="text"
+              value={name}
+              maxLength={MAX_USER_NAME_LENGTH}
+              onChange={e => updateName(e.target.value)}
+              placeholder={t('Your name')}
+              className="mt-1.5 w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
+            />
+          </div>
           {/* Belt color picker */}
           <div className="grid grid-cols-5 gap-1.5">
             {BELT_COLORS.map(color => {

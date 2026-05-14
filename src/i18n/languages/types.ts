@@ -189,6 +189,7 @@ export type TranslationKey =
   | 'Manage technique categories and icons'
   | 'Manage your training locations'
   | 'Your device storage is full. Export a backup to free up space.'
+  | 'Your name'
   | 'e.g. 🥋'
   | 'e.g. Main Dojo'
   | 'min'
