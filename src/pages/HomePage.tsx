@@ -437,14 +437,11 @@ export default function HomePage() {
       <div className="px-6 pt-12 pb-8 bg-gradient-to-b from-zinc-900 to-zinc-950">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-3xl font-black tracking-widest text-gold">BJJ DOJO</h1>
-          <span
-            role="img"
-            aria-label="Jiu-jitsu kanji"
-            className="h-7 w-24 shrink-0 bg-zinc-400 opacity-90"
-            style={{
-              WebkitMask: `url(${jujitsuKanjiHorizontal}) center / contain no-repeat`,
-              mask: `url(${jujitsuKanjiHorizontal}) center / contain no-repeat`,
-            }}
+          <img
+            src={jujitsuKanjiHorizontal}
+            alt="Jiu-jitsu kanji"
+            className="h-7 w-auto shrink-0 opacity-90"
+            style={{ filter: 'brightness(0) saturate(100%) invert(68%) sepia(7%) saturate(315%) hue-rotate(202deg) brightness(90%) contrast(88%)' }}
           />
         </div>
         <p className="text-zinc-400 text-sm mt-1">{t('Track your journey on the mats')}</p>
