@@ -11,7 +11,7 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, difficultyLabel, getCategoryName, getTechniqueDescription } from '../i18n'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 
-const ITEM_SIZE = 116 // card height (~104px) + gap (12px)
+const ITEM_SIZE = 136 // card height + fixed breathing room between rows
 const LIST_SCROLL_KEY = 'bjj-dojo.techniques.scroll-offset'
 const LIST_CONTEXT_KEY = 'bjj-dojo.techniques.list-context'
 const DIFFICULTY_ORDER: Record<Difficulty, number> = {
@@ -34,13 +34,15 @@ function TechniqueRow({ technique, categoryName, categoryIcon, description, prac
   technique: Technique; categoryName: string; categoryIcon?: string; description: string; practiceCount: number; onClick: () => void; onToggleFavorite: () => void
 }) {
   return (
-    <div className="w-full bg-zinc-900 rounded-2xl p-4 flex gap-3 text-left">
+    <div className="w-full min-h-[124px] bg-zinc-900 rounded-2xl p-4 flex gap-3 text-left">
       <button
         onClick={onClick}
         className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity"
       >
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-semibold text-zinc-100 text-sm">{technique.name}</span>
+        <span className="block font-semibold text-zinc-100 text-sm leading-snug line-clamp-2 min-h-[2.5rem]">
+          {technique.name}
+        </span>
+        <div className="flex items-center gap-2 flex-wrap mt-1">
           <DifficultyBadge difficulty={technique.difficulty} />
           {practiceCount > 0 && (
             <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300">
@@ -169,11 +171,23 @@ export default function TechniquesPage() {
       const results = await q.sortBy('name')
       const sessionTechniques = await db.sessionTechniques.toArray()
       const freqMap = new Map<number, number>()
+      const noteMap = new Map<number, string[]>()
       for (const st of sessionTechniques) {
         freqMap.set(st.techniqueId, (freqMap.get(st.techniqueId) ?? 0) + 1)
+        const note = st.notes?.trim()
+        if (!note) continue
+        const notes = noteMap.get(st.techniqueId) ?? []
+        notes.push(note)
+        noteMap.set(st.techniqueId, notes)
       }
       const filtered = results.filter(t => {
-        if (debouncedSearch.trim() && !techniqueMatchesQuery(t, debouncedSearch)) return false
+        if (debouncedSearch.trim() && !techniqueMatchesQuery(
+          {
+            ...t,
+            cues: [...(t.cues ?? []), ...(noteMap.get(t.id) ?? [])],
+          },
+          debouncedSearch,
+        )) return false
         if (favoritesOnly && !t.isFavorite) return false
         if (difficultyFilter !== 'all' && t.difficulty !== difficultyFilter) return false
         return true
@@ -192,7 +206,13 @@ export default function TechniquesPage() {
       }
       filtered.sort((a, b) => {
         if (debouncedSearch.trim()) {
-          const scoreDelta = techniqueScore(b, debouncedSearch) - techniqueScore(a, debouncedSearch)
+          const scoreDelta = techniqueScore(
+            { ...b, cues: [...(b.cues ?? []), ...(noteMap.get(b.id) ?? [])] },
+            debouncedSearch,
+          ) - techniqueScore(
+            { ...a, cues: [...(a.cues ?? []), ...(noteMap.get(a.id) ?? [])] },
+            debouncedSearch,
+          )
           if (scoreDelta !== 0) return scoreDelta
         }
         return compareBySort(a, b)

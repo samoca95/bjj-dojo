@@ -87,6 +87,27 @@ export class BJJDatabase extends Dexie {
         if (normalized.length > 0) await this.techniques.bulkPut(normalized)
       })
     })
+    this.version(6).stores({
+      categories: 'id, name',
+      techniques: 'id, categoryId, name',
+      techniqueConnections: '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+      sessions: '++id, date, clubId',
+      sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
+      sessionTaps: '++id, sessionId, techniqueId',
+      clubs: '++id, sortOrder, name',
+      drillPlans: '++id, name, createdAt',
+    }).upgrade(async () => {
+      await this.transaction('rw', [this.techniques], async () => {
+        const all = await this.techniques.toArray() as Technique[]
+        const normalized = all.map(t => ({
+          ...t,
+          aliases: Array.isArray(t.aliases)
+            ? t.aliases.filter((alias): alias is string => typeof alias === 'string')
+            : [],
+        }))
+        if (normalized.length > 0) await this.techniques.bulkPut(normalized)
+      })
+    })
 
     // Populate on first creation — registered here so every instance gets it
     // (including isolated test instances).
@@ -213,6 +234,13 @@ function validateTechniques(records: unknown[]): Technique[] {
     if (rec.imageUrl !== undefined && typeof rec.imageUrl !== 'string') throw new Error(`${ctx}: 'imageUrl' must be a string`)
     if (!VALID_DIFFICULTIES.has(rec.difficulty as string)) throw new Error(`${ctx}: 'difficulty' must be one of ${[...VALID_DIFFICULTIES].join(', ')}`)
     if (typeof rec.isCustom !== 'boolean') throw new Error(`${ctx}: 'isCustom' must be a boolean`)
+    if (rec.aliases !== undefined) {
+      if (!Array.isArray(rec.aliases)) throw new Error(`${ctx}: 'aliases' must be an array`)
+      for (let j = 0; j < rec.aliases.length; j++) {
+        if (typeof rec.aliases[j] !== 'string') throw new Error(`${ctx}: 'aliases[${j}]' must be a string`)
+        if ((rec.aliases[j] as string).length > NAME_MAX_LENGTH) throw new Error(`${ctx}: 'aliases[${j}]' exceeds ${NAME_MAX_LENGTH} characters`)
+      }
+    }
     if (rec.cues !== undefined) {
       if (!Array.isArray(rec.cues)) throw new Error(`${ctx}: 'cues' must be an array`)
       for (let j = 0; j < rec.cues.length; j++) {

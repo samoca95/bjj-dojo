@@ -13,6 +13,7 @@ const TechniqueEditPage = lazy(() => import('./pages/TechniqueEditPage'))
 const ClubsPage = lazy(() => import('./pages/ClubsPage'))
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const DevSettingsPage = lazy(() => import('./pages/DevSettingsPage'))
 const SessionTypeIconsPage = lazy(() => import('./pages/SessionTypeIconsPage'))
 
 const router = createHashRouter([
@@ -33,6 +34,7 @@ const router = createHashRouter([
       { path: '/categories', element: <CategoriesPage /> },
       { path: '/session-type-icons', element: <SessionTypeIconsPage /> },
       { path: '/settings', element: <SettingsPage /> },
+      { path: '/settings/dev', element: <DevSettingsPage /> },
     ],
   },
 ])

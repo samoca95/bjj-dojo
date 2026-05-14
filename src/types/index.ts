@@ -18,6 +18,7 @@ export interface ReferenceLink {
 export interface Technique {
   id: number
   name: string
+  aliases?: string[]
   description: string
   cues?: string[]
   tags?: string[]

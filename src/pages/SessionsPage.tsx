@@ -113,6 +113,7 @@ export default function SessionsPage() {
       techniques.map(technique => {
         const text = [
           technique.name,
+          ...(technique.aliases ?? []),
           technique.description,
           ...(technique.cues ?? []),
           ...(technique.tags ?? []),
@@ -131,7 +132,10 @@ export default function SessionsPage() {
 
       const searchBucket = searchTextBySessionId.get(st.sessionId) ?? ''
       const techniqueSearchText = searchableTechniqueTextById.get(st.techniqueId) ?? name.toLowerCase()
-      searchTextBySessionId.set(st.sessionId, `${searchBucket} ${techniqueSearchText}`.trim())
+      searchTextBySessionId.set(
+        st.sessionId,
+        `${searchBucket} ${techniqueSearchText} ${st.notes ?? ''}`.trim(),
+      )
     }
 
     const tapStatsBySessionId = new Map<number, { given: number; received: number }>()

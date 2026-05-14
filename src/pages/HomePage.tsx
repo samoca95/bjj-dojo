@@ -24,6 +24,7 @@ import {
   type BeltColor,
 } from '../utils/beltRank'
 import { PlainLogo } from '../components/PlainLogo'
+import jujitsuKanjiHorizontal from '../../icons/jujitsu_kanji_horizontal.svg'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -436,12 +437,12 @@ export default function HomePage() {
       <div className="px-6 pt-12 pb-8 bg-gradient-to-b from-zinc-900 to-zinc-950">
         <div className="flex items-baseline justify-between">
           <h1 className="text-3xl font-black tracking-widest text-gold">BJJ DOJO</h1>
-          <span
-            className="text-2xl text-gold leading-none"
-            style={{ fontFamily: "'Zen Old Mincho', serif", fontWeight: 900 }}
-          >
-            柔術
-          </span>
+          <img
+            src={jujitsuKanjiHorizontal}
+            alt="Jiu-jitsu kanji"
+            className="h-7 w-auto opacity-90"
+            style={{ filter: 'invert(76%) sepia(74%) saturate(1212%) hue-rotate(2deg) brightness(101%) contrast(89%)' }}
+          />
         </div>
         <p className="text-zinc-400 text-sm mt-1">{t('Track your journey on the mats')}</p>
       </div>

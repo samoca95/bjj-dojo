@@ -35,6 +35,7 @@ export default function TechniqueEditPage() {
   const isNew = !id
 
   const [name, setName] = useState('')
+  const [aliasesInput, setAliasesInput] = useState('')
   const [description, setDescription] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [imageUrl, setImageUrl] = useState('')
@@ -69,6 +70,7 @@ export default function TechniqueEditPage() {
     db.techniques.get(Number(id)).then(async t => {
       if (!t) return
       setName(t.name)
+      setAliasesInput((t.aliases ?? []).join(', '))
       setDescription(t.description)
       setYoutubeUrl(t.youtubeUrl)
       setImageUrl(t.imageUrl ?? '')
@@ -89,6 +91,7 @@ export default function TechniqueEditPage() {
   const handleSave = async () => {
     const payload = normalizeTechniquePayload({
       name,
+      aliases: aliasesInput.split(','),
       description,
       cues,
       youtubeUrl,
@@ -127,6 +130,7 @@ export default function TechniqueEditPage() {
         const technique: Technique = {
           id: newId,
           name: payload.name,
+          aliases: payload.aliases,
           description: payload.description,
           youtubeUrl: payload.youtubeUrl,
           imageUrl: payload.imageUrl || undefined,
@@ -152,6 +156,7 @@ export default function TechniqueEditPage() {
       } else {
         await runWithTelemetry('technique.update_failed', () => db.techniques.update(Number(id), {
           name: payload.name,
+          aliases: payload.aliases,
           description: payload.description,
           youtubeUrl: payload.youtubeUrl,
           imageUrl: payload.imageUrl || undefined,
@@ -302,6 +307,19 @@ export default function TechniqueEditPage() {
             onChange={e => setName(e.target.value)}
               placeholder={t('Technique name')}
             maxLength={VALIDATION_LIMITS.NAME_MAX_LENGTH}
+            className={`${inputCls} mt-2`}
+          />
+        </div>
+
+        <div>
+          <label className="text-xs text-gold font-semibold tracking-wide">
+            {language === 'es' ? 'ALIAS / NOMBRES ALTERNATIVOS' : language === 'fr' ? 'ALIAS / NOMS ALTERNATIFS' : 'ALIASES / ALT NAMES'}
+          </label>
+          <input
+            type="text"
+            value={aliasesInput}
+            onChange={e => setAliasesInput(e.target.value)}
+            placeholder={language === 'es' ? 'ej: Kimura, doble llave de hombro' : language === 'fr' ? 'ex. Kimura, double clé d’épaule' : 'e.g. Kimura, double wrist lock'}
             className={`${inputCls} mt-2`}
           />
         </div>
