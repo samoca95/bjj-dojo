@@ -179,7 +179,7 @@ export default function AddEditSessionPage() {
           )
         }
       })
-      navigate(isEdit ? `/sessions/${sid}` : '/sessions')
+      navigate(`/sessions/${sid}`, isEdit ? undefined : { state: { justCreated: true } })
     } catch (err) {
       setSubmitting(false)
       if (isQuotaError(err)) {
