@@ -7,6 +7,7 @@ const SessionsPage = lazy(() => import('./pages/SessionsPage'))
 const SessionDetailPage = lazy(() => import('./pages/SessionDetailPage'))
 const AddEditSessionPage = lazy(() => import('./pages/AddEditSessionPage'))
 const TechniquesPage = lazy(() => import('./pages/TechniquesPage'))
+const TechniqueGraphPage = lazy(() => import('./pages/TechniqueGraphPage'))
 const TechniqueDetailPage = lazy(() => import('./pages/TechniqueDetailPage'))
 const TechniqueEditPage = lazy(() => import('./pages/TechniqueEditPage'))
 const ClubsPage = lazy(() => import('./pages/ClubsPage'))
@@ -25,6 +26,7 @@ const router = createHashRouter([
       { path: '/sessions/:id/edit', element: <AddEditSessionPage /> },
       { path: '/clubs', element: <ClubsPage /> },
       { path: '/techniques', element: <TechniquesPage /> },
+      { path: '/techniques/graph', element: <TechniqueGraphPage /> },
       { path: '/techniques/new/edit', element: <TechniqueEditPage /> },
       { path: '/techniques/:id', element: <TechniqueDetailPage /> },
       { path: '/techniques/:id/edit', element: <TechniqueEditPage /> },

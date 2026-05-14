@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useLayoutEffect, forwardRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { FixedSizeList, type ListChildComponentProps } from 'react-window'
-import { Search, X, Plus, Star, SlidersHorizontal } from 'lucide-react'
+import { Search, X, Plus, Star, SlidersHorizontal, Waypoints } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
 import type { Category, Difficulty, Technique } from '../types'
@@ -258,6 +258,13 @@ export default function TechniquesPage() {
               <option value="level">{language === 'es' ? 'Nivel' : 'Level'}</option>
               <option value="frequency">{language === 'es' ? 'Frecuencia' : 'Frequency'}</option>
             </select>
+            <button
+              onClick={() => navigate('/techniques/graph')}
+              className="p-2 rounded-xl bg-zinc-800 text-zinc-300 active:bg-zinc-700 transition-colors"
+              aria-label={t('Open technique graph')}
+            >
+              <Waypoints size={18} strokeWidth={2} />
+            </button>
             <button
               onClick={() => setFilterOpen(prev => !prev)}
               className={`p-2 rounded-xl transition-colors relative ${
