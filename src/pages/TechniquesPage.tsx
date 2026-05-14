@@ -273,7 +273,6 @@ export default function TechniquesPage() {
             </button>
           </div>
         </div>
-        <div className="px-4 pb-2 flex justify-end">
         {/* Search */}
         <div className="px-4 pb-3">
           <div className="relative">

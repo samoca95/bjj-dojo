@@ -123,10 +123,12 @@ describe('TechniqueGraphPage', () => {
       dispatchEvent: vi.fn(),
     }))
     setupMocks()
-    const { container, queryByText } = renderPage()
+    const { container } = renderPage()
     const firstNode = container.querySelector('g[role="button"]')!
     fireEvent.click(firstNode)
-    expect(queryByText('Follow-up')).toBeNull()
+    const highlightedTypeLabels = [...container.querySelectorAll('text')]
+      .filter(node => node.textContent?.trim() === 'Follow-up')
+    expect(highlightedTypeLabels).toHaveLength(0)
     expect(container.querySelector('line[marker-end]')).not.toBeNull()
   })
 
