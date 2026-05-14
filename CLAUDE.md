@@ -41,6 +41,7 @@ Linting is ESLint (flat config in `eslint.config.js`) plus Prettier (`.prettierr
 - `commands/check.md` — the `/check` slash command runs the full validation suite.
 - `agents/code-reviewer.md` — reviews changed code against this project's invariants; used proactively before commits.
 - `agents/test-author.md` — writes Vitest tests using the isolated-DB pattern.
+- `agents/i18n-translator.md` — keeps language packs complete and the wording natural when UI strings change.
 - `settings.json` — registers the hooks and allowlists routine npm/test/build commands.
 
 ## Architecture
