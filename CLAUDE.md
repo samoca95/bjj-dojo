@@ -39,6 +39,8 @@ Linting is ESLint (flat config in `eslint.config.js`) plus Prettier (`.prettierr
 - `hooks/session-start.sh` — installs npm deps at session start (web sessions only).
 - `hooks/stop-check.sh` — runs `tsc -b` + `eslint` when a turn ends; blocks on errors so they get fixed in-session.
 - `commands/check.md` — the `/check` slash command runs the full validation suite.
+- `agents/code-reviewer.md` — reviews changed code against this project's invariants; used proactively before commits.
+- `agents/test-author.md` — writes Vitest tests using the isolated-DB pattern.
 - `settings.json` — registers the hooks and allowlists routine npm/test/build commands.
 
 ## Architecture
