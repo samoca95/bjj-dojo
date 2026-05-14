@@ -277,14 +277,14 @@ export default function TechniquesPage() {
 
   useEffect(() => {
     rowHeightsRef.current = {}
-    listRef.current?.resetAfterIndex(0)
+    listRef.current?.resetAfterIndex?.(0)
   }, [techniques])
 
   const handleRowHeightChange = useCallback((index: number, height: number) => {
     const nextSize = Math.ceil(height) + ROW_GAP
     if (rowHeightsRef.current[index] === nextSize) return
     rowHeightsRef.current[index] = nextSize
-    listRef.current?.resetAfterIndex(index)
+    listRef.current?.resetAfterIndex?.(index)
   }, [])
 
   const renderRow = ({ index, style }: ListChildComponentProps) => {
