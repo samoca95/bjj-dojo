@@ -330,7 +330,7 @@ export default function TechniqueGraphPage() {
                       strokeOpacity={dimmed ? DIMMED_EDGE_OPACITY : highlighted ? 0.98 : 0.56}
                       markerEnd={highlighted ? `url(#tg-arrow-${c.connectionType})` : undefined}
                     />
-                    <desc>{typeLabel}</desc>
+                    {!isTouchGraph && <title>{typeLabel}</title>}
                   </g>
                 )
               })}
@@ -384,6 +384,7 @@ export default function TechniqueGraphPage() {
                         {truncate(tech.name, 22)}
                       </text>
                     )}
+                    {!isTouchGraph && <title>{tech.name}</title>}
                   </g>
                 )
               })}
