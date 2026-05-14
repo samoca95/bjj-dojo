@@ -92,13 +92,13 @@ describe('TechniqueGraphPage', () => {
     expect(container.querySelectorAll('line')).toHaveLength(2)
   })
 
-  it('shows highlighted edge arrows and type tips when a node is hovered', () => {
+  it('shows highlighted edge arrows when a node is hovered', () => {
     setupMocks()
-    const { container, getAllByText } = renderPage()
+    const { container, queryAllByText } = renderPage()
     const firstNode = container.querySelector('g[role="button"]')!
     fireEvent.pointerEnter(firstNode)
     expect(container.querySelector('line[marker-end]')).not.toBeNull()
-    expect(getAllByText('Follow-up').length).toBeGreaterThan(0)
+    expect(queryAllByText('Follow-up')).toHaveLength(0)
   })
 
   it('uses a uniform colour for non-highlighted edges', () => {
@@ -111,7 +111,7 @@ describe('TechniqueGraphPage', () => {
     }
   })
 
-  it('hides the highlighted white/black type box on touch screens', () => {
+  it('does not render highlighted white/black type boxes on touch screens', () => {
     vi.mocked(window.matchMedia).mockImplementation(() => ({
       matches: true,
       media: '(hover: none), (pointer: coarse)',
@@ -130,6 +130,17 @@ describe('TechniqueGraphPage', () => {
       .filter(node => node.textContent?.trim() === 'Follow-up')
     expect(highlightedTypeLabels).toHaveLength(0)
     expect(container.querySelector('line[marker-end]')).not.toBeNull()
+  })
+
+  it('supports wheel zoom on laptop input devices', () => {
+    setupMocks()
+    const { container } = renderPage()
+    const svg = container.querySelector('svg[role="img"]')!
+    const before = svg.getAttribute('viewBox')
+    fireEvent.wheel(svg, { deltaY: -120, clientX: 200, clientY: 200 })
+    const after = svg.getAttribute('viewBox')
+    expect(after).not.toBeNull()
+    expect(after).not.toBe(before)
   })
 
   it('selects on first click and navigates on second click of the same node', () => {

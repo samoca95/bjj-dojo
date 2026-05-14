@@ -75,7 +75,6 @@ export default function TechniquesPage() {
   const [difficultyFilter, setDifficultyFilter] = useState<'all' | Difficulty>('all')
   const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc' | 'level' | 'frequency'>('name_asc')
   const [filterOpen, setFilterOpen] = useState(false)
-  const [actionsOpen, setActionsOpen] = useState(false)
   const scrollOffsetRef = useRef(0)
   const [initialScrollOffset, setInitialScrollOffset] = useState(0)
 
@@ -374,11 +373,11 @@ export default function TechniquesPage() {
             })()}
           </span>
           <button
-            onClick={() => setActionsOpen(true)}
-            aria-label={language === 'es' ? 'Acciones de técnica' : language === 'fr' ? 'Actions de technique' : 'Technique actions'}
-            className="w-10 h-10 rounded-full bg-gold flex items-center justify-center shadow-md shadow-gold/20 active:bg-gold-light transition-colors"
+            onClick={() => navigate('/techniques/new/edit')}
+            aria-label={language === 'es' ? 'Nueva técnica' : language === 'fr' ? 'Nouvelle technique' : 'New technique'}
+            className="w-14 h-14 rounded-full bg-zinc-800 text-gold flex items-center justify-center shadow-md shadow-black/40 active:bg-zinc-700 transition-colors"
           >
-            <Plus size={20} className="text-black" strokeWidth={2.5} />
+            <Plus size={24} strokeWidth={2.6} />
           </button>
         </div>
       </div>
@@ -399,52 +398,13 @@ export default function TechniquesPage() {
       >
         {renderRow}
       </FixedSizeList>
-
-      {actionsOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/65 flex items-end justify-center p-4"
-          onClick={() => setActionsOpen(false)}
-          role="presentation"
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={language === 'es' ? 'Acciones de técnica' : language === 'fr' ? 'Actions de technique' : 'Technique actions'}
-            className="w-full max-w-xs bg-zinc-900 border border-zinc-800 rounded-2xl p-4"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={() => {
-                  setActionsOpen(false)
-                  navigate('/techniques/graph')
-                }}
-                className="w-14 h-14 rounded-full bg-zinc-800 text-gold active:bg-zinc-700 flex items-center justify-center"
-                aria-label={t('Open technique graph')}
-              >
-                <Waypoints size={22} strokeWidth={2.4} />
-              </button>
-              <button
-                onClick={() => {
-                  setActionsOpen(false)
-                  navigate('/techniques/new/edit')
-                }}
-                className="w-14 h-14 rounded-full bg-gold text-black active:bg-gold-light flex items-center justify-center"
-                aria-label={language === 'es' ? 'Nueva técnica' : language === 'fr' ? 'Nouvelle technique' : 'New technique'}
-              >
-                <Plus size={24} strokeWidth={2.6} />
-              </button>
-            </div>
-            <button
-              onClick={() => setActionsOpen(false)}
-              className="w-full mt-3 h-9 rounded-xl bg-zinc-800 text-zinc-300 active:bg-zinc-700 transition-colors"
-              aria-label={language === 'es' ? 'Cerrar acciones' : language === 'fr' ? 'Fermer les actions' : 'Close actions'}
-            >
-              <X size={16} className="mx-auto" strokeWidth={2.2} />
-            </button>
-          </div>
-        </div>
-      )}
+      <button
+        onClick={() => navigate('/techniques/graph')}
+        aria-label={t('Open technique graph')}
+        className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-gold text-black active:bg-gold-light flex items-center justify-center shadow-lg shadow-gold/30 transition-colors z-40"
+      >
+        <Waypoints size={24} strokeWidth={2.4} />
+      </button>
     </div>
   )
 }

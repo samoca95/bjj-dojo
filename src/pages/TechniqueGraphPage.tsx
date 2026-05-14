@@ -20,6 +20,8 @@ const NODE_RADIUS = 14
 const LABEL_FONT_SIZE = 12
 const MIN_PINCH_ZOOM_FACTOR = 0.35
 const MAX_PINCH_ZOOM_FACTOR = 3.2
+const WHEEL_ZOOM_SENSITIVITY = 0.0015
+const WHEEL_PINCH_ZOOM_SENSITIVITY = 0.0025
 const DEFAULT_EDGE_COLOR = '#52525b'
 const EDGE_COLORS: Record<ConnectionType, string> = {
   FOLLOW_UP: '#fcd34d',
@@ -195,7 +197,7 @@ export default function TechniqueGraphPage() {
     }
     const pan = panRef.current
     if (!pan) return
-    if (Math.abs(e.clientX - pan.clientX) > 3 || Math.abs(e.clientY - pan.clientY) > 3) {
+    if (Math.abs(e.clientX - pan.clientX) > 6 || Math.abs(e.clientY - pan.clientY) > 6) {
       pan.moved = true
     }
     const dx = (e.clientX - pan.clientX) * (pan.startView.width / pan.rectW)
@@ -217,6 +219,24 @@ export default function TechniqueGraphPage() {
     }
     panRef.current = null
     if (pointersRef.current.size < 2) pinchRef.current = null
+  }
+
+  const onWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+    e.preventDefault()
+    if (!view || !svgRef.current) return
+    const rect = svgRef.current.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return
+    const sensitivity = e.ctrlKey ? WHEEL_PINCH_ZOOM_SENSITIVITY : WHEEL_ZOOM_SENSITIVITY
+    const factor = Math.exp(e.deltaY * sensitivity)
+    const wheelPinchState: PinchState = {
+      startDistance: 1,
+      startView: view,
+      rectLeft: rect.left,
+      rectTop: rect.top,
+      rectW: rect.width,
+      rectH: rect.height,
+    }
+    setView(zoomAtClientPoint(view, factor, wheelPinchState, e.clientX, e.clientY))
   }
 
   const activateNode = (id: number) => {
@@ -272,6 +292,7 @@ export default function TechniqueGraphPage() {
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
+              onWheel={onWheel}
             >
               {/* Edges */}
               {(connections ?? []).map(c => {
@@ -290,8 +311,6 @@ export default function TechniqueGraphPage() {
                 const y1 = a.y + (dy / dist) * sourcePad
                 const x2 = b.x - (dx / dist) * targetPad
                 const y2 = b.y - (dy / dist) * targetPad
-                const midX = (a.x + b.x) / 2
-                const midY = (a.y + b.y) / 2
                 return (
                   <g key={`${c.fromTechniqueId}-${c.toTechniqueId}`}>
                     <line
@@ -304,20 +323,6 @@ export default function TechniqueGraphPage() {
                       strokeOpacity={highlighted ? 0.98 : 0.56}
                       markerEnd={highlighted ? `url(#tg-arrow-${c.connectionType})` : undefined}
                     />
-                    {highlighted && !isTouchGraph && (
-                      <text
-                        x={midX}
-                        y={midY - 3}
-                        textAnchor="middle"
-                        fontSize={8.5}
-                        fill="#fafafa"
-                        stroke="#09090b"
-                        strokeWidth={2.2}
-                        paintOrder="stroke"
-                      >
-                        {typeLabel}
-                      </text>
-                    )}
                     <title>{typeLabel}</title>
                   </g>
                 )
@@ -373,8 +378,8 @@ export default function TechniqueGraphPage() {
                     viewBox="0 0 10 10"
                     refX="9"
                     refY="5"
-                    markerWidth="6.5"
-                    markerHeight="6.5"
+                    markerWidth="4.75"
+                    markerHeight="4.75"
                     orient="auto"
                   >
                     <path d="M0,0 L10,5 L0,10 z" fill={color} />
