@@ -11,7 +11,7 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, difficultyLabel, getCategoryName, getTechniqueDescription } from '../i18n'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 
-const ITEM_SIZE = 136 // card height + fixed breathing room between rows
+const ITEM_SIZE = 128 // fixed row height including constant vertical spacing
 const LIST_SCROLL_KEY = 'bjj-dojo.techniques.scroll-offset'
 const LIST_CONTEXT_KEY = 'bjj-dojo.techniques.list-context'
 const DIFFICULTY_ORDER: Record<Difficulty, number> = {
@@ -34,7 +34,7 @@ function TechniqueRow({ technique, categoryName, categoryIcon, description, prac
   technique: Technique; categoryName: string; categoryIcon?: string; description: string; practiceCount: number; onClick: () => void; onToggleFavorite: () => void
 }) {
   return (
-    <div className="w-full min-h-[124px] bg-zinc-900 rounded-2xl p-4 flex gap-3 text-left">
+    <div className="w-full bg-zinc-900 rounded-2xl p-4 flex gap-3 text-left">
       <button
         onClick={onClick}
         className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity"
@@ -232,7 +232,7 @@ export default function TechniquesPage() {
   const renderRow = ({ index, style }: ListChildComponentProps) => {
     const technique = techniques[index]
     return (
-      <div style={{ ...style, paddingLeft: 16, paddingRight: 16 }}>
+      <div style={{ ...style, paddingLeft: 16, paddingRight: 16, paddingTop: 4, paddingBottom: 4 }}>
         <TechniqueRow
           technique={technique}
           categoryName={catMap.get(technique.categoryId) ?? ''}
