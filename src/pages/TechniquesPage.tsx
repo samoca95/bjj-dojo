@@ -53,7 +53,7 @@ function TechniqueRow({ technique, categoryName, categoryIcon, description, prac
           <CategoryIcon value={categoryIcon} fallbackId={technique.categoryId} size={14} className="text-gold" />
           <span>{categoryName}</span>
         </div>
-        <p className="text-xs text-zinc-500 mt-1">{description}</p>
+        <p className="text-xs text-zinc-500 mt-1 line-clamp-4">{description}</p>
       </button>
       <button
         onClick={() => onToggleFavorite()}
@@ -70,7 +70,13 @@ function MeasuredTechniqueRow({
   index,
   style,
   onHeightChange,
-  ...props
+  technique,
+  categoryName,
+  categoryIcon,
+  description,
+  practiceCount,
+  onClick,
+  onToggleFavorite,
 }: {
   index: number
   style: React.CSSProperties
@@ -100,12 +106,31 @@ function MeasuredTechniqueRow({
     const observer = new ResizeObserver(measure)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [index, onHeightChange, props])
+  }, [
+    index,
+    onHeightChange,
+    technique.id,
+    technique.isFavorite,
+    technique.name,
+    technique.difficulty,
+    categoryName,
+    categoryIcon,
+    description,
+    practiceCount,
+  ])
 
   return (
     <div style={{ ...style, paddingLeft: 16, paddingRight: 16, paddingBottom: ROW_GAP }}>
       <div ref={rowRef}>
-        <TechniqueRow {...props} />
+        <TechniqueRow
+          technique={technique}
+          categoryName={categoryName}
+          categoryIcon={categoryIcon}
+          description={description}
+          practiceCount={practiceCount}
+          onClick={onClick}
+          onToggleFavorite={onToggleFavorite}
+        />
       </div>
     </div>
   )
