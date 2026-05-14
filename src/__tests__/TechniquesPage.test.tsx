@@ -63,6 +63,7 @@ function renderPage() {
       <Routes>
         <Route path="/techniques" element={<TechniquesPage />} />
         <Route path="/techniques/new/edit" element={<div data-testid="new-technique-page" />} />
+        <Route path="/techniques/graph" element={<div data-testid="technique-graph-page" />} />
         <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
       </Routes>
     </MemoryRouter>,
@@ -92,20 +93,28 @@ describe('TechniquesPage — structure', () => {
     expect(screen.getByText('Closed Guard')).toBeInTheDocument()
   })
 
-  it('renders FAB button to add a technique', () => {
+  it('renders actions button opposite to the technique counter', () => {
     setupMocks()
     renderPage()
-    const fab = document.querySelector('button[class*="fixed bottom-20"]') as HTMLElement
-    expect(fab).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Technique actions' })).toBeInTheDocument()
   })
 
-  it('FAB navigates to new technique page', async () => {
+  it('action modal navigates to new technique page', async () => {
     setupMocks()
     const user = userEvent.setup()
     renderPage()
-    const fab = document.querySelector('button[class*="fixed bottom-20"]') as HTMLElement
-    await user.click(fab)
+    await user.click(screen.getByRole('button', { name: 'Technique actions' }))
+    await user.click(screen.getByRole('button', { name: 'New technique' }))
     expect(screen.getByTestId('new-technique-page')).toBeInTheDocument()
+  })
+
+  it('action modal opens the global graph page from icon-only button', async () => {
+    setupMocks()
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Technique actions' }))
+    await user.click(screen.getByRole('button', { name: 'Open technique graph' }))
+    expect(screen.getByTestId('technique-graph-page')).toBeInTheDocument()
   })
 
   it('shows technique count', () => {

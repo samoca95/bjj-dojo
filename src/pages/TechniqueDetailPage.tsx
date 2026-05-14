@@ -295,18 +295,6 @@ export default function TechniqueDetailPage() {
                     </button>
                   ))}
                 </div>
-                <div className="bg-zinc-900 rounded-2xl p-3">
-                  <div className="space-y-1.5">
-                    {(['FOLLOW_UP', 'SETUP', 'COUNTER', 'TRANSITION'] as const).map(type => (
-                      <div key={type} className="text-xs text-zinc-300">
-                        <span className={`inline-flex mr-1.5 rounded px-1.5 py-0.5 font-semibold ${CONNECTION_COLORS[type]}`}>
-                          {connectionTypeLabel(type, CONNECTION_LABELS[type], language)}
-                        </span>
-                        <span className="text-zinc-400">{connectionTypeDescription(type, language)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
                 {connectionsView === 'graph' && (
                   <ConnectionGraph
                     centerName={technique.name}
@@ -362,6 +350,18 @@ export default function TechniqueDetailPage() {
                 )}
                 </>
                 )}
+                <div className="bg-zinc-900 rounded-2xl p-3">
+                  <div className="space-y-1.5">
+                    {(['FOLLOW_UP', 'SETUP', 'COUNTER', 'TRANSITION'] as const).map(type => (
+                      <div key={type} className="text-xs text-zinc-300">
+                        <span className={`inline-flex mr-1.5 rounded px-1.5 py-0.5 font-semibold ${CONNECTION_COLORS[type]}`}>
+                          {connectionTypeLabel(type, CONNECTION_LABELS[type], language)}
+                        </span>
+                        <span className="text-zinc-400">{connectionTypeDescription(type, language)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </>
             )}
           </div>
