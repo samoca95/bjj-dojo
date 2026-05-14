@@ -268,6 +268,25 @@ export default function SessionsPage() {
           </div>
         </div>
 
+        <div className="px-6 pb-2 flex items-center justify-between gap-3">
+          <span className="text-xs text-zinc-500">
+            {(sessions ?? []).length}{' '}
+            {(() => {
+              const count = (sessions ?? []).length
+              if (language === 'es') return count === 1 ? 'sesión' : 'sesiones'
+              if (language === 'fr') return count === 1 ? 'séance' : 'séances'
+              return count === 1 ? 'session' : 'sessions'
+            })()}
+          </span>
+          <button
+            onClick={() => navigate('/sessions/new')}
+            aria-label={language === 'es' ? 'Nueva sesión' : language === 'fr' ? 'Nouvelle séance' : 'New session'}
+            className="w-10 h-10 rounded-full bg-zinc-800 text-gold flex items-center justify-center active:bg-zinc-700 transition-colors"
+          >
+            <Plus size={18} strokeWidth={2.2} />
+          </button>
+        </div>
+
         {/* Collapsible filter panel */}
         {filterOpen && (
           <div className="mx-4 mb-3 bg-zinc-900 rounded-2xl p-3 space-y-3">
@@ -356,12 +375,12 @@ export default function SessionsPage() {
             <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center">
               <CalendarDays size={32} className="text-zinc-600" strokeWidth={2} />
             </div>
-              <p className="text-zinc-400 font-medium">
+              <p className="text-zinc-400 font-medium text-center">
                 {searchTokens.length > 0 || typeFilter !== 'all' || clubFilter !== 'all' || daysFilter !== 'all'
                   ? t('No matching sessions')
                   : t('No sessions yet')}
               </p>
-              <p className="text-zinc-600 text-sm">
+              <p className="text-zinc-600 text-sm text-center">
                 {searchTokens.length > 0 || typeFilter !== 'all' || clubFilter !== 'all' || daysFilter !== 'all'
                   ? t('Try a different search or filter')
                   : t('Tap + to log your first training')}
@@ -390,13 +409,6 @@ export default function SessionsPage() {
         )}
       </div>
 
-      {/* FAB */}
-      <button
-        onClick={() => navigate('/sessions/new')}
-        className="fixed bottom-20 right-4 w-10 h-10 bg-gold rounded-full flex items-center justify-center active:bg-gold-light transition-colors z-40"
-      >
-        <Plus size={18} className="text-black" strokeWidth={2.2} />
-      </button>
     </div>
   )
 }

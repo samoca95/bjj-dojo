@@ -72,6 +72,18 @@ export default function AddEditSessionPage() {
     [],
     [] as Technique[],
   )
+  const sessionTechniqueNotes = useLiveQuery(async () => {
+    const sts = await db.sessionTechniques.toArray()
+    const noteMap = new Map<number, string[]>()
+    for (const st of sts) {
+      const note = st.notes?.trim()
+      if (!note) continue
+      const notes = noteMap.get(st.techniqueId) ?? []
+      notes.push(note)
+      noteMap.set(st.techniqueId, notes)
+    }
+    return noteMap
+  }, [], new Map<number, string[]>())
   const clubs = useLiveQuery(
     () => db.clubs.orderBy('sortOrder').toArray(),
     [],
@@ -179,7 +191,7 @@ export default function AddEditSessionPage() {
           )
         }
       })
-      navigate(`/sessions/${sid}`, isEdit ? undefined : { state: { justCreated: true } })
+      navigate(`/sessions/${sid}`, isEdit ? undefined : { replace: true, state: { justCreated: true } })
     } catch (err) {
       setSubmitting(false)
       if (isQuotaError(err)) {
@@ -195,9 +207,23 @@ export default function AddEditSessionPage() {
   }
 
   const filteredTechniques = (() => {
-    const results = allTechniques?.filter(t => techniqueMatchesQuery(t, pickerSearch)) ?? []
+    const noteMap = sessionTechniqueNotes ?? new Map<number, string[]>()
+    const results = (allTechniques ?? []).filter(t =>
+      techniqueMatchesQuery(
+        { ...t, cues: [...(t.cues ?? []), ...(noteMap.get(t.id) ?? [])] },
+        pickerSearch,
+      ),
+    )
     if (pickerSearch.trim()) {
-      return [...results].sort((a, b) => techniqueScore(b, pickerSearch) - techniqueScore(a, pickerSearch))
+      return [...results].sort((a, b) =>
+        techniqueScore(
+          { ...b, cues: [...(b.cues ?? []), ...(noteMap.get(b.id) ?? [])] },
+          pickerSearch,
+        ) - techniqueScore(
+          { ...a, cues: [...(a.cues ?? []), ...(noteMap.get(a.id) ?? [])] },
+          pickerSearch,
+        ),
+      )
     }
     return results
   })()

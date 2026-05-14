@@ -154,17 +154,16 @@ describe('SessionsPage', () => {
     expect(sessionCard?.querySelector('svg.text-red-400')).not.toBeNull()
   })
 
-  it('has a working + FAB button', async () => {
+  it('has a working + add session button', async () => {
     setupEmptyMocks()
     const user = userEvent.setup()
     renderSessionsPage()
 
-    const fab = document.querySelector('button[class*="fixed bottom-20"]') as HTMLElement
-    expect(fab).not.toBeNull()
-    expect(fab.className).toContain('w-10')
-    expect(fab.className).toContain('h-10')
-    expect(fab.className).not.toContain('shadow')
-    await user.click(fab)
+    const btn = screen.getByRole('button', { name: /new session/i })
+    expect(btn).not.toBeNull()
+    expect(btn.className).toContain('w-10')
+    expect(btn.className).toContain('h-10')
+    await user.click(btn)
     expect(screen.getByTestId('new-session-page')).toBeInTheDocument()
   })
 
