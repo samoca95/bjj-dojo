@@ -441,7 +441,7 @@ export default function HomePage() {
             src={jujitsuKanjiHorizontal}
             alt="Jiu-jitsu kanji"
             className="h-7 w-auto opacity-90"
-            style={{ filter: 'invert(76%) sepia(74%) saturate(1212%) hue-rotate(2deg) brightness(101%) contrast(89%)' }}
+            style={{fill:"text-gold"}}
           />
         </div>
         <p className="text-zinc-400 text-sm mt-1">{t('Track your journey on the mats')}</p>
