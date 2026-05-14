@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, HandHeart, Lightbulb } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Minus, Plus, Eye, EyeOff, HandHeart, Lightbulb, Bug } from 'lucide-react'
 import { PlainLogo } from '../components/PlainLogo'
 import { themeFill } from '../constants/themeColors'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -30,6 +30,15 @@ import {
 } from '../utils/beltRank'
 import type { AppLanguage } from '../i18n'
 
+function clearPrefixedStorage(storage: Storage, prefix: string) {
+  const keys: string[] = []
+  for (let index = 0; index < storage.length; index += 1) {
+    const key = storage.key(index)
+    if (key?.startsWith(prefix)) keys.push(key)
+  }
+  keys.forEach(key => storage.removeItem(key))
+}
+
 const BELT_ABBREV: Record<AppLanguage, Record<BeltColor, string>> = {
   en: { white: 'Wht', blue: 'Blu', purple: 'Pur', brown: 'Brn', black: 'Blk' },
   es: { white: 'Bco', blue: 'Azl', purple: 'Mor', brown: 'Mrn', black: 'Ngr' },
@@ -49,12 +58,13 @@ export default function SettingsPage() {
   const appVersionLabel = appVersion.startsWith('v') ? appVersion : `v${appVersion}`
   const githubRepoUrl = 'https://github.com/samoca95/bjj-dojo'
   const [theme, setTheme] = useState<AppTheme>(getAppTheme())
-  const [telemetryCount, setTelemetryCount] = useState(0)
   const [goalInput, setGoalInput] = useState(String(getGoalMatTime()))
   const [sectionOrder, setSectionOrder] = useState<HomeSectionId[]>(getHomeSectionOrder)
   const [sectionVisibility, setSectionVisibility] = useState(getHomeSectionVisibility)
   const [belt, setBelt] = useState<BeltColor>(getBeltColor)
   const [stripes, setStripes] = useState<number>(getBeltStripes)
+  const [showResetModal, setShowResetModal] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
 
   const moveSection = (index: number, delta: number) => {
     const next = [...sectionOrder]
@@ -82,10 +92,6 @@ export default function SettingsPage() {
     quickAccess: t('QUICK ACCESS'),
   }
   const importRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    setTelemetryCount(telemetry.read().length)
-  }, [])
 
   const handleGoalSave = () => {
     const n = Number(goalInput)
@@ -116,7 +122,6 @@ export default function SettingsPage() {
       if (importedLanguage) setAppLanguage(importedLanguage)
       const lang = importedLanguage ?? language
       window.alert(translate('Backup imported successfully.', lang))
-      setTelemetryCount(telemetry.read().length)
     } catch (error) {
       telemetry.error('backup.import_failed', error)
       if (isQuotaError(error)) {
@@ -124,6 +129,31 @@ export default function SettingsPage() {
       } else {
         window.alert(t('Could not import backup.'))
       }
+    }
+  }
+
+  const handleFullReset = async () => {
+    if (isResetting) return
+    setIsResetting(true)
+    try {
+      db.close()
+      await db.delete()
+      invalidateCategoryCache()
+      clearPrefixedStorage(window.localStorage, 'bjj-dojo')
+      clearPrefixedStorage(window.sessionStorage, 'bjj-dojo')
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations()
+        await Promise.all(registrations.map(registration => registration.unregister()))
+      }
+      if ('caches' in window) {
+        const cacheKeys = await window.caches.keys()
+        await Promise.all(cacheKeys.map(key => window.caches.delete(key)))
+      }
+      window.location.reload()
+    } catch (error) {
+      telemetry.error('app.reset_failed', error)
+      setIsResetting(false)
+      window.alert(language === 'es' ? 'No se pudo reiniciar la aplicación.' : language === 'fr' ? 'Impossible de réinitialiser l’application.' : 'Could not reset the app.')
     }
   }
 
@@ -348,6 +378,23 @@ export default function SettingsPage() {
             </div>
             <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
           </button>
+          <button
+            onClick={() => navigate('/settings/dev')}
+            className="w-full rounded-xl px-3 py-3 flex items-center gap-3 text-left active:bg-zinc-900"
+          >
+            <div className="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+              <Bug size={18} className="text-gold" />
+            </div>
+            <div className="bg-zinc-900 flex-1">
+              <div className="text-sm font-semibold text-zinc-100">
+                {language === 'es' ? 'Ajustes de desarrollo' : language === 'fr' ? 'Réglages développeur' : 'Dev settings'}
+              </div>
+              <div className="text-xs text-zinc-500">
+                {language === 'es' ? 'Registro local y herramientas de diagnóstico' : language === 'fr' ? 'Journal local et outils de diagnostic' : 'Local logging and diagnostics tools'}
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-zinc-600 shrink-0" strokeWidth={2} />
+          </button>
         </div>
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
@@ -424,21 +471,22 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
-          <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {t('LOCAL LOGGING')}
-          </h2>
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
+          <div className="text-xs text-gold font-semibold tracking-widest">
+            {language === 'es' ? 'REINICIO COMPLETO' : language === 'fr' ? 'RÉINITIALISATION COMPLÈTE' : 'FULL RESET'}
+          </div>
           <p className="text-xs text-zinc-500">
-            {t('Logged events:')} {telemetryCount}
+            {language === 'es'
+              ? 'Borra todos los datos locales, elimina la caché de la app y vuelve al estado inicial con la última versión desplegada.'
+              : language === 'fr'
+                ? 'Efface toutes les données locales, supprime le cache de l’app et revient à l’état initial avec la dernière version déployée.'
+                : 'Deletes all local data, clears the app cache, and restores a first-time state with the latest deployed version.'}
           </p>
           <button
-            onClick={() => {
-              telemetry.clear()
-              setTelemetryCount(0)
-            }}
-            className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 px-3 active:bg-zinc-700"
+            onClick={() => setShowResetModal(true)}
+            className="w-full rounded-xl bg-red-900/50 text-red-200 text-sm font-semibold py-2.5 active:bg-red-900"
           >
-            {t('Clear logs')}
+            {language === 'es' ? 'Reiniciar y actualizar la app' : language === 'fr' ? 'Réinitialiser et mettre à jour l’app' : 'Reset & update app'}
           </button>
         </div>
 
@@ -478,6 +526,55 @@ export default function SettingsPage() {
           </a>
         </div>
       </div>
+      {showResetModal && (
+        <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl bg-zinc-900 border border-zinc-800 p-4 space-y-4">
+            <div className="space-y-2">
+              <h2 className="text-base font-bold text-zinc-100">
+                {language === 'es' ? 'Reiniciar y actualizar la app' : language === 'fr' ? 'Réinitialiser et mettre à jour l’app' : 'Reset & update app'}
+              </h2>
+              <p className="text-sm text-zinc-300">
+                {language === 'es'
+                  ? 'Esto eliminará tus sesiones, técnicas personalizadas, ajustes, caché y datos locales. Puedes exportar una copia antes de continuar.'
+                  : language === 'fr'
+                    ? 'Cela supprimera vos sessions, techniques personnalisées, réglages, cache et données locales. Vous pouvez exporter une copie avant de continuer.'
+                    : 'This will delete your sessions, custom techniques, settings, cache, and local data. You can export a backup before continuing.'}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button
+                onClick={() => void handleExportBackup()}
+                className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 active:bg-zinc-700"
+              >
+                {t('Export JSON')}
+              </button>
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 active:bg-zinc-700"
+              >
+                {t('Cancel')}
+              </button>
+            </div>
+            <button
+              onClick={() => void handleFullReset()}
+              disabled={isResetting}
+              className="w-full rounded-xl bg-red-900/60 text-red-100 text-sm font-semibold py-2.5 disabled:opacity-60 active:bg-red-900"
+            >
+              {isResetting
+                ? language === 'es'
+                  ? 'Reiniciando…'
+                  : language === 'fr'
+                    ? 'Réinitialisation…'
+                    : 'Resetting…'
+                : language === 'es'
+                  ? 'Confirmar reinicio completo'
+                  : language === 'fr'
+                    ? 'Confirmer la réinitialisation complète'
+                    : 'Confirm full reset'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

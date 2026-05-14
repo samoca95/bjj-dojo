@@ -109,6 +109,26 @@ export default function TechniqueDetailPage() {
     return sessions.sort((a, b) => b.date - a.date) as Session[]
   }, [numId], [])
 
+  const practiceSessionNotes = useLiveQuery(async () => {
+    const sts = await db.sessionTechniques.where('techniqueId').equals(numId).toArray()
+    const noted = sts.filter(st => st.notes?.trim())
+    if (noted.length === 0) return []
+    const sessions = await db.sessions.where('id').anyOf(noted.map(st => st.sessionId)).toArray()
+    const sessionById = new Map(sessions.map(session => [session.id, session]))
+    return noted
+      .map(st => {
+        const session = sessionById.get(st.sessionId)
+        if (!session) return null
+        return {
+          sessionId: st.sessionId,
+          date: session.date,
+          note: st.notes!.trim(),
+        }
+      })
+      .filter((entry): entry is { sessionId: number; date: number; note: string } => Boolean(entry))
+      .sort((a, b) => b.date - a.date)
+  }, [numId], [])
+
   const recommendations = useLiveQuery(async () => {
     const edges = await db.techniqueConnections.where('fromTechniqueId').equals(numId).toArray()
     if (edges.length === 0) return []
@@ -206,6 +226,36 @@ export default function TechniqueDetailPage() {
             )}
           </div>
           <p className="text-sm text-zinc-300 leading-relaxed">{getTechniqueDescription(technique, language)}</p>
+          {(practiceSessionNotes?.length ?? 0) > 0 && (
+            <div className="mt-4 space-y-2">
+              <div className="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase">
+                {language === 'es' ? 'Desde sesiones' : language === 'fr' ? 'Depuis les sessions' : 'From sessions'}
+              </div>
+              <div className="space-y-2">
+                {practiceSessionNotes!.map(({ sessionId, date, note }) => (
+                  <button
+                    key={`${sessionId}-${date}`}
+                    onClick={() => navigate(`/sessions/${sessionId}`)}
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-left active:bg-zinc-800/80 transition-colors"
+                  >
+                    <div className="text-[11px] text-zinc-500 mb-1">
+                      {new Date(date).toLocaleDateString(language === 'en' ? 'en-GB' : language, { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                    <div className="text-sm text-zinc-300 leading-snug whitespace-pre-wrap">{note}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {(technique.aliases?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {technique.aliases!.map(alias => (
+                <span key={alias} className="text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-400">
+                  {alias}
+                </span>
+              ))}
+            </div>
+          )}
           {(technique.tags?.length ?? 0) > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {(technique.tags ?? []).map(tag => (

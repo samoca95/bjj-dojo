@@ -35,6 +35,20 @@ export function sanitizeTags(tags: string[]): string[] {
   return result.slice(0, 10)
 }
 
+export function sanitizeAliases(aliases: string[]): string[] {
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const rawAlias of aliases) {
+    const trimmed = trimAndClamp(rawAlias, NAME_MAX_LENGTH)
+    if (!trimmed) continue
+    const dedupeKey = trimmed.toLowerCase()
+    if (seen.has(dedupeKey)) continue
+    seen.add(dedupeKey)
+    result.push(trimmed)
+  }
+  return result.slice(0, 10)
+}
+
 export function normalizeDuration(input: string): number {
   const parsed = Number.parseInt(input, 10)
   if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_DURATION_MINUTES
@@ -111,6 +125,7 @@ export function normalizeTechniqueImageUrl(url: string): string {
 
 export function normalizeTechniquePayload(input: {
   name: string
+  aliases?: string[]
   description: string
   cues: string[]
   youtubeUrl: string
@@ -119,6 +134,7 @@ export function normalizeTechniquePayload(input: {
 }) {
   return {
     name: trimAndClamp(input.name, NAME_MAX_LENGTH),
+    aliases: sanitizeAliases(input.aliases ?? []),
     description: trimAndClamp(input.description, DESCRIPTION_MAX_LENGTH),
     cues: input.cues.map(cue => trimAndClamp(cue, CUE_MAX_LENGTH)).filter(Boolean).slice(0, 20),
     youtubeUrl: trimAndClamp(input.youtubeUrl, 300),

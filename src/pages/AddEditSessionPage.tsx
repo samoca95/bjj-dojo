@@ -234,6 +234,7 @@ export default function AddEditSessionPage() {
   const handleCreateTechnique = async () => {
     const payload = normalizeTechniquePayload({
       name: newTechName,
+      aliases: [],
       description: '',
       cues: [],
       youtubeUrl: '',
@@ -246,6 +247,7 @@ export default function AddEditSessionPage() {
     const newTech: Technique = {
       id: newId,
       name,
+      aliases: [],
       description: '',
       cues: [],
       categoryId: newTechCatId,
