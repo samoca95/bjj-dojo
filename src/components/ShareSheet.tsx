@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from 'react'
 import {
   X, Share2, Download, Camera, Image as ImageIcon, Copy, FileText,
   Loader2, Check, MessageCircle, Send, Palette, Award, QrCode, RotateCcw, Move,
+  ChevronDown,
 } from 'lucide-react'
 import type { SessionExportData } from '../utils/exportSession'
 import {
@@ -11,33 +12,44 @@ import {
 import {
   renderShareCard, loadShareImage, clampTransform, getShareCardTheme,
   SHARE_CARD_THEMES, DEFAULT_TRANSFORM,
-  type ShareCardFormat, type BackgroundTransform,
+  type ShareCardFormat, type BackgroundTransform, type ShareCardOptions,
 } from '../utils/shareCard'
 import {
-  APP_URL, getShareThemeId, setShareThemeId, getShareShowBelt, setShareShowBelt,
-  getShareShowQr, setShareShowQr, getShareName, setShareName,
+  APP_URL, getShareThemeId, setShareThemeId, getShareFormat, setShareFormat,
+  getShareShowBelt, setShareShowBelt, getShareShowQr, setShareShowQr,
 } from '../utils/sharePreferences'
+import {
+  getUserName, setUserName, getUserNamePrompted, setUserNamePrompted,
+  MAX_USER_NAME_LENGTH,
+} from '../utils/userName'
 import { getBeltColor, getBeltStripes, type BeltColor } from '../utils/beltRank'
 import type { AppLanguage } from '../i18n'
+
+/** Preview render resolution — a fraction of the 1080px export for snappiness. */
+const PREVIEW_SCALE = 0.5
 
 interface ShareSheetLabels {
   title: string
   formatSquare: string
   formatStory: string
   theme: string
+  background: string
   addPhoto: string
   camera: string
   gallery: string
   removePhoto: string
+  photoAdded: string
   zoom: string
   reset: string
   dragHint: string
   beltBranding: string
+  beltSection: string
   namePlaceholder: string
   beltHint: string
   stripes: string
   qrCode: string
   qrHint: string
+  on: string
   share: string
   savePng: string
   whatsapp: string
@@ -46,9 +58,14 @@ interface ShareSheetLabels {
   exportText: string
   rendering: string
   copied: string
-  saved: string
+  savedHint: string
+  shareError: string
   imageError: string
   customPhoto: string
+  namePromptTitle: string
+  namePromptBody: string
+  skip: string
+  saveContinue: string
 }
 
 const LABELS: Record<AppLanguage, ShareSheetLabels> = {
@@ -57,19 +74,23 @@ const LABELS: Record<AppLanguage, ShareSheetLabels> = {
     formatSquare: 'Square',
     formatStory: 'Story',
     theme: 'Card theme',
+    background: 'Background photo',
     addPhoto: 'Background photo',
     camera: 'Camera',
     gallery: 'Gallery',
     removePhoto: 'Remove photo',
+    photoAdded: 'Photo added',
     zoom: 'Zoom',
     reset: 'Reset',
     dragHint: 'Drag the preview to reposition',
     beltBranding: 'Show belt & name',
+    beltSection: 'Belt & name',
     namePlaceholder: 'Your name (optional)',
     beltHint: 'Belt',
     stripes: 'stripes',
-    qrCode: 'Show QR code',
+    qrCode: 'QR code',
     qrHint: 'Adds a scannable link to the app',
+    on: 'On',
     share: 'Share',
     savePng: 'Save PNG',
     whatsapp: 'WhatsApp',
@@ -78,28 +99,37 @@ const LABELS: Record<AppLanguage, ShareSheetLabels> = {
     exportText: 'Export as text',
     rendering: 'Building image…',
     copied: 'Caption copied',
-    saved: 'Image saved',
+    savedHint: 'Image saved — open Instagram or your gallery to post',
+    shareError: 'Could not share — please try again',
     imageError: 'Could not load that image',
     customPhoto: 'Custom photo added',
+    namePromptTitle: 'Add your name?',
+    namePromptBody: 'It will appear on your shared session cards. You can change it later in Settings.',
+    skip: 'Skip',
+    saveContinue: 'Save & continue',
   },
   es: {
     title: 'Compartir sesión',
     formatSquare: 'Cuadrado',
     formatStory: 'Historia',
     theme: 'Tema de la tarjeta',
+    background: 'Foto de fondo',
     addPhoto: 'Foto de fondo',
     camera: 'Cámara',
     gallery: 'Galería',
     removePhoto: 'Quitar foto',
+    photoAdded: 'Foto añadida',
     zoom: 'Zoom',
     reset: 'Restablecer',
     dragHint: 'Arrastra la vista previa para reposicionar',
     beltBranding: 'Mostrar cinturón y nombre',
+    beltSection: 'Cinturón y nombre',
     namePlaceholder: 'Tu nombre (opcional)',
     beltHint: 'Cinturón',
     stripes: 'grados',
-    qrCode: 'Mostrar código QR',
+    qrCode: 'Código QR',
     qrHint: 'Añade un enlace escaneable a la app',
+    on: 'Activado',
     share: 'Compartir',
     savePng: 'Guardar PNG',
     whatsapp: 'WhatsApp',
@@ -108,28 +138,37 @@ const LABELS: Record<AppLanguage, ShareSheetLabels> = {
     exportText: 'Exportar como texto',
     rendering: 'Generando imagen…',
     copied: 'Texto copiado',
-    saved: 'Imagen guardada',
+    savedHint: 'Imagen guardada — abre Instagram o tu galería para publicar',
+    shareError: 'No se pudo compartir, inténtalo de nuevo',
     imageError: 'No se pudo cargar la imagen',
     customPhoto: 'Foto personalizada añadida',
+    namePromptTitle: '¿Añadir tu nombre?',
+    namePromptBody: 'Aparecerá en tus tarjetas de sesión compartidas. Puedes cambiarlo luego en Ajustes.',
+    skip: 'Omitir',
+    saveContinue: 'Guardar y continuar',
   },
   fr: {
     title: 'Partager la session',
     formatSquare: 'Carré',
     formatStory: 'Story',
     theme: 'Thème de la carte',
+    background: 'Photo de fond',
     addPhoto: 'Photo de fond',
     camera: 'Caméra',
     gallery: 'Galerie',
     removePhoto: 'Retirer la photo',
+    photoAdded: 'Photo ajoutée',
     zoom: 'Zoom',
     reset: 'Réinitialiser',
     dragHint: 'Glissez l’aperçu pour repositionner',
     beltBranding: 'Afficher ceinture et nom',
+    beltSection: 'Ceinture et nom',
     namePlaceholder: 'Votre nom (facultatif)',
     beltHint: 'Ceinture',
     stripes: 'barrettes',
-    qrCode: 'Afficher le QR code',
+    qrCode: 'QR code',
     qrHint: 'Ajoute un lien scannable vers l’app',
+    on: 'Activé',
     share: 'Partager',
     savePng: 'Enregistrer PNG',
     whatsapp: 'WhatsApp',
@@ -138,9 +177,14 @@ const LABELS: Record<AppLanguage, ShareSheetLabels> = {
     exportText: 'Exporter en texte',
     rendering: 'Création de l’image…',
     copied: 'Texte copié',
-    saved: 'Image enregistrée',
+    savedHint: 'Image enregistrée — ouvrez Instagram ou votre galerie',
+    shareError: 'Échec du partage, réessayez',
     imageError: 'Impossible de charger cette image',
     customPhoto: 'Photo personnalisée ajoutée',
+    namePromptTitle: 'Ajouter votre nom ?',
+    namePromptBody: 'Il apparaîtra sur vos cartes de session partagées. Modifiable plus tard dans les réglages.',
+    skip: 'Ignorer',
+    saveContinue: 'Enregistrer et continuer',
   },
 }
 
@@ -169,29 +213,60 @@ function Toggle({ on }: { on: boolean }) {
   )
 }
 
+function CollapsibleSection({
+  icon, title, summary, children,
+}: {
+  icon: ReactNode
+  title: string
+  summary?: string
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="rounded-xl bg-zinc-800/40 border border-zinc-800">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2.5 px-3 py-3 text-left"
+        aria-expanded={open}
+      >
+        <span className="text-gold shrink-0">{icon}</span>
+        <span className="flex-1 text-sm font-semibold text-zinc-200">{title}</span>
+        {summary && !open && <span className="text-xs text-gold-light">{summary}</span>}
+        <ChevronDown
+          size={16}
+          strokeWidth={2}
+          className={`text-zinc-500 transition-transform ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && <div className="px-3 pb-3 pt-0.5 space-y-2">{children}</div>}
+    </div>
+  )
+}
+
 export default function ShareSheet({ data, language, locale, onClose }: Props) {
   const L = LABELS[language] ?? LABELS.en
   // The underlying session does not change while the sheet is open — freeze it
   // so the preview only re-renders in response to share-option changes.
   const [sessionData] = useState(data)
 
-  const [format, setFormat] = useState<ShareCardFormat>('square')
+  const [format, setFormat] = useState<ShareCardFormat>(getShareFormat)
   const [background, setBackground] = useState<CanvasImageSource | null>(null)
   const [transform, setTransform] = useState<BackgroundTransform>(DEFAULT_TRANSFORM)
   const [themeId, setThemeId] = useState(getShareThemeId)
   const [showBelt, setShowBelt] = useState(getShareShowBelt)
   const [showQr, setShowQr] = useState(getShareShowQr)
-  const [name, setName] = useState(getShareName)
+  const [name, setName] = useState(getUserName)
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [rendering, setRendering] = useState(true)
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [namePromptFor, setNamePromptFor] = useState<null | 'share' | 'save'>(null)
+  const [namePromptValue, setNamePromptValue] = useState('')
 
   const [beltColor] = useState(getBeltColor)
   const [beltStripes] = useState(getBeltStripes)
 
-  const blobRef = useRef<Blob | null>(null)
   const previewUrlRef = useRef<string | null>(null)
   const previewImgRef = useRef<HTMLImageElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
@@ -212,17 +287,16 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
   useEffect(() => { setShareThemeId(themeId) }, [themeId])
   useEffect(() => { setShareShowBelt(showBelt) }, [showBelt])
   useEffect(() => { setShareShowQr(showQr) }, [showQr])
-  useEffect(() => { setShareName(name) }, [name])
 
   useEffect(() => {
     let cancelled = false
     setRendering(true)
     renderShareCard(sessionData, language, locale, {
       format, theme, background, backgroundTransform: transform, belt, qrUrl,
+      pixelScale: PREVIEW_SCALE,
     })
       .then(blob => {
         if (cancelled) return
-        blobRef.current = blob
         const url = URL.createObjectURL(blob)
         if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
         previewUrlRef.current = url
@@ -242,11 +316,11 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
 
   const showToast = (msg: string) => {
     setToast(msg)
-    window.setTimeout(() => setToast(null), 2600)
+    window.setTimeout(() => setToast(null), 2800)
   }
 
   // Leading + trailing throttle so dragging/zooming stays responsive without
-  // re-rendering the full-resolution card on every pointer event.
+  // re-rendering the preview on every pointer event.
   const commitTransform = useCallback((next: BackgroundTransform) => {
     transformRef.current = next
     const now = Date.now()
@@ -263,6 +337,11 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
     }
   }, [])
 
+  /** Render options at full export resolution. */
+  const exportOptions = (): ShareCardOptions => ({
+    format, theme, background, backgroundTransform: transform, belt, qrUrl, pixelScale: 1,
+  })
+
   const handleFile = async (file: File | undefined) => {
     if (!file) return
     try {
@@ -277,6 +356,7 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
 
   const handleSelectFormat = (next: ShareCardFormat) => {
     setFormat(next)
+    setShareFormat(next)
     setTransform(DEFAULT_TRANSFORM)
   }
 
@@ -307,23 +387,68 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
     commitTransform(clampTransform(background, format, { ...transformRef.current, scale: value }))
   }
 
-  const handleShare = async () => {
-    if (!blobRef.current || busy) return
+  const doShare = async (opts: ShareCardOptions) => {
     setBusy(true)
     try {
-      const result = await shareSessionImage(blobRef.current, sessionData.session, caption, language)
-      if (result.method === 'download') showToast(L.saved)
+      const blob = await renderShareCard(sessionData, language, locale, opts)
+      const result = await shareSessionImage(blob, sessionData.session, caption, language)
+      if (result.method === 'download') showToast(L.savedHint)
+    } catch {
+      showToast(L.shareError)
     } finally {
       setBusy(false)
     }
   }
 
+  const doSave = async (opts: ShareCardOptions) => {
+    setBusy(true)
+    try {
+      const blob = await renderShareCard(sessionData, language, locale, opts)
+      const d = new Date(sessionData.session.date)
+      const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      downloadBlob(blob, `bjj-session-${stamp}.png`)
+      showToast(L.savedHint)
+    } catch {
+      showToast(L.shareError)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /** Returns true when the first-share name prompt was opened instead. */
+  const promptedForName = (action: 'share' | 'save'): boolean => {
+    if (getUserName() || getUserNamePrompted()) return false
+    setNamePromptValue('')
+    setNamePromptFor(action)
+    return true
+  }
+
+  const handleShare = () => {
+    if (busy || rendering) return
+    if (promptedForName('share')) return
+    void doShare(exportOptions())
+  }
+
   const handleSave = () => {
-    if (!blobRef.current) return
-    const d = new Date(sessionData.session.date)
-    const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    downloadBlob(blobRef.current, `bjj-session-${stamp}.png`)
-    showToast(L.saved)
+    if (busy || rendering) return
+    if (promptedForName('save')) return
+    void doSave(exportOptions())
+  }
+
+  const resolveNamePrompt = (withName: boolean) => {
+    const action = namePromptFor
+    setNamePromptFor(null)
+    setUserNamePrompted()
+    let opts = exportOptions()
+    const trimmed = namePromptValue.trim()
+    if (withName && trimmed) {
+      setUserName(trimmed)
+      setName(trimmed)
+      setShowBelt(true)
+      opts = { ...opts, belt: { color: beltColor, stripes: beltStripes, name: trimmed } }
+    }
+    if (action === 'share') void doShare(opts)
+    else if (action === 'save') void doSave(opts)
   }
 
   const handleCopy = async () => {
@@ -338,6 +463,11 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
     } finally {
       setBusy(false)
     }
+  }
+
+  const updateName = (value: string) => {
+    setName(value)
+    setUserName(value)
   }
 
   return (
@@ -364,7 +494,7 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
           </button>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {/* Preview */}
           <div
             className={`relative bg-zinc-950 rounded-xl overflow-hidden flex items-center justify-center min-h-[180px] ${
@@ -441,8 +571,11 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
           </div>
 
           {/* Background photo */}
-          <div>
-            <div className="text-xs text-gold mb-2">{L.addPhoto}</div>
+          <CollapsibleSection
+            icon={<ImageIcon size={16} strokeWidth={2} />}
+            title={L.background}
+            summary={background ? L.photoAdded : undefined}
+          >
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => cameraInputRef.current?.click()}
@@ -460,7 +593,7 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
               </button>
             </div>
             {background && (
-              <div className="mt-3 space-y-2">
+              <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-zinc-400 w-10">{L.zoom}</span>
                   <input
@@ -504,25 +637,28 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
               className="hidden"
               onChange={e => { void handleFile(e.target.files?.[0]); e.target.value = '' }}
             />
-          </div>
+          </CollapsibleSection>
 
           {/* Belt + name branding */}
-          <div className="space-y-2">
+          <CollapsibleSection
+            icon={<Award size={16} strokeWidth={2} />}
+            title={L.beltSection}
+            summary={showBelt ? (name.trim() || BELT_LABELS[language][beltColor]) : undefined}
+          >
             <button
               onClick={() => setShowBelt(v => !v)}
               className="w-full flex items-center gap-3 py-1 text-left"
             >
-              <Award size={16} className="text-gold shrink-0" strokeWidth={2} />
               <span className="flex-1 text-sm font-semibold text-zinc-200">{L.beltBranding}</span>
               <Toggle on={showBelt} />
             </button>
             {showBelt && (
-              <div className="space-y-2 pl-7">
+              <div className="space-y-2">
                 <input
                   type="text"
                   value={name}
-                  maxLength={40}
-                  onChange={e => setName(e.target.value)}
+                  maxLength={MAX_USER_NAME_LENGTH}
+                  onChange={e => updateName(e.target.value)}
                   placeholder={L.namePlaceholder}
                   className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500"
                 />
@@ -531,34 +667,36 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
                 </p>
               </div>
             )}
-          </div>
+          </CollapsibleSection>
 
           {/* QR code */}
-          <div className="space-y-1">
+          <CollapsibleSection
+            icon={<QrCode size={16} strokeWidth={2} />}
+            title={L.qrCode}
+            summary={showQr ? L.on : undefined}
+          >
             <button
               onClick={() => setShowQr(v => !v)}
               className="w-full flex items-center gap-3 py-1 text-left"
             >
-              <QrCode size={16} className="text-gold shrink-0" strokeWidth={2} />
-              <span className="flex-1 text-sm font-semibold text-zinc-200">{L.qrCode}</span>
+              <span className="flex-1 text-sm font-semibold text-zinc-200">{L.qrHint}</span>
               <Toggle on={showQr} />
             </button>
-            {showQr && <p className="text-xs text-zinc-500 pl-7">{L.qrHint}</p>}
-          </div>
+          </CollapsibleSection>
 
           {/* Primary actions */}
           <div className="grid grid-cols-2 gap-2 pt-1">
             <button
-              onClick={() => void handleShare()}
+              onClick={handleShare}
               disabled={busy || rendering}
               className="flex items-center justify-center gap-2 py-3 rounded-lg bg-gold text-zinc-950 text-sm font-bold active:bg-gold-light disabled:opacity-50"
             >
-              <Share2 size={16} strokeWidth={2.5} />
+              {busy ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} strokeWidth={2.5} />}
               {L.share}
             </button>
             <button
               onClick={handleSave}
-              disabled={rendering}
+              disabled={busy || rendering}
               className="flex items-center justify-center gap-2 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-sm font-bold text-zinc-100 active:bg-zinc-700 disabled:opacity-50"
             >
               <Download size={16} strokeWidth={2.5} />
@@ -604,8 +742,51 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
 
         {toast && (
           <div className="sticky bottom-0 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 px-4 py-3 flex items-center gap-2 text-sm text-gold-light">
-            <Check size={16} strokeWidth={2.5} />
+            <Check size={16} strokeWidth={2.5} className="shrink-0" />
             {toast}
+          </div>
+        )}
+
+        {/* First-share name prompt */}
+        {namePromptFor && (
+          <div
+            className="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center p-4"
+            onClick={() => resolveNamePrompt(false)}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label={L.namePromptTitle}
+              className="w-full max-w-xs bg-zinc-900 border border-zinc-700 rounded-2xl p-4 space-y-3"
+            >
+              <h3 className="font-bold text-zinc-100">{L.namePromptTitle}</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">{L.namePromptBody}</p>
+              <input
+                type="text"
+                autoFocus
+                value={namePromptValue}
+                maxLength={MAX_USER_NAME_LENGTH}
+                onChange={e => setNamePromptValue(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') resolveNamePrompt(true) }}
+                placeholder={L.namePlaceholder}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => resolveNamePrompt(false)}
+                  className="flex-1 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-sm font-semibold text-zinc-300 active:bg-zinc-700"
+                >
+                  {L.skip}
+                </button>
+                <button
+                  onClick={() => resolveNamePrompt(true)}
+                  className="flex-1 py-2.5 rounded-lg bg-gold text-zinc-950 text-sm font-bold active:bg-gold-light"
+                >
+                  {L.saveContinue}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

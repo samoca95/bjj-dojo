@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   ChevronLeft, Pencil, Trash2, ChevronRight,
-  Zap, Hand, Building2, Share2,
+  Zap, Hand, Building2, Share2, X,
 } from 'lucide-react'
 import { db } from '../db/database'
 import type { Session, SessionTap, Technique } from '../types'
@@ -11,9 +11,15 @@ import { SESSION_TYPE_LABELS, SESSION_TYPE_COLORS } from '../types'
 import EnergyDots from '../components/EnergyDots'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT } from '../utils/sessionTypeIcons'
-import { sessionTypeLabel, useI18n } from '../i18n'
+import { sessionTypeLabel, useI18n, type AppLanguage } from '../i18n'
 import { useUndo } from '../components/UndoContext'
 import ShareSheet from '../components/ShareSheet'
+
+const SHARE_PROMPT_LABELS: Record<AppLanguage, { title: string; cta: string }> = {
+  en: { title: 'Session logged — share it?', cta: 'Share' },
+  es: { title: 'Sesión registrada, ¿compartir?', cta: 'Compartir' },
+  fr: { title: 'Session enregistrée — partager ?', cta: 'Partager' },
+}
 
 function formatDate(epoch: number, locale?: string) {
   return new Date(epoch).toLocaleDateString(locale, {
@@ -33,6 +39,7 @@ function InfoCard({ label, value }: { label: string; value: string }) {
 export default function SessionDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { t, language, locale } = useI18n()
   const { push: pushUndo } = useUndo()
   const [session, setSession] = useState<Session | null>(null)
@@ -40,6 +47,9 @@ export default function SessionDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showShareSheet, setShowShareSheet] = useState(false)
+  const [showSharePrompt, setShowSharePrompt] = useState(
+    () => Boolean((location.state as { justCreated?: boolean } | null)?.justCreated),
+  )
   const club = useLiveQuery(
     () => session?.clubId ? db.clubs.get(session.clubId) : undefined,
     [session?.clubId],
@@ -145,6 +155,27 @@ export default function SessionDetailPage() {
       </div>
 
       <div className="px-4 space-y-4 pb-6">
+        {/* Post-save share prompt */}
+        {showSharePrompt && (
+          <div className="flex items-center gap-3 bg-gold/10 border border-gold/30 rounded-xl px-4 py-3">
+            <Share2 size={18} className="text-gold shrink-0" strokeWidth={2} />
+            <span className="flex-1 text-sm text-zinc-100">{SHARE_PROMPT_LABELS[language].title}</span>
+            <button
+              onClick={() => { setShowSharePrompt(false); setShowShareSheet(true) }}
+              className="px-3 py-1.5 rounded-lg bg-gold text-zinc-950 text-xs font-bold active:bg-gold-light shrink-0"
+            >
+              {SHARE_PROMPT_LABELS[language].cta}
+            </button>
+            <button
+              onClick={() => setShowSharePrompt(false)}
+              className="p-1 -mr-1 text-zinc-500 active:text-zinc-300 shrink-0"
+              aria-label="Dismiss"
+            >
+              <X size={16} strokeWidth={2} />
+            </button>
+          </div>
+        )}
+
         {/* Type badge with icon */}
         <div className={`inline-flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-lg ${SESSION_TYPE_COLORS[session.sessionType]}`}>
           <CategoryIcon value={sessionTypeIcons[session.sessionType]} size={16} className="text-current" />
