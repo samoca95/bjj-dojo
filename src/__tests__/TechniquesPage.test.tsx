@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { forwardRef } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
@@ -24,14 +25,18 @@ vi.mock('../db/categoryCache', () => ({
 
 // Render all items without virtualization — tests care about content, not windowing
 vi.mock('react-window', () => ({
-  FixedSizeList: ({ children, itemCount }: {
+  VariableSizeList: forwardRef<HTMLDivElement, {
     children: (props: { index: number; style: React.CSSProperties }) => React.ReactNode
     itemCount: number
-  }) => (
-    <div>
-      {Array.from({ length: itemCount }, (_, i) => children({ index: i, style: {} }))}
+  }>(({ children, itemCount }, ref) => (
+    <div ref={ref}>
+      {Array.from({ length: itemCount }, (_, i) => (
+        <div key={i}>
+          {children({ index: i, style: {} })}
+        </div>
+      ))}
     </div>
-  ),
+  )),
 }))
 
 import { useLiveQuery } from 'dexie-react-hooks'

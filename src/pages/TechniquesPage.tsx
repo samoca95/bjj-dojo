@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useLayoutEffect, forwardRef } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect, useCallback, forwardRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { FixedSizeList, type ListChildComponentProps } from 'react-window'
+import { VariableSizeList, type ListChildComponentProps } from 'react-window'
 import { Search, X, Plus, Star, SlidersHorizontal, Waypoints } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
@@ -11,7 +11,8 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, difficultyLabel, getCategoryName, getTechniqueDescription } from '../i18n'
 import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
 
-const ITEM_SIZE = 116 // card height (~104px) + gap (12px)
+const ROW_GAP = 12
+const DEFAULT_ITEM_SIZE = 116 // estimated card height (~104px) + fixed gap (12px)
 const LIST_SCROLL_KEY = 'bjj-dojo.techniques.scroll-offset'
 const LIST_CONTEXT_KEY = 'bjj-dojo.techniques.list-context'
 const DIFFICULTY_ORDER: Record<Difficulty, number> = {
@@ -52,7 +53,7 @@ function TechniqueRow({ technique, categoryName, categoryIcon, description, prac
           <CategoryIcon value={categoryIcon} fallbackId={technique.categoryId} size={14} className="text-gold" />
           <span>{categoryName}</span>
         </div>
-        <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{description}</p>
+        <p className="text-xs text-zinc-500 mt-1 line-clamp-4">{description}</p>
       </button>
       <button
         onClick={() => onToggleFavorite()}
@@ -61,6 +62,78 @@ function TechniqueRow({ technique, categoryName, categoryIcon, description, prac
       >
         <Star size={18} strokeWidth={1.5} fill={technique.isFavorite ? 'currentColor' : 'none'} />
       </button>
+    </div>
+  )
+}
+
+function MeasuredTechniqueRow({
+  index,
+  style,
+  onHeightChange,
+  techniqueId,
+  technique,
+  categoryName,
+  categoryIcon,
+  description,
+  practiceCount,
+  onClick,
+  onToggleFavorite,
+}: {
+  index: number
+  style: React.CSSProperties
+  techniqueId: number
+  onHeightChange: (index: number, techniqueId: number, height: number) => void
+  technique: Technique
+  categoryName: string
+  categoryIcon?: string
+  description: string
+  practiceCount: number
+  onClick: () => void
+  onToggleFavorite: () => void
+}) {
+  const rowRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const element = rowRef.current
+    if (!element) return
+
+    const measure = () => {
+      onHeightChange(index, techniqueId, element.getBoundingClientRect().height)
+    }
+
+    measure()
+
+    if (typeof ResizeObserver === 'undefined') return
+
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [
+    index,
+    techniqueId,
+    onHeightChange,
+    technique.isFavorite,
+    technique.name,
+    technique.difficulty,
+    categoryName,
+    categoryIcon,
+    description,
+    practiceCount,
+  ])
+
+  return (
+    <div style={{ ...style, paddingLeft: 16, paddingRight: 16, paddingBottom: ROW_GAP }}>
+      <div ref={rowRef}>
+        <TechniqueRow
+          technique={technique}
+          categoryName={categoryName}
+          categoryIcon={categoryIcon}
+          description={description}
+          practiceCount={practiceCount}
+          onClick={onClick}
+          onToggleFavorite={onToggleFavorite}
+        />
+      </div>
     </div>
   )
 }
@@ -77,6 +150,8 @@ export default function TechniquesPage() {
   const [filterOpen, setFilterOpen] = useState(false)
   const scrollOffsetRef = useRef(0)
   const [initialScrollOffset, setInitialScrollOffset] = useState(0)
+  const listRef = useRef<VariableSizeList | null>(null)
+  const rowHeightsRef = useRef<Record<number, number>>({})
 
   const headerRef = useRef<HTMLDivElement>(null)
   const [listHeight, setListHeight] = useState(() => window.innerHeight - 200)
@@ -227,35 +302,57 @@ export default function TechniquesPage() {
   const catMap = new Map(categories?.map(c => [c.id, getCategoryName(c, language)]))
   const catIconMap = new Map(categories?.map(c => [c.id, c.icon]))
 
+  useEffect(() => {
+    const nextHeights = Object.fromEntries(
+      techniques
+        .map(technique => {
+          const cachedHeight = rowHeightsRef.current[technique.id]
+          return cachedHeight === undefined ? null : [technique.id, cachedHeight]
+        })
+        .filter((entry): entry is [number, number] => entry !== null),
+    )
+    rowHeightsRef.current = nextHeights
+    listRef.current?.resetAfterIndex?.(0)
+  }, [techniques])
+
+  const handleRowHeightChange = useCallback((index: number, techniqueId: number, height: number) => {
+    const nextSize = Math.ceil(height) + ROW_GAP
+    if (rowHeightsRef.current[techniqueId] === nextSize) return
+    rowHeightsRef.current[techniqueId] = nextSize
+    listRef.current?.resetAfterIndex?.(index)
+  }, [])
+
   const renderRow = ({ index, style }: ListChildComponentProps) => {
     const technique = techniques[index]
     return (
-      <div style={{ ...style, paddingLeft: 16, paddingRight: 16, paddingTop: 4, paddingBottom: 4 }}>
-        <TechniqueRow
+        <MeasuredTechniqueRow
+          index={index}
+          style={style}
+          onHeightChange={handleRowHeightChange}
+          techniqueId={technique.id}
           technique={technique}
           categoryName={catMap.get(technique.categoryId) ?? ''}
           categoryIcon={catIconMap.get(technique.categoryId)}
-          description={getTechniqueDescription(technique, language)}
-          practiceCount={freqMap.get(technique.id) ?? 0}
-          onClick={() => {
-            window.sessionStorage.setItem(
-              LIST_CONTEXT_KEY,
-              JSON.stringify({
-                search,
-                categoryId,
-                favoritesOnly,
-                difficultyFilter,
-                sortBy,
-              }),
-            )
-            window.sessionStorage.setItem(LIST_SCROLL_KEY, String(scrollOffsetRef.current))
-            navigate(`/techniques/${technique.id}`)
-          }}
-          onToggleFavorite={() => {
-            void db.techniques.update(technique.id, { isFavorite: !technique.isFavorite })
-          }}
-        />
-      </div>
+        description={getTechniqueDescription(technique, language)}
+        practiceCount={freqMap.get(technique.id) ?? 0}
+        onClick={() => {
+          window.sessionStorage.setItem(
+            LIST_CONTEXT_KEY,
+            JSON.stringify({
+              search,
+              categoryId,
+              favoritesOnly,
+              difficultyFilter,
+              sortBy,
+            }),
+          )
+          window.sessionStorage.setItem(LIST_SCROLL_KEY, String(scrollOffsetRef.current))
+          navigate(`/techniques/${technique.id}`)
+        }}
+        onToggleFavorite={() => {
+          void db.techniques.update(technique.id, { isFavorite: !technique.isFavorite })
+        }}
+      />
     )
   }
 
@@ -401,10 +498,12 @@ export default function TechniquesPage() {
       </div>
 
       {/* P4: windowed list — only visible cards are in the DOM */}
-      <FixedSizeList
+      <VariableSizeList
+        ref={listRef}
         height={listHeight}
         itemCount={techniques.length}
-        itemSize={ITEM_SIZE}
+        itemSize={index => rowHeightsRef.current[techniques[index]?.id] ?? DEFAULT_ITEM_SIZE}
+        estimatedItemSize={DEFAULT_ITEM_SIZE}
         width="100%"
         innerElementType={ListInner}
         overscanCount={3}
@@ -415,7 +514,7 @@ export default function TechniquesPage() {
         }}
       >
         {renderRow}
-      </FixedSizeList>
+      </VariableSizeList>
       <button
         onClick={() => navigate('/techniques/graph')}
         aria-label={t('Open technique graph')}
