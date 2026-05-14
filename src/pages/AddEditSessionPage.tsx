@@ -11,7 +11,7 @@ import type { Category, Club, Session, SessionType, Technique, TapType } from '.
 import { SESSION_TYPE_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useI18n, sessionTypeLabel } from '../i18n'
-import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
+import { techniqueMatchesQuery, techniqueScore, getMatchingAlias } from '../utils/fuzzySearch'
 import { normalizeDateInput, normalizeDuration, normalizeSessionNotes, normalizeTechniquePayload, toSafeDateEpoch, VALIDATION_LIMITS } from '../utils/validation'
 import { runWithTelemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
@@ -675,6 +675,7 @@ export default function AddEditSessionPage() {
                 const isSelected = pickerMode === 'techniques' && selectedIds.has(t.id)
                 const tapType = pickerMode === 'tap-given' ? 'given' : pickerMode === 'tap-received' ? 'received' : null
                 const tapCount = tapType ? taps.filter(tap => tap.techniqueId === t.id && tap.type === tapType).length : 0
+                const matchingAlias = getMatchingAlias(t, pickerSearch) ?? undefined
                 return (
                   <button
                     key={t.id}
@@ -687,7 +688,12 @@ export default function AddEditSessionPage() {
                       {isSelected && <Check size={11} className="text-black" strokeWidth={3} />}
                       {tapCount > 0 && <span className="text-[10px] text-zinc-100 font-bold leading-none">{tapCount}</span>}
                     </div>
-                    <span className="text-sm text-zinc-100">{t.name}</span>
+                    <div className="min-w-0">
+                      <span className="text-sm text-zinc-100">{t.name}</span>
+                      {matchingAlias && (
+                        <p className="text-xs text-zinc-400 mt-0.5">→ {matchingAlias}</p>
+                      )}
+                    </div>
                   </button>
                 )
               })}
