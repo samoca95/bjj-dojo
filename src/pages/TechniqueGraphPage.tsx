@@ -58,7 +58,13 @@ interface PinchState {
   rectH: number
 }
 
-function zoomAtClientPoint(view: ViewBox, factor: number, pinch: PinchState, clientX: number, clientY: number): ViewBox {
+function zoomAtClientPoint(
+  view: ViewBox,
+  factor: number,
+  pinch: PinchState,
+  clientX: number,
+  clientY: number,
+): ViewBox {
   const relX = (clientX - pinch.rectLeft) / pinch.rectW
   const relY = (clientY - pinch.rectTop) / pinch.rectH
   const anchorX = view.x + relX * view.width
@@ -79,33 +85,45 @@ export default function TechniqueGraphPage() {
 
   const techniques = useLiveQuery(() => db.techniques.toArray(), [])
   const connections = useLiveQuery(() => db.techniqueConnections.toArray(), [])
-  const catMap = useLiveQuery(() => getCategoryMap(), [], new Map<number, Category>())
+  const catMap = useLiveQuery(
+    () => getCategoryMap(),
+    [],
+    new Map<number, Category>(),
+  )
 
   // Force-directed layout — recomputed only when the graph data actually changes.
   const { positions, fittedViewBox } = useMemo(() => {
-    const ids = (techniques ?? []).map(tech => tech.id)
-    const edges = (connections ?? []).map(c => ({ from: c.fromTechniqueId, to: c.toTechniqueId }))
+    const ids = (techniques ?? []).map((tech) => tech.id)
+    const edges = (connections ?? []).map((c) => ({
+      from: c.fromTechniqueId,
+      to: c.toTechniqueId,
+    }))
     const pos = forceDirectedLayout(ids, edges)
     return { positions: pos, fittedViewBox: computeViewBox(pos, 32) }
   }, [techniques, connections])
 
   // Restore a previously saved view (kept across navigation); otherwise null
   // until the data loads and we can fit the whole graph.
-  const [view, setView] = useState<ViewBox | null>(
-    () => parseViewBox(window.sessionStorage.getItem(GRAPH_VIEW_KEY)),
+  const [view, setView] = useState<ViewBox | null>(() =>
+    parseViewBox(window.sessionStorage.getItem(GRAPH_VIEW_KEY)),
   )
 
   // First load only: fit the viewport to the whole graph. Skipped when a saved
   // view was restored, so returning to the page keeps the previous coordinates.
   useEffect(() => {
-    if (view === null && techniques !== undefined && connections !== undefined) {
+    if (
+      view === null &&
+      techniques !== undefined &&
+      connections !== undefined
+    ) {
       setView(fittedViewBox)
     }
   }, [view, techniques, connections, fittedViewBox])
 
   // Persist the current view so it survives navigating away and back.
   useEffect(() => {
-    if (view) window.sessionStorage.setItem(GRAPH_VIEW_KEY, JSON.stringify(view))
+    if (view)
+      window.sessionStorage.setItem(GRAPH_VIEW_KEY, JSON.stringify(view))
   }, [view])
 
   const svgRef = useRef<SVGSVGElement>(null)
@@ -118,7 +136,8 @@ export default function TechniqueGraphPage() {
   const [isTouchGraph, setIsTouchGraph] = useState(() => {
     if (typeof window === 'undefined') return false
     return (
-      (typeof window.matchMedia === 'function' && window.matchMedia('(hover: none), (pointer: coarse)').matches) ||
+      (typeof window.matchMedia === 'function' &&
+        window.matchMedia('(hover: none), (pointer: coarse)').matches) ||
       navigator.maxTouchPoints > 0
     )
   })
@@ -196,14 +215,22 @@ export default function TechniqueGraphPage() {
       const currentDistance = Math.max(Math.hypot(a.x - b.x, a.y - b.y), 1)
       const centerX = (a.x + b.x) / 2
       const centerY = (a.y + b.y) / 2
-      const factor = Math.min(MAX_PINCH_ZOOM_FACTOR, Math.max(MIN_PINCH_ZOOM_FACTOR, pinch.startDistance / currentDistance))
+      const factor = Math.min(
+        MAX_PINCH_ZOOM_FACTOR,
+        Math.max(MIN_PINCH_ZOOM_FACTOR, pinch.startDistance / currentDistance),
+      )
       didPanRef.current = true
-      setView(zoomAtClientPoint(pinch.startView, factor, pinch, centerX, centerY))
+      setView(
+        zoomAtClientPoint(pinch.startView, factor, pinch, centerX, centerY),
+      )
       return
     }
     const pan = panRef.current
     if (!pan) return
-    if (Math.abs(e.clientX - pan.clientX) > 6 || Math.abs(e.clientY - pan.clientY) > 6) {
+    if (
+      Math.abs(e.clientX - pan.clientX) > 6 ||
+      Math.abs(e.clientY - pan.clientY) > 6
+    ) {
       pan.moved = true
     }
     const dx = (e.clientX - pan.clientX) * (pan.startView.width / pan.rectW)
@@ -232,7 +259,9 @@ export default function TechniqueGraphPage() {
     if (!view || !svgRef.current) return
     const rect = svgRef.current.getBoundingClientRect()
     if (rect.width <= 0 || rect.height <= 0) return
-    const sensitivity = e.ctrlKey ? WHEEL_PINCH_ZOOM_SENSITIVITY : WHEEL_ZOOM_SENSITIVITY
+    const sensitivity = e.ctrlKey
+      ? WHEEL_PINCH_ZOOM_SENSITIVITY
+      : WHEEL_ZOOM_SENSITIVITY
     const factor = Math.exp(e.deltaY * sensitivity)
     const wheelPinchState: PinchState = {
       startDistance: 1,
@@ -242,12 +271,14 @@ export default function TechniqueGraphPage() {
       rectW: rect.width,
       rectH: rect.height,
     }
-    setView(zoomAtClientPoint(view, factor, wheelPinchState, e.clientX, e.clientY))
+    setView(
+      zoomAtClientPoint(view, factor, wheelPinchState, e.clientX, e.clientY),
+    )
   }
 
   const activateTouchNode = (id: number) => {
     if (didPanRef.current) return
-    setSelectedNodeId(prev => {
+    setSelectedNodeId((prev) => {
       if (prev === id) {
         navigate(`/techniques/${id}`)
         return prev
@@ -260,9 +291,9 @@ export default function TechniqueGraphPage() {
   const showLabels = view !== null && view.width < fittedViewBox.width * 0.7
 
   const usedCategories = useMemo(() => {
-    const ids = new Set((techniques ?? []).map(tech => tech.categoryId))
+    const ids = new Set((techniques ?? []).map((tech) => tech.categoryId))
     return [...(catMap?.values() ?? [])]
-      .filter(c => ids.has(c.id))
+      .filter((c) => ids.has(c.id))
       .sort((a, b) => a.id - b.id)
   }, [techniques, catMap])
 
@@ -270,10 +301,15 @@ export default function TechniqueGraphPage() {
     <div className="h-full flex flex-col bg-zinc-950">
       {/* Header */}
       <div className="shrink-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 -ml-2 text-zinc-400 active:text-zinc-100"
+        >
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
-        <h1 className="flex-1 font-bold text-zinc-100 truncate">{t('Technique Graph')}</h1>
+        <h1 className="flex-1 font-bold text-zinc-100 truncate">
+          {t('Technique Graph')}
+        </h1>
       </div>
 
       {/* Graph canvas */}
@@ -301,14 +337,23 @@ export default function TechniqueGraphPage() {
               onWheel={onWheel}
             >
               {/* Edges */}
-              {(connections ?? []).map(c => {
+              {(connections ?? []).map((c) => {
                 const a = positions.get(c.fromTechniqueId)
                 const b = positions.get(c.toTechniqueId)
                 if (!a || !b) return null
-                const highlighted = activeNodeId !== null && (c.fromTechniqueId === activeNodeId || c.toTechniqueId === activeNodeId)
+                const highlighted =
+                  activeNodeId !== null &&
+                  (c.fromTechniqueId === activeNodeId ||
+                    c.toTechniqueId === activeNodeId)
                 const dimmed = activeNodeId !== null && !highlighted
-                const typeLabel = connectionTypeLabel(c.connectionType, CONNECTION_LABELS[c.connectionType], language)
-                const edgeColor = highlighted ? EDGE_COLORS[c.connectionType] : DEFAULT_EDGE_COLOR
+                const typeLabel = connectionTypeLabel(
+                  c.connectionType,
+                  CONNECTION_LABELS[c.connectionType],
+                  language,
+                )
+                const edgeColor = highlighted
+                  ? EDGE_COLORS[c.connectionType]
+                  : DEFAULT_EDGE_COLOR
                 const dx = b.x - a.x
                 const dy = b.y - a.y
                 const dist = Math.max(Math.hypot(dx, dy), 0.001)
@@ -327,8 +372,14 @@ export default function TechniqueGraphPage() {
                       y2={y2}
                       stroke={edgeColor}
                       strokeWidth={highlighted ? 2.4 : 1.8}
-                      strokeOpacity={dimmed ? DIMMED_EDGE_OPACITY : highlighted ? 0.98 : 0.56}
-                      markerEnd={highlighted ? `url(#tg-arrow-${c.connectionType})` : undefined}
+                      strokeOpacity={
+                        dimmed ? DIMMED_EDGE_OPACITY : highlighted ? 0.98 : 0.56
+                      }
+                      markerEnd={
+                        highlighted
+                          ? `url(#tg-arrow-${c.connectionType})`
+                          : undefined
+                      }
                     />
                     {!isTouchGraph && <title>{typeLabel}</title>}
                   </g>
@@ -336,7 +387,7 @@ export default function TechniqueGraphPage() {
               })}
 
               {/* Nodes — coloured by category */}
-              {(techniques ?? []).map(tech => {
+              {(techniques ?? []).map((tech) => {
                 const p = positions.get(tech.id)
                 if (!p) return null
                 const color = categoryColor(tech.categoryId)
@@ -357,9 +408,18 @@ export default function TechniqueGraphPage() {
                       }
                       navigate(`/techniques/${tech.id}`)
                     }}
-                    onPointerEnter={isTouchGraph ? undefined : () => setHoveredNodeId(tech.id)}
-                    onPointerLeave={isTouchGraph ? undefined : () => setHoveredNodeId(prev => (prev === tech.id ? null : prev))}
-                    onKeyDown={e => {
+                    onPointerEnter={
+                      isTouchGraph ? undefined : () => setHoveredNodeId(tech.id)
+                    }
+                    onPointerLeave={
+                      isTouchGraph
+                        ? undefined
+                        : () =>
+                            setHoveredNodeId((prev) =>
+                              prev === tech.id ? null : prev,
+                            )
+                    }
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault()
                         navigate(`/techniques/${tech.id}`)
@@ -368,10 +428,30 @@ export default function TechniqueGraphPage() {
                     aria-label={tech.name}
                   >
                     {highlighted && (
-                      <circle cx={p.x} cy={p.y} r={NODE_RADIUS + 4.5} fill="none" stroke={color} strokeWidth={3} />
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r={NODE_RADIUS + 4.5}
+                        fill="none"
+                        stroke={color}
+                        strokeWidth={3}
+                      />
                     )}
-                    <circle cx={p.x} cy={p.y} r={NODE_RADIUS} fill="#18181b" stroke="#3f3f46" strokeWidth={1.4} />
-                    <circle cx={p.x} cy={p.y} r={NODE_RADIUS - 5} fill={color} fillOpacity={highlighted ? 0.5 : 0.28} />
+                    <circle
+                      cx={p.x}
+                      cy={p.y}
+                      r={NODE_RADIUS}
+                      fill="#18181b"
+                      stroke="#3f3f46"
+                      strokeWidth={1.4}
+                    />
+                    <circle
+                      cx={p.x}
+                      cy={p.y}
+                      r={NODE_RADIUS - 5}
+                      fill={color}
+                      fillOpacity={highlighted ? 0.5 : 0.28}
+                    />
                     {showLabels && (
                       <text
                         x={p.x}
@@ -409,14 +489,14 @@ export default function TechniqueGraphPage() {
             {/* Zoom controls */}
             <div className="absolute top-3 right-3 flex flex-col gap-1.5">
               <button
-                onClick={() => setView(v => (v ? zoomViewBox(v, 0.7) : v))}
+                onClick={() => setView((v) => (v ? zoomViewBox(v, 0.7) : v))}
                 aria-label={t('Zoom in')}
                 className="w-9 h-9 flex items-center justify-center bg-zinc-800/90 text-zinc-200 rounded-lg active:bg-zinc-700"
               >
                 <Plus size={18} strokeWidth={2.5} />
               </button>
               <button
-                onClick={() => setView(v => (v ? zoomViewBox(v, 1.4) : v))}
+                onClick={() => setView((v) => (v ? zoomViewBox(v, 1.4) : v))}
                 aria-label={t('Zoom out')}
                 className="w-9 h-9 flex items-center justify-center bg-zinc-800/90 text-zinc-200 rounded-lg active:bg-zinc-700"
               >
@@ -434,8 +514,11 @@ export default function TechniqueGraphPage() {
             {/* Category legend */}
             {usedCategories.length > 0 && (
               <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-x-3 gap-y-1.5 bg-zinc-900/85 backdrop-blur-sm rounded-xl px-3 py-2">
-                {usedCategories.map(c => (
-                  <span key={c.id} className="flex items-center gap-1.5 text-xs text-zinc-300">
+                {usedCategories.map((c) => (
+                  <span
+                    key={c.id}
+                    className="flex items-center gap-1.5 text-xs text-zinc-300"
+                  >
                     <span
                       className="w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: categoryColor(c.id) }}

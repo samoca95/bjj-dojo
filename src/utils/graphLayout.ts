@@ -35,9 +35,11 @@ export function forceDirectedLayout(
   }
 
   const idSet = new Set(nodeIds)
-  const validEdges = edges.filter(e => idSet.has(e.from) && idSet.has(e.to) && e.from !== e.to)
+  const validEdges = edges.filter(
+    (e) => idSet.has(e.from) && idSet.has(e.to) && e.from !== e.to,
+  )
   const adjacency = new Map<number, Set<number>>()
-  nodeIds.forEach(id => adjacency.set(id, new Set()))
+  nodeIds.forEach((id) => adjacency.set(id, new Set()))
   for (const edge of validEdges) {
     adjacency.get(edge.from)?.add(edge.to)
     adjacency.get(edge.to)?.add(edge.from)
@@ -65,11 +67,25 @@ export function forceDirectedLayout(
   components.sort((a, b) => b.length - a.length || a[0] - b[0])
 
   const componentGap = k * 2
-  const componentLayouts: Array<{ ids: number[]; positions: Map<number, GraphNodePosition>; minX: number; maxX: number; minY: number; maxY: number }> = []
+  const componentLayouts: Array<{
+    ids: number[]
+    positions: Map<number, GraphNodePosition>
+    minX: number
+    maxX: number
+    minY: number
+    maxY: number
+  }> = []
   for (const ids of components) {
     const componentSet = new Set(ids)
-    const componentEdges = validEdges.filter(edge => componentSet.has(edge.from) && componentSet.has(edge.to))
-    const componentPositions = runForceLayout(ids, componentEdges, iterations, k)
+    const componentEdges = validEdges.filter(
+      (edge) => componentSet.has(edge.from) && componentSet.has(edge.to),
+    )
+    const componentPositions = runForceLayout(
+      ids,
+      componentEdges,
+      iterations,
+      k,
+    )
     const bounds = computeBounds(componentPositions)
     componentLayouts.push({ ids, positions: componentPositions, ...bounds })
   }
@@ -165,8 +181,8 @@ function runForceLayout(
     for (const edge of edges) {
       const a = pos.get(edge.from)!
       const b = pos.get(edge.to)!
-      let dx = a.x - b.x
-      let dy = a.y - b.y
+      const dx = a.x - b.x
+      const dy = a.y - b.y
       let dist = Math.sqrt(dx * dx + dy * dy)
       if (dist < 0.01) dist = 0.01
       const force = (dist * dist) / k
@@ -266,10 +282,14 @@ export function parseViewBox(raw: string | null): ViewBox | null {
   try {
     const v = JSON.parse(raw) as Record<string, unknown>
     if (
-      v && typeof v === 'object' &&
-      Number.isFinite(v.x) && Number.isFinite(v.y) &&
-      Number.isFinite(v.width) && Number.isFinite(v.height) &&
-      (v.width as number) > 0 && (v.height as number) > 0
+      v &&
+      typeof v === 'object' &&
+      Number.isFinite(v.x) &&
+      Number.isFinite(v.y) &&
+      Number.isFinite(v.width) &&
+      Number.isFinite(v.height) &&
+      (v.width as number) > 0 &&
+      (v.height as number) > 0
     ) {
       return {
         x: v.x as number,

@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, fireEvent } from '@testing-library/react'
-import ConnectionGraph, { type GraphConnection } from '../components/ConnectionGraph'
+import ConnectionGraph, {
+  type GraphConnection,
+} from '../components/ConnectionGraph'
 import { categoryColor } from '../utils/categoryColor'
 import type { ConnectionType, Technique } from '../types'
 
@@ -24,7 +26,11 @@ function conn(
   direction: 'from' | 'to',
   categoryId = 1,
 ): GraphConnection {
-  return { technique: makeTechnique(id, name, categoryId), connectionType, direction }
+  return {
+    technique: makeTechnique(id, name, categoryId),
+    connectionType,
+    direction,
+  }
 }
 
 const typeName = (t: ConnectionType) => t
@@ -53,7 +59,9 @@ describe('ConnectionGraph', () => {
         connectionTypeName={typeName}
       />,
     )
-    expect(container.querySelector('svg > text')?.textContent).toContain('Mount')
+    expect(container.querySelector('svg > text')?.textContent).toContain(
+      'Mount',
+    )
   })
 
   it('renders one clickable node per unique neighbour', () => {
@@ -114,7 +122,9 @@ describe('ConnectionGraph', () => {
         connectionTypeName={typeName}
       />,
     )
-    fireEvent.keyDown(container.querySelector('g[role="button"]')!, { key: 'Enter' })
+    fireEvent.keyDown(container.querySelector('g[role="button"]')!, {
+      key: 'Enter',
+    })
     expect(onSelect).toHaveBeenCalledWith(7)
   })
 
@@ -129,7 +139,7 @@ describe('ConnectionGraph', () => {
           conn(4, 'Hip Bump', 'FOLLOW_UP', 'from'),
         ]}
         onSelect={vi.fn()}
-        connectionTypeName={t => (t === 'FOLLOW_UP' ? 'Follow-up' : 'Setup')}
+        connectionTypeName={(t) => (t === 'FOLLOW_UP' ? 'Follow-up' : 'Setup')}
       />,
     )
     expect(getByText('Follow-up')).toBeInTheDocument()

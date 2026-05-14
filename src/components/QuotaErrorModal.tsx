@@ -31,7 +31,10 @@ export default function QuotaErrorModal() {
             {t('Dismiss')}
           </button>
           <button
-            onClick={() => { setOpen(false); navigate('/settings') }}
+            onClick={() => {
+              setOpen(false)
+              navigate('/settings')
+            }}
             className="rounded-xl px-3 py-2 bg-gold text-black text-sm font-semibold"
           >
             {t('Export backup')}

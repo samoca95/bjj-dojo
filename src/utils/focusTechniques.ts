@@ -15,6 +15,11 @@ export function getFocusTechniqueIds(): number[] {
 
 export function setFocusTechniqueIds(ids: number[]) {
   if (typeof window === 'undefined') return
-  const unique = Array.from(new Set(ids)).filter(id => Number.isInteger(id) && id > 0)
-  window.localStorage.setItem(FOCUS_TECHNIQUE_IDS_STORAGE_KEY, JSON.stringify(unique))
+  const unique = Array.from(new Set(ids)).filter(
+    (id) => Number.isInteger(id) && id > 0,
+  )
+  window.localStorage.setItem(
+    FOCUS_TECHNIQUE_IDS_STORAGE_KEY,
+    JSON.stringify(unique),
+  )
 }

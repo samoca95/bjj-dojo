@@ -11,12 +11,18 @@ const PROMPTED_KEY = 'bjj-dojo:user-name-prompted'
 
 export function getUserName(): string {
   if (typeof window === 'undefined') return ''
-  return (window.localStorage.getItem(NAME_KEY) ?? '').slice(0, MAX_USER_NAME_LENGTH)
+  return (window.localStorage.getItem(NAME_KEY) ?? '').slice(
+    0,
+    MAX_USER_NAME_LENGTH,
+  )
 }
 
 export function setUserName(name: string) {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(NAME_KEY, name.trim().slice(0, MAX_USER_NAME_LENGTH))
+  window.localStorage.setItem(
+    NAME_KEY,
+    name.trim().slice(0, MAX_USER_NAME_LENGTH),
+  )
 }
 
 /** Whether the user has already been asked for their name on first share. */

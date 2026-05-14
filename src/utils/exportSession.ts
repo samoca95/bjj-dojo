@@ -77,7 +77,10 @@ const LABELS: Record<AppLanguage, ExportLabels> = {
 
 function formatDate(epoch: number, locale?: string) {
   return new Date(epoch).toLocaleDateString(locale, {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   })
 }
 
@@ -88,7 +91,11 @@ export function buildSessionText(
 ): string {
   const L = LABELS[language]
   const { session, clubName, techniques, givenTaps, receivedTaps } = data
-  const typeLabel = sessionTypeLabel(session.sessionType, SESSION_TYPE_LABELS[session.sessionType], language)
+  const typeLabel = sessionTypeLabel(
+    session.sessionType,
+    SESSION_TYPE_LABELS[session.sessionType],
+    language,
+  )
 
   const lines: string[] = []
   lines.push(L.title)
@@ -156,37 +163,56 @@ export function buildSessionHtml(
 ): string {
   const L = LABELS[language]
   const { session, clubName, techniques, givenTaps, receivedTaps } = data
-  const typeLabel = sessionTypeLabel(session.sessionType, SESSION_TYPE_LABELS[session.sessionType], language)
+  const typeLabel = sessionTypeLabel(
+    session.sessionType,
+    SESSION_TYPE_LABELS[session.sessionType],
+    language,
+  )
   const dateText = formatDate(session.date, locale)
 
-  const techList = techniques.length === 0
-    ? `<p><em>${escapeHtml(L.none)}</em></p>`
-    : `<ul>${techniques.map(({ technique, notes }) => {
-        const noteHtml = notes
-          ? `<div style="color:#555;font-size:0.9em;white-space:pre-wrap;margin-top:2px">${escapeHtml(notes)}</div>`
-          : ''
-        return `<li>${escapeHtml(technique.name)}${noteHtml}</li>`
-      }).join('')}</ul>`
+  const techList =
+    techniques.length === 0
+      ? `<p><em>${escapeHtml(L.none)}</em></p>`
+      : `<ul>${techniques
+          .map(({ technique, notes }) => {
+            const noteHtml = notes
+              ? `<div style="color:#555;font-size:0.9em;white-space:pre-wrap;margin-top:2px">${escapeHtml(notes)}</div>`
+              : ''
+            return `<li>${escapeHtml(technique.name)}${noteHtml}</li>`
+          })
+          .join('')}</ul>`
 
-  const tapsSection = (givenTaps.length > 0 || receivedTaps.length > 0)
-    ? `
+  const tapsSection =
+    givenTaps.length > 0 || receivedTaps.length > 0
+      ? `
         <h2>${escapeHtml(L.taps)}</h2>
-        ${givenTaps.length > 0 ? `
+        ${
+          givenTaps.length > 0
+            ? `
           <h3>${escapeHtml(L.given)} (${givenTaps.length})</h3>
-          <ul>${givenTaps.map(t => `<li>${escapeHtml(t.techniqueName)}</li>`).join('')}</ul>
-        ` : ''}
-        ${receivedTaps.length > 0 ? `
+          <ul>${givenTaps.map((t) => `<li>${escapeHtml(t.techniqueName)}</li>`).join('')}</ul>
+        `
+            : ''
+        }
+        ${
+          receivedTaps.length > 0
+            ? `
           <h3>${escapeHtml(L.received)} (${receivedTaps.length})</h3>
-          <ul>${receivedTaps.map(t => `<li>${escapeHtml(t.techniqueName)}</li>`).join('')}</ul>
-        ` : ''}
+          <ul>${receivedTaps.map((t) => `<li>${escapeHtml(t.techniqueName)}</li>`).join('')}</ul>
+        `
+            : ''
+        }
       `
-    : ''
+      : ''
 
-  const notesSection = session.notes && session.notes.trim()
-    ? `<h2>${escapeHtml(L.notes)}</h2><p style="white-space:pre-wrap">${escapeHtml(session.notes)}</p>`
-    : ''
+  const notesSection =
+    session.notes && session.notes.trim()
+      ? `<h2>${escapeHtml(L.notes)}</h2><p style="white-space:pre-wrap">${escapeHtml(session.notes)}</p>`
+      : ''
 
-  const clubLine = clubName ? `<p><strong>${escapeHtml(L.club)}:</strong> ${escapeHtml(clubName)}</p>` : ''
+  const clubLine = clubName
+    ? `<p><strong>${escapeHtml(L.club)}:</strong> ${escapeHtml(clubName)}</p>`
+    : ''
 
   return `<!doctype html>
 <html lang="${language}">
@@ -253,7 +279,11 @@ export async function exportSession(
 
   const nav = typeof navigator !== 'undefined' ? navigator : undefined
 
-  if (nav && typeof nav.canShare === 'function' && typeof nav.share === 'function') {
+  if (
+    nav &&
+    typeof nav.canShare === 'function' &&
+    typeof nav.share === 'function'
+  ) {
     try {
       const file = new File([text], `${base}.txt`, { type: 'text/plain' })
       if (nav.canShare({ files: [file] })) {
@@ -261,7 +291,8 @@ export async function exportSession(
         return { method: 'share' }
       }
     } catch (err) {
-      if ((err as DOMException)?.name === 'AbortError') return { method: 'share' }
+      if ((err as DOMException)?.name === 'AbortError')
+        return { method: 'share' }
     }
   }
 
@@ -270,11 +301,15 @@ export async function exportSession(
       await nav.share({ title, text })
       return { method: 'share' }
     } catch (err) {
-      if ((err as DOMException)?.name === 'AbortError') return { method: 'share' }
+      if ((err as DOMException)?.name === 'AbortError')
+        return { method: 'share' }
     }
   }
 
-  downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${base}.html`)
+  downloadBlob(
+    new Blob([html], { type: 'text/html;charset=utf-8' }),
+    `${base}.html`,
+  )
   return { method: 'download' }
 }
 
@@ -293,30 +328,39 @@ const CAPTION_LABELS: Record<AppLanguage, CaptionLabels> = {
     session: (d, t) => `🥋 ${d} min ${t} session`,
     at: 'at',
     drilled: 'Drilled',
-    taps: c => `${c} ${c === 1 ? 'submission' : 'submissions'} landed 🔥`,
+    taps: (c) => `${c} ${c === 1 ? 'submission' : 'submissions'} landed 🔥`,
     hashtags: '#bjj #jiujitsu #grappling #bjjdojo',
   },
   es: {
     session: (d, t) => `🥋 Sesión de ${t} de ${d} min`,
     at: 'en',
     drilled: 'Técnicas',
-    taps: c => `${c} ${c === 1 ? 'sumisión aplicada' : 'sumisiones aplicadas'} 🔥`,
+    taps: (c) =>
+      `${c} ${c === 1 ? 'sumisión aplicada' : 'sumisiones aplicadas'} 🔥`,
     hashtags: '#bjj #jiujitsu #grappling #bjjdojo',
   },
   fr: {
     session: (d, t) => `🥋 Session ${t} de ${d} min`,
     at: 'à',
     drilled: 'Travaillé',
-    taps: c => `${c} ${c === 1 ? 'soumission réussie' : 'soumissions réussies'} 🔥`,
+    taps: (c) =>
+      `${c} ${c === 1 ? 'soumission réussie' : 'soumissions réussies'} 🔥`,
     hashtags: '#bjj #jiujitsu #grappling #bjjdojo',
   },
 }
 
 /** Builds a short, punchy caption suited to a social media post. */
-export function buildShareCaption(data: SessionExportData, language: AppLanguage): string {
+export function buildShareCaption(
+  data: SessionExportData,
+  language: AppLanguage,
+): string {
   const C = CAPTION_LABELS[language] ?? CAPTION_LABELS.en
   const { session, clubName, techniques, givenTaps } = data
-  const typeLabel = sessionTypeLabel(session.sessionType, SESSION_TYPE_LABELS[session.sessionType], language)
+  const typeLabel = sessionTypeLabel(
+    session.sessionType,
+    SESSION_TYPE_LABELS[session.sessionType],
+    language,
+  )
 
   const lines: string[] = []
   let header = C.session(session.durationMinutes, typeLabel)
@@ -324,7 +368,7 @@ export function buildShareCaption(data: SessionExportData, language: AppLanguage
   lines.push(header)
 
   if (techniques.length > 0) {
-    const names = techniques.map(t => t.technique.name)
+    const names = techniques.map((t) => t.technique.name)
     const shown = names.slice(0, 3)
     const extra = names.length - shown.length
     let techLine = `${C.drilled}: ${shown.join(', ')}`
@@ -357,7 +401,11 @@ export async function shareSessionImage(
   const title = LABELS[language].title
   const nav = typeof navigator !== 'undefined' ? navigator : undefined
 
-  if (nav && typeof nav.canShare === 'function' && typeof nav.share === 'function') {
+  if (
+    nav &&
+    typeof nav.canShare === 'function' &&
+    typeof nav.share === 'function'
+  ) {
     try {
       const file = new File([blob], filename, { type: 'image/png' })
       if (nav.canShare({ files: [file] })) {
@@ -365,7 +413,8 @@ export async function shareSessionImage(
         return { method: 'share' }
       }
     } catch (err) {
-      if ((err as DOMException)?.name === 'AbortError') return { method: 'share' }
+      if ((err as DOMException)?.name === 'AbortError')
+        return { method: 'share' }
     }
   }
 
@@ -374,11 +423,19 @@ export async function shareSessionImage(
 }
 
 export function openWhatsAppShare(text: string) {
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
+  window.open(
+    `https://wa.me/?text=${encodeURIComponent(text)}`,
+    '_blank',
+    'noopener',
+  )
 }
 
 export function openTwitterShare(text: string) {
-  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
+  window.open(
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
+    '_blank',
+    'noopener',
+  )
 }
 
 export async function copyToClipboard(text: string): Promise<boolean> {

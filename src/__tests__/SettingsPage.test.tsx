@@ -33,7 +33,9 @@ describe('SettingsPage — theme mode', () => {
     )
     await user.click(screen.getByRole('button', { name: 'Light' }))
     expect(localStorage.getItem(APP_THEME_STORAGE_KEY)).toBe('light')
-    expect(document.documentElement.classList.contains('theme-light')).toBe(true)
+    expect(document.documentElement.classList.contains('theme-light')).toBe(
+      true,
+    )
   })
 
   it('removes light class when Dark is selected', async () => {
@@ -47,7 +49,9 @@ describe('SettingsPage — theme mode', () => {
     )
     await user.click(screen.getByRole('button', { name: 'Dark' }))
     expect(localStorage.getItem(APP_THEME_STORAGE_KEY)).toBe('black')
-    expect(document.documentElement.classList.contains('theme-light')).toBe(false)
+    expect(document.documentElement.classList.contains('theme-light')).toBe(
+      false,
+    )
   })
 
   it('changes app language to Spanish', async () => {
@@ -68,13 +72,23 @@ describe('SettingsPage — theme mode', () => {
         <SettingsPage />
       </MemoryRouter>,
     )
-    expect(screen.getByRole('button', { name: /Session type/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Categories/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /Session type/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /Categories/i }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Clubs/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Goals/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Home section order/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Dev settings/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Data & reset/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /Home section order/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /Dev settings/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /Data & reset/i }),
+    ).toBeInTheDocument()
   })
 
   it('shows app info and github link at the bottom', () => {

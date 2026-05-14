@@ -68,7 +68,7 @@ export const SHARE_CARD_THEMES: ShareCardTheme[] = [
 ]
 
 export function getShareCardTheme(id: string): ShareCardTheme {
-  return SHARE_CARD_THEMES.find(t => t.id === id) ?? SHARE_CARD_THEMES[0]
+  return SHARE_CARD_THEMES.find((t) => t.id === id) ?? SHARE_CARD_THEMES[0]
 }
 
 /** Pan/zoom applied to a user-supplied background photo. */
@@ -111,7 +111,8 @@ const DIMENSIONS: Record<ShareCardFormat, { w: number; h: number }> = {
   story: { w: 1080, h: 1920 },
 }
 
-const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+const FONT =
+  'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
 
 const SESSION_TYPE_HEX: Record<SessionType, { bg: string; fg: string }> = {
   GI: { bg: '#1e3a8a', fg: '#bfdbfe' },
@@ -121,7 +122,10 @@ const SESSION_TYPE_HEX: Record<SessionType, { bg: string; fg: string }> = {
   DRILLING: { bg: '#78350f', fg: '#fde68a' },
 }
 
-const BELT_HEX: Record<BeltColor, { belt: string; tip: string; stripe: string }> = {
+const BELT_HEX: Record<
+  BeltColor,
+  { belt: string; tip: string; stripe: string }
+> = {
   white: { belt: '#e7e5e4', tip: '#292524', stripe: '#ffffff' },
   blue: { belt: '#1d4ed8', tip: '#0a0a0a', stripe: '#ffffff' },
   purple: { belt: '#6d28d9', tip: '#0a0a0a', stripe: '#ffffff' },
@@ -186,7 +190,9 @@ const LABELS: Record<AppLanguage, CardLabels> = {
 }
 
 /** Loads a user-picked file into something drawable on a canvas. */
-export async function loadShareImage(file: File): Promise<ImageBitmap | HTMLImageElement> {
+export async function loadShareImage(
+  file: File,
+): Promise<ImageBitmap | HTMLImageElement> {
   if (typeof createImageBitmap === 'function') {
     try {
       return await createImageBitmap(file, { imageOrientation: 'from-image' })
@@ -208,7 +214,12 @@ export async function loadShareImage(file: File): Promise<ImageBitmap | HTMLImag
 }
 
 function imageSize(img: CanvasImageSource): { w: number; h: number } {
-  const any = img as { naturalWidth?: number; naturalHeight?: number; width?: number; height?: number }
+  const any = img as {
+    naturalWidth?: number
+    naturalHeight?: number
+    width?: number
+    height?: number
+  }
   return {
     w: any.naturalWidth || any.width || 0,
     h: any.naturalHeight || any.height || 0,
@@ -256,7 +267,11 @@ function drawBackgroundImage(
 
 function roundRectPath(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, w: number, h: number, r: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
 ) {
   const rr = Math.max(0, Math.min(r, w / 2, h / 2))
   ctx.beginPath()
@@ -268,10 +283,15 @@ function roundRectPath(
   ctx.closePath()
 }
 
-function truncateToWidth(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+function truncateToWidth(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+): string {
   if (ctx.measureText(text).width <= maxWidth) return text
   let t = text
-  while (t.length > 0 && ctx.measureText(`${t}…`).width > maxWidth) t = t.slice(0, -1)
+  while (t.length > 0 && ctx.measureText(`${t}…`).width > maxWidth)
+    t = t.slice(0, -1)
   return `${t.trimEnd()}…`
 }
 
@@ -302,17 +322,26 @@ function wrapText(
 
 function formatCardDate(epoch: number, locale?: string): string {
   return new Date(epoch).toLocaleDateString(locale, {
-    weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   })
 }
 
 function setLetterSpacing(ctx: CanvasRenderingContext2D, value: string) {
   if ('letterSpacing' in ctx) {
-    (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = value
+    ;(
+      ctx as CanvasRenderingContext2D & { letterSpacing: string }
+    ).letterSpacing = value
   }
 }
 
-function withAlpha(ctx: CanvasRenderingContext2D, alpha: number, draw: () => void) {
+function withAlpha(
+  ctx: CanvasRenderingContext2D,
+  alpha: number,
+  draw: () => void,
+) {
   const prev = ctx.globalAlpha
   ctx.globalAlpha = alpha
   draw()
@@ -421,7 +450,8 @@ export async function renderShareCard(
   const { w, h } = DIMENSIONS[options.format]
   const { session, clubName, techniques, givenTaps, receivedTaps } = data
 
-  const pixelScale = options.pixelScale && options.pixelScale > 0 ? options.pixelScale : 1
+  const pixelScale =
+    options.pixelScale && options.pixelScale > 0 ? options.pixelScale : 1
   const canvas = document.createElement('canvas')
   canvas.width = Math.round(w * pixelScale)
   canvas.height = Math.round(h * pixelScale)
@@ -439,7 +469,13 @@ export async function renderShareCard(
 
   // --- Background ---------------------------------------------------------
   if (options.background) {
-    drawBackgroundImage(ctx, options.background, w, h, options.backgroundTransform ?? DEFAULT_TRANSFORM)
+    drawBackgroundImage(
+      ctx,
+      options.background,
+      w,
+      h,
+      options.backgroundTransform ?? DEFAULT_TRANSFORM,
+    )
   } else {
     const g = ctx.createLinearGradient(0, 0, w, h)
     g.addColorStop(0, theme.gradient[0])
@@ -447,7 +483,14 @@ export async function renderShareCard(
     g.addColorStop(1, theme.gradient[2])
     ctx.fillStyle = g
     ctx.fillRect(0, 0, w, h)
-    const glow = ctx.createRadialGradient(w * 0.5, h * 0.22, 0, w * 0.5, h * 0.22, w * 0.95)
+    const glow = ctx.createRadialGradient(
+      w * 0.5,
+      h * 0.22,
+      0,
+      w * 0.5,
+      h * 0.22,
+      w * 0.95,
+    )
     glow.addColorStop(0, theme.glow)
     glow.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = glow
@@ -479,7 +522,9 @@ export async function renderShareCard(
   setLetterSpacing(ctx, '0px')
 
   const typeLabel = sessionTypeLabel(
-    session.sessionType, SESSION_TYPE_LABELS[session.sessionType], language,
+    session.sessionType,
+    SESSION_TYPE_LABELS[session.sessionType],
+    language,
   ).toUpperCase()
   const badge = SESSION_TYPE_HEX[session.sessionType]
   ctx.font = `700 26px ${FONT}`
@@ -512,7 +557,12 @@ export async function renderShareCard(
   // --- Date ---------------------------------------------------------------
   ctx.fillStyle = '#ffffff'
   ctx.font = `800 60px ${FONT}`
-  const dateLines = wrapText(ctx, formatCardDate(session.date, locale), contentW, 2)
+  const dateLines = wrapText(
+    ctx,
+    formatCardDate(session.date, locale),
+    contentW,
+    2,
+  )
   for (const line of dateLines) {
     ctx.fillText(line, PAD, y)
     y += 72
@@ -531,7 +581,10 @@ export async function renderShareCard(
   y += 36
 
   // --- Stat tiles ---------------------------------------------------------
-  const tiles: { label: string; render: (x: number, ty: number, tw: number) => void }[] = []
+  const tiles: {
+    label: string
+    render: (x: number, ty: number, tw: number) => void
+  }[] = []
 
   tiles.push({
     label: 'TIME',
@@ -554,7 +607,8 @@ export async function renderShareCard(
       for (let i = 0; i < 5; i++) {
         const dx = x + i * (dot + gap)
         roundRectPath(ctx, dx, ty + 6, dot, dot, 8)
-        ctx.fillStyle = i < session.energyLevel ? theme.accent : 'rgba(255,255,255,0.16)'
+        ctx.fillStyle =
+          i < session.energyLevel ? theme.accent : 'rgba(255,255,255,0.16)'
         ctx.fill()
       }
     },
@@ -662,7 +716,11 @@ export async function renderShareCard(
     ctx.fillStyle = 'rgba(255,255,255,0.75)'
     ctx.font = `600 26px ${FONT}`
     if (options.qrUrl) {
-      ctx.fillText(truncateToWidth(ctx, tapText, footerRight - PAD), PAD, footerLineY + 64)
+      ctx.fillText(
+        truncateToWidth(ctx, tapText, footerRight - PAD),
+        PAD,
+        footerLineY + 64,
+      )
     } else {
       ctx.textAlign = 'right'
       ctx.fillText(tapText, w - PAD, footerLineY + 26)
@@ -686,7 +744,8 @@ export async function renderShareCard(
 
   return await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
-      blob => (blob ? resolve(blob) : reject(new Error('Could not render image'))),
+      (blob) =>
+        blob ? resolve(blob) : reject(new Error('Could not render image')),
       'image/png',
     )
   })

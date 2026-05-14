@@ -53,19 +53,32 @@ describe('buildSessionText', () => {
 
   it('omits the club line when no club is given and includes it when present', () => {
     expect(buildSessionText(baseData, 'en', 'en-US')).not.toContain('Club:')
-    const withClub = buildSessionText({ ...baseData, clubName: 'Main Dojo' }, 'en', 'en-US')
+    const withClub = buildSessionText(
+      { ...baseData, clubName: 'Main Dojo' },
+      'en',
+      'en-US',
+    )
     expect(withClub).toContain('Club: Main Dojo')
   })
 
   it('shows "None" when no techniques were practised', () => {
-    const text = buildSessionText({ ...baseData, techniques: [] }, 'en', 'en-US')
+    const text = buildSessionText(
+      { ...baseData, techniques: [] },
+      'en',
+      'en-US',
+    )
     expect(text).toContain('Techniques practiced:')
     expect(text).toContain('— None')
   })
 
   it('indents technique notes underneath the technique', () => {
     const text = buildSessionText(
-      { ...baseData, techniques: [{ technique: makeTechnique(1, 'Armbar'), notes: 'keep elbow tight' }] },
+      {
+        ...baseData,
+        techniques: [
+          { technique: makeTechnique(1, 'Armbar'), notes: 'keep elbow tight' },
+        ],
+      },
       'en',
       'en-US',
     )
@@ -89,7 +102,9 @@ describe('buildSessionText', () => {
   })
 
   it('omits the taps section when there are no taps', () => {
-    expect(buildSessionText(baseData, 'en', 'en-US')).not.toContain('Taps / Submissions')
+    expect(buildSessionText(baseData, 'en', 'en-US')).not.toContain(
+      'Taps / Submissions',
+    )
   })
 
   it('includes the notes section only when notes are present', () => {
@@ -129,7 +144,9 @@ describe('buildSessionHtml', () => {
     const html = buildSessionHtml(
       {
         ...baseData,
-        techniques: [{ technique: makeTechnique(1, '<script>alert(1)</script>') }],
+        techniques: [
+          { technique: makeTechnique(1, '<script>alert(1)</script>') },
+        ],
       },
       'en',
       'en-US',
@@ -140,7 +157,10 @@ describe('buildSessionHtml', () => {
 
   it('escapes HTML in session notes', () => {
     const html = buildSessionHtml(
-      { ...baseData, session: makeSession({ notes: '<img src=x onerror=alert(1)>' }) },
+      {
+        ...baseData,
+        session: makeSession({ notes: '<img src=x onerror=alert(1)>' }),
+      },
       'en',
       'en-US',
     )
@@ -158,7 +178,10 @@ describe('buildShareCaption', () => {
   })
 
   it('appends the club when present', () => {
-    const caption = buildShareCaption({ ...baseData, clubName: 'Main Dojo' }, 'en')
+    const caption = buildShareCaption(
+      { ...baseData, clubName: 'Main Dojo' },
+      'en',
+    )
     expect(caption).toContain('at Main Dojo')
   })
 
@@ -215,7 +238,9 @@ describe('exportSession', () => {
     expect(share).toHaveBeenCalledTimes(1)
     const shareArg = share.mock.calls[0][0]
     expect(shareArg.files).toHaveLength(1)
-    expect(shareArg.files[0].name).toMatch(/^bjj-session-\d{4}-\d{2}-\d{2}\.txt$/)
+    expect(shareArg.files[0].name).toMatch(
+      /^bjj-session-\d{4}-\d{2}-\d{2}\.txt$/,
+    )
   })
 
   it('falls back to sharing plain text when file sharing is unavailable', async () => {
@@ -230,7 +255,9 @@ describe('exportSession', () => {
   })
 
   it('treats a user-cancelled share (AbortError) as a successful share', async () => {
-    const share = vi.fn().mockRejectedValue(new DOMException('cancelled', 'AbortError'))
+    const share = vi
+      .fn()
+      .mockRejectedValue(new DOMException('cancelled', 'AbortError'))
     const canShare = vi.fn().mockReturnValue(true)
     vi.stubGlobal('navigator', { canShare, share })
 
@@ -244,9 +271,15 @@ describe('exportSession', () => {
     vi.stubGlobal('navigator', {})
     const createObjectURL = vi.fn(() => 'blob:mock-url')
     const revokeObjectURL = vi.fn()
-    ;(URL as unknown as { createObjectURL: typeof createObjectURL }).createObjectURL = createObjectURL
-    ;(URL as unknown as { revokeObjectURL: typeof revokeObjectURL }).revokeObjectURL = revokeObjectURL
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    ;(
+      URL as unknown as { createObjectURL: typeof createObjectURL }
+    ).createObjectURL = createObjectURL
+    ;(
+      URL as unknown as { revokeObjectURL: typeof revokeObjectURL }
+    ).revokeObjectURL = revokeObjectURL
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => {})
 
     const result = await exportSession(baseData, 'en', 'en-US')
 

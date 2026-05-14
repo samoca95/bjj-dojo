@@ -13,8 +13,11 @@ import {
 export default function SettingsHomeSectionsPage() {
   const navigate = useNavigate()
   const { language, t } = useI18n()
-  const [sectionOrder, setSectionOrder] = useState<HomeSectionId[]>(getHomeSectionOrder)
-  const [sectionVisibility, setSectionVisibility] = useState(getHomeSectionVisibility)
+  const [sectionOrder, setSectionOrder] =
+    useState<HomeSectionId[]>(getHomeSectionOrder)
+  const [sectionVisibility, setSectionVisibility] = useState(
+    getHomeSectionVisibility,
+  )
 
   const moveSection = (index: number, delta: number) => {
     const next = [...sectionOrder]
@@ -45,11 +48,18 @@ export default function SettingsHomeSectionsPage() {
   return (
     <div className="min-h-full bg-zinc-950">
       <div className="sticky top-0 bg-zinc-950/90 backdrop-blur-sm px-4 pt-12 pb-4 z-10 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-zinc-400 active:text-zinc-100">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 -ml-2 text-zinc-400 active:text-zinc-100"
+        >
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <h1 className="flex-1 font-bold text-zinc-100">
-          {language === 'es' ? 'Orden del inicio' : language === 'fr' ? "Ordre de l’accueil" : 'Home section order'}
+          {language === 'es'
+            ? 'Orden del inicio'
+            : language === 'fr'
+              ? 'Ordre de l’accueil'
+              : 'Home section order'}
         </h1>
       </div>
 
@@ -59,7 +69,9 @@ export default function SettingsHomeSectionsPage() {
             {t('HOME SECTION ORDER')}
           </h2>
           <p className="text-xs text-zinc-500">
-            {t('Reorder the sections on the home screen and hide the ones you do not want to see.')}
+            {t(
+              'Reorder the sections on the home screen and hide the ones you do not want to see.',
+            )}
           </p>
           <div className="space-y-2">
             {sectionOrder.map((id, index) => (
@@ -67,13 +79,23 @@ export default function SettingsHomeSectionsPage() {
                 key={id}
                 className="flex items-center gap-2 bg-zinc-800 rounded-xl px-3 py-2"
               >
-                <span className="flex-1 text-sm text-zinc-100">{sectionLabels[id]}</span>
+                <span className="flex-1 text-sm text-zinc-100">
+                  {sectionLabels[id]}
+                </span>
                 <button
                   onClick={() => toggleSectionVisibility(id)}
-                  aria-label={sectionVisibility[id] ? t('Hide section') : t('Show section')}
+                  aria-label={
+                    sectionVisibility[id]
+                      ? t('Hide section')
+                      : t('Show section')
+                  }
                   className="p-1.5 rounded-lg text-zinc-300 active:bg-zinc-700"
                 >
-                  {sectionVisibility[id] ? <Eye size={16} strokeWidth={2} /> : <EyeOff size={16} strokeWidth={2} />}
+                  {sectionVisibility[id] ? (
+                    <Eye size={16} strokeWidth={2} />
+                  ) : (
+                    <EyeOff size={16} strokeWidth={2} />
+                  )}
                 </button>
                 <button
                   onClick={() => moveSection(index, -1)}

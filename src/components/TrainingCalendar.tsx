@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Session, SessionType } from '../types'
-import { getSessionTypeIcons, SESSION_TYPE_ICONS_UPDATED_EVENT, type SessionTypeIconsMap } from '../utils/sessionTypeIcons'
+import {
+  getSessionTypeIcons,
+  SESSION_TYPE_ICONS_UPDATED_EVENT,
+  type SessionTypeIconsMap,
+} from '../utils/sessionTypeIcons'
 import { APP_THEME_UPDATED_EVENT, getAppTheme } from '../utils/theme'
 import { useI18n } from '../i18n'
 
@@ -21,7 +25,10 @@ const SESSION_TYPE_COLORS_LIGHT: Record<SessionType, string> = {
   DRILLING: 'rgba(253, 230, 138, 0.95)',
 }
 
-function buildCircleBackground(types: SessionType[], palette: Record<SessionType, string>): string | undefined {
+function buildCircleBackground(
+  types: SessionType[],
+  palette: Record<SessionType, string>,
+): string | undefined {
   if (types.length === 0) return undefined
   if (types.length === 1) return palette[types[0]]
   const step = 100 / types.length
@@ -50,13 +57,18 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
     const now = new Date()
     return new Date(now.getFullYear(), now.getMonth(), 1)
   })
-  const [iconsMap, setIconsMap] = useState<SessionTypeIconsMap>(getSessionTypeIcons())
-  const [isLightTheme, setIsLightTheme] = useState(() => getAppTheme() === 'light')
+  const [iconsMap, setIconsMap] = useState<SessionTypeIconsMap>(
+    getSessionTypeIcons(),
+  )
+  const [isLightTheme, setIsLightTheme] = useState(
+    () => getAppTheme() === 'light',
+  )
 
   useEffect(() => {
     const sync = () => setIconsMap(getSessionTypeIcons())
     window.addEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
-    return () => window.removeEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
+    return () =>
+      window.removeEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
   }, [])
 
   useEffect(() => {
@@ -97,7 +109,9 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-xs font-semibold tracking-widest text-gold">{t('TRAINING CALENDAR')}</h2>
+        <h2 className="text-xs font-semibold tracking-widest text-gold">
+          {t('TRAINING CALENDAR')}
+        </h2>
         <div className="flex items-center gap-1">
           <button
             onClick={goPrev}
@@ -106,7 +120,9 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
           >
             <ChevronLeft size={14} strokeWidth={2} />
           </button>
-          <span className="text-xs text-zinc-500 capitalize min-w-[7rem] text-center">{monthLabel}</span>
+          <span className="text-xs text-zinc-500 capitalize min-w-[7rem] text-center">
+            {monthLabel}
+          </span>
           <button
             onClick={goNext}
             aria-label={t('Next month')}
@@ -119,8 +135,11 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
 
       {/* Weekday headers — single letter, minimalist */}
       <div className="grid grid-cols-7 gap-1 px-1">
-        {WEEKDAY_KEYS.map(key => (
-          <div key={key} className="text-[11px] font-medium uppercase text-zinc-500 text-center">
+        {WEEKDAY_KEYS.map((key) => (
+          <div
+            key={key}
+            className="text-[11px] font-medium uppercase text-zinc-500 text-center"
+          >
             {t(key).charAt(0)}
           </div>
         ))}
@@ -134,8 +153,10 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
           const dayNumber = cellDate.getDate()
           const inMonth = offset >= 0 && offset < daysInMonth
           const epoch = cellDate.getTime()
-          const daySessions = inMonth ? sessionsByDay.get(epoch) ?? [] : []
-          const uniqueTypes = Array.from(new Set(daySessions.map(s => s.sessionType)))
+          const daySessions = inMonth ? (sessionsByDay.get(epoch) ?? []) : []
+          const uniqueTypes = Array.from(
+            new Set(daySessions.map((s) => s.sessionType)),
+          )
           const isToday = inMonth && epoch === todayKey
           const hasSessions = uniqueTypes.length > 0
           const background = buildCircleBackground(
@@ -143,12 +164,14 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
             isLightTheme ? SESSION_TYPE_COLORS_LIGHT : SESSION_TYPE_COLORS_DARK,
           )
 
-          const activeDayNumberColor = isLightTheme ? 'text-zinc-900' : 'text-white'
+          const activeDayNumberColor = isLightTheme
+            ? 'text-zinc-900'
+            : 'text-white'
           const numberColor = hasSessions
             ? activeDayNumberColor
             : inMonth
-            ? 'text-zinc-300'
-            : 'text-zinc-600'
+              ? 'text-zinc-300'
+              : 'text-zinc-600'
 
           return (
             <button
@@ -163,11 +186,15 @@ export default function TrainingCalendar({ sessions, onDayClick }: Props) {
                 className={`relative flex items-center justify-center rounded-full h-9 w-9 sm:h-10 sm:w-10 ${
                   hasSessions ? 'shadow-sm' : ''
                 } ${isToday ? 'ring-[2px] ring-gold' : ''} ${
-                  onDayClick && inMonth ? 'active:scale-95 transition-transform' : ''
+                  onDayClick && inMonth
+                    ? 'active:scale-95 transition-transform'
+                    : ''
                 }`}
                 style={background ? { background } : undefined}
               >
-                <span className={`text-sm font-semibold leading-none ${numberColor}`}>
+                <span
+                  className={`text-sm font-semibold leading-none ${numberColor}`}
+                >
                   {dayNumber}
                 </span>
               </span>

@@ -23,7 +23,10 @@ describe('forceDirectedLayout', () => {
 
   it('returns a finite position for every node', () => {
     const ids = [1, 2, 3, 4, 5]
-    const pos = forceDirectedLayout(ids, [{ from: 1, to: 2 }, { from: 2, to: 3 }])
+    const pos = forceDirectedLayout(ids, [
+      { from: 1, to: 2 },
+      { from: 2, to: 3 },
+    ])
     expect(pos.size).toBe(5)
     for (const id of ids) {
       const p = pos.get(id)!
@@ -34,7 +37,11 @@ describe('forceDirectedLayout', () => {
 
   it('is deterministic — identical inputs produce identical layouts', () => {
     const ids = [1, 2, 3, 4]
-    const edges = [{ from: 1, to: 2 }, { from: 1, to: 3 }, { from: 1, to: 4 }]
+    const edges = [
+      { from: 1, to: 2 },
+      { from: 1, to: 3 },
+      { from: 1, to: 4 },
+    ]
     const a = forceDirectedLayout(ids, edges)
     const b = forceDirectedLayout(ids, edges)
     for (const id of ids) {
@@ -45,7 +52,11 @@ describe('forceDirectedLayout', () => {
   it('pulls connected nodes closer than unconnected ones', () => {
     // Star graph: node 1 links to leaves 2, 3, 4 (the leaves are not linked to each other).
     const ids = [1, 2, 3, 4]
-    const edges = [{ from: 1, to: 2 }, { from: 1, to: 3 }, { from: 1, to: 4 }]
+    const edges = [
+      { from: 1, to: 2 },
+      { from: 1, to: 3 },
+      { from: 1, to: 4 },
+    ]
     const pos = forceDirectedLayout(ids, edges)
     const centreToLeaf = dist(pos.get(1)!, pos.get(2)!)
     const leafToLeaf = dist(pos.get(2)!, pos.get(3)!)
@@ -53,11 +64,14 @@ describe('forceDirectedLayout', () => {
   })
 
   it('ignores edges that reference unknown nodes or are self-loops', () => {
-    const pos = forceDirectedLayout([1, 2], [
-      { from: 1, to: 99 },
-      { from: 1, to: 1 },
-      { from: 1, to: 2 },
-    ])
+    const pos = forceDirectedLayout(
+      [1, 2],
+      [
+        { from: 1, to: 99 },
+        { from: 1, to: 1 },
+        { from: 1, to: 2 },
+      ],
+    )
     expect(pos.size).toBe(2)
     expect(Number.isFinite(pos.get(1)!.x)).toBe(true)
     expect(Number.isFinite(pos.get(2)!.y)).toBe(true)
@@ -72,13 +86,13 @@ describe('forceDirectedLayout', () => {
       { from: 5, to: 6 },
     ]
     const pos = forceDirectedLayout(ids, edges)
-    const groupA = [1, 2, 3].map(id => pos.get(id)!)
-    const groupB = [4, 5, 6].map(id => pos.get(id)!)
+    const groupA = [1, 2, 3].map((id) => pos.get(id)!)
+    const groupB = [4, 5, 6].map((id) => pos.get(id)!)
     const bounds = (group: GraphNodePosition[]) => ({
-      minX: Math.min(...group.map(p => p.x)),
-      maxX: Math.max(...group.map(p => p.x)),
-      minY: Math.min(...group.map(p => p.y)),
-      maxY: Math.max(...group.map(p => p.y)),
+      minX: Math.min(...group.map((p) => p.x)),
+      maxX: Math.max(...group.map((p) => p.x)),
+      minY: Math.min(...group.map((p) => p.y)),
+      maxY: Math.max(...group.map((p) => p.y)),
     })
     const a = bounds(groupA)
     const b = bounds(groupB)
@@ -93,7 +107,12 @@ describe('forceDirectedLayout', () => {
 
 describe('computeViewBox', () => {
   it('returns a padding-sized box when there are no positions', () => {
-    expect(computeViewBox(new Map(), 40)).toEqual({ x: -40, y: -40, width: 80, height: 80 })
+    expect(computeViewBox(new Map(), 40)).toEqual({
+      x: -40,
+      y: -40,
+      width: 80,
+      height: 80,
+    })
   })
 
   it('encloses every node position with padding on all sides', () => {
@@ -119,8 +138,18 @@ describe('computeViewBox', () => {
 describe('zoomViewBox', () => {
   it('scales the box about its centre', () => {
     const vb = { x: 0, y: 0, width: 100, height: 100 }
-    expect(zoomViewBox(vb, 2)).toEqual({ x: -50, y: -50, width: 200, height: 200 })
-    expect(zoomViewBox(vb, 0.5)).toEqual({ x: 25, y: 25, width: 50, height: 50 })
+    expect(zoomViewBox(vb, 2)).toEqual({
+      x: -50,
+      y: -50,
+      width: 200,
+      height: 200,
+    })
+    expect(zoomViewBox(vb, 0.5)).toEqual({
+      x: 25,
+      y: 25,
+      width: 50,
+      height: 50,
+    })
   })
 
   it('keeps the centre point fixed', () => {
@@ -143,12 +172,18 @@ describe('parseViewBox', () => {
 
   it('returns null when fields are missing or non-numeric', () => {
     expect(parseViewBox(JSON.stringify({ x: 0, y: 0, width: 100 }))).toBeNull()
-    expect(parseViewBox(JSON.stringify({ x: 0, y: 0, width: 'wide', height: 10 }))).toBeNull()
+    expect(
+      parseViewBox(JSON.stringify({ x: 0, y: 0, width: 'wide', height: 10 })),
+    ).toBeNull()
   })
 
   it('returns null for non-positive dimensions', () => {
-    expect(parseViewBox(JSON.stringify({ x: 0, y: 0, width: 0, height: 10 }))).toBeNull()
-    expect(parseViewBox(JSON.stringify({ x: 0, y: 0, width: 10, height: -5 }))).toBeNull()
+    expect(
+      parseViewBox(JSON.stringify({ x: 0, y: 0, width: 0, height: 10 })),
+    ).toBeNull()
+    expect(
+      parseViewBox(JSON.stringify({ x: 0, y: 0, width: 10, height: -5 })),
+    ).toBeNull()
   })
 
   it('round-trips a valid serialised viewBox', () => {

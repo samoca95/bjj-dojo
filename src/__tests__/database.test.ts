@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import Dexie from 'dexie'
 import { makeTestDb, openDb, closeDb } from '../test/testDb'
-import { BJJDatabase, importDatabaseBackup, exportDatabaseBackup, resetPrefilledTechniques } from '../db/database'
+import {
+  BJJDatabase,
+  importDatabaseBackup,
+  exportDatabaseBackup,
+  resetPrefilledTechniques,
+} from '../db/database'
 import { prefilledTechniques } from '../db/prefilled'
 
 let db: BJJDatabase
@@ -52,12 +57,12 @@ describe('Technique queries', () => {
   it('can filter by categoryId', async () => {
     const guards = await db.techniques.where('categoryId').equals(1).toArray()
     expect(guards.length).toBeGreaterThan(0)
-    guards.forEach(t => expect(t.categoryId).toBe(1))
+    guards.forEach((t) => expect(t.categoryId).toBe(1))
   })
 
   it('can sort by name', async () => {
     const sorted = await db.techniques.orderBy('name').toArray()
-    const names = sorted.map(t => t.name)
+    const names = sorted.map((t) => t.name)
     expect(names).toEqual([...names].sort())
   })
 
@@ -96,21 +101,25 @@ describe('Session CRUD', () => {
   })
 
   it('deletes session and clears related sessionTechniques', async () => {
-    const sid = await db.sessions.add({
+    const sid = (await db.sessions.add({
       date: Date.now(),
       durationMinutes: 60,
       sessionType: 'NOGI',
       clubId: null,
       notes: '',
       energyLevel: 3,
-    }) as number
+    })) as number
 
     await db.sessionTechniques.add({ sessionId: sid, techniqueId: 401 })
-    expect(await db.sessionTechniques.where('sessionId').equals(sid).count()).toBe(1)
+    expect(
+      await db.sessionTechniques.where('sessionId').equals(sid).count(),
+    ).toBe(1)
 
     await db.sessions.delete(sid)
     await db.sessionTechniques.where('sessionId').equals(sid).delete()
-    expect(await db.sessionTechniques.where('sessionId').equals(sid).count()).toBe(0)
+    expect(
+      await db.sessionTechniques.where('sessionId').equals(sid).count(),
+    ).toBe(0)
   })
 })
 
@@ -118,16 +127,20 @@ describe('Session CRUD', () => {
 
 describe('Tap tracking with technique association', () => {
   it('records a tap given and links it to a technique', async () => {
-    const sid = await db.sessions.add({
+    const sid = (await db.sessions.add({
       date: Date.now(),
       durationMinutes: 75,
       sessionType: 'GI',
       clubId: null,
       notes: '',
       energyLevel: 3,
-    }) as number
+    })) as number
 
-    await db.sessionTaps.add({ sessionId: sid, techniqueId: 402, type: 'given' })
+    await db.sessionTaps.add({
+      sessionId: sid,
+      techniqueId: 402,
+      type: 'given',
+    })
 
     const taps = await db.sessionTaps.where('sessionId').equals(sid).toArray()
     expect(taps.length).toBe(1)
@@ -140,41 +153,45 @@ describe('Tap tracking with technique association', () => {
   })
 
   it('records taps of both types independently', async () => {
-    const sid = await db.sessions.add({
+    const sid = (await db.sessions.add({
       date: Date.now(),
       durationMinutes: 60,
       sessionType: 'NOGI',
       clubId: null,
       notes: '',
       energyLevel: 2,
-    }) as number
+    })) as number
 
     await db.sessionTaps.bulkAdd([
-      { sessionId: sid, techniqueId: 401, type: 'given' },   // Armbar given
+      { sessionId: sid, techniqueId: 401, type: 'given' }, // Armbar given
       { sessionId: sid, techniqueId: 405, type: 'received' }, // RNC received
-      { sessionId: sid, techniqueId: 401, type: 'given' },   // Armbar given again
+      { sessionId: sid, techniqueId: 401, type: 'given' }, // Armbar given again
     ])
 
     const all = await db.sessionTaps.where('sessionId').equals(sid).toArray()
     expect(all.length).toBe(3)
 
-    const given = all.filter(t => t.type === 'given')
-    const received = all.filter(t => t.type === 'received')
+    const given = all.filter((t) => t.type === 'given')
+    const received = all.filter((t) => t.type === 'received')
     expect(given.length).toBe(2)
     expect(received.length).toBe(1)
   })
 
   it('deletes taps when session is removed', async () => {
-    const sid = await db.sessions.add({
+    const sid = (await db.sessions.add({
       date: Date.now(),
       durationMinutes: 60,
       sessionType: 'GI',
       clubId: null,
       notes: '',
       energyLevel: 3,
-    }) as number
+    })) as number
 
-    await db.sessionTaps.add({ sessionId: sid, techniqueId: 403, type: 'received' })
+    await db.sessionTaps.add({
+      sessionId: sid,
+      techniqueId: 403,
+      type: 'received',
+    })
     await db.sessions.delete(sid)
     await db.sessionTaps.where('sessionId').equals(sid).delete()
 
@@ -206,7 +223,7 @@ describe('DB upgrade safety', () => {
 
     // Prefilled techniques should all still be there
     const prefilled = await db.techniques.where('id').below(8000).toArray()
-    expect(prefilled.every(t => t.isCustom === false)).toBe(true)
+    expect(prefilled.every((t) => t.isCustom === false)).toBe(true)
   })
 })
 
@@ -232,7 +249,9 @@ describe('Reset prefilled techniques', () => {
 
     const restoredPrefilled = await db.techniques.get(101)
     const custom = await db.techniques.get(9001)
-    expect(restoredPrefilled?.name).toBe(prefilledTechniques.find(t => t.id === 101)?.name)
+    expect(restoredPrefilled?.name).toBe(
+      prefilledTechniques.find((t) => t.id === 101)?.name,
+    )
     expect(custom?.name).toBe('My Custom Technique')
     expect(custom?.isCustom).toBe(true)
   })
@@ -245,17 +264,36 @@ describe('DB migration integrity (v1 -> v5)', () => {
     legacy.version(1).stores({
       categories: 'id, name',
       techniques: 'id, categoryId, name',
-      techniqueConnections: '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+      techniqueConnections:
+        '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
       sessions: '++id, date',
       sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
     })
     await legacy.open()
-    await legacy.table('categories').bulkAdd([
-      { id: 1, name: 'Guards', description: '' },
-    ])
+    await legacy
+      .table('categories')
+      .bulkAdd([{ id: 1, name: 'Guards', description: '' }])
     await legacy.table('techniques').bulkAdd([
-      { id: 100, name: 'Legacy Prefilled', description: '', cues: ['a'], categoryId: 1, youtubeUrl: '', difficulty: 'BEGINNER', isCustom: false },
-      { id: 9001, name: 'Legacy Custom', description: '', cues: ['b'], categoryId: 1, youtubeUrl: '', difficulty: 'BEGINNER', isCustom: true },
+      {
+        id: 100,
+        name: 'Legacy Prefilled',
+        description: '',
+        cues: ['a'],
+        categoryId: 1,
+        youtubeUrl: '',
+        difficulty: 'BEGINNER',
+        isCustom: false,
+      },
+      {
+        id: 9001,
+        name: 'Legacy Custom',
+        description: '',
+        cues: ['b'],
+        categoryId: 1,
+        youtubeUrl: '',
+        difficulty: 'BEGINNER',
+        isCustom: true,
+      },
     ])
     await legacy.close()
 
@@ -272,7 +310,11 @@ describe('DB migration integrity (v1 -> v5)', () => {
 
 describe('Backup and restore integrity', () => {
   it('exports and imports all collections including drill plans', async () => {
-    await db.drillPlans.add({ name: 'Main', techniqueIds: [401], createdAt: Date.now() })
+    await db.drillPlans.add({
+      name: 'Main',
+      techniqueIds: [401],
+      createdAt: Date.now(),
+    })
     const backup = await exportDatabaseBackup(db)
     await db.sessions.clear()
     await importDatabaseBackup(backup, db)
@@ -289,13 +331,39 @@ function validBackup() {
     version: 1,
     exportedAt: Date.now(),
     categories: [{ id: 1, name: 'Guards', description: '' }],
-    techniques: [{ id: 101, name: 'Closed Guard', description: '', categoryId: 1, youtubeUrl: '', difficulty: 'BEGINNER', isCustom: false }],
+    techniques: [
+      {
+        id: 101,
+        name: 'Closed Guard',
+        description: '',
+        categoryId: 1,
+        youtubeUrl: '',
+        difficulty: 'BEGINNER',
+        isCustom: false,
+      },
+    ],
     techniqueConnections: [],
-    sessions: [{ id: 1, date: 1_700_000_000_000, durationMinutes: 60, sessionType: 'GI', notes: '', energyLevel: 3 }],
+    sessions: [
+      {
+        id: 1,
+        date: 1_700_000_000_000,
+        durationMinutes: 60,
+        sessionType: 'GI',
+        notes: '',
+        energyLevel: 3,
+      },
+    ],
     sessionTechniques: [{ sessionId: 1, techniqueId: 101 }],
     sessionTaps: [{ id: 1, sessionId: 1, techniqueId: 101, type: 'given' }],
     clubs: [{ id: 1, name: 'Dojo', sortOrder: 1 }],
-    drillPlans: [{ id: 1, name: 'Warm-up', techniqueIds: [101], createdAt: 1_700_000_000_000 }],
+    drillPlans: [
+      {
+        id: 1,
+        name: 'Warm-up',
+        techniqueIds: [101],
+        createdAt: 1_700_000_000_000,
+      },
+    ],
   }
 }
 
@@ -305,99 +373,235 @@ describe('importDatabaseBackup validation', () => {
   })
 
   it('rejects non-object payload', async () => {
-    await expect(importDatabaseBackup('not an object', db)).rejects.toThrow('Malformed backup payload')
+    await expect(importDatabaseBackup('not an object', db)).rejects.toThrow(
+      'Malformed backup payload',
+    )
   })
 
   it('rejects a category with a non-integer id', async () => {
-    const bad = { ...validBackup(), categories: [{ id: 'x', name: 'Guards', description: '' }] }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("categories[0]: 'id' must be a positive integer")
+    const bad = {
+      ...validBackup(),
+      categories: [{ id: 'x', name: 'Guards', description: '' }],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "categories[0]: 'id' must be a positive integer",
+    )
   })
 
   it('rejects a category with an empty name', async () => {
-    const bad = { ...validBackup(), categories: [{ id: 1, name: '   ', description: '' }] }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("categories[0]: 'name' must be a non-empty string")
+    const bad = {
+      ...validBackup(),
+      categories: [{ id: 1, name: '   ', description: '' }],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "categories[0]: 'name' must be a non-empty string",
+    )
   })
 
   it('rejects a technique with an invalid difficulty', async () => {
     const bad = {
       ...validBackup(),
-      techniques: [{ id: 101, name: 'T', description: '', categoryId: 1, youtubeUrl: '', difficulty: 'EXPERT', isCustom: false }],
+      techniques: [
+        {
+          id: 101,
+          name: 'T',
+          description: '',
+          categoryId: 1,
+          youtubeUrl: '',
+          difficulty: 'EXPERT',
+          isCustom: false,
+        },
+      ],
     }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("techniques[0]: 'difficulty' must be one of")
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "techniques[0]: 'difficulty' must be one of",
+    )
   })
 
   it('rejects a technique with an invalid YouTube URL', async () => {
     const bad = {
       ...validBackup(),
-      techniques: [{ id: 101, name: 'T', description: '', categoryId: 1, youtubeUrl: 'https://evil.com/x', difficulty: 'BEGINNER', isCustom: false }],
+      techniques: [
+        {
+          id: 101,
+          name: 'T',
+          description: '',
+          categoryId: 1,
+          youtubeUrl: 'https://evil.com/x',
+          difficulty: 'BEGINNER',
+          isCustom: false,
+        },
+      ],
     }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("techniques[0]: 'youtubeUrl' is not a valid YouTube URL")
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "techniques[0]: 'youtubeUrl' is not a valid YouTube URL",
+    )
   })
 
   it('rejects a technique with a non-boolean isCustom', async () => {
     const bad = {
       ...validBackup(),
-      techniques: [{ id: 101, name: 'T', description: '', categoryId: 1, youtubeUrl: '', difficulty: 'BEGINNER', isCustom: 'yes' }],
+      techniques: [
+        {
+          id: 101,
+          name: 'T',
+          description: '',
+          categoryId: 1,
+          youtubeUrl: '',
+          difficulty: 'BEGINNER',
+          isCustom: 'yes',
+        },
+      ],
     }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("techniques[0]: 'isCustom' must be a boolean")
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "techniques[0]: 'isCustom' must be a boolean",
+    )
   })
 
   it('rejects a techniqueConnection with an invalid connectionType', async () => {
-    const bad = { ...validBackup(), techniqueConnections: [{ fromTechniqueId: 1, toTechniqueId: 2, connectionType: 'NOPE' }] }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("techniqueConnections[0]: 'connectionType' must be one of")
+    const bad = {
+      ...validBackup(),
+      techniqueConnections: [
+        { fromTechniqueId: 1, toTechniqueId: 2, connectionType: 'NOPE' },
+      ],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "techniqueConnections[0]: 'connectionType' must be one of",
+    )
   })
 
   it('rejects a session with energyLevel out of range', async () => {
     const bad = {
       ...validBackup(),
-      sessions: [{ id: 1, date: 1_700_000_000_000, durationMinutes: 60, sessionType: 'GI', notes: '', energyLevel: 6 }],
+      sessions: [
+        {
+          id: 1,
+          date: 1_700_000_000_000,
+          durationMinutes: 60,
+          sessionType: 'GI',
+          notes: '',
+          energyLevel: 6,
+        },
+      ],
     }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("sessions[0]: 'energyLevel' must be an integer between 1 and 5")
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "sessions[0]: 'energyLevel' must be an integer between 1 and 5",
+    )
   })
 
   it('rejects a session with durationMinutes out of range', async () => {
     const bad = {
       ...validBackup(),
-      sessions: [{ id: 1, date: 1_700_000_000_000, durationMinutes: 0, sessionType: 'GI', notes: '', energyLevel: 3 }],
+      sessions: [
+        {
+          id: 1,
+          date: 1_700_000_000_000,
+          durationMinutes: 0,
+          sessionType: 'GI',
+          notes: '',
+          energyLevel: 3,
+        },
+      ],
     }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("sessions[0]: 'durationMinutes' must be an integer between 1 and 1440")
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "sessions[0]: 'durationMinutes' must be an integer between 1 and 1440",
+    )
   })
 
   it('rejects a session with an invalid sessionType', async () => {
     const bad = {
       ...validBackup(),
-      sessions: [{ id: 1, date: 1_700_000_000_000, durationMinutes: 60, sessionType: 'YOGA', notes: '', energyLevel: 3 }],
+      sessions: [
+        {
+          id: 1,
+          date: 1_700_000_000_000,
+          durationMinutes: 60,
+          sessionType: 'YOGA',
+          notes: '',
+          energyLevel: 3,
+        },
+      ],
     }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("sessions[0]: 'sessionType' must be one of")
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "sessions[0]: 'sessionType' must be one of",
+    )
   })
 
   it('rejects a sessionTap with an invalid type', async () => {
-    const bad = { ...validBackup(), sessionTaps: [{ id: 1, sessionId: 1, techniqueId: 101, type: 'submitted' }] }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("sessionTaps[0]: 'type' must be one of")
+    const bad = {
+      ...validBackup(),
+      sessionTaps: [
+        { id: 1, sessionId: 1, techniqueId: 101, type: 'submitted' },
+      ],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "sessionTaps[0]: 'type' must be one of",
+    )
   })
 
   it('rejects a club with a missing name', async () => {
     const bad = { ...validBackup(), clubs: [{ id: 1, name: '', sortOrder: 1 }] }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("clubs[0]: 'name' must be a non-empty string")
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "clubs[0]: 'name' must be a non-empty string",
+    )
   })
 
   it('rejects a drillPlan with a non-array techniqueIds', async () => {
-    const bad = { ...validBackup(), drillPlans: [{ id: 1, name: 'Plan', techniqueIds: 'all', createdAt: 1_700_000_000_000 }] }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("drillPlans[0]: 'techniqueIds' must be an array")
+    const bad = {
+      ...validBackup(),
+      drillPlans: [
+        {
+          id: 1,
+          name: 'Plan',
+          techniqueIds: 'all',
+          createdAt: 1_700_000_000_000,
+        },
+      ],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "drillPlans[0]: 'techniqueIds' must be an array",
+    )
   })
 
   it('rejects a drillPlan with a non-integer element in techniqueIds', async () => {
-    const bad = { ...validBackup(), drillPlans: [{ id: 1, name: 'Plan', techniqueIds: ['x'], createdAt: 1_700_000_000_000 }] }
-    await expect(importDatabaseBackup(bad, db)).rejects.toThrow("drillPlans[0]: 'techniqueIds[0]' must be an integer")
+    const bad = {
+      ...validBackup(),
+      drillPlans: [
+        {
+          id: 1,
+          name: 'Plan',
+          techniqueIds: ['x'],
+          createdAt: 1_700_000_000_000,
+        },
+      ],
+    }
+    await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
+      "drillPlans[0]: 'techniqueIds[0]' must be an integer",
+    )
   })
 
   it('leaves the database unmodified when validation fails', async () => {
-    const sid = await db.sessions.add({ date: Date.now(), durationMinutes: 45, sessionType: 'GI', notes: 'original', energyLevel: 3 }) as number
+    const sid = (await db.sessions.add({
+      date: Date.now(),
+      durationMinutes: 45,
+      sessionType: 'GI',
+      notes: 'original',
+      energyLevel: 3,
+    })) as number
     const countBefore = await db.sessions.count()
 
     const bad = {
       ...validBackup(),
-      sessions: [{ id: 1, date: 1_700_000_000_000, durationMinutes: 9999, sessionType: 'GI', notes: '', energyLevel: 3 }],
+      sessions: [
+        {
+          id: 1,
+          date: 1_700_000_000_000,
+          durationMinutes: 9999,
+          sessionType: 'GI',
+          notes: '',
+          energyLevel: 3,
+        },
+      ],
     }
     await expect(importDatabaseBackup(bad, db)).rejects.toThrow()
 

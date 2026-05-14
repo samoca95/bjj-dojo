@@ -1,30 +1,14 @@
 import { useState } from 'react'
 import { Minus, Plus } from 'lucide-react'
-import { APP_LANGUAGE_STORAGE_KEY, setAppLanguage, type AppLanguage } from '../i18n'
+import { setAppLanguage, type AppLanguage } from '../i18n'
 import {
   BELT_COLORS,
-  BELT_STORAGE_KEY,
   MAX_STRIPES,
-  STRIPES_STORAGE_KEY,
   type BeltColor,
   setBeltColor,
   setBeltStripes,
 } from '../utils/beltRank'
-
-export const INITIAL_SETUP_COMPLETED_STORAGE_KEY = 'bjj-dojo:initial-setup-completed'
-
-export function isInitialSetupRequired(): boolean {
-  if (typeof window === 'undefined') return false
-  if (window.localStorage.getItem(INITIAL_SETUP_COMPLETED_STORAGE_KEY) === '1') return false
-  return !window.localStorage.getItem(APP_LANGUAGE_STORAGE_KEY)
-    && !window.localStorage.getItem(BELT_STORAGE_KEY)
-    && !window.localStorage.getItem(STRIPES_STORAGE_KEY)
-}
-
-function completeInitialSetup() {
-  if (typeof window === 'undefined') return
-  window.localStorage.setItem(INITIAL_SETUP_COMPLETED_STORAGE_KEY, '1')
-}
+import { completeInitialSetup } from './firstLaunchSetup'
 
 interface FirstLaunchSetupPromptProps {
   onComplete?: () => void
@@ -110,7 +94,9 @@ const SWATCH_CLASS: Record<BeltColor, string> = {
   black: 'bg-belt-black',
 }
 
-export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupPromptProps) {
+export default function FirstLaunchSetupPrompt({
+  onComplete,
+}: FirstLaunchSetupPromptProps) {
   const [language, setLanguage] = useState<AppLanguage>('en')
   const [belt, setBelt] = useState<BeltColor>('white')
   const [stripes, setStripes] = useState<number>(0)
@@ -130,9 +116,7 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
           <h2 className="text-lg font-bold text-zinc-100">
             {WELCOME_TITLE[language]}
           </h2>
-          <p className="text-sm text-zinc-400">
-            {WELCOME_SUBTITLE[language]}
-          </p>
+          <p className="text-sm text-zinc-400">{WELCOME_SUBTITLE[language]}</p>
         </div>
 
         <div className="space-y-2">
@@ -140,17 +124,21 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
             {LANGUAGE_LABEL[language]}
           </span>
           <div className="flex bg-zinc-800 rounded-lg p-0.5 gap-0.5">
-            {([
-              { code: 'en', flag: '🇬🇧', label: 'EN' },
-              { code: 'es', flag: '🇪🇸', label: 'ES' },
-              { code: 'fr', flag: '🇫🇷', label: 'FR' },
-            ] as const).map(({ code, flag, label }) => (
+            {(
+              [
+                { code: 'en', flag: '🇬🇧', label: 'EN' },
+                { code: 'es', flag: '🇪🇸', label: 'ES' },
+                { code: 'fr', flag: '🇫🇷', label: 'FR' },
+              ] as const
+            ).map(({ code, flag, label }) => (
               <button
                 key={code}
                 onClick={() => setLanguage(code)}
                 aria-label={label}
                 className={`flex-1 rounded-md px-2 py-2 text-xs font-semibold transition-colors flex items-center justify-center gap-1 ${
-                  language === code ? 'bg-gold text-black' : 'text-zinc-400 active:text-zinc-200'
+                  language === code
+                    ? 'bg-gold text-black'
+                    : 'text-zinc-400 active:text-zinc-200'
                 }`}
               >
                 <span aria-hidden="true">{flag}</span>
@@ -165,7 +153,7 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
             {BELT_LABEL[language]}
           </span>
           <div className="grid grid-cols-5 gap-1.5">
-            {BELT_COLORS.map(color => {
+            {BELT_COLORS.map((color) => {
               const isSelected = belt === color
               return (
                 <button
@@ -173,12 +161,16 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
                   onClick={() => setBelt(color)}
                   aria-label={BELT_LABELS[language][color]}
                   className={`relative rounded-xl py-2.5 flex items-center justify-center transition-all ${SWATCH_CLASS[color]} ${
-                    isSelected ? 'ring-2 ring-gold' : 'ring-2 ring-white/40 opacity-70 active:opacity-100'
+                    isSelected
+                      ? 'ring-2 ring-gold'
+                      : 'ring-2 ring-white/40 opacity-70 active:opacity-100'
                   }`}
                 >
-                  <span className={`text-[10px] font-bold tracking-wide uppercase ${
-                    color === 'white' ? 'text-zinc-700' : 'text-white'
-                  }`}>
+                  <span
+                    className={`text-[10px] font-bold tracking-wide uppercase ${
+                      color === 'white' ? 'text-zinc-700' : 'text-white'
+                    }`}
+                  >
                     {BELT_LABELS[language][color].slice(0, 3)}
                   </span>
                 </button>
@@ -193,7 +185,7 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
           </span>
           <div className="flex items-center justify-between gap-3">
             <button
-              onClick={() => setStripes(prev => Math.max(0, prev - 1))}
+              onClick={() => setStripes((prev) => Math.max(0, prev - 1))}
               disabled={stripes === 0}
               aria-label={DECREASE_STRIPES_LABEL[language]}
               className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 disabled:text-zinc-600 active:bg-zinc-700"
@@ -204,11 +196,12 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
               {Array.from({ length: MAX_STRIPES }).map((_, i) => {
                 const selected = i + 1
                 const plural = selected > 1
-                const stripeLabel = language === 'es'
-                  ? `${selected} grado${plural ? 's' : ''}`
-                  : language === 'fr'
-                    ? `${selected} barrette${plural ? 's' : ''}`
-                    : `${selected} stripe${plural ? 's' : ''}`
+                const stripeLabel =
+                  language === 'es'
+                    ? `${selected} grado${plural ? 's' : ''}`
+                    : language === 'fr'
+                      ? `${selected} barrette${plural ? 's' : ''}`
+                      : `${selected} stripe${plural ? 's' : ''}`
                 return (
                   <button
                     key={i}
@@ -222,7 +215,9 @@ export default function FirstLaunchSetupPrompt({ onComplete }: FirstLaunchSetupP
               })}
             </div>
             <button
-              onClick={() => setStripes(prev => Math.min(MAX_STRIPES, prev + 1))}
+              onClick={() =>
+                setStripes((prev) => Math.min(MAX_STRIPES, prev + 1))
+              }
               disabled={stripes === MAX_STRIPES}
               aria-label={INCREASE_STRIPES_LABEL[language]}
               className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 disabled:text-zinc-600 active:bg-zinc-700"

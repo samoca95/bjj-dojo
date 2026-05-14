@@ -26,10 +26,13 @@ export function fuzzyMatch(text: string, query: string): boolean {
   const normalizedText = normalize(text)
   const tokens = normalize(query).split(/\s+/).filter(Boolean)
   if (tokens.length === 0) return true
-  return tokens.every(token => matchesToken(normalizedText, token))
+  return tokens.every((token) => matchesToken(normalizedText, token))
 }
 
-export function techniqueMatchesQuery(technique: Technique, query: string): boolean {
+export function techniqueMatchesQuery(
+  technique: Technique,
+  query: string,
+): boolean {
   if (!query.trim()) return true
   const combined = [
     technique.name,
@@ -45,7 +48,10 @@ export function techniqueMatchesQuery(technique: Technique, query: string): bool
  * Returns the first alias that matches the query, but only when the technique
  * name itself does not match — so callers can show "why" this result appeared.
  */
-export function getMatchingAlias(technique: Technique, query: string): string | null {
+export function getMatchingAlias(
+  technique: Technique,
+  query: string,
+): string | null {
   if (!query.trim() || !technique.aliases?.length) return null
 
   const normQuery = normalize(query)
@@ -57,7 +63,7 @@ export function getMatchingAlias(technique: Technique, query: string): string | 
     normName.startsWith(normQuery) ||
     normName.includes(normQuery) ||
     isSubsequence(normName, normQuery) ||
-    (tokens.length > 1 && tokens.every(token => normName.includes(token)))
+    (tokens.length > 1 && tokens.every((token) => normName.includes(token)))
 
   if (nameMatches) return null
 
@@ -84,13 +90,18 @@ export function techniqueScore(technique: Technique, query: string): number {
   if (isSubsequence(normName, normQuery)) return 50
 
   if (normAliases.includes(normQuery)) return 80
-  if (normAliases.some(alias => alias.startsWith(normQuery))) return 65
-  if (normAliases.some(alias => alias.includes(normQuery))) return 45
+  if (normAliases.some((alias) => alias.startsWith(normQuery))) return 65
+  if (normAliases.some((alias) => alias.includes(normQuery))) return 45
 
   // Multi-token: check if every token strictly matches the name
   const tokens = normQuery.split(/\s+/).filter(Boolean)
-  if (tokens.length > 1 && tokens.every(token => normName.includes(token))) return 60
-  if (tokens.length > 1 && normAliases.some(alias => tokens.every(token => alias.includes(token)))) return 40
+  if (tokens.length > 1 && tokens.every((token) => normName.includes(token)))
+    return 60
+  if (
+    tokens.length > 1 &&
+    normAliases.some((alias) => tokens.every((token) => alias.includes(token)))
+  )
+    return 40
 
   // Match only found in description
   return 10

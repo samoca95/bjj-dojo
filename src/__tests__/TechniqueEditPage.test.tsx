@@ -70,14 +70,19 @@ function renderNew() {
   // Alternate: odd calls → categories, even calls → allTechniques ([])
   // This handles multiple renders without running out of mocked values
   let callIdx = 0
-  mockUseLiveQuery.mockImplementation(() => callIdx++ % 2 === 0 ? sampleCategories : [])
+  mockUseLiveQuery.mockImplementation(() =>
+    callIdx++ % 2 === 0 ? sampleCategories : [],
+  )
   return render(
     <UndoProvider>
       <MemoryRouter initialEntries={['/techniques/new/edit']}>
         <Routes>
           {/* literal path — no :id param captured, so id is undefined → isNew=true */}
           <Route path="/techniques/new/edit" element={<TechniqueEditPage />} />
-          <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
+          <Route
+            path="/techniques/:id"
+            element={<div data-testid="technique-detail" />}
+          />
         </Routes>
       </MemoryRouter>
       <UndoSnackbar />
@@ -85,19 +90,33 @@ function renderNew() {
   )
 }
 
-function renderEdit(technique = sampleTechnique, initialEntries: string[] = [`/techniques/${technique.id}/edit`]) {
+function renderEdit(
+  technique = sampleTechnique,
+  initialEntries: string[] = [`/techniques/${technique.id}/edit`],
+) {
   mocks.get.mockResolvedValue(technique)
   // Alternate: odd calls → categories, even calls → allTechniques ([])
   let callIdx = 0
-  mockUseLiveQuery.mockImplementation(() => callIdx++ % 2 === 0 ? sampleCategories : [])
+  mockUseLiveQuery.mockImplementation(() =>
+    callIdx++ % 2 === 0 ? sampleCategories : [],
+  )
   return render(
     <UndoProvider>
       <MemoryRouter initialEntries={initialEntries}>
         <Routes>
-          <Route path="/settings" element={<div data-testid="settings-page" />} />
+          <Route
+            path="/settings"
+            element={<div data-testid="settings-page" />}
+          />
           <Route path="/techniques/:id/edit" element={<TechniqueEditPage />} />
-          <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
-          <Route path="/techniques" element={<div data-testid="techniques-list" />} />
+          <Route
+            path="/techniques/:id"
+            element={<div data-testid="technique-detail" />}
+          />
+          <Route
+            path="/techniques"
+            element={<div data-testid="techniques-list" />}
+          />
         </Routes>
       </MemoryRouter>
       <UndoSnackbar />
@@ -182,7 +201,9 @@ describe('TechniqueEditPage — edit existing technique', () => {
   it('pre-populates the name field after load', async () => {
     renderEdit()
     await waitFor(() => {
-      const input = screen.getByPlaceholderText('Technique name') as HTMLInputElement
+      const input = screen.getByPlaceholderText(
+        'Technique name',
+      ) as HTMLInputElement
       expect(input.value).toBe('Armbar')
     })
   })
@@ -211,7 +232,9 @@ describe('TechniqueEditPage — edit existing technique', () => {
   it('can remove a coaching cue', async () => {
     const user = userEvent.setup()
     renderEdit()
-    await waitFor(() => expect(screen.getByText('Squeeze knees')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText('Squeeze knees')).toBeInTheDocument(),
+    )
     const cueRow = screen.getByText('Squeeze knees').closest('div')!
     const xBtn = cueRow.parentElement!.querySelector('button') as HTMLElement
     await user.click(xBtn)
@@ -230,11 +253,15 @@ describe('TechniqueEditPage — edit existing technique', () => {
     const user = userEvent.setup()
     const confirmSpy = vi.spyOn(window, 'confirm')
     renderEdit()
-    await waitFor(() => expect(screen.getByText('Delete Technique')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText('Delete Technique')).toBeInTheDocument(),
+    )
     await user.click(screen.getByText('Delete Technique'))
 
     expect(screen.getByText('Delete technique')).toBeInTheDocument()
-    expect(screen.getByText('This technique will be deleted:')).toBeInTheDocument()
+    expect(
+      screen.getByText('This technique will be deleted:'),
+    ).toBeInTheDocument()
     expect(screen.getByText('Armbar')).toBeInTheDocument()
     expect(confirmSpy).not.toHaveBeenCalled()
   })
@@ -242,11 +269,15 @@ describe('TechniqueEditPage — edit existing technique', () => {
   it('shows undo snackbar and restores deleted technique', async () => {
     const user = userEvent.setup()
     renderEdit()
-    await waitFor(() => expect(screen.getByText('Delete Technique')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText('Delete Technique')).toBeInTheDocument(),
+    )
 
     await user.click(screen.getByText('Delete Technique'))
     await user.click(screen.getByRole('button', { name: 'Delete' }))
-    await waitFor(() => expect(screen.getByText('Technique deleted.')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText('Technique deleted.')).toBeInTheDocument(),
+    )
     await user.click(screen.getByRole('button', { name: 'UNDO' }))
 
     await waitFor(() => {
@@ -256,14 +287,23 @@ describe('TechniqueEditPage — edit existing technique', () => {
 
   it('returns to previous window after delete timeout', async () => {
     const user = userEvent.setup()
-    renderEdit(sampleTechnique, ['/settings', `/techniques/${sampleTechnique.id}/edit`])
-    await waitFor(() => expect(screen.getByText('Delete Technique')).toBeInTheDocument())
+    renderEdit(sampleTechnique, [
+      '/settings',
+      `/techniques/${sampleTechnique.id}/edit`,
+    ])
+    await waitFor(() =>
+      expect(screen.getByText('Delete Technique')).toBeInTheDocument(),
+    )
 
     await user.click(screen.getByText('Delete Technique'))
     await user.click(screen.getByRole('button', { name: 'Delete' }))
-    await waitFor(() => expect(screen.getByText('Technique deleted.')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText('Technique deleted.')).toBeInTheDocument(),
+    )
 
-    await new Promise(resolve => setTimeout(resolve, 5100))
-    await waitFor(() => expect(screen.getByTestId('settings-page')).toBeInTheDocument())
+    await new Promise((resolve) => setTimeout(resolve, 5100))
+    await waitFor(() =>
+      expect(screen.getByTestId('settings-page')).toBeInTheDocument(),
+    )
   }, 12000)
 })

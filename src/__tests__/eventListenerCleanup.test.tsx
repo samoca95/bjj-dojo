@@ -17,10 +17,21 @@ vi.mock('dexie-react-hooks', () => ({
 
 vi.mock('../db/database', () => ({
   db: {
-    sessions: { count: vi.fn().mockResolvedValue(0), toArray: vi.fn().mockResolvedValue([]), where: vi.fn().mockReturnThis(), aboveOrEqual: vi.fn().mockReturnThis() },
+    sessions: {
+      count: vi.fn().mockResolvedValue(0),
+      toArray: vi.fn().mockResolvedValue([]),
+      where: vi.fn().mockReturnThis(),
+      aboveOrEqual: vi.fn().mockReturnThis(),
+    },
     sessionTaps: { toArray: vi.fn().mockResolvedValue([]) },
-    sessionTechniques: { where: vi.fn().mockReturnThis(), toArray: vi.fn().mockResolvedValue([]) },
-    techniques: { orderBy: vi.fn().mockReturnThis(), toArray: vi.fn().mockResolvedValue([]) },
+    sessionTechniques: {
+      where: vi.fn().mockReturnThis(),
+      toArray: vi.fn().mockResolvedValue([]),
+    },
+    techniques: {
+      orderBy: vi.fn().mockReturnThis(),
+      toArray: vi.fn().mockResolvedValue([]),
+    },
   },
 }))
 
@@ -36,11 +47,22 @@ function assertCleanedUp(
   eventType: string,
 ) {
   const added = addSpy.mock.calls.filter((c: unknown[]) => c[0] === eventType)
-  const removed = removeSpy.mock.calls.filter((c: unknown[]) => c[0] === eventType)
-  expect(added.length, `${eventType}: should be registered at least once`).toBeGreaterThan(0)
-  expect(removed.length, `${eventType}: removeEventListener count must match addEventListener count`).toBe(added.length)
+  const removed = removeSpy.mock.calls.filter(
+    (c: unknown[]) => c[0] === eventType,
+  )
+  expect(
+    added.length,
+    `${eventType}: should be registered at least once`,
+  ).toBeGreaterThan(0)
+  expect(
+    removed.length,
+    `${eventType}: removeEventListener count must match addEventListener count`,
+  ).toBe(added.length)
   for (let i = 0; i < added.length; i++) {
-    expect(removed[i][1], `${eventType}: handler[${i}] passed to removeEventListener must be the same reference registered via addEventListener`).toBe(added[i][1])
+    expect(
+      removed[i][1],
+      `${eventType}: handler[${i}] passed to removeEventListener must be the same reference registered via addEventListener`,
+    ).toBe(added[i][1])
   }
 }
 
@@ -50,8 +72,13 @@ describe('OfflineNotice — event listener cleanup', () => {
   let addSpy: ReturnType<typeof vi.spyOn>
   let removeSpy: ReturnType<typeof vi.spyOn>
 
-  beforeEach(() => { ({ addSpy, removeSpy } = spyOnListeners()) })
-  afterEach(() => { addSpy.mockRestore(); removeSpy.mockRestore() })
+  beforeEach(() => {
+    ;({ addSpy, removeSpy } = spyOnListeners())
+  })
+  afterEach(() => {
+    addSpy.mockRestore()
+    removeSpy.mockRestore()
+  })
 
   it('removes online and offline listeners on unmount', () => {
     const { unmount } = render(<OfflineNotice />)
@@ -67,8 +94,13 @@ describe('QuotaErrorModal — event listener cleanup', () => {
   let addSpy: ReturnType<typeof vi.spyOn>
   let removeSpy: ReturnType<typeof vi.spyOn>
 
-  beforeEach(() => { ({ addSpy, removeSpy } = spyOnListeners()) })
-  afterEach(() => { addSpy.mockRestore(); removeSpy.mockRestore() })
+  beforeEach(() => {
+    ;({ addSpy, removeSpy } = spyOnListeners())
+  })
+  afterEach(() => {
+    addSpy.mockRestore()
+    removeSpy.mockRestore()
+  })
 
   it(`removes ${QUOTA_ERROR_EVENT} listener on unmount`, () => {
     const { unmount } = render(
@@ -87,8 +119,13 @@ describe('TrainingCalendar — event listener cleanup', () => {
   let addSpy: ReturnType<typeof vi.spyOn>
   let removeSpy: ReturnType<typeof vi.spyOn>
 
-  beforeEach(() => { ({ addSpy, removeSpy } = spyOnListeners()) })
-  afterEach(() => { addSpy.mockRestore(); removeSpy.mockRestore() })
+  beforeEach(() => {
+    ;({ addSpy, removeSpy } = spyOnListeners())
+  })
+  afterEach(() => {
+    addSpy.mockRestore()
+    removeSpy.mockRestore()
+  })
 
   it(`removes ${SESSION_TYPE_ICONS_UPDATED_EVENT} and ${APP_THEME_UPDATED_EVENT} listeners on unmount`, () => {
     const { unmount } = render(
@@ -108,8 +145,13 @@ describe('HomePage — event listener cleanup', () => {
   let addSpy: ReturnType<typeof vi.spyOn>
   let removeSpy: ReturnType<typeof vi.spyOn>
 
-  beforeEach(() => { ({ addSpy, removeSpy } = spyOnListeners()) })
-  afterEach(() => { addSpy.mockRestore(); removeSpy.mockRestore() })
+  beforeEach(() => {
+    ;({ addSpy, removeSpy } = spyOnListeners())
+  })
+  afterEach(() => {
+    addSpy.mockRestore()
+    removeSpy.mockRestore()
+  })
 
   it('removes section-order, belt-rank, and storage listeners on unmount', async () => {
     const { default: HomePage } = await import('../pages/HomePage')
@@ -120,15 +162,22 @@ describe('HomePage — event listener cleanup', () => {
     )
 
     // Capture storage count while mounted so we can assert full removal after unmount
-    const storageAddedBeforeUnmount = addSpy.mock.calls.filter((c: unknown[]) => c[0] === 'storage').length
+    const storageAddedBeforeUnmount = addSpy.mock.calls.filter(
+      (c: unknown[]) => c[0] === 'storage',
+    ).length
 
     unmount()
 
     assertCleanedUp(addSpy, removeSpy, HOME_SECTION_ORDER_UPDATED_EVENT)
     assertCleanedUp(addSpy, removeSpy, BELT_RANK_UPDATED_EVENT)
 
-    const storageRemoved = removeSpy.mock.calls.filter((c: unknown[]) => c[0] === 'storage').length
-    expect(storageRemoved, 'all storage listeners must be removed on unmount').toBe(storageAddedBeforeUnmount)
+    const storageRemoved = removeSpy.mock.calls.filter(
+      (c: unknown[]) => c[0] === 'storage',
+    ).length
+    expect(
+      storageRemoved,
+      'all storage listeners must be removed on unmount',
+    ).toBe(storageAddedBeforeUnmount)
   })
 })
 
@@ -143,8 +192,13 @@ describe('useI18n — event listener cleanup', () => {
   let addSpy: ReturnType<typeof vi.spyOn>
   let removeSpy: ReturnType<typeof vi.spyOn>
 
-  beforeEach(() => { ({ addSpy, removeSpy } = spyOnListeners()) })
-  afterEach(() => { addSpy.mockRestore(); removeSpy.mockRestore() })
+  beforeEach(() => {
+    ;({ addSpy, removeSpy } = spyOnListeners())
+  })
+  afterEach(() => {
+    addSpy.mockRestore()
+    removeSpy.mockRestore()
+  })
 
   it(`removes ${APP_LANGUAGE_UPDATED_EVENT} and storage listeners on unmount`, () => {
     const { unmount } = render(<I18nConsumer />)

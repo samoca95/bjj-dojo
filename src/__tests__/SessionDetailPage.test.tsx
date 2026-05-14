@@ -12,10 +12,16 @@ vi.mock('dexie-react-hooks', () => ({
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
   sessionTechsWhere: vi.fn(() => ({
-    equals: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]), delete: vi.fn() })),
+    equals: vi.fn(() => ({
+      toArray: vi.fn().mockResolvedValue([]),
+      delete: vi.fn(),
+    })),
   })),
   tapsWhere: vi.fn(() => ({
-    equals: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]), delete: vi.fn() })),
+    equals: vi.fn(() => ({
+      toArray: vi.fn().mockResolvedValue([]),
+      delete: vi.fn(),
+    })),
   })),
   techsWhere: vi.fn(() => ({
     anyOf: vi.fn(() => ({
@@ -31,9 +37,16 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../db/database', () => ({
   db: {
-    sessions: { get: mocks.get, delete: mocks.sessionsDelete, put: mocks.sessionsPut },
+    sessions: {
+      get: mocks.get,
+      delete: mocks.sessionsDelete,
+      put: mocks.sessionsPut,
+    },
     clubs: { get: vi.fn() },
-    sessionTechniques: { where: mocks.sessionTechsWhere, bulkPut: mocks.sessionTechniquesBulkPut },
+    sessionTechniques: {
+      where: mocks.sessionTechsWhere,
+      bulkPut: mocks.sessionTechniquesBulkPut,
+    },
     sessionTaps: { where: mocks.tapsWhere, bulkPut: mocks.sessionTapsBulkPut },
     techniques: { where: mocks.techsWhere },
   },
@@ -53,12 +66,31 @@ const mockSession = {
 }
 
 const mockTechniques = [
-  { id: 401, name: 'Armbar', categoryId: 4, difficulty: 'BEGINNER' as const, isCustom: false, description: '', cues: [], youtubeUrl: '' },
+  {
+    id: 401,
+    name: 'Armbar',
+    categoryId: 4,
+    difficulty: 'BEGINNER' as const,
+    isCustom: false,
+    description: '',
+    cues: [],
+    youtubeUrl: '',
+  },
 ]
 
 import type { TapType } from '../types'
-const mockGivenTap = { id: 1, sessionId: 1, techniqueId: 401, type: 'given' as TapType }
-const mockReceivedTap = { id: 2, sessionId: 1, techniqueId: 401, type: 'received' as TapType }
+const mockGivenTap = {
+  id: 1,
+  sessionId: 1,
+  techniqueId: 401,
+  type: 'given' as TapType,
+}
+const mockReceivedTap = {
+  id: 2,
+  sessionId: 1,
+  techniqueId: 401,
+  type: 'received' as TapType,
+}
 
 function setupMocks(overrides?: {
   techniques?: typeof mockTechniques
@@ -75,7 +107,10 @@ function setupMocks(overrides?: {
   // 0 (mod 3): club query
   // 1 (mod 3): techniqueEntries query (returns { technique, notes }[])
   // 2 (mod 3): tapData query
-  const techniqueEntries = techniques.map(tech => ({ technique: tech, notes: undefined }))
+  const techniqueEntries = techniques.map((tech) => ({
+    technique: tech,
+    notes: undefined,
+  }))
   let call = 0
   mockUseLiveQuery.mockImplementation(() => {
     const c = call++
@@ -92,9 +127,18 @@ function renderPage(initialEntries: string[] = ['/sessions/1']) {
         <Routes>
           <Route path="/" element={<div data-testid="home-page" />} />
           <Route path="/sessions/:id" element={<SessionDetailPage />} />
-          <Route path="/sessions/:id/edit" element={<div data-testid="edit-page" />} />
-          <Route path="/sessions" element={<div data-testid="sessions-list" />} />
-          <Route path="/techniques/:id" element={<div data-testid="technique-detail" />} />
+          <Route
+            path="/sessions/:id/edit"
+            element={<div data-testid="edit-page" />}
+          />
+          <Route
+            path="/sessions"
+            element={<div data-testid="sessions-list" />}
+          />
+          <Route
+            path="/techniques/:id"
+            element={<div data-testid="technique-detail" />}
+          />
         </Routes>
       </MemoryRouter>
       <UndoSnackbar />
@@ -105,10 +149,16 @@ function renderPage(initialEntries: string[] = ['/sessions/1']) {
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.sessionTechsWhere.mockReturnValue({
-    equals: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]), delete: vi.fn() })),
+    equals: vi.fn(() => ({
+      toArray: vi.fn().mockResolvedValue([]),
+      delete: vi.fn(),
+    })),
   })
   mocks.tapsWhere.mockReturnValue({
-    equals: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]), delete: vi.fn() })),
+    equals: vi.fn(() => ({
+      toArray: vi.fn().mockResolvedValue([]),
+      delete: vi.fn(),
+    })),
   })
   mocks.techsWhere.mockReturnValue({
     anyOf: vi.fn(() => ({
@@ -138,25 +188,35 @@ describe('SessionDetailPage — structure', () => {
   it('renders notes when present', async () => {
     setupMocks()
     renderPage()
-    await waitFor(() => expect(screen.getByText('Great session')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText('Great session')).toBeInTheDocument(),
+    )
   })
 
   it('shows TECHNIQUES PRACTICED section', async () => {
     setupMocks()
     renderPage()
-    await waitFor(() => expect(screen.getByText('TECHNIQUES PRACTICED')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText('TECHNIQUES PRACTICED')).toBeInTheDocument(),
+    )
   })
 
   it('shows "No techniques logged" when none', async () => {
     setupMocks({ techniques: [] })
     renderPage()
-    await waitFor(() => expect(screen.getByText('No techniques logged for this session.')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(
+        screen.getByText('No techniques logged for this session.'),
+      ).toBeInTheDocument(),
+    )
   })
 
   it('shows technique names when techniques are present', async () => {
     setupMocks({ techniques: mockTechniques })
     renderPage()
-    await waitFor(() => expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument(),
+    )
   })
 })
 
@@ -168,7 +228,10 @@ describe('SessionDetailPage — order: techniques before taps', () => {
       const techSection = screen.getByText('TECHNIQUES PRACTICED')
       const tapSection = screen.getByText('Taps / Submissions')
       // DOCUMENT_POSITION_FOLLOWING (4) means tapSection comes after techSection
-      expect(techSection.compareDocumentPosition(tapSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(
+        techSection.compareDocumentPosition(tapSection) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
     })
   })
 })
@@ -183,13 +246,17 @@ describe('SessionDetailPage — taps', () => {
   it('shows received tap count', async () => {
     setupMocks({ taps: [mockReceivedTap] })
     renderPage()
-    await waitFor(() => expect(screen.getByText(/1 received/)).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText(/1 received/)).toBeInTheDocument(),
+    )
   })
 
   it('does not show taps section when empty', async () => {
     setupMocks({ taps: [] })
     renderPage()
-    await waitFor(() => expect(screen.queryByText('Taps / Submissions')).toBeNull())
+    await waitFor(() =>
+      expect(screen.queryByText('Taps / Submissions')).toBeNull(),
+    )
   })
 })
 
@@ -198,7 +265,9 @@ describe('SessionDetailPage — navigation', () => {
     setupMocks()
     renderPage()
     await waitFor(() => expect(screen.getByText('Gi')).toBeInTheDocument())
-    const editBtn = document.querySelector('button svg.lucide-pencil')?.closest('button') as HTMLElement
+    const editBtn = document
+      .querySelector('button svg.lucide-pencil')
+      ?.closest('button') as HTMLElement
     expect(editBtn).not.toBeNull()
   })
 
@@ -206,7 +275,9 @@ describe('SessionDetailPage — navigation', () => {
     setupMocks({ techniques: mockTechniques })
     const user = userEvent.setup()
     renderPage()
-    await waitFor(() => expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument(),
+    )
     await user.click(screen.getByText('Armbar'))
     expect(screen.getByTestId('technique-detail')).toBeInTheDocument()
   })
@@ -218,13 +289,19 @@ describe('SessionDetailPage — delete flow', () => {
     const user = userEvent.setup()
     const confirmSpy = vi.spyOn(window, 'confirm')
     renderPage()
-    await waitFor(() => expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument(),
+    )
 
-    const deleteBtn = document.querySelector('button svg.lucide-trash-2')?.closest('button') as HTMLElement
+    const deleteBtn = document
+      .querySelector('button svg.lucide-trash-2')
+      ?.closest('button') as HTMLElement
     await user.click(deleteBtn)
 
     expect(screen.getByText('Delete session')).toBeInTheDocument()
-    expect(screen.getByText('This session will be deleted:')).toBeInTheDocument()
+    expect(
+      screen.getByText('This session will be deleted:'),
+    ).toBeInTheDocument()
     expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument()
     expect(confirmSpy).not.toHaveBeenCalled()
   })
@@ -236,13 +313,19 @@ describe('SessionDetailPage — delete flow', () => {
     })
     const user = userEvent.setup()
     renderPage()
-    await waitFor(() => expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument(),
+    )
 
-    const deleteBtn = document.querySelector('button svg.lucide-trash-2')?.closest('button') as HTMLElement
+    const deleteBtn = document
+      .querySelector('button svg.lucide-trash-2')
+      ?.closest('button') as HTMLElement
     await user.click(deleteBtn)
     await user.click(screen.getByRole('button', { name: 'Delete' }))
 
-    await waitFor(() => expect(screen.getByText('Session deleted.')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText('Session deleted.')).toBeInTheDocument(),
+    )
     await user.click(screen.getByRole('button', { name: 'UNDO' }))
 
     await waitFor(() => {
@@ -254,14 +337,22 @@ describe('SessionDetailPage — delete flow', () => {
     const user = userEvent.setup()
     setupMocks({ techniques: mockTechniques })
     renderPage(['/', '/sessions/1'])
-    await waitFor(() => expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getAllByText('Armbar')[0]).toBeInTheDocument(),
+    )
 
-    const deleteBtn = document.querySelector('button svg.lucide-trash-2')?.closest('button') as HTMLElement
+    const deleteBtn = document
+      .querySelector('button svg.lucide-trash-2')
+      ?.closest('button') as HTMLElement
     await user.click(deleteBtn)
     await user.click(screen.getByRole('button', { name: 'Delete' }))
-    await waitFor(() => expect(screen.getByText('Session deleted.')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText('Session deleted.')).toBeInTheDocument(),
+    )
 
-    await new Promise(resolve => setTimeout(resolve, 5100))
-    await waitFor(() => expect(screen.getByTestId('home-page')).toBeInTheDocument())
+    await new Promise((resolve) => setTimeout(resolve, 5100))
+    await waitFor(() =>
+      expect(screen.getByTestId('home-page')).toBeInTheDocument(),
+    )
   }, 12000)
 })

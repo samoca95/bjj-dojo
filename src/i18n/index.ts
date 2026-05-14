@@ -12,7 +12,13 @@
  * 4. Add a button for the new language in `SettingsPage` and `FirstLaunchSetupPrompt`
  */
 import { useEffect, useMemo, useState } from 'react'
-import type { Category, ConnectionType, Difficulty, SessionType, Technique } from '../types'
+import type {
+  Category,
+  ConnectionType,
+  Difficulty,
+  SessionType,
+  Technique,
+} from '../types'
 import { EN_LANGUAGE_PACK } from './languages/en'
 import { ES_LANGUAGE_PACK } from './languages/es'
 import { FR_LANGUAGE_PACK } from './languages/fr'
@@ -52,62 +58,102 @@ export function translate(text: TranslationKey, language: AppLanguage): string {
   return pack.translations[text] ?? text
 }
 
-export function difficultyLabel(difficulty: Difficulty, fallback: string, language: AppLanguage): string {
+export function difficultyLabel(
+  difficulty: Difficulty,
+  fallback: string,
+  language: AppLanguage,
+): string {
   if (language === 'en') return fallback
   const pack = getLanguagePack(language)
   return pack.difficulty[difficulty] ?? fallback
 }
 
-export function sessionTypeLabel(sessionType: SessionType, fallback: string, language: AppLanguage): string {
+export function sessionTypeLabel(
+  sessionType: SessionType,
+  fallback: string,
+  language: AppLanguage,
+): string {
   if (language === 'en') return fallback
   const pack = getLanguagePack(language)
   return pack.sessionTypes[sessionType] ?? fallback
 }
 
-export function connectionTypeLabel(connectionType: ConnectionType, fallback: string, language: AppLanguage): string {
+export function connectionTypeLabel(
+  connectionType: ConnectionType,
+  fallback: string,
+  language: AppLanguage,
+): string {
   if (language === 'en') return fallback
   const pack = getLanguagePack(language)
   return pack.connectionTypes[connectionType] ?? fallback
 }
 
-export function getCategoryName(category: Category, language: AppLanguage): string {
+export function getCategoryName(
+  category: Category,
+  language: AppLanguage,
+): string {
   if (language === 'en') return category.name
   const pack = getLanguagePack(language)
   return pack.categoryContent[category.id]?.name ?? category.name
 }
 
-export function getCategoryDescription(category: Category, language: AppLanguage): string {
+export function getCategoryDescription(
+  category: Category,
+  language: AppLanguage,
+): string {
   if (language === 'en') return category.description
   const pack = getLanguagePack(language)
   return pack.categoryContent[category.id]?.description ?? category.description
 }
 
-export function getTechniqueDescription(technique: Technique, language: AppLanguage): string {
+export function getTechniqueDescription(
+  technique: Technique,
+  language: AppLanguage,
+): string {
   if (language === 'en' || technique.isCustom) return technique.description
   const pack = getLanguagePack(language)
-  return pack.techniqueContent[technique.id]?.description ?? technique.description
+  return (
+    pack.techniqueContent[technique.id]?.description ?? technique.description
+  )
 }
 
-export function getTechniqueCues(technique: Technique, language: AppLanguage): string[] {
+export function getTechniqueCues(
+  technique: Technique,
+  language: AppLanguage,
+): string[] {
   if (language === 'en' || technique.isCustom) return technique.cues ?? []
   const pack = getLanguagePack(language)
   return pack.techniqueContent[technique.id]?.cues ?? technique.cues ?? []
 }
 
-export function translateCategoryForExport(category: Category, language: AppLanguage): Category {
+export function translateCategoryForExport(
+  category: Category,
+  language: AppLanguage,
+): Category {
   if (language === 'en') return category
   const pack = getLanguagePack(language)
   const localized = pack.categoryContent[category.id]
   if (!localized) return category
-  return { ...category, name: localized.name, description: localized.description }
+  return {
+    ...category,
+    name: localized.name,
+    description: localized.description,
+  }
 }
 
-export function translateTechniqueForExport(technique: Technique, language: AppLanguage): Technique {
+export function translateTechniqueForExport(
+  technique: Technique,
+  language: AppLanguage,
+): Technique {
   if (language === 'en' || technique.isCustom) return technique
   const pack = getLanguagePack(language)
   const localized = pack.techniqueContent[technique.id]
   if (!localized) return technique
-  return { ...technique, description: localized.description, cues: localized.cues }
+  return {
+    ...technique,
+    description: localized.description,
+    cues: localized.cues,
+  }
 }
 
 export function useI18n() {
@@ -123,12 +169,15 @@ export function useI18n() {
     }
   }, [])
 
-  const api = useMemo(() => ({
-    language,
-    setLanguage: (next: AppLanguage) => setAppLanguage(next),
-    t: (text: TranslationKey) => translate(text, language),
-    locale: getLanguagePack(language).locale,
-  }), [language])
+  const api = useMemo(
+    () => ({
+      language,
+      setLanguage: (next: AppLanguage) => setAppLanguage(next),
+      t: (text: TranslationKey) => translate(text, language),
+      locale: getLanguagePack(language).locale,
+    }),
+    [language],
+  )
 
   return api
 }

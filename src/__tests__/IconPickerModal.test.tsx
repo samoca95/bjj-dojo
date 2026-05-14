@@ -5,7 +5,12 @@ import IconPickerModal from '../components/IconPickerModal'
 
 function renderModal(value?: string, onSelect = vi.fn(), onClose = vi.fn()) {
   return render(
-    <IconPickerModal title="Pick an icon" value={value} onSelect={onSelect} onClose={onClose} />,
+    <IconPickerModal
+      title="Pick an icon"
+      value={value}
+      onSelect={onSelect}
+      onClose={onClose}
+    />,
   )
 }
 
@@ -38,7 +43,9 @@ describe('IconPickerModal — structure', () => {
     const overlay = container.firstElementChild as HTMLElement
     const frame = overlay.firstElementChild as HTMLElement
     expect(overlay.className).toContain('z-[60]')
-    expect(frame.className).toContain('max-h-[calc(100dvh-4rem-env(safe-area-inset-bottom)-0.5rem)]')
+    expect(frame.className).toContain(
+      'max-h-[calc(100dvh-4rem-env(safe-area-inset-bottom)-0.5rem)]',
+    )
   })
 })
 

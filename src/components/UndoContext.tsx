@@ -1,38 +1,26 @@
-import { createContext, useContext, useRef, useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { useI18n } from '../i18n'
-
-interface UndoEntry {
-  label: string
-  onUndo: () => Promise<void> | void
-}
-
-interface UndoContextValue {
-  push: (entry: UndoEntry, timeoutMs?: number) => void
-  execute: () => void
-  dismiss: () => void
-  current: UndoEntry | null
-}
-
-const UndoContext = createContext<UndoContextValue>({
-  push: () => {},
-  execute: () => {},
-  dismiss: () => {},
-  current: null,
-})
+import { UndoContext, useUndo, type UndoEntry } from './undo'
 
 export function UndoProvider({ children }: { children: ReactNode }) {
   const [current, setCurrent] = useState<UndoEntry | null>(null)
   const timerRef = useRef<number | null>(null)
 
   const dismiss = () => {
-    if (timerRef.current !== null) { window.clearTimeout(timerRef.current); timerRef.current = null }
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
     setCurrent(null)
   }
 
   const push = (entry: UndoEntry, timeoutMs = 5000) => {
     if (timerRef.current !== null) window.clearTimeout(timerRef.current)
     setCurrent(entry)
-    timerRef.current = window.setTimeout(() => { timerRef.current = null; setCurrent(null) }, timeoutMs)
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null
+      setCurrent(null)
+    }, timeoutMs)
   }
 
   const execute = () => {
@@ -47,8 +35,6 @@ export function UndoProvider({ children }: { children: ReactNode }) {
     </UndoContext.Provider>
   )
 }
-
-export const useUndo = () => useContext(UndoContext)
 
 export function UndoSnackbar() {
   const { current, execute, dismiss } = useUndo()
@@ -68,9 +54,12 @@ export function UndoSnackbar() {
         onClick={execute}
         className="text-sm font-bold text-gold active:text-gold-light shrink-0"
       >
-        {language === 'es' ? 'DESHACER' : language === 'fr' ? 'ANNULER' : 'UNDO'}
+        {language === 'es'
+          ? 'DESHACER'
+          : language === 'fr'
+            ? 'ANNULER'
+            : 'UNDO'}
       </button>
     </div>
   )
 }
-

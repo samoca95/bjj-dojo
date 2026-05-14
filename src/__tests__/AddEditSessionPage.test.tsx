@@ -12,11 +12,21 @@ vi.mock('../db/database', () => ({
   db: {
     sessions: { get: vi.fn(), add: vi.fn().mockResolvedValue(1), put: vi.fn() },
     sessionTechniques: {
-      where: vi.fn(() => ({ equals: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]), delete: vi.fn() })) })),
+      where: vi.fn(() => ({
+        equals: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue([]),
+          delete: vi.fn(),
+        })),
+      })),
       bulkAdd: vi.fn(),
     },
     sessionTaps: {
-      where: vi.fn(() => ({ equals: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]), delete: vi.fn() })) })),
+      where: vi.fn(() => ({
+        equals: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue([]),
+          delete: vi.fn(),
+        })),
+      })),
       bulkAdd: vi.fn(),
     },
     techniques: {
@@ -24,8 +34,12 @@ vi.mock('../db/database', () => ({
       last: vi.fn().mockResolvedValue({ id: 1000 }),
       add: vi.fn(),
     },
-    clubs: { orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })) },
-    categories: { orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })) },
+    clubs: {
+      orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
+    },
+    categories: {
+      orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
+    },
   },
 }))
 
@@ -33,8 +47,26 @@ import { useLiveQuery } from 'dexie-react-hooks'
 const mockUseLiveQuery = vi.mocked(useLiveQuery)
 
 const sampleTechniques = [
-  { id: 401, name: 'Armbar', categoryId: 4, difficulty: 'BEGINNER' as const, isCustom: false, description: 'Test', cues: ['Squeeze knees'], youtubeUrl: '' },
-  { id: 402, name: 'Triangle Choke', categoryId: 4, difficulty: 'BEGINNER' as const, isCustom: false, description: 'Test', cues: ['Angle off'], youtubeUrl: '' },
+  {
+    id: 401,
+    name: 'Armbar',
+    categoryId: 4,
+    difficulty: 'BEGINNER' as const,
+    isCustom: false,
+    description: 'Test',
+    cues: ['Squeeze knees'],
+    youtubeUrl: '',
+  },
+  {
+    id: 402,
+    name: 'Triangle Choke',
+    categoryId: 4,
+    difficulty: 'BEGINNER' as const,
+    isCustom: false,
+    description: 'Test',
+    cues: ['Angle off'],
+    youtubeUrl: '',
+  },
 ]
 const sampleCategories = [
   { id: 4, name: 'Submissions', description: 'test', icon: 'target' },
@@ -197,7 +229,9 @@ describe('AddEditSessionPage — tap tracking', () => {
     const user = userEvent.setup()
     renderPage()
     await user.click(screen.getByText('Received'))
-    expect(screen.getByText('Select Technique — Tap Received')).toBeInTheDocument()
+    expect(
+      screen.getByText('Select Technique — Tap Received'),
+    ).toBeInTheDocument()
   })
 
   it('adding a tap given shows it in the given list', async () => {
@@ -208,7 +242,9 @@ describe('AddEditSessionPage — tap tracking', () => {
     await user.click(screen.getByText('Armbar'))
     expect(screen.getByText(/Given \(1\)/)).toBeInTheDocument()
     const container = screen.getByText(/Given \(1\)/).closest('div')!
-    expect(within(container.parentElement!).getByText('Armbar')).toBeInTheDocument()
+    expect(
+      within(container.parentElement!).getByText('Armbar'),
+    ).toBeInTheDocument()
   })
 
   it('adding a tap received shows it in the received list', async () => {

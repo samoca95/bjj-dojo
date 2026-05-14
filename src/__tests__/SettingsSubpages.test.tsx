@@ -11,7 +11,8 @@ const { resetPrefilledTechniquesMock } = vi.hoisted(() => ({
 }))
 
 vi.mock('../db/database', async () => {
-  const actual = await vi.importActual<typeof import('../db/database')>('../db/database')
+  const actual =
+    await vi.importActual<typeof import('../db/database')>('../db/database')
   return {
     ...actual,
     resetPrefilledTechniques: resetPrefilledTechniquesMock,
@@ -34,7 +35,9 @@ describe('Settings subpages', () => {
 
     await user.click(screen.getAllByLabelText('Hide section')[0])
 
-    expect(localStorage.getItem(HOME_SECTION_VISIBILITY_STORAGE_KEY)).toContain('"focus":false')
+    expect(localStorage.getItem(HOME_SECTION_VISIBILITY_STORAGE_KEY)).toContain(
+      '"focus":false',
+    )
   })
 
   it('resets pre-filled techniques from data and reset page', async () => {
@@ -46,7 +49,9 @@ describe('Settings subpages', () => {
         <SettingsDataResetPage />
       </MemoryRouter>,
     )
-    await user.click(screen.getByRole('button', { name: 'Reset pre-filled techniques' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Reset pre-filled techniques' }),
+    )
     expect(resetPrefilledTechniquesMock).toHaveBeenCalledTimes(1)
     confirmSpy.mockRestore()
     alertSpy.mockRestore()
