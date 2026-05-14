@@ -11,11 +11,15 @@ import {
   forceDirectedLayout,
   computeViewBox,
   zoomViewBox,
+  parseViewBox,
   type ViewBox,
 } from '../utils/graphLayout'
 
 const NODE_RADIUS = 14
 const LABEL_FONT_SIZE = 12
+// Persists the pan/zoom position so navigating to a technique and back
+// returns the graph to the exact same coordinates.
+const GRAPH_VIEW_KEY = 'bjj-dojo.techniques.graph-view'
 
 function truncate(text: string, max: number): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text
@@ -47,9 +51,24 @@ export default function TechniqueGraphPage() {
     return { positions: pos, fittedViewBox: computeViewBox(pos, 60) }
   }, [techniques, connections])
 
-  const [view, setView] = useState<ViewBox>(fittedViewBox)
-  // Re-fit the viewport whenever the underlying graph changes (incl. initial load).
-  useEffect(() => setView(fittedViewBox), [fittedViewBox])
+  // Restore a previously saved view (kept across navigation); otherwise null
+  // until the data loads and we can fit the whole graph.
+  const [view, setView] = useState<ViewBox | null>(
+    () => parseViewBox(window.sessionStorage.getItem(GRAPH_VIEW_KEY)),
+  )
+
+  // First load only: fit the viewport to the whole graph. Skipped when a saved
+  // view was restored, so returning to the page keeps the previous coordinates.
+  useEffect(() => {
+    if (view === null && techniques !== undefined && connections !== undefined) {
+      setView(fittedViewBox)
+    }
+  }, [view, techniques, connections, fittedViewBox])
+
+  // Persist the current view so it survives navigating away and back.
+  useEffect(() => {
+    if (view) window.sessionStorage.setItem(GRAPH_VIEW_KEY, JSON.stringify(view))
+  }, [view])
 
   const svgRef = useRef<SVGSVGElement>(null)
   const panRef = useRef<PanState | null>(null)
@@ -57,6 +76,7 @@ export default function TechniqueGraphPage() {
 
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     didPanRef.current = false
+    if (!view) return
     const rect = svgRef.current?.getBoundingClientRect()
     if (!rect) return
     panRef.current = {
@@ -101,8 +121,8 @@ export default function TechniqueGraphPage() {
     navigate(`/techniques/${id}`)
   }
 
-  const loading = techniques === undefined || connections === undefined
-  const showLabels = view.width < fittedViewBox.width * 0.7
+  const dataLoaded = techniques !== undefined && connections !== undefined
+  const showLabels = view !== null && view.width < fittedViewBox.width * 0.7
 
   const usedCategories = useMemo(() => {
     const ids = new Set((techniques ?? []).map(tech => tech.categoryId))
@@ -123,7 +143,7 @@ export default function TechniqueGraphPage() {
 
       {/* Graph canvas */}
       <div className="flex-1 min-h-0 relative">
-        {loading ? (
+        {!dataLoaded || !view ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
           </div>
@@ -204,14 +224,14 @@ export default function TechniqueGraphPage() {
             {/* Zoom controls */}
             <div className="absolute top-3 right-3 flex flex-col gap-1.5">
               <button
-                onClick={() => setView(v => zoomViewBox(v, 0.7))}
+                onClick={() => setView(v => (v ? zoomViewBox(v, 0.7) : v))}
                 aria-label={t('Zoom in')}
                 className="w-9 h-9 flex items-center justify-center bg-zinc-800/90 text-zinc-200 rounded-lg active:bg-zinc-700"
               >
                 <Plus size={18} strokeWidth={2.5} />
               </button>
               <button
-                onClick={() => setView(v => zoomViewBox(v, 1.4))}
+                onClick={() => setView(v => (v ? zoomViewBox(v, 1.4) : v))}
                 aria-label={t('Zoom out')}
                 className="w-9 h-9 flex items-center justify-center bg-zinc-800/90 text-zinc-200 rounded-lg active:bg-zinc-700"
               >

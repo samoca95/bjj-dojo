@@ -153,3 +153,30 @@ export function zoomViewBox(view: ViewBox, factor: number): ViewBox {
   const height = view.height * factor
   return { x: cx - width / 2, y: cy - height / 2, width, height }
 }
+
+/**
+ * Parses a serialised viewBox (e.g. from session storage), returning null when
+ * it is missing or malformed so callers can fall back to a freshly fitted view.
+ */
+export function parseViewBox(raw: string | null): ViewBox | null {
+  if (!raw) return null
+  try {
+    const v = JSON.parse(raw) as Record<string, unknown>
+    if (
+      v && typeof v === 'object' &&
+      Number.isFinite(v.x) && Number.isFinite(v.y) &&
+      Number.isFinite(v.width) && Number.isFinite(v.height) &&
+      (v.width as number) > 0 && (v.height as number) > 0
+    ) {
+      return {
+        x: v.x as number,
+        y: v.y as number,
+        width: v.width as number,
+        height: v.height as number,
+      }
+    }
+  } catch {
+    // Malformed JSON — fall through to null.
+  }
+  return null
+}

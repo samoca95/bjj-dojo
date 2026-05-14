@@ -48,7 +48,12 @@ function renderPage() {
   )
 }
 
-beforeEach(() => vi.clearAllMocks())
+const GRAPH_VIEW_KEY = 'bjj-dojo.techniques.graph-view'
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  window.sessionStorage.clear()
+})
 afterEach(() => vi.restoreAllMocks())
 
 describe('TechniqueGraphPage', () => {
@@ -92,5 +97,24 @@ describe('TechniqueGraphPage', () => {
     const { getByText } = renderPage()
     expect(getByText('Guards')).toBeInTheDocument()
     expect(getByText('Submissions')).toBeInTheDocument()
+  })
+
+  it('restores a previously saved view from session storage', () => {
+    const saved = { x: 10, y: 20, width: 300, height: 400 }
+    window.sessionStorage.setItem(GRAPH_VIEW_KEY, JSON.stringify(saved))
+    setupMocks()
+    const { container } = renderPage()
+    expect(container.querySelector('svg[role="img"]')?.getAttribute('viewBox')).toBe('10 20 300 400')
+  })
+
+  it('persists the current view to session storage', () => {
+    setupMocks()
+    renderPage()
+    const raw = window.sessionStorage.getItem(GRAPH_VIEW_KEY)
+    expect(raw).not.toBeNull()
+    const v = JSON.parse(raw!)
+    expect(Number.isFinite(v.x)).toBe(true)
+    expect(v.width).toBeGreaterThan(0)
+    expect(v.height).toBeGreaterThan(0)
   })
 })

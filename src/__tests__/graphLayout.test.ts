@@ -3,6 +3,7 @@ import {
   forceDirectedLayout,
   computeViewBox,
   zoomViewBox,
+  parseViewBox,
   type GraphNodePosition,
 } from '../utils/graphLayout'
 
@@ -100,5 +101,31 @@ describe('zoomViewBox', () => {
     const z = zoomViewBox(vb, 1.5)
     expect(z.x + z.width / 2).toBeCloseTo(vb.x + vb.width / 2)
     expect(z.y + z.height / 2).toBeCloseTo(vb.y + vb.height / 2)
+  })
+})
+
+describe('parseViewBox', () => {
+  it('returns null for missing input', () => {
+    expect(parseViewBox(null)).toBeNull()
+    expect(parseViewBox('')).toBeNull()
+  })
+
+  it('returns null for malformed JSON', () => {
+    expect(parseViewBox('{not json')).toBeNull()
+  })
+
+  it('returns null when fields are missing or non-numeric', () => {
+    expect(parseViewBox(JSON.stringify({ x: 0, y: 0, width: 100 }))).toBeNull()
+    expect(parseViewBox(JSON.stringify({ x: 0, y: 0, width: 'wide', height: 10 }))).toBeNull()
+  })
+
+  it('returns null for non-positive dimensions', () => {
+    expect(parseViewBox(JSON.stringify({ x: 0, y: 0, width: 0, height: 10 }))).toBeNull()
+    expect(parseViewBox(JSON.stringify({ x: 0, y: 0, width: 10, height: -5 }))).toBeNull()
+  })
+
+  it('round-trips a valid serialised viewBox', () => {
+    const vb = { x: -12.5, y: 30, width: 240, height: 160 }
+    expect(parseViewBox(JSON.stringify(vb))).toEqual(vb)
   })
 })
