@@ -259,13 +259,6 @@ export default function TechniquesPage() {
               <option value="frequency">{language === 'es' ? 'Frecuencia' : 'Frequency'}</option>
             </select>
             <button
-              onClick={() => navigate('/techniques/graph')}
-              className="p-2 rounded-xl bg-zinc-800 text-zinc-300 active:bg-zinc-700 transition-colors"
-              aria-label={t('Open technique graph')}
-            >
-              <Waypoints size={18} strokeWidth={2} />
-            </button>
-            <button
               onClick={() => setFilterOpen(prev => !prev)}
               className={`p-2 rounded-xl transition-colors relative ${
                 filterOpen ? 'bg-gold text-black' : 'bg-zinc-800 text-zinc-300 active:bg-zinc-700'
@@ -278,6 +271,16 @@ export default function TechniquesPage() {
               )}
             </button>
           </div>
+        </div>
+        <div className="px-4 pb-2 flex justify-end">
+          <button
+            onClick={() => navigate('/techniques/graph')}
+            className="h-9 px-3 rounded-xl bg-gold/90 text-black active:bg-gold flex items-center gap-1.5 transition-colors"
+            aria-label={t('Open technique graph')}
+          >
+            <Waypoints size={15} strokeWidth={2.4} />
+            <span className="text-xs font-semibold">{t('Technique Graph')}</span>
+          </button>
         </div>
 
         {/* Search */}

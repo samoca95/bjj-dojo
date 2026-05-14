@@ -4,8 +4,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, Plus, Minus, Maximize2 } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
-import type { Category } from '../types'
-import { useI18n, getCategoryName } from '../i18n'
+import type { Category, ConnectionType } from '../types'
+import { CONNECTION_LABELS } from '../types'
+import { useI18n, connectionTypeLabel, getCategoryName } from '../i18n'
 import { categoryColor } from '../utils/categoryColor'
 import {
   forceDirectedLayout,
@@ -17,6 +18,14 @@ import {
 
 const NODE_RADIUS = 14
 const LABEL_FONT_SIZE = 12
+const MIN_PINCH_ZOOM_FACTOR = 0.35
+const MAX_PINCH_ZOOM_FACTOR = 3.2
+const EDGE_COLORS: Record<ConnectionType, string> = {
+  FOLLOW_UP: '#fcd34d',
+  COUNTER: '#fca5a5',
+  SETUP: '#86efac',
+  TRANSITION: '#93c5fd',
+}
 // Persists the pan/zoom position so navigating to a technique and back
 // returns the graph to the exact same coordinates.
 const GRAPH_VIEW_KEY = 'bjj-dojo.techniques.graph-view'
@@ -35,6 +44,30 @@ interface PanState {
   moved: boolean
 }
 
+interface PinchState {
+  startDistance: number
+  startView: ViewBox
+  rectLeft: number
+  rectTop: number
+  rectW: number
+  rectH: number
+}
+
+function zoomAtClientPoint(view: ViewBox, factor: number, pinch: PinchState, clientX: number, clientY: number): ViewBox {
+  const relX = (clientX - pinch.rectLeft) / pinch.rectW
+  const relY = (clientY - pinch.rectTop) / pinch.rectH
+  const anchorX = view.x + relX * view.width
+  const anchorY = view.y + relY * view.height
+  const width = view.width * factor
+  const height = view.height * factor
+  return {
+    x: anchorX - relX * width,
+    y: anchorY - relY * height,
+    width,
+    height,
+  }
+}
+
 export default function TechniqueGraphPage() {
   const navigate = useNavigate()
   const { language, t } = useI18n()
@@ -48,7 +81,7 @@ export default function TechniqueGraphPage() {
     const ids = (techniques ?? []).map(tech => tech.id)
     const edges = (connections ?? []).map(c => ({ from: c.fromTechniqueId, to: c.toTechniqueId }))
     const pos = forceDirectedLayout(ids, edges)
-    return { positions: pos, fittedViewBox: computeViewBox(pos, 60) }
+    return { positions: pos, fittedViewBox: computeViewBox(pos, 32) }
   }, [techniques, connections])
 
   // Restore a previously saved view (kept across navigation); otherwise null
@@ -72,26 +105,71 @@ export default function TechniqueGraphPage() {
 
   const svgRef = useRef<SVGSVGElement>(null)
   const panRef = useRef<PanState | null>(null)
+  const pinchRef = useRef<PinchState | null>(null)
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
   const didPanRef = useRef(false)
+  const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null)
+  const [hoveredNodeId, setHoveredNodeId] = useState<number | null>(null)
+
+  const activeNodeId = hoveredNodeId ?? selectedNodeId
+  const highlightedNodeIds = useMemo(() => {
+    const ids = new Set<number>()
+    if (!activeNodeId) return ids
+    ids.add(activeNodeId)
+    for (const c of connections ?? []) {
+      if (c.fromTechniqueId === activeNodeId) ids.add(c.toTechniqueId)
+      if (c.toTechniqueId === activeNodeId) ids.add(c.fromTechniqueId)
+    }
+    return ids
+  }, [activeNodeId, connections])
 
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     didPanRef.current = false
     if (!view) return
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     const rect = svgRef.current?.getBoundingClientRect()
     if (!rect) return
-    panRef.current = {
-      pointerId: e.pointerId,
-      clientX: e.clientX,
-      clientY: e.clientY,
-      startView: view,
-      rectW: rect.width,
-      rectH: rect.height,
-      moved: false,
+    if (pointersRef.current.size === 1) {
+      panRef.current = {
+        pointerId: e.pointerId,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        startView: view,
+        rectW: rect.width,
+        rectH: rect.height,
+        moved: false,
+      }
+      pinchRef.current = null
+    } else if (pointersRef.current.size >= 2) {
+      const [a, b] = [...pointersRef.current.values()]
+      const startDistance = Math.hypot(a.x - b.x, a.y - b.y)
+      pinchRef.current = {
+        startDistance: Math.max(startDistance, 1),
+        startView: view,
+        rectLeft: rect.left,
+        rectTop: rect.top,
+        rectW: rect.width,
+        rectH: rect.height,
+      }
+      panRef.current = null
     }
     svgRef.current?.setPointerCapture(e.pointerId)
   }
 
   const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (!pointersRef.current.has(e.pointerId)) return
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    const pinch = pinchRef.current
+    if (pinch && pointersRef.current.size >= 2) {
+      const [a, b] = [...pointersRef.current.values()]
+      const currentDistance = Math.max(Math.hypot(a.x - b.x, a.y - b.y), 1)
+      const centerX = (a.x + b.x) / 2
+      const centerY = (a.y + b.y) / 2
+      const factor = Math.min(MAX_PINCH_ZOOM_FACTOR, Math.max(MIN_PINCH_ZOOM_FACTOR, pinch.startDistance / currentDistance))
+      didPanRef.current = true
+      setView(zoomAtClientPoint(pinch.startView, factor, pinch, centerX, centerY))
+      return
+    }
     const pan = panRef.current
     if (!pan) return
     if (Math.abs(e.clientX - pan.clientX) > 3 || Math.abs(e.clientY - pan.clientY) > 3) {
@@ -108,17 +186,25 @@ export default function TechniqueGraphPage() {
   }
 
   const onPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    pointersRef.current.delete(e.pointerId)
     const pan = panRef.current
     if (pan) {
       didPanRef.current = pan.moved
       svgRef.current?.releasePointerCapture(e.pointerId)
     }
     panRef.current = null
+    if (pointersRef.current.size < 2) pinchRef.current = null
   }
 
   const activateNode = (id: number) => {
     if (didPanRef.current) return
-    navigate(`/techniques/${id}`)
+    setSelectedNodeId(prev => {
+      if (prev === id) {
+        navigate(`/techniques/${id}`)
+        return prev
+      }
+      return id
+    })
   }
 
   const dataLoaded = techniques !== undefined && connections !== undefined
@@ -169,17 +255,39 @@ export default function TechniqueGraphPage() {
                 const a = positions.get(c.fromTechniqueId)
                 const b = positions.get(c.toTechniqueId)
                 if (!a || !b) return null
+                const highlighted = activeNodeId !== null && (c.fromTechniqueId === activeNodeId || c.toTechniqueId === activeNodeId)
+                const typeLabel = connectionTypeLabel(c.connectionType, CONNECTION_LABELS[c.connectionType], language)
+                const edgeColor = EDGE_COLORS[c.connectionType]
+                const midX = (a.x + b.x) / 2
+                const midY = (a.y + b.y) / 2
                 return (
-                  <line
-                    key={`${c.fromTechniqueId}-${c.toTechniqueId}`}
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
-                    stroke="#52525b"
-                    strokeWidth={1}
-                    strokeOpacity={0.4}
-                  />
+                  <g key={`${c.fromTechniqueId}-${c.toTechniqueId}`}>
+                    <line
+                      x1={a.x}
+                      y1={a.y}
+                      x2={b.x}
+                      y2={b.y}
+                      stroke={edgeColor}
+                      strokeWidth={highlighted ? 2.4 : 1.8}
+                      strokeOpacity={highlighted ? 0.98 : 0.62}
+                      markerEnd={highlighted ? `url(#tg-arrow-${c.connectionType})` : undefined}
+                    />
+                    {highlighted && (
+                      <text
+                        x={midX}
+                        y={midY - 3}
+                        textAnchor="middle"
+                        fontSize={8.5}
+                        fill="#fafafa"
+                        stroke="#09090b"
+                        strokeWidth={2.2}
+                        paintOrder="stroke"
+                      >
+                        {typeLabel}
+                      </text>
+                    )}
+                    <title>{typeLabel}</title>
+                  </g>
                 )
               })}
 
@@ -188,6 +296,7 @@ export default function TechniqueGraphPage() {
                 const p = positions.get(tech.id)
                 if (!p) return null
                 const color = categoryColor(tech.categoryId)
+                const highlighted = highlightedNodeIds.has(tech.id)
                 return (
                   <g
                     key={tech.id}
@@ -195,15 +304,20 @@ export default function TechniqueGraphPage() {
                     tabIndex={0}
                     className="cursor-pointer"
                     onClick={() => activateNode(tech.id)}
+                    onPointerEnter={() => setHoveredNodeId(tech.id)}
+                    onPointerLeave={() => setHoveredNodeId(prev => (prev === tech.id ? null : prev))}
                     onKeyDown={e => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault()
-                        navigate(`/techniques/${tech.id}`)
+                        activateNode(tech.id)
                       }
                     }}
                   >
-                    <circle cx={p.x} cy={p.y} r={NODE_RADIUS} fill="#18181b" stroke={color} strokeWidth={2.5} />
-                    <circle cx={p.x} cy={p.y} r={NODE_RADIUS - 5} fill={color} fillOpacity={0.35} />
+                    {highlighted && (
+                      <circle cx={p.x} cy={p.y} r={NODE_RADIUS + 4.5} fill="none" stroke={color} strokeWidth={3} />
+                    )}
+                    <circle cx={p.x} cy={p.y} r={NODE_RADIUS} fill="#18181b" stroke="#3f3f46" strokeWidth={1.4} />
+                    <circle cx={p.x} cy={p.y} r={NODE_RADIUS - 5} fill={color} fillOpacity={highlighted ? 0.5 : 0.28} />
                     {showLabels && (
                       <text
                         x={p.x}
@@ -219,6 +333,22 @@ export default function TechniqueGraphPage() {
                   </g>
                 )
               })}
+              <defs>
+                {Object.entries(EDGE_COLORS).map(([type, color]) => (
+                  <marker
+                    key={type}
+                    id={`tg-arrow-${type}`}
+                    viewBox="0 0 10 10"
+                    refX="9"
+                    refY="5"
+                    markerWidth="6.5"
+                    markerHeight="6.5"
+                    orient="auto"
+                  >
+                    <path d="M0,0 L10,5 L0,10 z" fill={color} />
+                  </marker>
+                ))}
+              </defs>
             </svg>
 
             {/* Zoom controls */}

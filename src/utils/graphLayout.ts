@@ -26,7 +26,7 @@ export function forceDirectedLayout(
   options?: { iterations?: number; spacing?: number },
 ): Map<number, GraphNodePosition> {
   const iterations = options?.iterations ?? 300
-  const k = options?.spacing ?? 70
+  const k = options?.spacing ?? 56
   const n = nodeIds.length
   const pos = new Map<number, GraphNodePosition>()
   if (n === 0) return pos
@@ -105,8 +105,8 @@ export function forceDirectedLayout(
       if (dist < 0.01) dist = 0.01
       p.x += (d.x / dist) * Math.min(dist, temp)
       p.y += (d.y / dist) * Math.min(dist, temp)
-      p.x *= 0.99
-      p.y *= 0.99
+      p.x *= 0.965
+      p.y *= 0.965
     }
 
     temp *= cooling

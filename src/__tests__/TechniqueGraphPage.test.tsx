@@ -79,10 +79,22 @@ describe('TechniqueGraphPage', () => {
     expect(container.querySelectorAll('line')).toHaveLength(2)
   })
 
-  it('navigates to the technique detail page when a node is clicked', () => {
+  it('shows highlighted edge arrows and type tips when a node is hovered', () => {
     setupMocks()
-    const { container, getByTestId } = renderPage()
-    fireEvent.click(container.querySelector('g[role="button"]')!)
+    const { container, getAllByText } = renderPage()
+    const firstNode = container.querySelector('g[role="button"]')!
+    fireEvent.pointerEnter(firstNode)
+    expect(container.querySelector('line[marker-end]')).not.toBeNull()
+    expect(getAllByText('Follow-up').length).toBeGreaterThan(0)
+  })
+
+  it('selects on first click and navigates on second click of the same node', () => {
+    setupMocks()
+    const { container, getByTestId, queryByTestId } = renderPage()
+    const firstNode = container.querySelector('g[role="button"]')!
+    fireEvent.click(firstNode)
+    expect(queryByTestId('technique-detail')).toBeNull()
+    fireEvent.click(firstNode)
     expect(getByTestId('technique-detail')).toBeInTheDocument()
   })
 
