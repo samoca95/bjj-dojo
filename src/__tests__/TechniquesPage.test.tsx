@@ -93,26 +93,24 @@ describe('TechniquesPage — structure', () => {
     expect(screen.getByText('Closed Guard')).toBeInTheDocument()
   })
 
-  it('renders actions button opposite to the technique counter', () => {
+  it('renders direct new-technique button opposite to the technique counter', () => {
     setupMocks()
     renderPage()
-    expect(screen.getByRole('button', { name: 'Technique actions' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New technique' })).toBeInTheDocument()
   })
 
-  it('action modal navigates to new technique page', async () => {
+  it('new-technique button navigates to new technique page', async () => {
     setupMocks()
     const user = userEvent.setup()
     renderPage()
-    await user.click(screen.getByRole('button', { name: 'Technique actions' }))
     await user.click(screen.getByRole('button', { name: 'New technique' }))
     expect(screen.getByTestId('new-technique-page')).toBeInTheDocument()
   })
 
-  it('action modal opens the global graph page from icon-only button', async () => {
+  it('bottom-right graph button opens the global graph page', async () => {
     setupMocks()
     const user = userEvent.setup()
     renderPage()
-    await user.click(screen.getByRole('button', { name: 'Technique actions' }))
     await user.click(screen.getByRole('button', { name: 'Open technique graph' }))
     expect(screen.getByTestId('technique-graph-page')).toBeInTheDocument()
   })
