@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { INITIAL_SETUP_COMPLETED_STORAGE_KEY } from '../components/FirstLaunchSetupPrompt'
+import { INITIAL_SETUP_COMPLETED_STORAGE_KEY } from '../components/firstLaunchSetup'
 import { APP_LANGUAGE_STORAGE_KEY } from '../i18n'
 import { BELT_STORAGE_KEY, STRIPES_STORAGE_KEY } from '../utils/beltRank'
 

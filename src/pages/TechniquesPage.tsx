@@ -4,6 +4,7 @@ import {
   useRef,
   useLayoutEffect,
   useCallback,
+  useMemo,
   forwardRef,
 } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -391,7 +392,9 @@ export default function TechniquesPage() {
     null as null | { items: Technique[]; freqMap: Map<number, number> },
   )
 
-  const techniques = queryResult?.items ?? []
+  // Memoized so the `[]` fallback keeps a stable identity while the live query
+  // resolves — otherwise the height-reset effect below would run every render.
+  const techniques = useMemo(() => queryResult?.items ?? [], [queryResult])
   const freqMap = queryResult?.freqMap ?? new Map<number, number>()
 
   const catMap = new Map(

@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { DynamicIcon, iconNames } from 'lucide-react/dynamic'
+import { CategoryIcon } from './CategoryIcon'
 import {
   CATEGORY_ICON_OPTIONS,
-  CategoryIcon,
   EMOJI_SUGGESTIONS,
   SUGGESTED_ICON_IDS,
-} from './CategoryIcon'
+} from './categoryIcons'
 import { useI18n } from '../i18n'
 
 type IconName = Parameters<typeof DynamicIcon>[0]['name']

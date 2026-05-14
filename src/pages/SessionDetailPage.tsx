@@ -22,7 +22,7 @@ import {
   SESSION_TYPE_ICONS_UPDATED_EVENT,
 } from '../utils/sessionTypeIcons'
 import { sessionTypeLabel, useI18n, type AppLanguage } from '../i18n'
-import { useUndo } from '../components/UndoContext'
+import { useUndo } from '../components/undo'
 import ShareSheet from '../components/ShareSheet'
 
 const SHARE_PROMPT_LABELS: Record<AppLanguage, { title: string; cta: string }> =

@@ -3,10 +3,10 @@ import { useState } from 'react'
 import BottomNav from './BottomNav'
 import OfflineNotice from './OfflineNotice'
 import PwaUpdatePrompt from './PwaUpdatePrompt'
-import FirstLaunchSetupPrompt, {
-  isInitialSetupRequired,
-} from './FirstLaunchSetupPrompt'
-import OnboardingFlow, { isOnboardingRequired } from './OnboardingFlow'
+import FirstLaunchSetupPrompt from './FirstLaunchSetupPrompt'
+import { isInitialSetupRequired } from './firstLaunchSetup'
+import OnboardingFlow from './OnboardingFlow'
+import { isOnboardingRequired } from './onboarding'
 import QuotaErrorModal from './QuotaErrorModal'
 import { UndoProvider, UndoSnackbar } from './UndoContext'
 

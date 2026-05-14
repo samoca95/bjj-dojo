@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import FirstLaunchSetupPrompt, {
+import FirstLaunchSetupPrompt from '../components/FirstLaunchSetupPrompt'
+import {
   INITIAL_SETUP_COMPLETED_STORAGE_KEY,
   isInitialSetupRequired,
-} from '../components/FirstLaunchSetupPrompt'
+} from '../components/firstLaunchSetup'
 import { APP_LANGUAGE_STORAGE_KEY } from '../i18n'
 import { BELT_STORAGE_KEY, STRIPES_STORAGE_KEY } from '../utils/beltRank'
 

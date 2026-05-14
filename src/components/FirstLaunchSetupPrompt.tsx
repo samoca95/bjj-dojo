@@ -1,38 +1,14 @@
 import { useState } from 'react'
 import { Minus, Plus } from 'lucide-react'
-import {
-  APP_LANGUAGE_STORAGE_KEY,
-  setAppLanguage,
-  type AppLanguage,
-} from '../i18n'
+import { setAppLanguage, type AppLanguage } from '../i18n'
 import {
   BELT_COLORS,
-  BELT_STORAGE_KEY,
   MAX_STRIPES,
-  STRIPES_STORAGE_KEY,
   type BeltColor,
   setBeltColor,
   setBeltStripes,
 } from '../utils/beltRank'
-
-export const INITIAL_SETUP_COMPLETED_STORAGE_KEY =
-  'bjj-dojo:initial-setup-completed'
-
-export function isInitialSetupRequired(): boolean {
-  if (typeof window === 'undefined') return false
-  if (window.localStorage.getItem(INITIAL_SETUP_COMPLETED_STORAGE_KEY) === '1')
-    return false
-  return (
-    !window.localStorage.getItem(APP_LANGUAGE_STORAGE_KEY) &&
-    !window.localStorage.getItem(BELT_STORAGE_KEY) &&
-    !window.localStorage.getItem(STRIPES_STORAGE_KEY)
-  )
-}
-
-function completeInitialSetup() {
-  if (typeof window === 'undefined') return
-  window.localStorage.setItem(INITIAL_SETUP_COMPLETED_STORAGE_KEY, '1')
-}
+import { completeInitialSetup } from './firstLaunchSetup'
 
 interface FirstLaunchSetupPromptProps {
   onComplete?: () => void

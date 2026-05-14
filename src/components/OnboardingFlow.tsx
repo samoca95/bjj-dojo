@@ -12,18 +12,13 @@ import {
 } from 'lucide-react'
 import { db } from '../db/database'
 import { getAppLanguage, type AppLanguage } from '../i18n'
+import { ONBOARDING_COMPLETED_STORAGE_KEY } from './onboarding'
 
-export const ONBOARDING_COMPLETED_STORAGE_KEY = 'bjj-dojo:onboarding-completed'
 const DUMMY_SESSION_STORAGE_KEY = 'bjj-dojo:onboarding-dummy-session-id'
 
 // Prefilled technique used by the onboarding tour for the "detail view" slide.
 // Armbar is recognizable and exists in every install (see prefilled.ts).
 const SHOWCASE_TECHNIQUE_ID = 401
-
-export function isOnboardingRequired(): boolean {
-  if (typeof window === 'undefined') return false
-  return window.localStorage.getItem(ONBOARDING_COMPLETED_STORAGE_KEY) !== '1'
-}
 
 interface Slide {
   title: string

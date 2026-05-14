@@ -1,30 +1,6 @@
-import {
-  createContext,
-  useContext,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { useI18n } from '../i18n'
-
-interface UndoEntry {
-  label: string
-  onUndo: () => Promise<void> | void
-}
-
-interface UndoContextValue {
-  push: (entry: UndoEntry, timeoutMs?: number) => void
-  execute: () => void
-  dismiss: () => void
-  current: UndoEntry | null
-}
-
-const UndoContext = createContext<UndoContextValue>({
-  push: () => {},
-  execute: () => {},
-  dismiss: () => {},
-  current: null,
-})
+import { UndoContext, useUndo, type UndoEntry } from './undo'
 
 export function UndoProvider({ children }: { children: ReactNode }) {
   const [current, setCurrent] = useState<UndoEntry | null>(null)
@@ -59,8 +35,6 @@ export function UndoProvider({ children }: { children: ReactNode }) {
     </UndoContext.Provider>
   )
 }
-
-export const useUndo = () => useContext(UndoContext)
 
 export function UndoSnackbar() {
   const { current, execute, dismiss } = useUndo()

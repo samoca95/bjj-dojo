@@ -23,7 +23,7 @@ import {
 } from '../utils/validation'
 import { runWithTelemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
-import { useUndo } from '../components/UndoContext'
+import { useUndo } from '../components/undo'
 
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
