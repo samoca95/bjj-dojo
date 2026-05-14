@@ -42,6 +42,32 @@ export function techniqueMatchesQuery(technique: Technique, query: string): bool
 }
 
 /**
+ * Returns the first alias that matches the query, but only when the technique
+ * name itself does not match — so callers can show "why" this result appeared.
+ */
+export function getMatchingAlias(technique: Technique, query: string): string | null {
+  if (!query.trim() || !technique.aliases?.length) return null
+
+  const normQuery = normalize(query)
+  const normName = normalize(technique.name)
+  const tokens = normQuery.split(/\s+/).filter(Boolean)
+
+  const nameMatches =
+    normName === normQuery ||
+    normName.startsWith(normQuery) ||
+    normName.includes(normQuery) ||
+    isSubsequence(normName, normQuery) ||
+    (tokens.length > 1 && tokens.every(token => normName.includes(token)))
+
+  if (nameMatches) return null
+
+  for (const alias of technique.aliases) {
+    if (fuzzyMatch(alias, query)) return alias
+  }
+  return null
+}
+
+/**
  * Returns a sort score for the technique against the query.
  * Higher score = closer match = should appear earlier in results.
  * Strict/exact matches in name rank highest; description-only matches rank lowest.

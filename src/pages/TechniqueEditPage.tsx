@@ -177,7 +177,7 @@ export default function TechniqueEditPage() {
             })),
           ))
         }
-        navigate(`/techniques/${id}`)
+        navigate(-1)
       }
     } catch (err) {
       if (isQuotaError(err)) {
