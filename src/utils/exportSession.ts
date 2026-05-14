@@ -226,7 +226,7 @@ function fileBaseName(session: Session): string {
   return `bjj-session-${yyyy}-${mm}-${dd}`
 }
 
-function downloadBlob(blob: Blob, filename: string) {
+export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -276,4 +276,117 @@ export async function exportSession(
 
   downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${base}.html`)
   return { method: 'download' }
+}
+
+// --- Social media sharing --------------------------------------------------
+
+interface CaptionLabels {
+  session: (duration: number, type: string) => string
+  at: string
+  drilled: string
+  taps: (count: number) => string
+  hashtags: string
+}
+
+const CAPTION_LABELS: Record<AppLanguage, CaptionLabels> = {
+  en: {
+    session: (d, t) => `🥋 ${d} min ${t} session`,
+    at: 'at',
+    drilled: 'Drilled',
+    taps: c => `${c} ${c === 1 ? 'submission' : 'submissions'} landed 🔥`,
+    hashtags: '#bjj #jiujitsu #grappling #bjjdojo',
+  },
+  es: {
+    session: (d, t) => `🥋 Sesión de ${t} de ${d} min`,
+    at: 'en',
+    drilled: 'Técnicas',
+    taps: c => `${c} ${c === 1 ? 'sumisión aplicada' : 'sumisiones aplicadas'} 🔥`,
+    hashtags: '#bjj #jiujitsu #grappling #bjjdojo',
+  },
+  fr: {
+    session: (d, t) => `🥋 Session ${t} de ${d} min`,
+    at: 'à',
+    drilled: 'Travaillé',
+    taps: c => `${c} ${c === 1 ? 'soumission réussie' : 'soumissions réussies'} 🔥`,
+    hashtags: '#bjj #jiujitsu #grappling #bjjdojo',
+  },
+}
+
+/** Builds a short, punchy caption suited to a social media post. */
+export function buildShareCaption(data: SessionExportData, language: AppLanguage): string {
+  const C = CAPTION_LABELS[language] ?? CAPTION_LABELS.en
+  const { session, clubName, techniques, givenTaps } = data
+  const typeLabel = sessionTypeLabel(session.sessionType, SESSION_TYPE_LABELS[session.sessionType], language)
+
+  const lines: string[] = []
+  let header = C.session(session.durationMinutes, typeLabel)
+  if (clubName) header += ` ${C.at} ${clubName}`
+  lines.push(header)
+
+  if (techniques.length > 0) {
+    const names = techniques.map(t => t.technique.name)
+    const shown = names.slice(0, 3)
+    const extra = names.length - shown.length
+    let techLine = `${C.drilled}: ${shown.join(', ')}`
+    if (extra > 0) techLine += ` +${extra}`
+    lines.push(techLine)
+  }
+
+  if (givenTaps.length > 0) lines.push(C.taps(givenTaps.length))
+
+  lines.push('')
+  lines.push(C.hashtags)
+  return lines.join('\n')
+}
+
+export interface ImageShareResult {
+  method: 'share' | 'download'
+}
+
+/**
+ * Shares the rendered PNG via the Web Share API (which surfaces WhatsApp,
+ * Instagram, X, etc. on mobile). Falls back to a direct download.
+ */
+export async function shareSessionImage(
+  blob: Blob,
+  session: Session,
+  caption: string,
+  language: AppLanguage,
+): Promise<ImageShareResult> {
+  const filename = `${fileBaseName(session)}.png`
+  const title = LABELS[language].title
+  const nav = typeof navigator !== 'undefined' ? navigator : undefined
+
+  if (nav && typeof nav.canShare === 'function' && typeof nav.share === 'function') {
+    try {
+      const file = new File([blob], filename, { type: 'image/png' })
+      if (nav.canShare({ files: [file] })) {
+        await nav.share({ files: [file], title, text: caption })
+        return { method: 'share' }
+      }
+    } catch (err) {
+      if ((err as DOMException)?.name === 'AbortError') return { method: 'share' }
+    }
+  }
+
+  downloadBlob(blob, filename)
+  return { method: 'download' }
+}
+
+export function openWhatsAppShare(text: string) {
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
+}
+
+export function openTwitterShare(text: string) {
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
+}
+
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (typeof navigator === 'undefined' || !navigator.clipboard) return false
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch {
+    return false
+  }
 }
