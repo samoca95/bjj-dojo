@@ -252,15 +252,6 @@ export default function TechniqueDetailPage() {
               </div>
             </div>
           )}
-          {(technique.aliases?.length ?? 0) > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {technique.aliases!.map(alias => (
-                <span key={alias} className="text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-400">
-                  {alias}
-                </span>
-              ))}
-            </div>
-          )}
           {(technique.tags?.length ?? 0) > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {(technique.tags ?? []).map(tag => (
