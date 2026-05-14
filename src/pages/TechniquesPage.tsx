@@ -112,7 +112,6 @@ function MeasuredTechniqueRow({
     index,
     techniqueId,
     onHeightChange,
-    technique.id,
     technique.isFavorite,
     technique.name,
     technique.difficulty,
