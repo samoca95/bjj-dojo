@@ -226,6 +226,9 @@ export default function TechniquesPage() {
   const [difficultyFilter, setDifficultyFilter] = useState<'all' | Difficulty>(
     'all',
   )
+  const [formatFilter, setFormatFilter] = useState<'all' | 'gi' | 'no-gi'>(
+    'all',
+  )
   const [sortBy, setSortBy] = useState<
     'name_asc' | 'name_desc' | 'level' | 'frequency'
   >('name_asc')
@@ -289,6 +292,18 @@ export default function TechniquesPage() {
           setDifficultyFilter(parsed.difficultyFilter as 'all' | Difficulty)
         }
         if (
+          (parsed as Record<string, unknown>).formatFilter === 'all' ||
+          (parsed as Record<string, unknown>).formatFilter === 'gi' ||
+          (parsed as Record<string, unknown>).formatFilter === 'no-gi'
+        ) {
+          setFormatFilter(
+            (parsed as Record<string, unknown>).formatFilter as
+              | 'all'
+              | 'gi'
+              | 'no-gi',
+          )
+        }
+        if (
           parsed.sortBy === 'name_asc' ||
           parsed.sortBy === 'name_desc' ||
           parsed.sortBy === 'level' ||
@@ -317,10 +332,18 @@ export default function TechniquesPage() {
         categoryId,
         favoritesOnly,
         difficultyFilter,
+        formatFilter,
         sortBy,
       }),
     )
-  }, [search, categoryId, favoritesOnly, difficultyFilter, sortBy])
+  }, [
+    search,
+    categoryId,
+    favoritesOnly,
+    difficultyFilter,
+    formatFilter,
+    sortBy,
+  ])
 
   // P5: category data served from module-level cache; returns ordered Category[]
   const categories = useLiveQuery(
@@ -361,6 +384,8 @@ export default function TechniquesPage() {
         if (favoritesOnly && !t.isFavorite) return false
         if (difficultyFilter !== 'all' && t.difficulty !== difficultyFilter)
           return false
+        if (formatFilter === 'gi' && t.gi === false) return false
+        if (formatFilter === 'no-gi' && t.noGi === false) return false
         return true
       })
       const compareBySort = (a: Technique, b: Technique) => {
@@ -406,6 +431,7 @@ export default function TechniquesPage() {
       categoryId,
       favoritesOnly,
       difficultyFilter,
+      formatFilter,
       sortBy,
       language,
     ],
@@ -476,6 +502,7 @@ export default function TechniquesPage() {
               categoryId,
               favoritesOnly,
               difficultyFilter,
+              formatFilter,
               sortBy,
             }),
           )
@@ -544,7 +571,8 @@ export default function TechniquesPage() {
               <SlidersHorizontal size={18} strokeWidth={2} />
               {(categoryId !== null ||
                 favoritesOnly ||
-                difficultyFilter !== 'all') &&
+                difficultyFilter !== 'all' ||
+                formatFilter !== 'all') &&
                 !filterOpen && (
                   <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
                 )}
@@ -595,6 +623,7 @@ export default function TechniquesPage() {
                   setCategoryId(null)
                   setFavoritesOnly(false)
                   setDifficultyFilter('all')
+                  setFormatFilter('all')
                 }}
                 className="text-xs text-zinc-500 active:text-zinc-300"
               >
@@ -683,6 +712,22 @@ export default function TechniquesPage() {
                   }`}
                 >
                   {difficultyLabel(d, d, language)}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {(['all', 'gi', 'no-gi'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFormatFilter(f)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    formatFilter === f
+                      ? 'bg-gold text-black'
+                      : 'bg-zinc-800 text-zinc-300'
+                  }`}
+                >
+                  {f === 'all' ? t('All') : f === 'gi' ? 'Gi' : 'No-Gi'}
                 </button>
               ))}
             </div>
