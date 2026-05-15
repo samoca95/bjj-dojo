@@ -83,7 +83,8 @@ export function getMatchingAlias(
       normEnglish.startsWith(normQuery) ||
       normEnglish.includes(normQuery) ||
       isSubsequence(normEnglish, normQuery) ||
-      (tokens.length > 1 && tokens.every((token) => normEnglish.includes(token)))
+      (tokens.length > 1 &&
+        tokens.every((token) => normEnglish.includes(token)))
     if (englishMatches) return technique.name
   }
 
