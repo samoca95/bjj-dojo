@@ -605,14 +605,15 @@ export default function HomePage() {
   }, [totalMinutes])
   const givenTapTrend = useMemo(() => {
     const sorted = [...(recentSessions ?? [])].sort((a, b) => a.date - b.date)
-    const counts = sorted.map(
-      (s) => tapCountsBySessionId.get(s.id ?? -1) ?? 0,
-    )
+    const counts = sorted.map((s) => tapCountsBySessionId.get(s.id ?? -1) ?? 0)
     const avgGiven =
       counts.length === 0
         ? 0
         : counts.reduce((sum, value) => sum + value, 0) / counts.length
-    const paddedCounts = [...Array(Math.max(0, 5 - counts.length)).fill(0), ...counts]
+    const paddedCounts = [
+      ...Array(Math.max(0, 5 - counts.length)).fill(0),
+      ...counts,
+    ]
     const maxGiven = Math.max(1, ...paddedCounts)
     return { avgGiven, paddedCounts, maxGiven }
   }, [recentSessions, tapCountsBySessionId])
