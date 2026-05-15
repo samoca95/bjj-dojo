@@ -1,3 +1,15 @@
+<p align="center">
+  <a href="./README.md">
+    <img src="https://img.shields.io/badge/%F0%9F%87%BA%F0%9F%87%B8-English-1f2937?style=for-the-badge" alt="English README" />
+  </a>
+  <a href="./README.es.md">
+    <img src="https://img.shields.io/badge/%F0%9F%87%AA%F0%9F%87%B8-Espa%C3%B1ol-1f2937?style=for-the-badge" alt="README en Español" />
+  </a>
+  <a href="./README.fr.md">
+    <img src="https://img.shields.io/badge/%F0%9F%87%AB%F0%9F%87%B7-Fran%C3%A7ais-1f2937?style=for-the-badge" alt="README en Français" />
+  </a>
+</p>
+
 # 🥋 BJJ Dojo
 
 **BJJ Dojo** is your offline-first Brazilian Jiu-Jitsu training companion — built to help you train with intention, track real progress, and keep your game organized.
