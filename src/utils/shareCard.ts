@@ -545,7 +545,8 @@ export async function renderShareCard(
     const watermark = await getKanjiWatermarkImage()
     if (watermark) {
       const watermarkH = h * 0.68
-      const watermarkW = (watermark.naturalWidth / watermark.naturalHeight) * watermarkH
+      const watermarkW =
+        (watermark.naturalWidth / watermark.naturalHeight) * watermarkH
       const watermarkX = (w - watermarkW) / 2
       const watermarkY = (h - watermarkH) / 2
       withAlpha(ctx, 0.12, () => {
