@@ -145,12 +145,6 @@ function BeltDisplay({
   )
 }
 
-function startOfDay(epoch: number): number {
-  const day = new Date(epoch)
-  day.setHours(0, 0, 0, 0)
-  return day.getTime()
-}
-
 function startOfWeek(epoch: number): number {
   const day = new Date(epoch)
   day.setHours(0, 0, 0, 0)
@@ -198,7 +192,9 @@ function SectionHeader({
             onClick={onToggleEdit}
             aria-label="Edit cards"
             className={`p-1.5 -mr-1 rounded-lg ${
-              editing ? 'bg-gold text-black' : 'text-zinc-500 active:bg-zinc-800'
+              editing
+                ? 'bg-gold text-black'
+                : 'text-zinc-500 active:bg-zinc-800'
             }`}
           >
             {editing ? <X size={14} /> : <Pencil size={14} />}
@@ -512,8 +508,6 @@ export default function HomePage() {
     window.addEventListener(ACHIEVEMENTS_UPDATED_EVENT, sync)
     return () => window.removeEventListener(ACHIEVEMENTS_UPDATED_EVENT, sync)
   }, [])
-  const todayStart = startOfDay(Date.now())
-  const weekStart = todayStart - 6 * DAY_MS
   const currentWeekStart = startOfWeek(Date.now())
   const previousWeekStart = currentWeekStart - 7 * DAY_MS
 
@@ -600,11 +594,9 @@ export default function HomePage() {
     const last5TapCounts = sorted.map(
       (s) => tapCountsBySessionId.get(s.id ?? -1) ?? 0,
     )
-    return (
-      last5TapCounts.length === 0
-        ? 0
-        : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
-    )
+    return last5TapCounts.length === 0
+      ? 0
+      : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
   }, [recentSessions, tapCountsBySessionId])
   const focusTechniques = useMemo(
     () => (techniques ?? []).filter((t) => focusTechniqueIds.includes(t.id)),
@@ -811,7 +803,9 @@ export default function HomePage() {
       />
       <div className="space-y-3">
         {(() => {
-          const visible = statsCardDefs.filter((c) => cardVisible('stats', c.id))
+          const visible = statsCardDefs.filter((c) =>
+            cardVisible('stats', c.id),
+          )
           const out: ReactNode[] = []
           let pending: typeof visible = []
           const flush = () => {
@@ -1014,7 +1008,9 @@ export default function HomePage() {
         />
         <div className="flex items-center gap-1.5">
           <Sparkles size={14} className="text-gold" />
-          <span className="text-sm font-bold text-zinc-100">{levelInfo.xp}</span>
+          <span className="text-sm font-bold text-zinc-100">
+            {levelInfo.xp}
+          </span>
         </div>
       </div>
       <div className="text-[11px] text-zinc-500">
