@@ -544,12 +544,12 @@ export async function renderShareCard(
     ctx.fillRect(0, 0, w, h)
     const watermark = await getKanjiWatermarkImage()
     if (watermark) {
-      const watermarkH = h * 0.68
+      const watermarkH = h * 0.72
       const watermarkW =
         (watermark.naturalWidth / watermark.naturalHeight) * watermarkH
       const watermarkX = (w - watermarkW) / 2
       const watermarkY = (h - watermarkH) / 2
-      withAlpha(ctx, 0.12, () => {
+      withAlpha(ctx, 0.22, () => {
         ctx.drawImage(watermark, watermarkX, watermarkY, watermarkW, watermarkH)
       })
     }
@@ -576,13 +576,13 @@ export async function renderShareCard(
 
   const logo = await getAppLogoImage()
   if (logo) {
-    const logoSize = 72
+    const logoSize = 96
     const logoX = w - PAD - logoSize
     const logoY = y
     ctx.drawImage(logo, logoX, logoY, logoSize, logoSize)
   }
 
-  y += 74
+  y += 98
 
   // --- Belt + name (optional) --------------------------------------------
   if (options.belt) {
