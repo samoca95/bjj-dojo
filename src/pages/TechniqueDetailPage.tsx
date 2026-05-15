@@ -389,6 +389,16 @@ export default function TechniqueDetailPage() {
                 {language === 'es' ? 'Practicada' : 'Practiced'} {sessionCount}×
               </span>
             )}
+            {technique.gi !== false && (
+              <span className="text-xs font-semibold px-2 py-1 rounded bg-indigo-900/40 text-indigo-300">
+                Gi
+              </span>
+            )}
+            {technique.noGi !== false && (
+              <span className="text-xs font-semibold px-2 py-1 rounded bg-teal-900/40 text-teal-300">
+                No-Gi
+              </span>
+            )}
           </div>
           <p className="text-sm text-zinc-300 leading-relaxed">
             {getTechniqueDescription(technique, language)}

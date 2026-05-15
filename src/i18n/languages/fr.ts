@@ -470,6 +470,39 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
       "Transitionner rapidement vers l'enchevêtrement de jambes",
     ],
   },
+  113: {
+    name: 'Garde De La Riva Inversée',
+    description:
+      "Position de garde où la jambe intérieure se croche autour de la jambe avant de l'adversaire par l'intérieur, créant un angle qui rend la pression frontale beaucoup plus difficile pour le joueur du dessus. Très répandue en no-gi. Les destinations principales sont les prises de dos, les calf kicks et les entrées en single-leg X.",
+    cues: [
+      "Crocher la jambe intérieure autour de leur jambe avant par le dessous — contrairement à la DLR, ce crochet vient de l'intérieur, pas de l'extérieur",
+      "Le pied d'appui doit être sur leur hanche ou cuisse pour maintenir la distance tandis que le crochet intérieur contrôle leur jambe",
+      'Prise de dos « Kiss of the Dragon » : s\'inverser sous l\'adversaire, utiliser le crochet pour pivoter et remonter dans son dos',
+      "Quand ils avancent, pomper le crochet et s'étendre pour entrer en single-leg X ou en enchevêtrement de jambes direct",
+    ],
+  },
+  114: {
+    name: 'Garde 50/50',
+    description:
+      "Garde en enchevêtrement de jambes neutre où les deux pratiquants se reflètent mutuellement, créant des opportunités offensives et défensives égales. Principalement une plateforme pour les clés de jambes ; les deux joueurs peuvent attaquer simultanément avec ankle locks, heel hooks et toe holds.",
+    cues: [
+      "Couvrir le genou de l'adversaire avec la main supérieure et cacher son propre talon derrière leur cuisse — exposer le talon est la façon la plus rapide de perdre",
+      "Rester en angle plutôt que face à face ; l'alignement direct leur permet de refléter la tentative de clé de jambe simultanément",
+      "L'ankle lock et le heel hook intérieur sont les finitions à plus fort pourcentage ; établir une connexion de hanche serrée avant d'aller chercher le talon",
+      "Pour balayer : pivoter le genou extérieur vers le sol pour plier leur genou avant, puis se dégager et établir la position supérieure",
+    ],
+  },
+  115: {
+    name: 'Demi-garde Profonde',
+    description:
+      "Extension de la demi-garde où le pratiquant du dessous tire son corps entièrement sous le centre de gravité de l'adversaire, tête près de son genou, bras enroulé autour d'une jambe et hanches serrées en dessous. Les attaques principales sont le balayage du serveur, le balayage Homer Simpson et la prise de dos.",
+    cues: [
+      "Entrer en tirant la hanche profondément sous la base de l'adversaire ; le visage doit être près de leur genou, pas de leur hanche",
+      "Garder les deux bras à l'intérieur : un enroule la jambe, l'autre contrôle leur genou ou cheville lointain ; cela empêche le cross-face et le kimura",
+      "Balayage du serveur : enfiler la jambe extérieure sous leur jambe proche, la soulever et balayer vers la tête",
+      "Quand ils prennent appui pour arrêter le balayage, utiliser cet appui comme point de pivot pour pivoter dans leur dos",
+    ],
+  },
   // Guard Passing (2xx)
   201: {
     name: 'Passage Toréador',
@@ -692,6 +725,39 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
       'Suivre et remonter avant le scramble',
     ],
   },
+  311: {
+    name: 'Balayage Old School (Gordo)',
+    description:
+      "Balayage fondamental depuis la demi-garde inférieure utilisant un underhook et une prise sur la cheville lointaine de l'adversaire pour le faire basculer. Popularisé par Roberto « Gordo » Correa, généralement le premier balayage de demi-garde enseigné.",
+    cues: [
+      "Sécuriser un underhook profond sur le bras proche de l'adversaire, puis passer la tête sous son torse",
+      "Atteindre sous sa jambe libre et saisir les orteils (pas la cheville) pour le levier maximal",
+      "Relâcher l'underhook, renforcer la prise avec les deux mains, puis pousser les hanches vers l'intérieur et soulever",
+      "S'ils prennent appui avec la jambe libre, transitionner vers la prise de dos plutôt que de compléter le balayage",
+    ],
+  },
+  312: {
+    name: 'Balayage Kimura',
+    description:
+      "Balayage depuis la garde fermée utilisant la prise kimura (figure 4 sur le poignet) pour déséquilibrer et renverser l'adversaire. Si le balayage est bloqué, la même prise passe directement en soumission kimura ou ouvre un triangle.",
+    cues: [
+      "Briser la posture de l'adversaire, isoler un poignet et établir la double-clé (kimura)",
+      "Tirer le bras à travers l'axe central ; quand ils prennent appui pour empêcher la soumission, utiliser cet appui pour soulever et balayer",
+      "Si le balayage échoue, rouler sur le côté et finir la soumission kimura depuis le dessous",
+      "Le balayage raté ouvre aussi le triangle et la guillotine depuis la garde — rester actif sur la prise",
+    ],
+  },
+  313: {
+    name: 'Balayage John Wayne',
+    description:
+      "Balayage de demi-garde utilisant le genou libre comme levier contre la cheville lointaine de l'adversaire pour le faire tomber de côté. Nommé d'après le mouvement roulant et décontracté qu'il produit.",
+    cues: [
+      "Depuis la demi-garde avec underhook, ouvrir la garde et poser le pied supérieur tandis que la jambe inférieure contrôle juste au-dessus de leur cheville",
+      "Balancer le genou libre (supérieur) vers le haut et en arc comme un essuie-glace, le conduire à travers la ligne de cheville",
+      "Combiner le levier de genou avec un pont-poussée depuis le pied d'appui pour générer la rotation",
+      "Suivre le balayage pour arriver directement en contrôle latéral ou demi-garde supérieure",
+    ],
+  },
   // Submissions (4xx)
   401: {
     name: 'Armbar',
@@ -891,6 +957,50 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
       'Cacher le coude et garder la poitrine lourde',
     ],
   },
+  419: {
+    name: 'Armbar Inversé',
+    description:
+      "Variante d'armbar paume vers le haut appliquée depuis la garde fermée ou papillon, hyperextendant le coude dans le sens opposé à l'armbar standard. En cas d'échec, la transition vers l'armbar classique est naturelle.",
+    cues: [
+      "Depuis la garde fermée, isoler un bras et déplacer le poids dans la direction de l'attaque pour charger la pression sur leur coude",
+      "Garder leur paume vers le haut (supinée) ; la jambe presse sur leur avant-bras pour appliquer le levier",
+      "Tirer leur poignet vers l'épaule et pousser le tibia vers le bas pour la finition",
+      "S'ils empilent ou se redressent, transitionner immédiatement vers l'armbar standard en passant la jambe au-dessus de la tête",
+    ],
+  },
+  420: {
+    name: 'Toe Hold',
+    description:
+      "Clé de jambe ciblant la cheville et le pied avec une prise en figure 4 style kimura sur le pied, tordant le pied vers l'intérieur pour déchirer les ligaments de la cheville. Appliqué le plus souvent depuis l'ashi garami, le 50/50 ou les enchevêtrements de demi-garde.",
+    cues: [
+      "Piéger la jambe pour empêcher l'échappée ; saisir le dessus du pied (auriculaire aligné avec l'auriculaire du pied) et passer l'autre bras sous leur tibia pour verrouiller sur son propre poignet",
+      "Garder le pied collé à la poitrine — tout espace leur permet de se dégager",
+      "Pivoter tout le corps pour tourner le pied vers l'intérieur (vers leur hanche opposée) plutôt que d'utiliser seulement la force des bras",
+      "Contrôler la ligne du genou avant d'appliquer la pression ; un genou non contrôlé leur permettra de rouler et s'échapper",
+    ],
+  },
+  421: {
+    name: 'Calf Slicer',
+    description:
+      "Clé de compression qui coince le tibia derrière le genou de l'adversaire et plie la jambe, écrasant le muscle du mollet contre le tibia. Les setups courants incluent la position tortue, la demi-garde profonde et la garde en X.",
+    cues: [
+      "Coincer le tibia derrière l'articulation du genou comme fulcrum ; plus le tibia est profond, plus la pression est efficace",
+      "Sécuriser une figure 4 avec les jambes et contrôler leur cou-de-pied ou cheville avec les deux mains",
+      "Tourner le tranchant du tibia dans leur mollet (comme en dorsiflexion de la cheville) en tirant leur cheville vers soi",
+      "La pression se développe vite — finir avant qu'ils roulent ; utiliser une prise ceinture ou un crochet si disponible pour bloquer le roulement",
+    ],
+  },
+  422: {
+    name: 'Triangle depuis la Monture',
+    description:
+      "Étranglement sanguin appliqué depuis la monture supérieure en passant une jambe au-dessus du cou et en verrouillant une figure 4 avec l'autre jambe, similaire au triangle de garde fermée mais avec l'avantage du poids d'être au-dessus.",
+    cues: [
+      "Depuis la monture haute, remonter les genoux au-delà des coudes de l'adversaire pour que leurs bras soient au-dessus du plan des coudes",
+      "Isoler un bras en contrôlant le poignet ; passer la jambe extérieure au-dessus du cou pour commencer le verrouillage du triangle",
+      "Verrouiller la figure 4 (tibia derrière le genou) et ajuster l'angle avec la pression de hanche plutôt que de s'inverser",
+      "Serrer les genoux ensemble et pousser le bras piégé à travers l'axe central pour resserrer l'étranglement",
+    ],
+  },
   // Takedowns & Throws (5xx)
   501: {
     name: 'Double Jambe',
@@ -1002,6 +1112,28 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
       'Sécuriser la prise du menton et le contrôle du coude',
     ],
   },
+  511: {
+    name: 'Snap Down vers Prise de Dos',
+    description:
+      "Un snap down qui, au lieu de se terminer en headlock frontal, utilise l'élan de l'adversaire pour pivoter directement derrière lui et sécuriser le contrôle de dos. Se distingue du snap down vers headlock frontal en circulant derrière la hanche plutôt que de sécuriser une position frontale.",
+    cues: [
+      "Depuis un collar-tie, exécuter un snap down vers le bas pour briser la posture et amener la tête sous les hanches",
+      "Quand ils avancent ou récupèrent, relâcher la tête et faire un pas latéral derrière leur hanche plutôt que de se plaquer en position frontale",
+      "Enrouler le bras extérieur autour du torse avec la prise ceinture de sécurité (un bras au-dessus, un en dessous) avant qu'ils ne puissent se relever",
+      "Compléter la prise de dos en insérant les deux crochets pour le contrôle de dos",
+    ],
+  },
+  512: {
+    name: 'Arm Drag vers Prise de Dos',
+    description:
+      "Entrée de projection utilisant un arm drag à deux mains (prise poignet et tricep) pour rediriger le bras de l'adversaire à travers le corps et passer derrière lui pour le contrôle de dos. Très adaptable depuis debout, assis et garde papillon.",
+    cues: [
+      "Saisir le poignet du même côté de l'adversaire pouce vers le bas ; simultanément atteindre profondément vers leur tricep avec l'autre main",
+      "Tirer le bras fermement à travers l'axe central en faisant un pas latéral du pied du même côté derrière leur hanche — garder la tête collée à leur poitrine",
+      "Enrouler le bras extérieur autour de leur taille et verrouiller la main sur leur hanche lointaine ; cela bloque leur rotation",
+      "Compléter la prise de dos en les amenant au tatami avec un retour au tapis ou un balayage de pied, puis insérer les crochets",
+    ],
+  },
   // Escapes (6xx)
   601: {
     name: 'Pont et Retournement (Upa)',
@@ -1080,6 +1212,72 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
       'Ne pas pousser avec les bras tendus',
     ],
   },
+  608: {
+    name: "Défense de l'Armbar",
+    description:
+      "Famille d'échappées depuis la soumission armbar, la défense par empilement étant l'option principale pour les débutants. Posture, rotation du pouce et poids du corps combinés pour relâcher la pression sur le coude et extraire le bras.",
+    cues: [
+      "Dès que l'armbar est sécurisé, saisir son propre avant-bras pour créer une connexion à deux bras et gagner du temps",
+      "Se mettre sur les orteils et empiler la poitrine vers le bas sur l'adversaire, soulever leurs hanches hors du tatami pour supprimer le fulcrum",
+      "Pivoter le pouce vers le haut (supiner) en tirant le coude à travers leurs jambes — cela change l'angle et libère le coude",
+      "Écarter les jambes et prendre appui pour les empêcher de refermer sur le bras",
+    ],
+  },
+  609: {
+    name: 'Défense du Triangle',
+    description:
+      "Échappée basée sur la posture depuis un triangle depuis la garde. Empiler, se redresser et briser la prise avant que le flux sanguin soit coupé — le temps est le facteur critique.",
+    cues: [
+      "Rentrer le coude du bras piégé vers l'axe central immédiatement pour ralentir l'étranglement",
+      "Se redresser fortement et empiler les hanches vers la tête de l'adversaire, chargeant le poids du corps pour réduire leur levier",
+      "Marcher les pieds vers eux, redresser le dos et libérer le verrou en poussant leur genou avec la main libre",
+      "Une fois le verrou brisé, passer la garde ou sécuriser une position défensive avant qu'ils ne la rétablissent",
+    ],
+  },
+  610: {
+    name: 'Défense du Triangle depuis la Monture',
+    description:
+      "Échappée de dernier recours depuis le triangle depuis la monture — parmi les positions les plus difficiles à s'échapper. Nécessite de soulever les hanches de façon explosive et de pivoter pour créer une séparation avant que le flux sanguin s'arrête.",
+    cues: [
+      "Poster le bras libre sous leur aisselle (pas à travers le corps) pour les empêcher de verrouiller le bras dans le triangle",
+      "Verrouiller les mains ensemble et étendre les bras vers leur hanche lointaine pour créer même une séparation minimale",
+      "Ponter les hanches de façon explosive vers leur bas du dos pendant qu'ils ajustent encore le verrou",
+      "Enjamber leur corps pour pivoter — même atterrir en contrôle latéral inférieur est une victoire face à l'étranglement",
+    ],
+  },
+  611: {
+    name: 'Défense Guillotine depuis la Chute de Garde',
+    description:
+      "Défense contre une guillotine attrapée pendant la phase de chute de garde ou les transitions de projection — distincte de la défense de guillotine depuis les positions debout ou de lutte. L'attaquant a une prise tête-et-bras quand on va au sol.",
+    cues: [
+      "Dès que la guillotine est sécurisée, rentrer fortement le menton vers l'épaule du bras piégé pour protéger la trachée",
+      "Poster les deux mains sur leurs hanches et se redresser — ne jamais pencher la tête plus loin vers l'intérieur, ce qui resserre l'étranglement",
+      "Marcher les pieds autour du même côté que le bras piégé (le côté bras-dedans) pour relâcher la pression",
+      "Une fois l'angle brisé, passer le bras extérieur par-dessus leur épaule et tirer vers le bas pour briser la prise",
+    ],
+  },
+  612: {
+    name: 'Granby Roll',
+    description:
+      "Échappée par inversion depuis la position tortue : rouler par-dessus une épaule (sans exposer la nuque) pour retrouver la garde ou atteindre un scramble neutre. Nommé d'après le lycée de Granby en lutte.",
+    cues: [
+      "Rentrer l'épaule de roulement ; ne jamais exposer la nuque — la tête reste baissée",
+      "Garder les orteils du pied avant sur le tatami tout au long pour rouler en ligne droite et contrôlée",
+      "Conduire les hanches et les jambes vers le haut et en arc ; elles doivent atterrir vers l'adversaire pour créer des cadres de garde immédiats",
+      "Dès que les hanches touchent le tatami, sortir les deux jambes comme cadres de garde — le roulement n'est complet que quand la garde est rétablie",
+    ],
+  },
+  613: {
+    name: 'Défense du Headlock Latéral',
+    description:
+      "Échappée depuis un headlock latéral assis (kesa gatame / scarf hold), où l'adversaire est assis à côté contrôlant la tête et le bras. Utilise le pontage et le mouvement de hanche pour déséquilibrer et récupérer.",
+    cues: [
+      "Protéger le bras piégé en le gardant plié et proche du corps — ne pas le tendre ou l'étranglement se resserre",
+      "Ponter vers l'adversaire pour charger le poids sur lui, puis utiliser l'élan du pont pour le rouler par-dessus le corps",
+      "S'ils prennent appui pour arrêter le roulement, faire la crevette dans la direction opposée pour libérer la tête",
+      "Une fois la tête libre, récupérer immédiatement la garde ou scrambler vers une position neutre",
+    ],
+  },
   // Positions (7xx)
   701: {
     name: 'Monture',
@@ -1156,6 +1354,28 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
       'Aplatir les hanches avant de libérer la jambe',
       'Reculer la ligne du genou pour dégager le piège',
       'Changer de base quand ils utilisent le bouclier de genou',
+    ],
+  },
+  708: {
+    name: 'S-Mount',
+    description:
+      "Variation avancée de la monture où un genou est posté haut près de l'oreille de l'adversaire tandis que le pied opposé reste au sol, formant un S avec les jambes. Cette configuration isole un bras et crée une plateforme extrêmement serrée pour les finitions en armbar et triangle.",
+    cues: [
+      "Depuis la monture haute, attendre que l'adversaire pousse les coudes vers le haut comme cadre — cette ouverture est la fenêtre d'entrée en S-mount",
+      "Glisser (pas enjamber) un genou jusqu'à leur oreille le long du tatami ; enjamber leur donne de l'espace pour récupérer",
+      "Fermer tout l'espace immédiatement après avoir glissé ; poster le pied opposé stabilise la position",
+      "L'armbar est la finition principale — la position S pré-charge le bras ; aller directement dessus sans réinitialiser",
+    ],
+  },
+  709: {
+    name: 'Crucifix',
+    description:
+      "Position de contrôle attaquant un adversaire en tortue où un bras est piégé par les jambes et l'autre par les mains, immobilisant les deux bras simultanément. L'entrée se fait typiquement depuis un sprawl ou une attaque de dos sur la tortue.",
+    cues: [
+      "Depuis un sprawl ou une position d'attaque de dos, circuler d'un côté et coincer le genou proche dans la tortue pour l'ouvrir",
+      "Enfiler le bras proche sous leur bras lointain, le prenant avec le coude ; les jambes piègent le bras proche en figure 4",
+      "Maintenir une pression poitrine-sur-dos tout au long ; tout espace leur permet de tirer le bras libre",
+      "Attaques principales : étranglement arrière (le bras libre passe sous le menton), étranglement de revers et kimura depuis le bras lointain",
     ],
   },
 }

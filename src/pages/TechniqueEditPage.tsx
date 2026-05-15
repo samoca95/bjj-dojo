@@ -66,6 +66,8 @@ export default function TechniqueEditPage() {
   const [newConnectionTargetId, setNewConnectionTargetId] = useState<
     number | null
   >(null)
+  const [gi, setGi] = useState(true)
+  const [noGi, setNoGi] = useState(true)
   const [tagsInput, setTagsInput] = useState('')
   const [isFavorite, setIsFavorite] = useState(false)
   const [referenceLinks, setReferenceLinks] = useState<ReferenceLink[]>([])
@@ -97,6 +99,8 @@ export default function TechniqueEditPage() {
       setDifficulty(t.difficulty)
       setCategoryId(t.categoryId)
       setCues(t.cues ?? [])
+      setGi(t.gi !== false)
+      setNoGi(t.noGi !== false)
       setTagsInput((t.tags ?? []).join(', '))
       setIsFavorite(Boolean(t.isFavorite))
       setReferenceLinks(Array.isArray(t.referenceLinks) ? t.referenceLinks : [])
@@ -170,6 +174,8 @@ export default function TechniqueEditPage() {
           isFavorite,
           referenceLinks: cleanedReferenceLinks,
           isCustom: true,
+          gi,
+          noGi,
         }
         await runWithTelemetry('technique.save_failed', () =>
           db.techniques.add(technique),
@@ -200,6 +206,8 @@ export default function TechniqueEditPage() {
             tags: payload.tags,
             isFavorite,
             referenceLinks: cleanedReferenceLinks,
+            gi,
+            noGi,
           }),
         )
         await runWithTelemetry('technique.connection_clear_failed', () =>
@@ -473,6 +481,37 @@ export default function TechniqueEditPage() {
                 {difficultyLabel(d, DIFFICULTY_LABELS[d], language)}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Gi / No-Gi */}
+        <div>
+          <label className="text-xs text-gold font-semibold tracking-wide">
+            {language === 'es'
+              ? 'FORMATO'
+              : language === 'fr'
+                ? 'FORMAT'
+                : 'FORMAT'}
+          </label>
+          <div className="flex gap-3 mt-2">
+            <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={gi}
+                onChange={(e) => setGi(e.target.checked)}
+                className="accent-gold"
+              />
+              Gi
+            </label>
+            <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={noGi}
+                onChange={(e) => setNoGi(e.target.checked)}
+                className="accent-gold"
+              />
+              No-Gi
+            </label>
           </div>
         </div>
 
