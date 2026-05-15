@@ -11,6 +11,8 @@ import {
   Target,
   SlidersVertical,
   DatabaseZap,
+  Moon,
+  Sun,
 } from 'lucide-react'
 import { PlainLogo } from '../components/PlainLogo'
 import { themeFill } from '../constants/themeColors'
@@ -225,26 +227,28 @@ export default function SettingsPage() {
                   setTheme('black')
                   setAppTheme('black')
                 }}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                aria-label={t('Dark')}
+                className={`rounded-md px-3 py-1.5 transition-colors ${
                   theme === 'black'
                     ? 'bg-gold text-black'
                     : 'text-zinc-400 active:text-zinc-200'
                 }`}
               >
-                {t('Dark')}
+                <Moon size={15} strokeWidth={2} />
               </button>
               <button
                 onClick={() => {
                   setTheme('light')
                   setAppTheme('light')
                 }}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                aria-label={t('Light')}
+                className={`rounded-md px-3 py-1.5 transition-colors ${
                   theme === 'light'
                     ? 'bg-gold text-black'
                     : 'text-zinc-400 active:text-zinc-200'
                 }`}
               >
-                {t('Light')}
+                <Sun size={15} strokeWidth={2} />
               </button>
             </div>
           </div>
@@ -273,10 +277,10 @@ export default function SettingsPage() {
         <div className="bg-zinc-900 rounded-2xl p-2 space-y-1">
           <div className="px-3 pt-2 pb-1 text-xs text-gold font-semibold tracking-widest">
             {language === 'es'
-              ? 'AJUSTES AVANZADOS'
+              ? 'AJUSTES'
               : language === 'fr'
-                ? 'RACCOURCIS DES RÉGLAGES'
-                : 'SETTINGS SHORTCUTS'}
+                ? 'RÉGLAGES'
+                : 'SETTINGS'}
           </div>
           <button
             onClick={() => navigate('/session-type-icons')}
@@ -379,7 +383,7 @@ export default function SettingsPage() {
             </div>
             <div className="bg-zinc-900 flex-1">
               <div className="text-sm font-semibold text-zinc-100">
-                {t('HOME SECTION ORDER')}
+                {t('Home section order')}
               </div>
               <div className="text-xs text-zinc-500">
                 {t(

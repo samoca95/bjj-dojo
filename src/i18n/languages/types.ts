@@ -75,6 +75,7 @@ export type TranslationKey =
   | 'HOME SECTION ORDER'
   | 'Hide section'
   | 'Home'
+  | 'Home section order'
   | 'Icons'
   | 'Import JSON'
   | 'Language'

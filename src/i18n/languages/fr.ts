@@ -71,7 +71,7 @@ const FR_TRANSLATIONS = {
   Given: 'Réussies',
   Received: 'Subies',
   NOTES: 'NOTES',
-  'What clicked? What to fix?': 'Ce qui a cliqué ? Quoi corriger ?',
+  'What clicked? What to fix?': "Qu'est-ce qui a bien marché ? Quoi améliorer ?",
   'What did you work on? Any insights?':
     'Sur quoi avez-vous travaillé ? Des observations ?',
   'Select Techniques': 'Sélectionner des techniques',
@@ -183,6 +183,7 @@ const FR_TRANSLATIONS = {
   Dark: 'Sombre',
   Stripes: 'Barrettes',
   'HOME SECTION ORDER': "ORDRE DE L'ACCUEIL",
+  'Home section order': "Ordre de l'accueil",
   'Reorder the sections on the home screen and hide the ones you do not want to see.':
     "Réorganisez les sections de l'écran d'accueil et masquez celles que vous ne souhaitez pas voir.",
   'WEEKLY MAT TIME GOAL': 'OBJECTIF HEBDOMADAIRE',
