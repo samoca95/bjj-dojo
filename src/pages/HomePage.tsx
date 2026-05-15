@@ -402,7 +402,14 @@ function ScoreHelp({
         <CircleHelp size={13} />
       </button>
       {open && (
-        <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-zinc-700 bg-zinc-900 p-2.5 text-[11px] leading-relaxed text-zinc-300 shadow-lg">
+        <div
+          className={[
+            'fixed left-1/2 top-24 z-30 -translate-x-1/2',
+            'w-[min(28rem,calc(100vw-1.5rem))] max-h-[70vh] overflow-y-auto',
+            'rounded-xl border border-zinc-700 bg-zinc-900 p-3 shadow-lg',
+            'text-[11px] leading-relaxed text-zinc-300 whitespace-pre-line',
+          ].join(' ')}
+        >
           {description}
         </div>
       )}
@@ -968,23 +975,35 @@ export default function HomePage() {
     </section>
   )
 
+  const levelHelpDescription = [
+    t(
+      'Your level increases as your total XP grows. Levels get progressively harder to reach.',
+    ),
+    t(
+      'Level thresholds: L1 0 XP, L2 100 XP, L3 300 XP, L4 600 XP, L5 1000 XP. Each next level needs 100 XP more than the previous one.',
+    ),
+    t(
+      'XP comes from mat time, submissions given, and sessions logged. Mat time gives 1 XP every 15 minutes.',
+    ),
+    t('Consecutive days with at least one logged training session.'),
+    t('Consecutive weeks with at least one logged training session.'),
+  ].join('\n\n')
+
   const levelCard = (
     <div key="level" className="bg-zinc-900 rounded-2xl px-4 py-3">
       <div className="flex items-center justify-between">
-        <ScoreLabel
-          label={t('Level')}
-          description={t(
-            'Your level increases as your total XP grows. Levels get progressively harder to reach.',
-          )}
-        />
-        <div className="flex items-center gap-1.5 text-gold">
-          <Trophy size={14} />
-          <span className="text-sm font-bold">{levelInfo.level}</span>
+        <div className="flex items-center gap-1.5">
+          <Trophy size={14} className="text-gold" />
+          <span className="text-sm font-bold tabular-nums text-zinc-100">
+            {levelInfo.level}
+          </span>
+          <ScoreLabel label={t('Level')} description={levelHelpDescription} />
         </div>
         <span
-          className="text-[11px] text-zinc-500 tabular-nums"
+          className="text-sm text-zinc-500 tabular-nums flex items-center gap-1.5"
           aria-label={`${levelInfo.xp} ${t('XP')} total`}
         >
+          <Sparkles size={14} className="text-gold" />
           {levelInfo.xpIntoLevel}/{levelInfo.xpForNext} {t('XP')}
         </span>
       </div>
@@ -997,76 +1016,39 @@ export default function HomePage() {
     </div>
   )
 
-  const xpCard = (
-    <div key="xp" className="bg-zinc-900 rounded-2xl px-4 py-3">
-      <div className="flex items-center justify-between mb-1.5">
-        <ScoreLabel
-          label={t('XP')}
-          description={t(
-            'XP comes from mat time, submissions given, and sessions logged. Mat time gives 1 XP every 15 minutes.',
-          )}
-        />
-        <div className="flex items-center gap-1.5">
-          <Sparkles size={14} className="text-gold" />
-          <span className="text-sm font-bold text-zinc-100">
-            {levelInfo.xp}
-          </span>
+  const streaksCard = (
+    <div key="streaks" className="bg-zinc-900 rounded-2xl px-4 py-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex items-center justify-between rounded-xl bg-zinc-950/70 px-3 py-2">
+          <div>
+            <div className="text-xs text-zinc-500">{t('Daily streak')}</div>
+            <div className="text-lg font-bold text-sky-400 mt-0.5 tabular-nums">
+              {dailyStreak.current}
+              <span className="text-[10px] uppercase tracking-wide text-sky-400/70 ml-1">
+                {t('d.')}
+              </span>
+            </div>
+          </div>
+          <Flame size={18} className="text-sky-400" strokeWidth={1.75} />
+        </div>
+        <div className="flex items-center justify-between rounded-xl bg-zinc-950/70 px-3 py-2">
+          <div>
+            <div className="text-xs text-zinc-500">{t('Weekly streak')}</div>
+            <div className="text-lg font-bold text-orange-400 mt-0.5 tabular-nums">
+              {trainingWeekStreak}
+              <span className="text-[10px] uppercase tracking-wide text-orange-400/70 ml-1">
+                {t('w.')}
+              </span>
+            </div>
+          </div>
+          <Flame
+            size={18}
+            className="text-orange-400"
+            fill="currentColor"
+            strokeWidth={0}
+          />
         </div>
       </div>
-      <div className="text-[11px] text-zinc-500">
-        {t('1 XP each 15 min • +5 per tap given • +2 per session')}
-      </div>
-    </div>
-  )
-
-  const dailyStreakCard = (
-    <div
-      key="dailyStreak"
-      className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center justify-between"
-    >
-      <div>
-        <ScoreLabel
-          label={t('Daily streak')}
-          description={t(
-            'Consecutive days with at least one logged training session.',
-          )}
-        />
-        <div className="text-xl font-bold text-sky-400 mt-0.5 tabular-nums">
-          {dailyStreak.current}
-          <span className="text-[10px] uppercase tracking-wide text-sky-400/70 ml-1">
-            {t('d.')}
-          </span>
-        </div>
-      </div>
-      <Flame size={20} className="text-sky-400" strokeWidth={1.75} />
-    </div>
-  )
-
-  const weeklyStreakCard = (
-    <div
-      key="weeklyStreak"
-      className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center justify-between"
-    >
-      <div>
-        <ScoreLabel
-          label={t('Weekly streak')}
-          description={t(
-            'Consecutive weeks with at least one logged training session.',
-          )}
-        />
-        <div className="text-xl font-bold text-orange-400 mt-0.5 tabular-nums">
-          {trainingWeekStreak}
-          <span className="text-[10px] uppercase tracking-wide text-orange-400/70 ml-1">
-            {t('w.')}
-          </span>
-        </div>
-      </div>
-      <Flame
-        size={20}
-        className="text-orange-400"
-        fill="currentColor"
-        strokeWidth={0}
-      />
     </div>
   )
 
@@ -1089,9 +1071,12 @@ export default function HomePage() {
     fullWidth?: boolean
   }[] = [
     { id: 'level', labelKey: 'Level', node: levelCard, fullWidth: true },
-    { id: 'xp', labelKey: 'XP', node: xpCard, fullWidth: true },
-    { id: 'dailyStreak', labelKey: 'Daily streak', node: dailyStreakCard },
-    { id: 'weeklyStreak', labelKey: 'Weekly streak', node: weeklyStreakCard },
+    {
+      id: 'streaks',
+      labelKey: 'Daily streak',
+      node: streaksCard,
+      fullWidth: true,
+    },
     {
       id: 'achievements',
       labelKey: 'Achievements',

@@ -227,10 +227,10 @@ const ES_TRANSLATIONS = {
   XP: 'XP',
   'Your level increases as your total XP grows. Levels get progressively harder to reach.':
     'Tu nivel sube cuando aumentan tus XP totales. Cada nivel requiere más progreso.',
+  'Level thresholds: L1 0 XP, L2 100 XP, L3 300 XP, L4 600 XP, L5 1000 XP. Each next level needs 100 XP more than the previous one.':
+    'Umbrales de nivel: N1 0 XP, N2 100 XP, N3 300 XP, N4 600 XP, N5 1000 XP. Cada nivel siguiente requiere 100 XP más que el anterior.',
   'XP comes from mat time, submissions given, and sessions logged. Mat time gives 1 XP every 15 minutes.':
     'Los XP vienen del tiempo en tatami, sumisiones aplicadas y sesiones registradas. El tatami da 1 XP cada 15 minutos.',
-  '1 XP each 15 min • +5 per tap given • +2 per session':
-    '1 XP cada 15 min • +5 por sumisión aplicada • +2 por sesión',
   'Consecutive days with at least one logged training session.':
     'Días consecutivos con al menos una sesión registrada.',
   'Consecutive weeks with at least one logged training session.':
