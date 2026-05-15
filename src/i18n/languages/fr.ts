@@ -211,6 +211,83 @@ const FR_TRANSLATIONS = {
     'Les techniques prédéfinies ont été réinitialisées avec succès.',
   'Could not reset techniques.': 'Impossible de réinitialiser les techniques.',
   'Export session': 'Exporter la session',
+  // Gamification
+  GAMIFICATION: 'GAMIFICATION',
+  'THIS WEEK': 'CETTE SEMAINE',
+  Achievements: 'Succès',
+  'View all': 'Tout voir',
+  Locked: 'Verrouillé',
+  Earned: 'Obtenu',
+  'Edit cards': 'Modifier les cartes',
+  'Done editing': 'Fin de modification',
+  'Daily streak': 'Série quotidienne',
+  'Weekly streak': 'Série hebdomadaire',
+  'd.': 'j.',
+  Level: 'Niveau',
+  XP: 'XP',
+  'Lifetime hours': 'Heures au total',
+  'Next tier': 'Prochain palier',
+  // Rank tiers
+  Recruit: 'Recrue',
+  'White Belt Spirit': 'Esprit ceinture blanche',
+  Striped: 'Barretté',
+  Roller: 'Rouleur',
+  Grinder: 'Acharné',
+  Veteran: 'Vétéran',
+  'Black Belt Path': 'Voie de la ceinture noire',
+  Legend: 'Légende',
+  // Focus goals
+  'Set goal': "Fixer l'objectif",
+  'Clear goal': "Effacer l'objectif",
+  'Goal type': "Type d'objectif",
+  Target: 'Cible',
+  'Sessions used in': 'Sessions en utilisant',
+  'Taps given': 'Soumissions données',
+  Drilled: 'Répétitions',
+  'Manual count': 'Compte manuel',
+  'Sessions since last submitted': 'Sessions sans soumission',
+  '+1': '+1',
+  Reset: 'Réinitialiser',
+  // Achievement titles
+  'First Steps': 'Premiers pas',
+  'On the Mat': 'Sur le tatami',
+  'Mat Veteran': 'Vétéran du tatami',
+  'Ten Hours': 'Dix heures',
+  Century: 'Centenaire',
+  'First Submission': 'Première soumission',
+  'Tap Master': 'Maître des soumissions',
+  'Defensive Wizard': 'Défenseur imprenable',
+  'Week Warrior': 'Guerrier hebdomadaire',
+  'Daily Devotee': 'Pratiquant assidu',
+  Focused: 'Focalisé',
+  'Goal Slayer': "Chasseur d'objectifs",
+  'Belt Promoted': 'Promotion de ceinture',
+  // Achievement descriptions
+  'Log your first training session.':
+    "Enregistrez votre première session d'entraînement.",
+  'Log 10 training sessions.': "Enregistrez 10 sessions d'entraînement.",
+  'Log 100 training sessions.': "Enregistrez 100 sessions d'entraînement.",
+  'Train 10 hours total.': 'Entraînez-vous 10 heures au total.',
+  'Train 100 hours total.': 'Entraînez-vous 100 heures au total.',
+  'Submit your first training partner.':
+    'Soumettez votre partenaire pour la première fois.',
+  'Get 50 submissions.': 'Obtenez 50 soumissions.',
+  'Survive 7 sessions in a row without getting submitted.':
+    'Tenez 7 sessions de suite sans être soumis.',
+  'Reach a 4-week training streak.':
+    "Atteignez une série de 4 semaines d'entraînement.",
+  'Reach a 7-day training streak.':
+    "Atteignez une série de 7 jours d'entraînement.",
+  'Hit 3 focus-technique goals at the same time.':
+    'Atteignez 3 objectifs de technique cible simultanément.',
+  'Complete any focus-technique goal.':
+    'Complétez un objectif de technique cible.',
+  'Earned a new belt or stripe in the last 7 days.':
+    'Obtenu une nouvelle ceinture ou barrette dans les 7 derniers jours.',
+  // Card labels
+  Rank: 'Rang',
+  Sparkline: 'Sparkline',
+  'Mat time': 'Temps sur tatami',
 } satisfies Record<TranslationKey, string>
 
 const FR_CATEGORY_CONTENT: LanguagePack['categoryContent'] = {

@@ -207,6 +207,83 @@ const ES_TRANSLATIONS = {
     'Técnicas predefinidas restablecidas correctamente.',
   'Could not reset techniques.': 'No se pudo restablecer.',
   'Export session': 'Exportar sesión',
+  // Gamification
+  GAMIFICATION: 'GAMIFICACIÓN',
+  'THIS WEEK': 'ESTA SEMANA',
+  Achievements: 'Logros',
+  'View all': 'Ver todos',
+  Locked: 'Bloqueado',
+  Earned: 'Ganado',
+  'Edit cards': 'Editar tarjetas',
+  'Done editing': 'Terminar edición',
+  'Daily streak': 'Racha diaria',
+  'Weekly streak': 'Racha semanal',
+  'd.': 'd.',
+  Level: 'Nivel',
+  XP: 'XP',
+  'Lifetime hours': 'Horas totales',
+  'Next tier': 'Siguiente rango',
+  // Rank tiers
+  Recruit: 'Recluta',
+  'White Belt Spirit': 'Espíritu Cinturón Blanco',
+  Striped: 'Graduado',
+  Roller: 'Rodador',
+  Grinder: 'Guerrero',
+  Veteran: 'Veterano',
+  'Black Belt Path': 'Camino al Negro',
+  Legend: 'Leyenda',
+  // Focus goals
+  'Set goal': 'Fijar meta',
+  'Clear goal': 'Borrar meta',
+  'Goal type': 'Tipo de meta',
+  Target: 'Objetivo',
+  'Sessions used in': 'Sesiones usando',
+  'Taps given': 'Sumisiones dadas',
+  Drilled: 'Repeticiones',
+  'Manual count': 'Conteo manual',
+  'Sessions since last submitted': 'Sesiones sin ceder',
+  '+1': '+1',
+  Reset: 'Reiniciar',
+  // Achievement titles
+  'First Steps': 'Primeros pasos',
+  'On the Mat': 'En el tatami',
+  'Mat Veteran': 'Veterano del tatami',
+  'Ten Hours': 'Diez horas',
+  Century: 'Centenario',
+  'First Submission': 'Primera sumisión',
+  'Tap Master': 'Maestro de sumisiones',
+  'Defensive Wizard': 'Mago defensivo',
+  'Week Warrior': 'Guerrero semanal',
+  'Daily Devotee': 'Dedicación diaria',
+  Focused: 'Enfocado',
+  'Goal Slayer': 'Cazametas',
+  'Belt Promoted': 'Ascenso de cinturón',
+  // Achievement descriptions
+  'Log your first training session.':
+    'Registra tu primera sesión de entrenamiento.',
+  'Log 10 training sessions.': 'Registra 10 sesiones de entrenamiento.',
+  'Log 100 training sessions.': 'Registra 100 sesiones de entrenamiento.',
+  'Train 10 hours total.': 'Entrena 10 horas en total.',
+  'Train 100 hours total.': 'Entrena 100 horas en total.',
+  'Submit your first training partner.':
+    'Aplica tu primera sumisión en sparring.',
+  'Get 50 submissions.': 'Consigue 50 sumisiones.',
+  'Survive 7 sessions in a row without getting submitted.':
+    'Aguanta 7 sesiones seguidas sin ceder.',
+  'Reach a 4-week training streak.':
+    'Alcanza una racha de 4 semanas de entrenamiento.',
+  'Reach a 7-day training streak.':
+    'Alcanza una racha de 7 días de entrenamiento.',
+  'Hit 3 focus-technique goals at the same time.':
+    'Cumple 3 metas de técnica de enfoque a la vez.',
+  'Complete any focus-technique goal.':
+    'Completa cualquier meta de técnica de enfoque.',
+  'Earned a new belt or stripe in the last 7 days.':
+    'Obtuviste un nuevo cinturón o grado en los últimos 7 días.',
+  // Card labels
+  Rank: 'Rango',
+  Sparkline: 'Sparkline',
+  'Mat time': 'Tiempo en tatami',
 } satisfies Record<TranslationKey, string>
 
 export const ES_CATEGORY_CONTENT: Record<
