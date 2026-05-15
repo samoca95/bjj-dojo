@@ -475,6 +475,39 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Transiciona rápidamente al enredo de piernas',
     ],
   },
+  113: {
+    name: 'Guardia De La Riva Inversa',
+    description:
+      'Posición de guardia donde la pierna interior se engancha alrededor de la pierna delantera del oponente desde adentro, creando un ángulo que dificulta la presión frontal. Muy habitual en no-gi. Los destinos principales son las tomas de espalda, los calf kicks y las entradas a single-leg X.',
+    cues: [
+      'Engancha tu pierna interior alrededor de su pierna delantera desde abajo — a diferencia de la DLR, este gancho va por dentro, no por fuera',
+      'El pie de apoyo debe estar en su cadera o muslo para mantener la distancia mientras el gancho interior controla su pierna',
+      'Toma de espalda "Kiss of the Dragon": inviértete bajo el oponente, usa el gancho para rotar y subir a su espalda',
+      'Cuando presionen hacia adelante, bombea el gancho y extiende para entrar a single-leg X o a un enredo directo de piernas',
+    ],
+  },
+  114: {
+    name: 'Guardia 50/50',
+    description:
+      'Enredo de piernas neutro en el que ambos practicantes se espejean mutuamente, creando igualdad ofensiva y defensiva. Es principalmente una plataforma para llaves de pierna; ambos pueden atacar al mismo tiempo con ankle locks, heel hooks y toe holds.',
+    cues: [
+      'Cubre la rodilla del oponente con tu mano superior y esconde tu propio talón detrás de su muslo — exponer el talón es la forma más rápida de perder',
+      'Mantente en ángulo en lugar de alinearte directamente; la alineación frontal permite que espejeen tu intento de llave de pierna simultáneamente',
+      'El ankle lock y el heel hook interior son las finalizaciones de mayor porcentaje; establece una conexión de cadera apretada antes de ir por el talón',
+      'Para barrer: rota tu rodilla exterior hacia el suelo para doblar su rodilla delantera, luego desengánchate y establece posición superior',
+    ],
+  },
+  115: {
+    name: 'Media Guardia Profunda',
+    description:
+      'Extensión de la media guardia en la que el practicante de abajo se mete completamente bajo el centro de gravedad del oponente, con la cabeza cerca de su rodilla, un brazo envolviendo una pierna y las caderas pegadas. Los ataques principales son la barrida del mesero, la barrida Homer Simpson y la toma de espalda.',
+    cues: [
+      'Entra jalando la cadera profundamente bajo la base del oponente; tu cara debe estar cerca de su rodilla, no de su cadera',
+      'Mantén ambos brazos adentro: uno envuelve la pierna, el otro controla su rodilla o tobillo lejano; esto impide el cross-face y la kimura',
+      'Barrida del mesero: ensarta tu pierna exterior bajo su pierna cercana, elévala y barre hacia tu cabeza',
+      'Cuando apoyen para frenar la barrida, usa ese apoyo como punto de pivote para rotar hacia su espalda',
+    ],
+  },
   // Guard Passing (2xx)
   201: {
     name: 'Pase Toreando',
@@ -697,6 +730,39 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Síguelos y sube antes del intercambio',
     ],
   },
+  311: {
+    name: 'Barrida Old School (Gordo)',
+    description:
+      'Barrida fundamental desde la media guardia inferior usando un underhook y un agarre en el tobillo lejano del oponente para voltearlo. Popularizada por Roberto "Gordo" Correa, suele ser la primera barrida de media guardia que se enseña.',
+    cues: [
+      'Asegura un underhook profundo en el brazo cercano del oponente, luego mete la cabeza bajo su torso',
+      'Alcanza por debajo de su pierna libre y agarra los dedos del pie (no el tobillo) para máxima palanca',
+      'Suelta el underhook, refuerza el agarre con ambas manos y luego empuja las caderas hacia adentro y levanta',
+      'Si apoyan la pierna libre para estabilizarse, transiciona a tomar la espalda en lugar de completar la barrida',
+    ],
+  },
+  312: {
+    name: 'Barrida con Kimura',
+    description:
+      'Barrida desde guardia cerrada usando el agarre kimura (figura 4 en la muñeca) para desequilibrar y voltear al oponente. Si la barrida se bloquea, el mismo agarre pasa directamente a la sumisión kimura o abre el triángulo.',
+    cues: [
+      'Rompe la postura del oponente, aísla una muñeca y establece el agarre de doble llave (kimura)',
+      'Jala el brazo cruzando tu línea central; cuando apoyen la mano para evitar la sumisión, usa ese apoyo para elevar y barrer',
+      'Si la barrida falla, rueda hacia tu lado y termina la kimura desde abajo',
+      'La barrida fallida también abre el triángulo y la guillotina desde guardia — mantente activo en el agarre',
+    ],
+  },
+  313: {
+    name: 'Barrida John Wayne',
+    description:
+      'Barrida de media guardia usando la rodilla libre como palanca contra el tobillo lejano del oponente para tumbarlo de lado. Debe su nombre al movimiento rodante y casual que produce.',
+    cues: [
+      'Desde media guardia con underhook, abre la guardia y apoya el pie superior mientras tu pierna inferior controla justo sobre su tobillo',
+      'Balancea tu rodilla libre (superior) hacia arriba y hacia afuera en arco como un limpiaparabrisas, llevándola a través de la línea del tobillo',
+      'Combina la palanca de rodilla con un puente-empuje desde el pie de apoyo para generar rotación',
+      'Sigue la barrida para terminar directamente en control lateral o media guardia superior',
+    ],
+  },
   // Submissions (4xx)
   401: {
     name: 'Armbar',
@@ -896,6 +962,50 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Esconde el codo y mantén el pecho pesado',
     ],
   },
+  419: {
+    name: 'Armbar Inverso',
+    description:
+      'Variante del armbar con la palma hacia arriba, aplicada desde guardia cerrada o mariposa, que hiperextiende el codo en dirección contraria al armbar estándar. Si falla, fluye de forma natural de vuelta al armbar regular.',
+    cues: [
+      'Desde guardia cerrada, aísla un brazo y desplaza tu peso en la dirección del ataque para cargar presión sobre su codo',
+      'Mantén su palma hacia arriba (supinada); tu pierna presiona sobre su antebrazo para aplicar la palanca',
+      'Jala su muñeca hacia tu hombro y empuja tu espinilla hacia abajo para la finalización',
+      'Si apilan o recuperan postura, transiciona de inmediato al armbar estándar pasando la pierna sobre la cabeza',
+    ],
+  },
+  420: {
+    name: 'Toe Hold',
+    description:
+      'Llave de pierna que ataca el tobillo y el pie con un agarre en figura 4 al estilo kimura sobre el pie, girándolo hacia adentro para desgarrar los ligamentos del tobillo. Se aplica con más frecuencia desde ashi garami, 50/50 o enredos de media guardia.',
+    cues: [
+      'Atrapa la pierna para impedir el escape; agarra la parte superior del pie (meñique de la mano alineado con el meñique del pie) y pasa el otro brazo bajo su espinilla para bloquearlo en tu propia muñeca',
+      'Mantén el pie pegado a tu pecho — cualquier espacio les permite zafarse',
+      'Rota todo tu cuerpo para girar el pie hacia adentro (hacia su cadera opuesta) en lugar de usar solo la fuerza de los brazos',
+      'Controla la línea de rodilla antes de aplicar presión; una rodilla sin controlar les permitirá rodar y escapar',
+    ],
+  },
+  421: {
+    name: 'Calf Slicer',
+    description:
+      'Llave de compresión que cuña la espinilla detrás de la rodilla del oponente y dobla la pierna, aplastando el músculo de la pantorrilla contra el hueso de la espinilla. Los setups más comunes son desde posición tortuga, media guardia profunda y guardia X.',
+    cues: [
+      'Cuña tu espinilla detrás de la articulación de la rodilla del oponente como fulcro; cuanto más profunda la espinilla, más eficiente la presión',
+      'Asegura una figura 4 con tus piernas y controla su empeine o tobillo con ambas manos',
+      'Gira la hoja de la espinilla hacia su pantorrilla (como dorsiflexionando el tobillo) mientras jalas su tobillo hacia ti',
+      'La presión se desarrolla rápido — termina antes de que rueden; usa un agarre de cinturón o gancho si está disponible para bloquear el rodado',
+    ],
+  },
+  422: {
+    name: 'Triángulo desde Montada',
+    description:
+      'Estrangulamiento de sangre aplicado desde la montada superior pasando una pierna sobre el cuello y bloqueando una figura 4 con la otra pierna, similar al triángulo de guardia cerrada pero con la ventaja de peso de estar encima.',
+    cues: [
+      'Desde montada alta, sube las rodillas pasando los codos del oponente para que sus brazos queden sobre el plano del codo',
+      'Aísla un brazo controlando la muñeca; pasa la pierna exterior sobre el cuello para comenzar el bloqueo del triángulo',
+      'Bloquea la figura 4 (espinilla detrás de la rodilla) y ajusta el ángulo usando la presión de cadera en lugar de invertirte',
+      'Aprieta las rodillas juntas y empuja el brazo atrapado cruzando la línea central para ajustar el estrangulamiento',
+    ],
+  },
   // Takedowns & Throws (5xx)
   501: {
     name: 'Doble Pierna',
@@ -1006,6 +1116,28 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Asegura el agarre de mentón y control de codo',
     ],
   },
+  511: {
+    name: 'Snap Down a Toma de Espalda',
+    description:
+      'Un snap down que, en lugar de terminar en headlock frontal, usa el impulso del oponente para girar directamente detrás de él y asegurar el control de espalda. Se distingue del Snap Down a Headlock Frontal por circular detrás de la cadera en lugar de asegurar una posición frontal.',
+    cues: [
+      'Desde un collar-tie, ejecuta un snap down brusco hacia abajo para romper la postura y llevar la cabeza bajo tus caderas',
+      'Mientras avanzan o se recuperan, suelta la cabeza y da un paso lateral detrás de su cadera en lugar de bajar en posición frontal',
+      'Envuelve el torso con el agarre de cinturón de seguridad (un brazo por encima, uno por debajo) antes de que puedan incorporarse',
+      'Completa la toma de espalda insertando ambos ganchos para el control de espalda',
+    ],
+  },
+  512: {
+    name: 'Arm Drag a Toma de Espalda',
+    description:
+      'Entrada a derribo que usa un arm drag con dos manos (agarre de muñeca y trícep) para redirigir el brazo del oponente cruzando el cuerpo y dar un paso detrás de él hacia el control de espalda. Muy adaptable desde de pie, sentado y guardia mariposa.',
+    cues: [
+      'Agarra la muñeca del mismo lado del oponente con el pulgar hacia abajo; simultáneamente alcanza profundo hacia su trícep con la otra mano',
+      'Jala el brazo con fuerza cruzando tu línea central mientras das un paso con el pie del mismo lado lateralmente detrás de su cadera — mantén la cabeza pegada a su pecho',
+      'Envuelve tu brazo exterior alrededor de su cintura y bloquea la mano en su cadera lejana; esto bloquea su rotación',
+      'Completa la toma de espalda llevándolos al tatami con un derribo de espalda o barrida de pie, luego inserta los ganchos',
+    ],
+  },
   // Escapes (6xx)
   601: {
     name: 'Puente y Volteo (Upa)',
@@ -1084,6 +1216,72 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'No empujes con los brazos rectos',
     ],
   },
+  608: {
+    name: 'Escape del Armbar',
+    description:
+      'Familia de escapes del armbar, siendo la defensa de pila la opción principal para principiantes. Postura, rotación del pulgar y apilamiento del peso corporal combinados alivian la presión en el codo y extraen el brazo.',
+    cues: [
+      'En el instante en que el armbar se asegura, agarra tu propio antebrazo para crear una conexión de dos brazos y ganar tiempo',
+      'Apóyate en los dedos de los pies y apila el pecho hacia abajo sobre el oponente, levantando sus caderas para eliminar el fulcro',
+      'Rota el pulgar hacia arriba (supina) mientras jalas el codo sobre sus piernas — esto cambia el ángulo y libera el codo',
+      'Abre las piernas en base amplia para evitar que cierren sobre el brazo',
+    ],
+  },
+  609: {
+    name: 'Escape del Triángulo',
+    description:
+      'Escape basado en la postura de un triángulo aplicado desde la guardia. Apila, recupera postura y rompe el agarre antes de que el flujo sanguíneo se corte — el tiempo es el factor crítico.',
+    cues: [
+      'Mete el codo del brazo atrapado hacia tu línea central inmediatamente para ralentizar el estrangulamiento',
+      'Recupera postura con fuerza y apila las caderas hacia la cabeza del oponente, cargando tu peso corporal para reducir su palanca',
+      'Camina los pies hacia ellos, endereza la espalda y rompe el bloqueo empujando su rodilla con la mano libre',
+      'Una vez roto el bloqueo, pasa la guardia o asegura una posición defensiva antes de que se restablezcan',
+    ],
+  },
+  610: {
+    name: 'Escape del Triángulo Montado',
+    description:
+      'Escape de último recurso del triángulo montado — una de las posiciones más difíciles de escapar. Requiere levantar las caderas explosivamente y rotar para crear separación antes de que se corte el flujo sanguíneo.',
+    cues: [
+      'Apoya el brazo libre bajo su axila (no cruzando el cuerpo) para evitar que bloqueen el brazo en el triángulo',
+      'Entrelaza las manos y extiende los brazos hacia su cadera lejana para crear aunque sea mínima separación',
+      'Puente explosivo de caderas hacia su zona lumbar mientras aún ajustan el bloqueo',
+      'Pasa por encima de su cuerpo para rotar — incluso aterrizar en control lateral inferior es una victoria frente a ser estrangulado',
+    ],
+  },
+  611: {
+    name: 'Escape de Guillotina desde Caída de Guardia',
+    description:
+      'Defensa contra una guillotina atrapada durante la fase de caída de guardia o en transiciones de derribo — distinta de la defensa de guillotina desde posiciones superiores/de lucha. El atacante tiene agarre de cabeza y brazo mientras vas al suelo.',
+    cues: [
+      'En el momento en que la guillotina se asegura, mete el mentón con fuerza hacia el hombro del brazo atrapado para proteger la tráquea',
+      'Apoya ambas manos en sus caderas y recupera postura — nunca bajes más la cabeza, eso aprieta el estrangulamiento',
+      'Camina los pies alrededor hacia el mismo lado del brazo atrapado (el lado con brazo adentro) para aliviar la presión',
+      'Una vez roto el ángulo, pasa el brazo exterior sobre su hombro y jala hacia abajo para romper el agarre',
+    ],
+  },
+  612: {
+    name: 'Rollo de Granby',
+    description:
+      'Escape de inversión desde posición tortuga: rodar sobre un hombro (sin exponer el cuello) para recuperar la guardia o llegar a un scramble neutro.',
+    cues: [
+      'Mete el hombro de rodada hacia abajo; nunca expongas la nuca — la cabeza permanece abajo',
+      'Mantén los dedos del pie delantero en el suelo durante todo el movimiento para rodar en línea recta y controlada',
+      'Impulsa caderas y piernas hacia arriba y en arco; deben caer hacia el oponente para crear marcos de guardia inmediatos',
+      'En el momento en que las caderas toquen el suelo, lanza ambas piernas como marcos de guardia — el rollo solo está completo al restablecer la guardia',
+    ],
+  },
+  613: {
+    name: 'Escape del Headlock',
+    description:
+      'Escape de un headlock lateral sentado (kesa gatame / scarf hold), donde el oponente se sienta a tu lado controlando tu cabeza y brazo. Usa puente y movimiento de caderas para desequilibrar y recuperar.',
+    cues: [
+      'Protege el brazo atrapado manteniéndolo doblado y pegado al cuerpo — no lo estires o el estrangulamiento se aprieta',
+      'Haz puente hacia el oponente para cargar tu peso sobre él, luego usa el impulso del puente para rodarlo sobre tu cuerpo',
+      'Si apoya para detener el rodamiento, gamba las caderas en la dirección opuesta para liberar la cabeza',
+      'Una vez libre la cabeza, recupera guardia o lucha por una posición neutral inmediatamente',
+    ],
+  },
   // Positions (7xx)
   701: {
     name: 'Montada',
@@ -1160,6 +1358,28 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Aplana las caderas antes de liberar la pierna',
       'Camina la línea de rodilla hacia atrás para despejar la trampa',
       'Cambia la base cuando utilizan el escudo de rodilla',
+    ],
+  },
+  708: {
+    name: 'S-Mount',
+    description:
+      'Variación avanzada de montura donde una rodilla se apoya alta cerca de la oreja del oponente mientras el pie opuesto permanece en el suelo, formando una forma de S con las piernas. Esta configuración aísla un brazo y crea una plataforma muy ajustada para finalizaciones de armbar y triángulo.',
+    cues: [
+      'Desde montura alta, espera a que el oponente empuje los codos hacia arriba como marco — ese espacio es la ventana de entrada al S-mount',
+      'Desliza (no des pasos) una rodilla hasta su oreja a lo largo del suelo; dar un paso les da espacio para recuperar',
+      'Cierra todo el espacio inmediatamente tras el deslizamiento; apoyar el pie opuesto estabiliza la posición',
+      'El armbar es la finalización principal — la posición en S pre-carga el brazo; muévete directamente hacia él sin reiniciar',
+    ],
+  },
+  709: {
+    name: 'Crucifijo',
+    description:
+      'Posición de control que ataca a un oponente en posición tortuga donde un brazo queda atrapado por las piernas y el otro por las manos, inmovilizando ambos brazos simultáneamente. La entrada es típicamente desde un sprawl o ataque de espalda a la tortuga.',
+    cues: [
+      'Desde un sprawl o posición de ataque a la espalda, circula hacia un lado y mete tu rodilla cercana en la tortuga para abrirla',
+      'Pasa el brazo cercano bajo su brazo lejano, atrapándolo con el codo; tus piernas atrapan el brazo cercano en figura 4',
+      'Mantén presión de pecho sobre la espalda en todo momento; cualquier espacio le permite librar el brazo',
+      'Ataques principales: estrangulamiento trasero (el brazo libre va bajo el mentón), estrangulamiento de solapa y kimura del brazo lejano',
     ],
   },
 }
