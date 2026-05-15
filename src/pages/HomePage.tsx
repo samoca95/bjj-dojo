@@ -985,7 +985,9 @@ export default function HomePage() {
           </span>
           <ScoreLabel
             label={t('Level')}
-            description={t('Level help details')}
+            description={t(
+              'Level details: thresholds, XP gains, and streak definitions.',
+            )}
           />
         </div>
         <span
