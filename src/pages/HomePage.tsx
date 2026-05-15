@@ -422,12 +422,12 @@ function ScoreLabel({
   description,
 }: {
   label: string
-  description?: string
+  description: string
 }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className="text-xs text-zinc-500">{label}</span>
-      {description && <ScoreHelp label={label} description={description} />}
+      <ScoreHelp label={label} description={description} />
     </div>
   )
 }
@@ -975,6 +975,20 @@ export default function HomePage() {
     </section>
   )
 
+  const levelHelpDescription = [
+    t(
+      'Your level increases as your total XP grows. Levels get progressively harder to reach.',
+    ),
+    t(
+      'Level thresholds: L1 0 XP, L2 100 XP, L3 300 XP, L4 600 XP, L5 1000 XP. Each next level needs 100 XP more than the previous one.',
+    ),
+    t(
+      'XP comes from mat time, submissions given, and sessions logged. Mat time gives 1 XP every 15 minutes.',
+    ),
+    t('Consecutive days with at least one logged training session.'),
+    t('Consecutive weeks with at least one logged training session.'),
+  ].join('\n\n')
+
   const levelCard = (
     <div key="level" className="bg-zinc-900 rounded-2xl px-4 py-3">
       <div className="flex items-center justify-between">
@@ -983,12 +997,7 @@ export default function HomePage() {
           <span className="text-sm font-bold tabular-nums text-zinc-100">
             {levelInfo.level}
           </span>
-          <ScoreLabel
-            label={t('Level')}
-            description={t(
-              'Level details: thresholds, XP gains, and streak definitions.',
-            )}
-          />
+          <ScoreLabel label={t('Level')} description={levelHelpDescription} />
         </div>
         <span
           className="text-sm text-zinc-500 tabular-nums flex items-center gap-1.5"

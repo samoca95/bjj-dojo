@@ -229,8 +229,16 @@ const FR_TRANSLATIONS = {
   'd.': 'j.',
   Level: 'Niveau',
   XP: 'XP',
-  'Level details: thresholds, XP gains, and streak definitions.':
-    'Niveaux et XP :\n• Le niveau 1 commence à 0 XP.\n• Chaque niveau suivant demande 100 XP de plus que le précédent (N2: 100, N3: 300, N4: 600, N5: 1000...).\nGain de XP :\n• 1 XP toutes les 15 min sur le tatami.\n• +5 XP par soumission réussie.\n• +2 XP par session enregistrée.\nSéries :\n• Série quotidienne = jours consécutifs avec au moins une session enregistrée.\n• Série hebdomadaire = semaines consécutives avec au moins une session enregistrée.',
+  'Your level increases as your total XP grows. Levels get progressively harder to reach.':
+    'Votre niveau monte avec vos XP totaux. Chaque niveau devient plus exigeant.',
+  'Level thresholds: L1 0 XP, L2 100 XP, L3 300 XP, L4 600 XP, L5 1000 XP. Each next level needs 100 XP more than the previous one.':
+    'Seuils de niveau : N1 0 XP, N2 100 XP, N3 300 XP, N4 600 XP, N5 1000 XP. Chaque niveau suivant demande 100 XP de plus que le précédent.',
+  'XP comes from mat time, submissions given, and sessions logged. Mat time gives 1 XP every 15 minutes.':
+    'Les XP viennent du temps sur tatami, des soumissions réussies et des sessions enregistrées. Le tatami donne 1 XP toutes les 15 minutes.',
+  'Consecutive days with at least one logged training session.':
+    "Jours consécutifs avec au moins une session d'entraînement enregistrée.",
+  'Consecutive weeks with at least one logged training session.':
+    "Semaines consécutives avec au moins une session d'entraînement enregistrée.",
   'Milestones unlocked from your long-term training consistency and progress.':
     'Jalons débloqués grâce à votre régularité et progression à long terme.',
   'Lifetime hours': 'Heures au total',
