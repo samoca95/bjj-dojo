@@ -444,6 +444,22 @@ function drawQrCode(
   }
 }
 
+function drawCompactStat(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  label: string,
+  drawValue: (x: number, y: number, w: number) => void,
+) {
+  ctx.fillStyle = 'rgba(255,255,255,0.58)'
+  ctx.font = `700 18px ${FONT}`
+  setLetterSpacing(ctx, '1.5px')
+  ctx.fillText(label, x, y)
+  setLetterSpacing(ctx, '0px')
+  drawValue(x, y + 28, w)
+}
+
 let appLogoPromise: Promise<HTMLImageElement | null> | null = null
 
 async function getAppLogoImage(): Promise<HTMLImageElement | null> {
@@ -524,33 +540,25 @@ export async function renderShareCard(
   ctx.fillStyle = scrim
   ctx.fillRect(0, 0, w, h)
 
-  // Theme frame.
-  ctx.strokeStyle = theme.accent
-  ctx.lineWidth = 5
-  withAlpha(ctx, 0.55, () => ctx.strokeRect(26, 26, w - 52, h - 52))
-
   // --- Brand row ----------------------------------------------------------
   let y = PAD
   ctx.textBaseline = 'top'
   ctx.textAlign = 'left'
   ctx.fillStyle = theme.accent
-  ctx.font = `800 36px ${FONT}`
-  setLetterSpacing(ctx, '6px')
-  ctx.fillText(L.brand, PAD, y + 12)
+  ctx.font = `800 30px ${FONT}`
+  setLetterSpacing(ctx, '5px')
+  ctx.fillText(L.brand, PAD, y + 10)
   setLetterSpacing(ctx, '0px')
 
   const logo = await getAppLogoImage()
   if (logo) {
-    const logoSize = 72
+    const logoSize = 56
     const logoX = w - PAD - logoSize
-    const logoY = y + 2
-    roundRectPath(ctx, logoX - 8, logoY - 8, logoSize + 16, logoSize + 16, 20)
-    ctx.fillStyle = 'rgba(0,0,0,0.35)'
-    ctx.fill()
+    const logoY = y
     ctx.drawImage(logo, logoX, logoY, logoSize, logoSize)
   }
 
-  y += 96
+  y += 74
 
   // --- Belt + name (optional) --------------------------------------------
   if (options.belt) {
@@ -559,7 +567,7 @@ export async function renderShareCard(
 
   // --- Date ---------------------------------------------------------------
   ctx.fillStyle = '#ffffff'
-  ctx.font = `800 60px ${FONT}`
+  ctx.font = `800 54px ${FONT}`
   const typeLabel = sessionTypeLabel(
     session.sessionType,
     SESSION_TYPE_LABELS[session.sessionType],
@@ -571,21 +579,17 @@ export async function renderShareCard(
   const badgePadX = 26
   const badgeH = 58
   const badgeW = ctx.measureText(typeLabel).width + badgePadX * 2
-  const dateMaxW = Math.max(340, contentW - badgeW - 24)
-  ctx.font = `800 60px ${FONT}`
-  const dateLines = wrapText(
-    ctx,
-    formatCardDate(session.date, locale),
-    dateMaxW,
-    2,
-  )
+  const inlineBadge = contentW - badgeW - 24 >= 340
+  const dateMaxW = inlineBadge ? contentW - badgeW - 24 : contentW
+  ctx.font = `800 54px ${FONT}`
+  const dateLines = wrapText(ctx, formatCardDate(session.date, locale), dateMaxW, 2)
   const dateStartY = y
   for (const line of dateLines) {
     ctx.fillText(line, PAD, y)
-    y += 72
+    y += 64
   }
-  const badgeX = PAD + dateMaxW + 24
-  const badgeY = dateStartY + 4
+  const badgeX = inlineBadge ? PAD + dateMaxW + 24 : PAD
+  const badgeY = inlineBadge ? dateStartY + 2 : y + 6
   ctx.fillStyle = badge.bg
   roundRectPath(ctx, badgeX, badgeY, badgeW, badgeH, badgeH / 2)
   ctx.fill()
@@ -599,8 +603,8 @@ export async function renderShareCard(
   ctx.fillText(typeLabel, badgeX + badgePadX, badgeY + badgeH / 2 + 2)
   ctx.textBaseline = 'top'
   setLetterSpacing(ctx, '0px')
-  y = Math.max(y, badgeY + badgeH + 12)
-  y += 14
+  y = Math.max(y, badgeY + badgeH + 10)
+  y += 10
 
   // Theme divider.
   ctx.strokeStyle = theme.accent
@@ -611,76 +615,60 @@ export async function renderShareCard(
     ctx.lineTo(PAD + 120, y)
     ctx.stroke()
   })
-  y += 36
+  y += 26
 
-  // --- Stat tiles ---------------------------------------------------------
-  const tiles: {
+  // --- Compact session stats ----------------------------------------------
+  const stats: {
     label: string
     render: (x: number, ty: number, tw: number) => void
   }[] = []
 
-  tiles.push({
+  stats.push({
     label: 'TIME',
     render: (x, ty) => {
       ctx.fillStyle = '#ffffff'
-      ctx.font = `800 46px ${FONT}`
+      ctx.font = `800 42px ${FONT}`
       ctx.fillText(`${session.durationMinutes}`, x, ty)
       const numW = ctx.measureText(`${session.durationMinutes}`).width
-      ctx.fillStyle = 'rgba(255,255,255,0.7)'
-      ctx.font = `600 26px ${FONT}`
-      ctx.fillText(` ${L.minutes}`, x + numW, ty + 16)
+      ctx.fillStyle = 'rgba(255,255,255,0.62)'
+      ctx.font = `600 22px ${FONT}`
+      ctx.fillText(` ${L.minutes}`, x + numW, ty + 15)
     },
   })
 
-  tiles.push({
+  stats.push({
     label: L.energy.toUpperCase(),
     render: (x, ty) => {
-      const dot = 30
-      const gap = 12
+      const dot = 18
+      const gap = 10
       for (let i = 0; i < 5; i++) {
         const dx = x + i * (dot + gap)
-        roundRectPath(ctx, dx, ty + 6, dot, dot, 8)
+        roundRectPath(ctx, dx, ty + 7, dot, dot, 6)
         ctx.fillStyle =
-          i < session.energyLevel ? theme.accent : 'rgba(255,255,255,0.16)'
+          i < session.energyLevel ? theme.accent : 'rgba(255,255,255,0.14)'
         ctx.fill()
       }
     },
   })
 
   if (clubName) {
-    tiles.push({
+    stats.push({
       label: 'CLUB',
       render: (x, ty, tw) => {
         ctx.fillStyle = '#ffffff'
-        ctx.font = `700 34px ${FONT}`
-        ctx.fillText(truncateToWidth(ctx, clubName, tw - 44), x, ty + 4)
+        ctx.font = `700 28px ${FONT}`
+        ctx.fillText(truncateToWidth(ctx, clubName, tw), x, ty + 2)
       },
     })
   }
 
   const tileGap = 20
-  const tileH = 152
-  const tileW = (contentW - tileGap * (tiles.length - 1)) / tiles.length
-  tiles.forEach((tile, i) => {
-    const tx = PAD + i * (tileW + tileGap)
-    roundRectPath(ctx, tx, y, tileW, tileH, 22)
-    ctx.fillStyle = 'rgba(255,255,255,0.07)'
-    ctx.fill()
-    ctx.strokeStyle = theme.accent
-    ctx.lineWidth = 2
-    withAlpha(ctx, 0.32, () => {
-      roundRectPath(ctx, tx, y, tileW, tileH, 22)
-      ctx.stroke()
-    })
-    const innerX = tx + 28
-    ctx.fillStyle = theme.accent
-    ctx.font = `700 22px ${FONT}`
-    setLetterSpacing(ctx, '2px')
-    ctx.fillText(tile.label, innerX, y + 26)
-    setLetterSpacing(ctx, '0px')
-    tile.render(innerX, y + 72, tileW)
+  const statW = (contentW - tileGap * (stats.length - 1)) / stats.length
+  stats.forEach((stat, i) => {
+    const tx = PAD + i * (statW + tileGap)
+    drawCompactStat(ctx, tx, y, statW, stat.label, stat.render)
   })
-  y += tileH + 44
+  y += 88
 
   // --- Taps / submissions highlight --------------------------------------
   const totalTaps = givenTaps.length + receivedTaps.length
