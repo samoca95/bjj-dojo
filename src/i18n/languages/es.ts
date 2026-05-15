@@ -285,8 +285,8 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Agarrar las mangas del oponente mientras se usan los pies en los bíceps para controlar la distancia y atacar.',
     cues: [
       'Agarre completo de manga, pies en bíceps no en antebrazos',
-      'Extiende completamente antes de jalar para romper postura',
-      'Patea la cadera simultáneamente con el jalón',
+      'Extiende completamente antes de tirar para romper postura',
+      'Patea la cadera simultáneamente con el tirón',
       'Rota caderas para entradas a triángulo y omoplata',
     ],
   },
@@ -417,7 +417,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     description:
       'Arrastrar una pierna a través del cuerpo manteniendo contacto de cadera para crear un ángulo de pase.',
     cues: [
-      'Jala una pierna a través de la línea del cuerpo',
+      'Tira una pierna a través de la línea del cuerpo',
       'Mantén contacto cadera a cadera durante todo el movimiento',
       'Despeja la segunda pierna antes de establecer posición',
       'Pasa por encima para completar el pase',
@@ -508,7 +508,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     cues: [
       'Debes romper la postura antes de abrir la guardia',
       'El agarre collar-manga controla ambos lados',
-      'Tijera las piernas simultáneamente con el jalón',
+      'Tijera las piernas simultáneamente con el tirón',
       'Empuja la rodilla de abajo en su cadera al barrer',
     ],
   },
@@ -519,7 +519,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     cues: [
       'Engancha su pierna cercana con tu pierna cercana',
       'El balanceo de péndulo genera el impulso',
-      'Jala su brazo cruzado sobre tu pecho',
+      'Tira de su brazo cruzado sobre tu pecho',
       'Gira hacia arriba cuando caen',
     ],
   },
@@ -573,8 +573,8 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Usar el pie en la cadera y el pie en el bícep para barrer al oponente.',
     cues: [
       'Pie en cadera, pie en bícep simultáneamente',
-      'Jala la manga para romper su base',
-      'Extiende las caderas mientras jalas la pierna hacia ti',
+      'Tira de la manga para romper su base',
+      'Extiende las caderas mientras tiras de la pierna hacia ti',
       'Sube a la posición superior rápidamente',
     ],
   },
@@ -618,7 +618,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Bloquear la cabeza y el brazo con las piernas en figura 4 para cortar el flujo sanguíneo al cerebro.',
     cues: [
       'Cabeza y un brazo dentro del triángulo',
-      'Jala la cabeza hacia abajo para completar el bloqueo',
+      'Tira de la cabeza hacia abajo para completar el bloqueo',
       'Angula hacia el lado del brazo atrapado',
       'Empuja el brazo cruzando su línea central para ajustar',
     ],
@@ -653,7 +653,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Brazo bajo el mentón, NO sobre el mentón',
       'Segundo brazo detrás de la cabeza, no del cuello',
       'Aprieta bícep y hombro juntos',
-      'Jala el codo hacia ti mientras aprietas',
+      'Tira del codo hacia ti mientras aprietas',
     ],
   },
   406: {
@@ -663,7 +663,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     cues: [
       'Entra completamente bajo el cuello, no encima',
       'Guillotina de codo alto para la variación con brazo dentro',
-      'Jala el brazo cruzando tu cuerpo mientras aprietas',
+      'Tira del brazo cruzando tu cuerpo mientras aprietas',
       'Encógete y cierra la guardia para guillotina de guardia',
     ],
   },
@@ -741,7 +741,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Agarre profundo de solapa en el lado del estrangulamiento',
       'Agarre de pantalón o cinturón en la pierna del lado opuesto',
       'Extiende tu cuerpo para crear el arco',
-      'Jala la solapa hacia ti, empuja la pierna hacia afuera',
+      'Tira de la solapa hacia ti, empuja la pierna hacia afuera',
     ],
   },
   414: {
@@ -794,7 +794,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Estrangulamiento desde norte-sur usando presión de hombro y dorsal alrededor del cuello.',
     cues: [
       'El brazo se envuelve profundamente alrededor de la línea del cuello',
-      'Presión de hombro hacia abajo, no jalando hacia arriba',
+      'Presión de hombro hacia abajo, no tirando hacia arriba',
       'Aleja las caderas para ajustar',
       'Esconde el codo y mantén el pecho pesado',
     ],
@@ -830,12 +830,12 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Rompe su equilibrio hacia adelante primero',
       'Carga la cadera directamente bajo su centro',
       'Gira — las caderas miran en la misma dirección que las suyas',
-      'Rota y jala sobre tu cadera suavemente',
+      'Rota y tira sobre tu cadera suavemente',
     ],
   },
   504: {
     name: 'Seoi Nage',
-    description: 'Jalar al oponente sobre el hombro para una gran proyección.',
+    description: 'Tirar del oponente sobre el hombro para una gran proyección.',
     cues: [
       'Jálalo mientras rotas por debajo',
       'Empuja el hombro bajo su axila',
@@ -893,7 +893,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Barrida basada en el timing que remueve un pie en paso para derribar limpiamente al oponente.',
     cues: [
       'Ataca cuando su peso se desplace',
-      'Usa el jalón de manga/solapa para desequilibrar',
+      'Usa el tirón de manga/solapa para desequilibrar',
       'Barre bajo en la línea del tobillo',
       'La dirección de la barrida sigue su paso',
     ],
@@ -901,10 +901,10 @@ export const ES_TECHNIQUE_CONTENT: Record<
   510: {
     name: 'Clinch de Cabeza Frontal',
     description:
-      'Jalar la cabeza y postura del oponente hacia abajo para asegurar control de headlock frontal y ataques.',
+      'Tirar de la cabeza y postura del oponente hacia abajo para asegurar control de headlock frontal y ataques.',
     cues: [
-      'Jala con los codos no con las muñecas',
-      'Da un paso atrás mientras jalas hacia abajo',
+      'Tira con los codos, no con las muñecas',
+      'Da un paso atrás mientras tiras hacia abajo',
       'Circula inmediatamente para crear ángulo',
       'Asegura el agarre de mentón y control de codo',
     ],

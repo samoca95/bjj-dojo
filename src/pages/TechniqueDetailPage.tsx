@@ -323,6 +323,13 @@ export default function TechniqueDetailPage() {
               {technique.aliases!.join(' · ')}
             </p>
           )}
+          {language !== 'en' &&
+            !technique.isCustom &&
+            getTechniqueName(technique, language) !== technique.name && (
+              <p className="text-xs text-zinc-500 truncate">
+                🇬🇧 {technique.name}
+              </p>
+            )}
         </div>
         <button
           onClick={() => navigate(`/techniques/${numId}/edit`)}

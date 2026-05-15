@@ -29,6 +29,7 @@ import {
   getCategoryName,
   getTechniqueName,
   getTechniqueDescription,
+  withLocalizedName,
 } from '../i18n'
 import {
   techniqueMatchesQuery,
@@ -352,7 +353,7 @@ export default function TechniquesPage() {
           debouncedSearch.trim() &&
           !techniqueMatchesQuery(
             {
-              ...t,
+              ...withLocalizedName(t, language),
               cues: [...(t.cues ?? []), ...(noteMap.get(t.id) ?? [])],
             },
             debouncedSearch,
@@ -383,11 +384,17 @@ export default function TechniquesPage() {
         if (debouncedSearch.trim()) {
           const scoreDelta =
             techniqueScore(
-              { ...b, cues: [...(b.cues ?? []), ...(noteMap.get(b.id) ?? [])] },
+              {
+                ...withLocalizedName(b, language),
+                cues: [...(b.cues ?? []), ...(noteMap.get(b.id) ?? [])],
+              },
               debouncedSearch,
             ) -
             techniqueScore(
-              { ...a, cues: [...(a.cues ?? []), ...(noteMap.get(a.id) ?? [])] },
+              {
+                ...withLocalizedName(a, language),
+                cues: [...(a.cues ?? []), ...(noteMap.get(a.id) ?? [])],
+              },
               debouncedSearch,
             )
           if (scoreDelta !== 0) return scoreDelta

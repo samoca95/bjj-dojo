@@ -11,7 +11,7 @@ import {
   Hand,
 } from 'lucide-react'
 import { db } from '../db/database'
-import { useI18n } from '../i18n'
+import { useI18n, withLocalizedName } from '../i18n'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { BELT } from '../constants/themeColors'
 import { getGoalMatTime } from '../utils/goalMatTime'
@@ -157,7 +157,7 @@ function StatCard({
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { t } = useI18n()
+  const { t, language } = useI18n()
   const [focusPickerOpen, setFocusPickerOpen] = useState(false)
   const [focusPickerSearch, setFocusPickerSearch] = useState('')
   const [focusTechniqueIds, setFocusTechniqueIdsState] =
@@ -306,17 +306,17 @@ export default function HomePage() {
 
   const filteredPickerTechniques = useMemo(() => {
     const results = (techniques ?? []).filter((t) =>
-      techniqueMatchesQuery(t, focusPickerSearch),
+      techniqueMatchesQuery(withLocalizedName(t, language), focusPickerSearch),
     )
     if (focusPickerSearch.trim()) {
       return [...results].sort(
         (a, b) =>
-          techniqueScore(b, focusPickerSearch) -
-          techniqueScore(a, focusPickerSearch),
+          techniqueScore(withLocalizedName(b, language), focusPickerSearch) -
+          techniqueScore(withLocalizedName(a, language), focusPickerSearch),
       )
     }
     return results
-  }, [techniques, focusPickerSearch])
+  }, [techniques, focusPickerSearch, language])
 
   const trainingWeekStreak = useMemo(() => {
     const weekStarts = Array.from(

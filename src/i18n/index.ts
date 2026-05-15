@@ -115,6 +115,19 @@ export function getTechniqueName(
   return pack.techniqueContent[technique.id]?.name ?? technique.name
 }
 
+export function withLocalizedName(
+  technique: Technique,
+  language: AppLanguage,
+): Technique {
+  if (language === 'en' || technique.isCustom) return technique
+  const localizedName = getTechniqueName(technique, language)
+  if (localizedName === technique.name) return technique
+  return {
+    ...technique,
+    aliases: [...(technique.aliases ?? []), localizedName],
+  }
+}
+
 export function getTechniqueDescription(
   technique: Technique,
   language: AppLanguage,
