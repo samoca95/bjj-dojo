@@ -8,6 +8,11 @@ import {
   setBeltColor,
   setBeltStripes,
 } from '../utils/beltRank'
+import {
+  getUserName,
+  setUserName,
+  setUserNamePrompted,
+} from '../utils/userName'
 import { completeInitialSetup } from './firstLaunchSetup'
 
 interface FirstLaunchSetupPromptProps {
@@ -86,6 +91,18 @@ const START_LABEL: Record<AppLanguage, string> = {
   fr: 'Commencer',
 }
 
+const NAME_LABEL: Record<AppLanguage, string> = {
+  en: 'YOUR NAME',
+  es: 'TU NOMBRE',
+  fr: 'VOTRE NOM',
+}
+
+const NAME_PLACEHOLDER: Record<AppLanguage, string> = {
+  en: 'Your name',
+  es: 'Tu nombre',
+  fr: 'Votre nom',
+}
+
 const SWATCH_CLASS: Record<BeltColor, string> = {
   white: 'bg-zinc-100',
   blue: 'bg-blue-600',
@@ -100,11 +117,14 @@ export default function FirstLaunchSetupPrompt({
   const [language, setLanguage] = useState<AppLanguage>('en')
   const [belt, setBelt] = useState<BeltColor>('white')
   const [stripes, setStripes] = useState<number>(0)
+  const [name, setNameState] = useState<string>(getUserName())
 
   const saveSetup = () => {
     setAppLanguage(language)
     setBeltColor(belt)
     setBeltStripes(stripes)
+    setUserName(name)
+    setUserNamePrompted()
     completeInitialSetup()
     onComplete?.()
   }
@@ -117,6 +137,19 @@ export default function FirstLaunchSetupPrompt({
             {WELCOME_TITLE[language]}
           </h2>
           <p className="text-sm text-zinc-400">{WELCOME_SUBTITLE[language]}</p>
+        </div>
+
+        <div className="space-y-2">
+          <span className="text-xs text-gold font-semibold tracking-widest">
+            {NAME_LABEL[language]}
+          </span>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setNameState(e.target.value)}
+            placeholder={NAME_PLACEHOLDER[language]}
+            className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
+          />
         </div>
 
         <div className="space-y-2">

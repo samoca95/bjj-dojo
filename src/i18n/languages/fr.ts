@@ -214,6 +214,10 @@ const FR_TRANSLATIONS = {
   // Gamification
   GAMIFICATION: 'GAMIFICATION',
   'THIS WEEK': 'CETTE SEMAINE',
+  'LEVEL AND SCORES': 'NIVEAU ET SCORES',
+  'LEVEL AND SCORES VIEW': 'AFFICHAGE NIVEAU ET SCORES',
+  'Choose which level and score cards are shown on Home.':
+    "Choisissez les cartes de niveau et de scores à afficher sur l'accueil.",
   Achievements: 'Succès',
   'View all': 'Tout voir',
   Locked: 'Verrouillé',
@@ -225,6 +229,18 @@ const FR_TRANSLATIONS = {
   'd.': 'j.',
   Level: 'Niveau',
   XP: 'XP',
+  'Your level increases as your total XP grows. Levels get progressively harder to reach.':
+    'Votre niveau monte avec vos XP totaux. Chaque niveau devient plus exigeant.',
+  'XP comes from mat time, submissions given, and sessions logged. Mat time gives 1 XP every 15 minutes.':
+    'Les XP viennent du temps sur tatami, des soumissions réussies et des sessions enregistrées. Le tatami donne 1 XP toutes les 15 minutes.',
+  '1 XP each 15 min • +5 per tap given • +2 per session':
+    '1 XP toutes les 15 min • +5 par soumission réussie • +2 par session',
+  'Consecutive days with at least one logged training session.':
+    "Jours consécutifs avec au moins une session d'entraînement enregistrée.",
+  'Consecutive weeks with at least one logged training session.':
+    "Semaines consécutives avec au moins une session d'entraînement enregistrée.",
+  'Milestones unlocked from your long-term training consistency and progress.':
+    'Jalons débloqués grâce à votre régularité et progression à long terme.',
   'Lifetime hours': 'Heures au total',
   'Next tier': 'Prochain palier',
   // Rank tiers

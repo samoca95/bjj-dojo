@@ -355,17 +355,17 @@ export default function SettingsPage() {
             <div className="bg-zinc-900 flex-1">
               <div className="text-sm font-semibold text-zinc-100">
                 {language === 'es'
-                  ? 'Objetivos'
+                  ? 'Objetivos y logros'
                   : language === 'fr'
-                    ? 'Objectifs'
-                    : 'Goals'}
+                    ? 'Objectifs et réalisations'
+                    : 'Goals and Achievements'}
               </div>
               <div className="text-xs text-zinc-500">
                 {language === 'es'
-                  ? 'Meta semanal y próximos objetivos'
+                  ? 'Meta semanal y vista de niveles y puntuaciones'
                   : language === 'fr'
-                    ? 'Objectif hebdomadaire et prochains objectifs'
-                    : 'Weekly goal and upcoming goals'}
+                    ? 'Objectif hebdomadaire et vue niveaux et scores'
+                    : 'Weekly goal and level-and-scores view'}
               </div>
             </div>
             <ChevronRight

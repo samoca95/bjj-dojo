@@ -2,18 +2,18 @@ import { describe, it, expect } from 'vitest'
 import { computeXp, computeLevel, xpRequiredForLevel } from '../utils/xpLevel'
 
 describe('computeXp', () => {
-  it('floors mat-time XP to integers (1 per 30 min)', () => {
+  it('floors mat-time XP to integers (1 per 15 min)', () => {
     expect(computeXp({ totalMinutes: 75, givenTaps: 0, sessionCount: 0 })).toBe(
-      2,
+      5,
     )
-    expect(computeXp({ totalMinutes: 29, givenTaps: 0, sessionCount: 0 })).toBe(
+    expect(computeXp({ totalMinutes: 14, givenTaps: 0, sessionCount: 0 })).toBe(
       0,
     )
   })
 
   it('combines mat, tap, and session XP', () => {
     const xp = computeXp({ totalMinutes: 60, givenTaps: 3, sessionCount: 2 })
-    expect(xp).toBe(2 + 15 + 4)
+    expect(xp).toBe(4 + 15 + 4)
   })
 })
 

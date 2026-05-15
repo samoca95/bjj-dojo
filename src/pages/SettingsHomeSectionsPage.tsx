@@ -39,8 +39,7 @@ export default function SettingsHomeSectionsPage() {
 
   const sectionLabels: Record<HomeSectionId, string> = {
     focus: t('FOCUS TECHNIQUES'),
-    gamification: t('GAMIFICATION'),
-    trending: t('THIS WEEK'),
+    gamification: t('LEVEL AND SCORES'),
     stats: t('YOUR STATS'),
     calendar: t('TRAINING CALENDAR'),
     quickAccess: t('QUICK ACCESS'),

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { CircleHelp, X } from 'lucide-react'
 import { useI18n } from '../i18n'
 import type { Achievement, AchievementCtx } from '../utils/achievements'
 
@@ -54,16 +54,19 @@ interface StripProps {
   achievements: Achievement[]
   earnedAt: Record<string, number>
   ctx: AchievementCtx
+  infoText?: string
 }
 
 export default function AchievementsCard({
   achievements,
   earnedAt,
   ctx,
+  infoText,
 }: StripProps) {
   const { t } = useI18n()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showAll, setShowAll] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
 
   const selected =
     selectedId != null
@@ -79,7 +82,25 @@ export default function AchievementsCard({
   return (
     <div className="bg-zinc-900 rounded-2xl px-3 py-3">
       <div className="flex items-center justify-between mb-2 px-1">
-        <span className="text-xs text-zinc-400">{t('Achievements')}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-zinc-400">{t('Achievements')}</span>
+          {infoText && (
+            <div className="relative">
+              <button
+                onClick={() => setShowInfo((prev) => !prev)}
+                aria-label={`${t('Achievements')} info`}
+                className="text-zinc-500 active:text-zinc-300"
+              >
+                <CircleHelp size={13} />
+              </button>
+              {showInfo && (
+                <div className="absolute left-0 z-20 mt-1 w-56 rounded-xl border border-zinc-700 bg-zinc-900 p-2.5 text-[11px] leading-relaxed text-zinc-300 shadow-lg">
+                  {infoText}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <button
           onClick={() => setShowAll(true)}
           className="text-xs font-semibold text-gold"
