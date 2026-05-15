@@ -462,7 +462,11 @@ export default function TechniquesPage() {
         description={getTechniqueDescription(technique, language)}
         practiceCount={freqMap.get(technique.id) ?? 0}
         matchingAlias={
-          getMatchingAlias(technique, debouncedSearch) ?? undefined
+          getMatchingAlias(
+            technique,
+            debouncedSearch,
+            getTechniqueName(technique, language),
+          ) ?? undefined
         }
         onClick={() => {
           window.sessionStorage.setItem(

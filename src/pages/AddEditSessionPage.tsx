@@ -15,7 +15,12 @@ import type {
 } from '../types'
 import { SESSION_TYPE_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
-import { useI18n, sessionTypeLabel, withLocalizedName } from '../i18n'
+import {
+  useI18n,
+  sessionTypeLabel,
+  withLocalizedName,
+  getTechniqueName,
+} from '../i18n'
 import {
   techniqueMatchesQuery,
   techniqueScore,
@@ -841,7 +846,11 @@ export default function AddEditSessionPage() {
                     ).length
                   : 0
                 const matchingAlias =
-                  getMatchingAlias(t, pickerSearch) ?? undefined
+                  getMatchingAlias(
+                    t,
+                    pickerSearch,
+                    getTechniqueName(t, language),
+                  ) ?? undefined
                 return (
                   <button
                     key={t.id}
