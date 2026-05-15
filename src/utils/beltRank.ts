@@ -1,3 +1,5 @@
+import { recordBeltChange } from './beltPromotion'
+
 export type BeltColor = 'white' | 'blue' | 'purple' | 'brown' | 'black'
 
 export const BELT_COLORS: BeltColor[] = [
@@ -26,7 +28,12 @@ export function getBeltColor(): BeltColor {
 
 export function setBeltColor(belt: BeltColor) {
   if (typeof window === 'undefined') return
+  const currentStripes = getBeltStripes()
+  const result = recordBeltChange({ color: belt, stripes: currentStripes })
   window.localStorage.setItem(BELT_STORAGE_KEY, belt)
+  if (result.forceStripesReset) {
+    window.localStorage.setItem(STRIPES_STORAGE_KEY, '0')
+  }
   window.dispatchEvent(new CustomEvent(BELT_RANK_UPDATED_EVENT))
 }
 
@@ -41,6 +48,8 @@ export function getBeltStripes(): number {
 
 export function setBeltStripes(stripes: number) {
   if (typeof window === 'undefined') return
+  const currentColor = getBeltColor()
+  recordBeltChange({ color: currentColor, stripes })
   window.localStorage.setItem(STRIPES_STORAGE_KEY, String(stripes))
   window.dispatchEvent(new CustomEvent(BELT_RANK_UPDATED_EVENT))
 }

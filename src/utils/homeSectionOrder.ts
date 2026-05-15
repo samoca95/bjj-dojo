@@ -1,5 +1,6 @@
 export type HomeSectionId =
   | 'focus'
+  | 'gamification'
   | 'trending'
   | 'stats'
   | 'calendar'
@@ -14,6 +15,7 @@ export const HOME_SECTION_ORDER_UPDATED_EVENT =
 
 export const DEFAULT_HOME_SECTION_ORDER: HomeSectionId[] = [
   'focus',
+  'gamification',
   'trending',
   'stats',
   'calendar',
@@ -21,6 +23,7 @@ export const DEFAULT_HOME_SECTION_ORDER: HomeSectionId[] = [
 ]
 export const DEFAULT_HOME_SECTION_VISIBILITY: HomeSectionVisibility = {
   focus: true,
+  gamification: true,
   trending: true,
   stats: true,
   calendar: true,
@@ -29,6 +32,7 @@ export const DEFAULT_HOME_SECTION_VISIBILITY: HomeSectionVisibility = {
 
 const ALL: HomeSectionId[] = [
   'focus',
+  'gamification',
   'trending',
   'stats',
   'calendar',
