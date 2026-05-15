@@ -75,6 +75,7 @@ export type TranslationKey =
   | 'HOME SECTION ORDER'
   | 'Hide section'
   | 'Home'
+  | 'Home section order'
   | 'Icons'
   | 'Import JSON'
   | 'Language'
@@ -205,7 +206,10 @@ export interface LanguagePack {
    */
   translations: Partial<Record<TranslationKey, string>>
   categoryContent: Record<number, { name: string; description: string }>
-  techniqueContent: Record<number, { description: string; cues: string[] }>
+  techniqueContent: Record<
+    number,
+    { name?: string; description: string; cues: string[] }
+  >
   difficulty: Partial<Record<Difficulty, string>>
   sessionTypes: Partial<Record<SessionType, string>>
   connectionTypes: Partial<Record<ConnectionType, string>>

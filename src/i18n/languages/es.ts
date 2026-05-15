@@ -126,14 +126,14 @@ const ES_TRANSLATIONS = {
   Filter: 'Filtrar',
   FILTERS: 'FILTROS',
   'Weekly goal': 'Meta semanal',
-  'Avg taps': 'Avg. taps',
+  'Avg taps': 'Prom. taps',
   weeks: 'semanas',
   'w.': 's.',
   'FOCUS TECHNIQUES': 'TÉCNICAS DE ENFOQUE',
   'Set focus': 'Definir enfoque',
   'Select focus techniques': 'Selecciona técnicas de enfoque',
   'No focus techniques selected': 'No hay técnicas de enfoque seleccionadas',
-  'Given submissions': 'submisiones aplicadas',
+  'Given submissions': 'sumisiones aplicadas',
   Submissions: 'sumisiones',
   Icons: 'Iconos',
   Emoji: 'Emoji',
@@ -179,6 +179,7 @@ const ES_TRANSLATIONS = {
   Dark: 'Oscuro',
   Stripes: 'Grados',
   'HOME SECTION ORDER': 'ORDEN DEL INICIO',
+  'Home section order': 'Orden del inicio',
   'Reorder the sections on the home screen and hide the ones you do not want to see.':
     'Reordena las secciones de la pantalla principal y oculta las que no quieras ver.',
   'WEEKLY MAT TIME GOAL': 'META SEMANAL DE TATAMI',
@@ -217,7 +218,7 @@ export const ES_CATEGORY_CONTENT: Record<
     description: 'Posiciones sobre tu espalda controlando al oponente',
   },
   2: {
-    name: 'Pasaje de Guardia',
+    name: 'Pase de Guardia',
     description: 'Técnicas para superar la guardia del oponente',
   },
   3: {
@@ -242,10 +243,11 @@ export const ES_CATEGORY_CONTENT: Record<
 
 export const ES_TECHNIQUE_CONTENT: Record<
   number,
-  { description: string; cues: string[] }
+  { name?: string; description: string; cues: string[] }
 > = {
   // Guards (1xx)
   101: {
+    name: 'Guardia Cerrada',
     description:
       'Guardia clásica con piernas bloqueadas detrás de la espalda del oponente, controlando la postura y creando ángulos de ataque.',
     cues: [
@@ -256,6 +258,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   102: {
+    name: 'Media Guardia',
     description:
       'Una pierna atrapa una pierna del oponente, ofreciendo retención de guardia y oportunidades de barrida.',
     cues: [
@@ -266,6 +269,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   103: {
+    name: 'Guardia Mariposa',
     description:
       'Guardia sentada usando los ganchos (empeine) contra los muslos del oponente para desequilibrar y barrer.',
     cues: [
@@ -276,16 +280,18 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   104: {
+    name: 'Guardia Araña',
     description:
       'Agarrar las mangas del oponente mientras se usan los pies en los bíceps para controlar la distancia y atacar.',
     cues: [
       'Agarre completo de manga, pies en bíceps no en antebrazos',
-      'Extiende completamente antes de jalar para romper postura',
-      'Patea la cadera simultáneamente con el jalón',
+      'Extiende completamente antes de tirar para romper postura',
+      'Patea la cadera simultáneamente con el tirón',
       'Rota caderas para entradas a triángulo y omoplata',
     ],
   },
   105: {
+    name: 'Guardia De La Riva',
     description:
       'Gancho en una pierna por fuera de la pierna del oponente con control de manga/tobillo.',
     cues: [
@@ -296,6 +302,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   106: {
+    name: 'Guardia en X',
     description:
       'Ambos ganchos bajo los muslos del oponente en forma de X, creando desequilibrio extremo para barridas.',
     cues: [
@@ -306,6 +313,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   107: {
+    name: 'Guardia Lazo',
     description:
       'Envolver el brazo en un lazo con la pierna para inmovilizar el brazo y crear ángulos de ataque.',
     cues: [
@@ -316,6 +324,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   108: {
+    name: 'Rubber Guard',
     description:
       'Posición de guardia alta con la pierna detrás del cuello, popularizada por Eddie Bravo.',
     cues: [
@@ -326,6 +335,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   109: {
+    name: 'Single Leg X (SLX)',
     description:
       'Un gancho entre las piernas del oponente controlando una sola pierna para barridas y entradas a llave de pierna.',
     cues: [
@@ -336,6 +346,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   110: {
+    name: 'Worm Guard',
     description:
       'Variación de DLR usando la solapa enhebrada alrededor de la pierna para control extremo y barridas.',
     cues: [
@@ -346,6 +357,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   111: {
+    name: 'Guardia Z',
     description:
       'Una guardia media fuerte con escudo de rodilla para controlar la distancia y recuperar ataques.',
     cues: [
@@ -356,6 +368,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   112: {
+    name: 'Guardia K',
     description:
       'Variación de guardia invertida para entrar a enredos de piernas y tomas de espalda.',
     cues: [
@@ -367,6 +380,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
   },
   // Guard Passing (2xx)
   201: {
+    name: 'Pase Toreando',
     description:
       'Usar agarres en las rodillas/tobillos para mover las piernas a un lado y pasar lateralmente.',
     cues: [
@@ -377,6 +391,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   202: {
+    name: 'Pase Doble por Debajo',
     description:
       'Meter ambos brazos bajo las piernas para apilar y pasar la guardia.',
     cues: [
@@ -387,6 +402,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   203: {
+    name: 'Pase Por Encima-Por Debajo',
     description:
       'Un brazo sobre una pierna y el otro bajo la otra, un potente pase de presión.',
     cues: [
@@ -397,16 +413,18 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   204: {
+    name: 'Leg Drag',
     description:
       'Arrastrar una pierna a través del cuerpo manteniendo contacto de cadera para crear un ángulo de pase.',
     cues: [
-      'Jala una pierna a través de la línea del cuerpo',
+      'Tira una pierna a través de la línea del cuerpo',
       'Mantén contacto cadera a cadera durante todo el movimiento',
       'Despeja la segunda pierna antes de establecer posición',
       'Pasa por encima para completar el pase',
     ],
   },
   205: {
+    name: 'Pase de Rodilla',
     description:
       'Conducir la rodilla a través de la guardia mientras se controla la cadera.',
     cues: [
@@ -417,6 +435,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   206: {
+    name: 'Smash Pass',
     description:
       'Apilar las piernas del oponente mientras se avanza para aplanar y pasar.',
     cues: [
@@ -427,6 +446,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   207: {
+    name: 'Pase Toreador',
     description:
       'Agarrar ambos tobillos/rodillas y redirigir las piernas hacia cualquier lado.',
     cues: [
@@ -437,6 +457,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   208: {
+    name: 'HQ / Headquarters',
     description:
       'Posición de pase neutral dentro de la guardia, para controlar y preparar llaves de pierna o pases.',
     cues: [
@@ -447,6 +468,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   209: {
+    name: 'Pase Candado',
     description:
       'Estilo de pase pecho a cadera usando un candado corporal ajustado para aplanar y despejar las piernas.',
     cues: [
@@ -457,6 +479,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   210: {
+    name: 'Pase de Paso Largo',
     description:
       'Movimiento de pase dinámico que da un paso largo alrededor de la guardia para exponer el control lateral.',
     cues: [
@@ -468,6 +491,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
   },
   // Sweeps (3xx)
   301: {
+    name: 'Barrida de Cadera',
     description:
       'Apoyarse en la mano y golpear la cadera hacia adelante desde guardia cerrada para tomar la posición superior.',
     cues: [
@@ -478,28 +502,31 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   302: {
+    name: 'Barrida de Tijera',
     description:
       'Usar un movimiento de tijera con las piernas desde guardia cerrada para tumbar al oponente.',
     cues: [
       'Debes romper la postura antes de abrir la guardia',
       'El agarre collar-manga controla ambos lados',
-      'Tijera las piernas simultáneamente con el jalón',
+      'Tijera las piernas simultáneamente con el tirón',
       'Empuja la rodilla de abajo en su cadera al barrer',
     ],
   },
   303: {
+    name: 'Barrida de Péndulo',
     description:
       'Desde guardia cerrada, enganchar una pierna y barrer con un movimiento de péndulo.',
     cues: [
       'Engancha su pierna cercana con tu pierna cercana',
       'El balanceo de péndulo genera el impulso',
-      'Jala su brazo cruzado sobre tu pecho',
+      'Tira de su brazo cruzado sobre tu pecho',
       'Gira hacia arriba cuando caen',
     ],
   },
   304: {
+    name: 'Barrida de Mariposa',
     description:
-      'Usar los ganchos de mariposa para desequilibrar al oponente y barrelo hacia el lado.',
+      'Usar los ganchos de mariposa para desequilibrar al oponente y barrerlo hacia el lado.',
     cues: [
       'El gancho bajo crea el ángulo para la barrida',
       'Eleva con el gancho mientras caes de lado',
@@ -508,6 +535,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   305: {
+    name: 'Barrida de Guardia en X',
     description:
       'Barrer desde guardia X extendiendo las piernas para volcar al oponente hacia adelante o atrás.',
     cues: [
@@ -518,6 +546,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   306: {
+    name: 'Berimbolo',
     description:
       'Una inversión giratoria desde De La Riva para tomar la espalda o ganar posición dominante.',
     cues: [
@@ -528,6 +557,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   307: {
+    name: 'Barrida De La Riva',
     description:
       'Varias barridas desde la guardia De La Riva atacando la pierna cercana o lejana.',
     cues: [
@@ -538,16 +568,18 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   308: {
+    name: 'Barrida Trípode',
     description:
       'Usar el pie en la cadera y el pie en el bícep para barrer al oponente.',
     cues: [
       'Pie en cadera, pie en bícep simultáneamente',
-      'Jala la manga para romper su base',
-      'Extiende las caderas mientras jalas la pierna hacia ti',
+      'Tira de la manga para romper su base',
+      'Extiende las caderas mientras tiras de la pierna hacia ti',
       'Sube a la posición superior rápidamente',
     ],
   },
   309: {
+    name: 'Barrida del Leñador',
     description:
       'Barrida desde guardia sentada elevando una pierna y cortando la pierna de apoyo.',
     cues: [
@@ -558,6 +590,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   310: {
+    name: 'Barrida del Globo',
     description:
       'Barrida flotante desde guardia abierta que eleva al oponente por encima antes de la transición superior.',
     cues: [
@@ -569,6 +602,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
   },
   // Submissions (4xx)
   401: {
+    name: 'Armbar',
     description:
       'Hiperextender la articulación del codo controlando el brazo a través del cuerpo — se aplica desde muchas posiciones.',
     cues: [
@@ -579,16 +613,18 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   402: {
+    name: 'Triángulo',
     description:
       'Bloquear la cabeza y el brazo con las piernas en figura 4 para cortar el flujo sanguíneo al cerebro.',
     cues: [
       'Cabeza y un brazo dentro del triángulo',
-      'Jala la cabeza hacia abajo para completar el bloqueo',
+      'Tira de la cabeza hacia abajo para completar el bloqueo',
       'Angula hacia el lado del brazo atrapado',
       'Empuja el brazo cruzando su línea central para ajustar',
     ],
   },
   403: {
+    name: 'Kimura',
     description:
       'Un agarre en figura 4 en la muñeca rotando la articulación del hombro — se aplica desde muchas posiciones.',
     cues: [
@@ -599,6 +635,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   404: {
+    name: 'Omoplata',
     description:
       'Llave de hombro usando las piernas para controlar el brazo y rotar el hombro.',
     cues: [
@@ -609,26 +646,29 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   405: {
+    name: 'Estrangulamiento Trasero',
     description:
       'Estrangulamiento de sangre desde la espalda — brazo bajo el mentón, brazo detrás de la cabeza.',
     cues: [
       'Brazo bajo el mentón, NO sobre el mentón',
       'Segundo brazo detrás de la cabeza, no del cuello',
       'Aprieta bícep y hombro juntos',
-      'Jala el codo hacia ti mientras aprietas',
+      'Tira del codo hacia ti mientras aprietas',
     ],
   },
   406: {
+    name: 'Guillotina',
     description:
       'Brazo alrededor del cuello cortando el flujo sanguíneo, aplicado de pie o desde guardia.',
     cues: [
       'Entra completamente bajo el cuello, no encima',
       'Guillotina de codo alto para la variación con brazo dentro',
-      'Jala el brazo cruzando tu cuerpo mientras aprietas',
+      'Tira del brazo cruzando tu cuerpo mientras aprietas',
       'Encógete y cierra la guardia para guillotina de guardia',
     ],
   },
   407: {
+    name: 'Heel Hook Externo',
     description:
       'Rotar el talón hacia afuera para atacar las estructuras laterales de la rodilla.',
     cues: [
@@ -639,6 +679,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   408: {
+    name: 'Heel Hook Interno',
     description:
       'Rotar el talón hacia adentro para atacar las estructuras mediales de la rodilla — extremadamente peligroso.',
     cues: [
@@ -649,6 +690,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   409: {
+    name: 'Llave de Tobillo',
     description:
       'Aplicar presión contra el tendón de Aquiles para atacar el tobillo.',
     cues: [
@@ -659,6 +701,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   410: {
+    name: 'Palanca de Rodilla',
     description:
       'Hiperextender la articulación de la rodilla, similar a un armbar pero en la pierna.',
     cues: [
@@ -669,6 +712,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   411: {
+    name: 'Darce',
     description:
       'Estrangulamiento con brazo dentro usando una figura 4 a través del cuello, aplicado desde tortuga o guardia.',
     cues: [
@@ -679,6 +723,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   412: {
+    name: 'Anaconda',
     description:
       'Similar al Darce pero con diferente posición de brazo, a menudo desde el headlock frontal.',
     cues: [
@@ -689,16 +734,18 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   413: {
+    name: 'Arco y Flecha',
     description:
       'Potente estrangulamiento de solapa desde la espalda usando el agarre del cinturón/pantalón para palanca.',
     cues: [
       'Agarre profundo de solapa en el lado del estrangulamiento',
       'Agarre de pantalón o cinturón en la pierna del lado opuesto',
       'Extiende tu cuerpo para crear el arco',
-      'Jala la solapa hacia ti, empuja la pierna hacia afuera',
+      'Tira de la solapa hacia ti, empuja la pierna hacia afuera',
     ],
   },
   414: {
+    name: 'Estrangulamiento de Cruz',
     description:
       'Doble agarre de solapa desde montura o guardia cruzando para estrangular.',
     cues: [
@@ -709,6 +756,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   415: {
+    name: 'Ezekiel',
     description:
       'Estrangulamiento de agarre de manga desde la montura, incluso puede aplicarse dentro de la guardia del oponente.',
     cues: [
@@ -719,6 +767,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   416: {
+    name: 'Americana',
     description:
       'Llave de hombro en figura 4 doblando la muñeca hacia arriba — aplicada desde montura o control lateral.',
     cues: [
@@ -729,6 +778,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   417: {
+    name: 'Triángulo de Brazo',
     description:
       'Estrangulamiento de sangre cabeza y brazo terminado desde montura o control lateral con presión de hombro.',
     cues: [
@@ -739,17 +789,19 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   418: {
+    name: 'Estrangulamiento Norte-Sur',
     description:
       'Estrangulamiento desde norte-sur usando presión de hombro y dorsal alrededor del cuello.',
     cues: [
       'El brazo se envuelve profundamente alrededor de la línea del cuello',
-      'Presión de hombro hacia abajo, no jalando hacia arriba',
+      'Presión de hombro hacia abajo, no tirando hacia arriba',
       'Aleja las caderas para ajustar',
       'Esconde el codo y mantén el pecho pesado',
     ],
   },
   // Takedowns & Throws (5xx)
   501: {
+    name: 'Doble Pierna',
     description:
       'Dispararse en ambas piernas y empujar para levantar/virar al oponente al suelo.',
     cues: [
@@ -760,6 +812,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   502: {
+    name: 'Pierna Simple',
     description:
       'Controlar una pierna y usar viradas o elevaciones para derrumbar al oponente.',
     cues: [
@@ -770,17 +823,19 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   503: {
+    name: 'Proyección de Cadera (O-goshi)',
     description:
       'Cargar al oponente en la cadera y rotar para tirarlo al suelo.',
     cues: [
       'Rompe su equilibrio hacia adelante primero',
       'Carga la cadera directamente bajo su centro',
       'Gira — las caderas miran en la misma dirección que las suyas',
-      'Rota y jala sobre tu cadera suavemente',
+      'Rota y tira sobre tu cadera suavemente',
     ],
   },
   504: {
-    description: 'Jalar al oponente sobre el hombro para una gran proyección.',
+    name: 'Seoi Nage',
+    description: 'Tirar del oponente sobre el hombro para una gran proyección.',
     cues: [
       'Jálalo mientras rotas por debajo',
       'Empuja el hombro bajo su axila',
@@ -789,6 +844,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   505: {
+    name: 'Uchi Mata',
     description:
       'Barrer el interior de la pierna del oponente mientras se rompe su equilibrio.',
     cues: [
@@ -799,6 +855,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   506: {
+    name: 'Osoto Gari',
     description:
       'Segar la pierna del oponente desde afuera mientras se lo empuja hacia atrás.',
     cues: [
@@ -809,6 +866,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   507: {
+    name: 'Recogida de Tobillo',
     description:
       'Agarrar el tobillo mientras se empuja la cabeza para virar al oponente.',
     cues: [
@@ -819,6 +877,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   508: {
+    name: 'Proyección del Bombero',
     description:
       'Cargar al oponente por la espalda agarrando el brazo y el tobillo.',
     cues: [
@@ -829,27 +888,30 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   509: {
+    name: 'Barredura de Pie (De Ashi Barai)',
     description:
       'Barrida basada en el timing que remueve un pie en paso para derribar limpiamente al oponente.',
     cues: [
       'Ataca cuando su peso se desplace',
-      'Usa el jalón de manga/solapa para desequilibrar',
+      'Usa el tirón de manga/solapa para desequilibrar',
       'Barre bajo en la línea del tobillo',
       'La dirección de la barrida sigue su paso',
     ],
   },
   510: {
+    name: 'Clinch de Cabeza Frontal',
     description:
-      'Jalar la cabeza y postura del oponente hacia abajo para asegurar control de headlock frontal y ataques.',
+      'Tirar de la cabeza y postura del oponente hacia abajo para asegurar control de headlock frontal y ataques.',
     cues: [
-      'Jala con los codos no con las muñecas',
-      'Da un paso atrás mientras jalas hacia abajo',
+      'Tira con los codos, no con las muñecas',
+      'Da un paso atrás mientras tiras hacia abajo',
       'Circula inmediatamente para crear ángulo',
       'Asegura el agarre de mentón y control de codo',
     ],
   },
   // Escapes (6xx)
   601: {
+    name: 'Puente y Volteo (Upa)',
     description:
       'Puente explosivo desde la montura para voltear al oponente, recuperar guardia o tomar posición superior.',
     cues: [
@@ -860,26 +922,29 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   602: {
+    name: 'Escape de Gamba',
     description:
-      'Crear espacio haciendo camarón con las caderas y recuperar la guardia desde abajo.',
+      'Crear espacio haciendo la gamba con las caderas y recuperar la guardia desde abajo.',
     cues: [
-      'Crea un marco en la cadera antes de hacer camarón',
-      'Camarón las caderas hacia afuera — crea espacio para la rodilla',
+      'Crea un marco en la cadera antes de hacer la gamba',
+      'Haz la gamba de caderas hacia afuera — crea espacio para la rodilla',
       'Empuja la rodilla hacia adentro para recuperar guardia',
       'Mantente de lado — nunca plano sobre tu espalda',
     ],
   },
   603: {
+    name: 'Escape del Control Lateral',
     description:
-      'Usar el movimiento de camarón para recuperar la guardia desde el control lateral.',
+      'Usar el movimiento de gamba para recuperar la guardia desde el control lateral.',
     cues: [
       'Marco en cadera y cuello simultáneamente',
-      'Puente para crear espacio para hacer camarón',
-      'Camarón las caderas hacia afuera y recupera la rodilla de guardia',
+      'Puente para crear espacio para hacer la gamba',
+      'Haz la gamba de caderas hacia afuera y recupera la rodilla de guardia',
       'Mantente de lado durante todo el movimiento — nunca plano',
     ],
   },
   604: {
+    name: 'Escape de Espalda',
     description:
       'Proteger el cuello, trabajar para quitar el cinturón de seguridad, y recuperar guardia desde el control de espalda.',
     cues: [
@@ -890,6 +955,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   605: {
+    name: 'Defensa de Guillotina',
     description:
       'Recuperar la postura, girar hacia el estrangulamiento y encontrar el cuello para escapar.',
     cues: [
@@ -900,6 +966,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   606: {
+    name: 'Defensa de Triángulo',
     description:
       'Apilar, recuperar postura y usar rupturas de agarre para escapar del triángulo.',
     cues: [
@@ -910,17 +977,19 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   607: {
+    name: 'Escape de Rodilla en Abdomen',
     description:
       'Secuencia de escape para remover la presión de rodilla y recuperar guardia o media guardia.',
     cues: [
       'Marco en su rodilla y cadera',
-      'Puente luego camarón bajo presión',
+      'Puente luego gamba bajo presión',
       'Atrapa su pierna que da el paso para media guardia',
       'No empujes con los brazos rectos',
     ],
   },
   // Positions (7xx)
   701: {
+    name: 'Montada',
     description:
       'Sentarse encima del torso del oponente — una de las posiciones más dominantes en el BJJ.',
     cues: [
@@ -931,6 +1000,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   702: {
+    name: 'Control Lateral',
     description:
       'Controlar al oponente desde el lado con presión pecho a pecho.',
     cues: [
@@ -941,6 +1011,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   703: {
+    name: 'Control de Espalda',
     description:
       'Pegarse a la espalda del oponente con ganchos dentro, la posición más peligrosa del BJJ.',
     cues: [
@@ -951,6 +1022,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   704: {
+    name: 'Norte-Sur',
     description:
       'Controlar al oponente cabeza con cabeza, perpendicular a su cuerpo.',
     cues: [
@@ -961,6 +1033,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   705: {
+    name: 'Rodilla en Abdomen',
     description:
       'Hundir la rodilla en el abdomen del oponente — una posición de transición y ataque.',
     cues: [
@@ -971,8 +1044,9 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   706: {
+    name: 'Posición Tortuga',
     description:
-      'Posición defensiva en cuatro apoyos — el oponente debe abrirla para atacar.',
+      'Posición tortuga — posición defensiva en cuatro apoyos que el oponente debe abrir para atacar.',
     cues: [
       'Mentón al pecho — protege el cuello siempre',
       'Apoya en cabeza y manos para estructura',
@@ -981,6 +1055,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     ],
   },
   707: {
+    name: 'Media Guardia Superior',
     description:
       'Posición de control superior mientras el oponente tiene una pierna atrapada, ideal para pases de presión.',
     cues: [
@@ -1002,7 +1077,7 @@ export const ES_DIFFICULTY: Record<Difficulty, string> = {
 export const ES_SESSION_TYPES: Record<SessionType, string> = {
   GI: 'Gi',
   NOGI: 'No-Gi',
-  OPEN_MAT: 'Entrenamiento Libre',
+  OPEN_MAT: 'Open Mat',
   COMPETITION: 'Competición',
   DRILLING: 'Drills',
 }

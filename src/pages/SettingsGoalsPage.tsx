@@ -41,23 +41,6 @@ export default function SettingsGoalsPage() {
       </div>
 
       <div className="px-4 pb-6 space-y-4">
-        <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
-          <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {language === 'es'
-              ? 'SEGUIMIENTO'
-              : language === 'fr'
-                ? 'SUIVI'
-                : 'TRACKING'}
-          </h2>
-          <p className="text-xs text-zinc-500">
-            {language === 'es'
-              ? 'Más objetivos y gamificación próximamente.'
-              : language === 'fr'
-                ? 'Plus d’objectifs et de gamification bientôt.'
-                : 'More goals and gamification options coming soon.'}
-          </p>
-        </div>
-
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
             {t('WEEKLY MAT TIME GOAL')}

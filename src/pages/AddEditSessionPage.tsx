@@ -15,7 +15,7 @@ import type {
 } from '../types'
 import { SESSION_TYPE_LABELS } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
-import { useI18n, sessionTypeLabel } from '../i18n'
+import { useI18n, sessionTypeLabel, withLocalizedName } from '../i18n'
 import {
   techniqueMatchesQuery,
   techniqueScore,
@@ -265,7 +265,10 @@ export default function AddEditSessionPage() {
     const noteMap = sessionTechniqueNotes ?? new Map<number, string[]>()
     const results = (allTechniques ?? []).filter((t) =>
       techniqueMatchesQuery(
-        { ...t, cues: [...(t.cues ?? []), ...(noteMap.get(t.id) ?? [])] },
+        {
+          ...withLocalizedName(t, language),
+          cues: [...(t.cues ?? []), ...(noteMap.get(t.id) ?? [])],
+        },
         pickerSearch,
       ),
     )
@@ -273,11 +276,17 @@ export default function AddEditSessionPage() {
       return [...results].sort(
         (a, b) =>
           techniqueScore(
-            { ...b, cues: [...(b.cues ?? []), ...(noteMap.get(b.id) ?? [])] },
+            {
+              ...withLocalizedName(b, language),
+              cues: [...(b.cues ?? []), ...(noteMap.get(b.id) ?? [])],
+            },
             pickerSearch,
           ) -
           techniqueScore(
-            { ...a, cues: [...(a.cues ?? []), ...(noteMap.get(a.id) ?? [])] },
+            {
+              ...withLocalizedName(a, language),
+              cues: [...(a.cues ?? []), ...(noteMap.get(a.id) ?? [])],
+            },
             pickerSearch,
           ),
       )

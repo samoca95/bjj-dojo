@@ -27,7 +27,9 @@ import {
   useI18n,
   difficultyLabel,
   getCategoryName,
+  getTechniqueName,
   getTechniqueDescription,
+  withLocalizedName,
 } from '../i18n'
 import {
   techniqueMatchesQuery,
@@ -63,6 +65,7 @@ ListInner.displayName = 'ListInner'
 
 function TechniqueRow({
   technique,
+  name,
   categoryName,
   categoryIcon,
   description,
@@ -72,6 +75,7 @@ function TechniqueRow({
   onToggleFavorite,
 }: {
   technique: Technique
+  name: string
   categoryName: string
   categoryIcon?: string
   description: string
@@ -87,9 +91,7 @@ function TechniqueRow({
         className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity"
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-semibold text-zinc-100 text-sm">
-            {technique.name}
-          </span>
+          <span className="font-semibold text-zinc-100 text-sm">{name}</span>
           <DifficultyBadge difficulty={technique.difficulty} />
           {practiceCount > 0 && (
             <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300">
@@ -134,6 +136,7 @@ function MeasuredTechniqueRow({
   onHeightChange,
   techniqueId,
   technique,
+  name,
   categoryName,
   categoryIcon,
   description,
@@ -147,6 +150,7 @@ function MeasuredTechniqueRow({
   techniqueId: number
   onHeightChange: (index: number, techniqueId: number, height: number) => void
   technique: Technique
+  name: string
   categoryName: string
   categoryIcon?: string
   description: string
@@ -177,7 +181,7 @@ function MeasuredTechniqueRow({
     techniqueId,
     onHeightChange,
     technique.isFavorite,
-    technique.name,
+    name,
     technique.difficulty,
     categoryName,
     categoryIcon,
@@ -198,6 +202,7 @@ function MeasuredTechniqueRow({
       <div ref={rowRef}>
         <TechniqueRow
           technique={technique}
+          name={name}
           categoryName={categoryName}
           categoryIcon={categoryIcon}
           description={description}
@@ -346,7 +351,7 @@ export default function TechniquesPage() {
           debouncedSearch.trim() &&
           !techniqueMatchesQuery(
             {
-              ...t,
+              ...withLocalizedName(t, language),
               cues: [...(t.cues ?? []), ...(noteMap.get(t.id) ?? [])],
             },
             debouncedSearch,
@@ -359,27 +364,35 @@ export default function TechniquesPage() {
         return true
       })
       const compareBySort = (a: Technique, b: Technique) => {
-        if (sortBy === 'name_desc') return b.name.localeCompare(a.name)
+        const aName = getTechniqueName(a, language)
+        const bName = getTechniqueName(b, language)
+        if (sortBy === 'name_desc') return bName.localeCompare(aName)
         if (sortBy === 'level') {
           const levelDelta =
             DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty]
-          return levelDelta !== 0 ? levelDelta : a.name.localeCompare(b.name)
+          return levelDelta !== 0 ? levelDelta : aName.localeCompare(bName)
         }
         if (sortBy === 'frequency') {
           const freqDelta = (freqMap.get(b.id) ?? 0) - (freqMap.get(a.id) ?? 0)
-          return freqDelta !== 0 ? freqDelta : a.name.localeCompare(b.name)
+          return freqDelta !== 0 ? freqDelta : aName.localeCompare(bName)
         }
-        return a.name.localeCompare(b.name)
+        return aName.localeCompare(bName)
       }
       filtered.sort((a, b) => {
         if (debouncedSearch.trim()) {
           const scoreDelta =
             techniqueScore(
-              { ...b, cues: [...(b.cues ?? []), ...(noteMap.get(b.id) ?? [])] },
+              {
+                ...withLocalizedName(b, language),
+                cues: [...(b.cues ?? []), ...(noteMap.get(b.id) ?? [])],
+              },
               debouncedSearch,
             ) -
             techniqueScore(
-              { ...a, cues: [...(a.cues ?? []), ...(noteMap.get(a.id) ?? [])] },
+              {
+                ...withLocalizedName(a, language),
+                cues: [...(a.cues ?? []), ...(noteMap.get(a.id) ?? [])],
+              },
               debouncedSearch,
             )
           if (scoreDelta !== 0) return scoreDelta
@@ -388,7 +401,14 @@ export default function TechniquesPage() {
       })
       return { items: filtered, freqMap }
     },
-    [debouncedSearch, categoryId, favoritesOnly, difficultyFilter, sortBy],
+    [
+      debouncedSearch,
+      categoryId,
+      favoritesOnly,
+      difficultyFilter,
+      sortBy,
+      language,
+    ],
     null as null | { items: Technique[]; freqMap: Map<number, number> },
   )
 
@@ -436,6 +456,7 @@ export default function TechniquesPage() {
         onHeightChange={handleRowHeightChange}
         techniqueId={technique.id}
         technique={technique}
+        name={getTechniqueName(technique, language)}
         categoryName={catMap.get(technique.categoryId) ?? ''}
         categoryIcon={catIconMap.get(technique.categoryId)}
         description={getTechniqueDescription(technique, language)}

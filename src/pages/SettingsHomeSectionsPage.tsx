@@ -63,7 +63,7 @@ export default function SettingsHomeSectionsPage() {
         </h1>
       </div>
 
-      <div className="px-4 pb-6">
+      <div className="px-4 pb-6 space-y-4">
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
           <h2 className="text-xs text-gold font-semibold tracking-widest">
             {t('HOME SECTION ORDER')}

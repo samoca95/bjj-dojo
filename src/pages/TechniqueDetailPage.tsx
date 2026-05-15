@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
-import type { Category, ConnectionType, Session, Technique } from '../types'
+import type { Category, ConnectionType, Session } from '../types'
 import { CONNECTION_LABELS, CONNECTION_COLORS } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -25,18 +25,19 @@ import {
   useI18n,
   connectionTypeLabel,
   getCategoryName,
+  getTechniqueName,
   getTechniqueDescription,
   getTechniqueCues,
 } from '../i18n'
 // import { defaultTechniqueImageUrl, normalizeTechniqueImageUrl } from '../utils/validation' // kept for future image re-implementation
 
 function ConnectedTechniqueRow({
-  technique,
+  name,
   badge,
   badgeCls,
   onClick,
 }: {
-  technique: Technique
+  name: string
   badge: string
   badgeCls: string
   onClick: () => void
@@ -51,7 +52,7 @@ function ConnectedTechniqueRow({
       >
         {badge}
       </span>
-      <span className="flex-1 text-sm text-zinc-100">{technique.name}</span>
+      <span className="flex-1 text-sm text-zinc-100">{name}</span>
       <ChevronRight
         size={16}
         className="text-zinc-600 shrink-0"
@@ -316,12 +317,21 @@ export default function TechniqueDetailPage() {
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="font-bold text-zinc-100 truncate">{technique.name}</h1>
+          <h1 className="font-bold text-zinc-100 truncate">
+            {getTechniqueName(technique, language)}
+          </h1>
           {(technique.aliases?.length ?? 0) > 0 && (
             <p className="text-xs text-zinc-500 truncate">
               {technique.aliases!.join(' · ')}
             </p>
           )}
+          {language !== 'en' &&
+            !technique.isCustom &&
+            getTechniqueName(technique, language) !== technique.name && (
+              <p className="text-xs text-zinc-500 truncate">
+                🇬🇧 {technique.name}
+              </p>
+            )}
         </div>
         <button
           onClick={() => navigate(`/techniques/${numId}/edit`)}
@@ -516,7 +526,7 @@ export default function TechniqueDetailPage() {
                 </div>
                 {connectionsView === 'graph' && (
                   <ConnectionGraph
-                    centerName={technique.name}
+                    centerName={getTechniqueName(technique, language)}
                     centerCategoryId={technique.categoryId}
                     connections={graphConnections}
                     onSelect={(tid) => navigate(`/techniques/${tid}`)}
@@ -545,7 +555,7 @@ export default function TechniqueDetailPage() {
                               t ? (
                                 <ConnectedTechniqueRow
                                   key={i}
-                                  technique={t}
+                                  name={getTechniqueName(t, language)}
                                   badge={connectionTypeLabel(
                                     connectionType,
                                     CONNECTION_LABELS[connectionType],
@@ -579,7 +589,7 @@ export default function TechniqueDetailPage() {
                               t ? (
                                 <ConnectedTechniqueRow
                                   key={i}
-                                  technique={t}
+                                  name={getTechniqueName(t, language)}
                                   badge={connectionTypeLabel(
                                     connectionType,
                                     CONNECTION_LABELS[connectionType],
@@ -680,7 +690,7 @@ export default function TechniqueDetailPage() {
                   className="w-full bg-zinc-950 rounded-xl px-3 py-2.5 flex items-center gap-2 text-left active:bg-zinc-800"
                 >
                   <span className="flex-1 text-sm text-zinc-100">
-                    {item.technique.name}
+                    {getTechniqueName(item.technique, language)}
                   </span>
                   <span className="text-xs text-zinc-500">{item.usage}×</span>
                   <ChevronRight size={15} className="text-zinc-600" />

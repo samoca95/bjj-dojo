@@ -24,7 +24,7 @@ export const DEFAULT_HOME_SECTION_VISIBILITY: HomeSectionVisibility = {
   trending: true,
   stats: true,
   calendar: true,
-  quickAccess: true,
+  quickAccess: false,
 }
 
 const ALL: HomeSectionId[] = [
