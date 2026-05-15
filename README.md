@@ -1,70 +1,58 @@
 # BJJ Dojo
 
-Track your Brazilian Jiu-Jitsu journey with a fast, offline-first training log and technique library.
+BJJ Dojo is an offline-first training companion for Brazilian Jiu-Jitsu practitioners who want to train with more intention, keep track of progress, and build a stronger game over time.
 
-## ✨ Highlights
+## Why BJJ Dojo
 
-- **Session tracking**: log mat time, energy, taps, notes, and techniques practiced.
-- **Technique library**: browse categorized techniques with YouTube references.
-- **Category icons**: customize categories with a built-in icon picker or your favorite emoji.
-- **Club management**: create, reorder, and select clubs for every session.
-- **Language support**: switch between English and Spanish in Settings.
-- **Home customization**: reorder home sections and set a weekly mat-time goal.
-- **PWA ready**: install it on mobile and keep data available offline.
+- **Train with clarity**: log what happened on the mats, not just how long you were there.
+- **See your progress**: keep a consistent history of sessions, techniques, and habits.
+- **Own your data**: your records stay in your browser and work offline.
+- **Make it your own**: personalize clubs, categories, home layout, and app preferences.
 
-## 🧰 Tech Stack
+## Core Features
 
-- React + TypeScript + Vite
-- Tailwind CSS
-- Dexie (IndexedDB)
-- React Router
+### Session Tracking
+- Log each session with date, duration, session type, energy, and notes.
+- Track taps and techniques practiced in each training session.
+- Keep clubs organized and choose the right club per session.
 
-## 🚀 Getting Started
+### Technique Library
+- Browse and search a structured technique library.
+- Filter by category and difficulty to focus your study.
+- Create custom techniques and map connections (follow-ups and counters).
+
+### Personalization
+- Set belt rank and stripes.
+- Customize category icons (emoji or built-in icons).
+- Reorder home sections and set weekly mat-time goals.
+- Switch theme and language from Settings.
+
+### Backup & Recovery
+- Export your data to JSON for safe backups.
+- Import backups to restore your history on the same or another device.
+
+### Offline-First PWA
+- Install on mobile or desktop like an app.
+- Keep using it even without an internet connection.
+
+## Getting Started
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the app in your browser (usually `http://localhost:5173`) and start logging sessions right away.
+Then open `http://localhost:5173` in your browser.
 
-### Build & Preview
+## Data & Privacy
 
-```bash
-npm run build
-npm run preview
-```
+All data is stored locally in your browser (IndexedDB). There is no backend account or server-side profile.
 
-### Tests
+## For Developers
 
-```bash
-npm test
-```
+If you want setup steps, scripts, architecture notes, and full tech stack details, see:
 
-## 📱 How to Use the App
-
-1. **Log sessions**
-   - Go to **Sessions** and tap **+**.
-   - Add date, session type, duration, energy, techniques, taps, and notes.
-2. **Build your technique game**
-   - Open **Techniques** to browse, search, and filter your library.
-   - Create custom techniques and link follow-ups/counters.
-3. **Set up your profile**
-   - Open **Settings** to set your belt color/stripes, theme, and language.
-   - Reorder home sections and adjust your weekly mat-time goal.
-4. **Manage data safely**
-   - Use **Export JSON** to back up your progress.
-   - Use **Import JSON** to restore backups on the same or another device.
-
-## 💾 Data Storage
-
-All data lives in your browser’s IndexedDB. Clearing site data or browser storage resets the app.
-
-## 🎛️ Managing Data In-App
-
-- **Clubs**: open Sessions → Clubs to add, reorder, rename, or delete.
-- **Categories**: open Techniques → Categories to update icons.
-- **Language**: open Settings → Theme & Language and choose **EN** or **ES**.
+- **[DEVELOPMENT.md](./DEVELOPMENT.md)**
 
 ---
 
