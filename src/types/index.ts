@@ -28,6 +28,8 @@ export interface Technique {
   cues?: string[]
   tags?: string[]
   isFavorite?: boolean
+  gi?: boolean
+  noGi?: boolean
   categoryId: number
   youtubeUrl: string
   imageUrl?: string

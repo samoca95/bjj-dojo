@@ -53,6 +53,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Full Guard', 'Guarda Fechada'],
     description:
       "Classic guard with legs locked behind the opponent's back, controlling posture and creating attack angles.",
@@ -77,6 +79,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       "One leg trapping one of the opponent's legs, providing guard retention and sweep opportunities.",
     cues: [
@@ -102,6 +106,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Hook Guard'],
     description:
       "Seated guard using the hooks (insteps) against the opponent's thighs to off-balance and sweep.",
@@ -126,6 +132,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: false,
     description:
       "Gripping the opponent's sleeves while using feet on biceps to control distance and attack.",
     cues: [
@@ -149,6 +157,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['DLR Guard', 'DLR'],
     description:
       "One-leg hook on the outside of the opponent's leg with sleeve/ankle control.",
@@ -173,6 +183,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       "Both hooks under opponent's thighs in an X shape, creating extreme off-balance for sweeps.",
     cues: [
@@ -196,6 +208,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: false,
     description:
       'Wrapping the arm in a lasso with the leg to immobilize the arm and create attack angles.',
     cues: [
@@ -219,6 +233,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'High guard position with leg behind the neck, popularised by Eddie Bravo.',
     cues: [
@@ -242,6 +258,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Single Leg X-Guard', 'Ashi Garami'],
     description:
       "One hook between the opponent's legs controlling a single leg for sweeps and leg-lock entries.",
@@ -266,6 +284,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'ELITE',
     isCustom: false,
+    gi: true,
+    noGi: false,
     description:
       'DLR variation using the lapel threaded around the leg for extreme control and sweeps.',
     cues: [
@@ -289,6 +309,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Knee Shield Half Guard', 'Z-Guard'],
     description:
       'A strong half-guard frame with knee shield to control distance and recover attacks.',
@@ -297,6 +319,7 @@ export const prefilledTechniques: Technique[] = [
       'Frame at shoulder and bicep',
       'Keep hips angled on your side',
       'Underhook when they pressure in',
+      "The Z-guard knee shield frames directly into the Choi Bar (an omoplata variation) — monitor the opponent's near arm when they post on the knee shield",
     ],
     youtubeUrl:
       'https://www.youtube.com/results?search_query=z+guard+bjj+knee+shield',
@@ -313,6 +336,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 1,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Inverted guard variation used to enter leg entanglements and back takes.',
     cues: [
@@ -320,6 +345,7 @@ export const prefilledTechniques: Technique[] = [
       'Hide your hips under their base',
       'Clamp knees to trap leg line',
       'Transition quickly to leg entanglement',
+      'K-guard creates immediate back take and heel hook entries; the knee on belly of the trapped leg is the key pressure point for transitions',
     ],
     youtubeUrl:
       'https://www.youtube.com/results?search_query=k+guard+bjj+entries',
@@ -330,6 +356,66 @@ export const prefilledTechniques: Technique[] = [
       },
     ],
   },
+  {
+    id: 113,
+    name: 'Reverse De La Riva Guard',
+    categoryId: 1,
+    difficulty: 'ADVANCED',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['RDLR', 'Reverse DLR', 'Spiral Guard', 'Back Hook Guard'],
+    description:
+      "A guard position where the inside leg hooks around the opponent's lead leg from the inside, creating an angle that makes forward pressure much harder for the top player. Particularly prevalent in no-gi. Primary destinations are back takes, calf kicks, and single-leg X entries.",
+    cues: [
+      'Hook your inside leg around their lead leg from below — unlike DLR, this hook comes from the inside, not outside',
+      'Your posting foot should be on their hip or thigh to maintain distance while the inside hook controls their leg',
+      '"Kiss of the Dragon" back take: invert under the opponent, use the hook to rotate and climb to their back',
+      'When they drive through, pump the hook and extend to enter single-leg X or direct leg lock entanglement',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=reverse+de+la+riva+guard+tutorial+BJJ+back+take',
+  },
+  {
+    id: 114,
+    name: '50/50 Guard',
+    categoryId: 1,
+    difficulty: 'ADVANCED',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['50/50', 'Fifty-Fifty Guard', 'Neutral Leg Entanglement'],
+    description:
+      "A neutral leg-entanglement guard where both practitioners mirror each other's leg position, creating equal offensive and defensive opportunities. Primarily a platform for leg locks; both players can attack ankle locks, heel hooks, and toe holds simultaneously.",
+    cues: [
+      "Cup your opponent's knee with your top hand and hide your own heel behind their thigh — exposing your heel is the fastest way to lose",
+      'Stay at an angle rather than straight-on; direct alignment lets them mirror your leg lock attempt simultaneously',
+      'Ankle lock and inside heel hook are the highest-percentage finishes; establish a tight hip connection before reaching for the heel',
+      'To sweep: rotate your outside knee toward the mat to buckle their lead knee, then disengage and establish top position',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=50+50+guard+BJJ+leg+locks+sweeps+tutorial',
+  },
+  {
+    id: 115,
+    name: 'Deep Half Guard',
+    categoryId: 1,
+    difficulty: 'ADVANCED',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Deep Half', 'DH Guard', 'Under Hook Half Guard'],
+    description:
+      "An extension of the half guard where the bottom player pulls their body fully beneath the opponent's centre of gravity with head near their knee, arm wrapped around one leg, and hips tight underneath. Primary attacks are the waiter sweep, Homer Simpson sweep, and back take.",
+    cues: [
+      "Enter by pulling your hip deep beneath the opponent's base; your face should be near their knee, not their hip",
+      'Keep both arms in: one wraps the leg, the other controls their far knee or ankle; this prevents the cross-face and the kimura',
+      'Waiter sweep: thread your outside leg under their near leg, elevate it, and sweep toward your head',
+      'When they post to stop the sweep, use that post as a pivot point to rotate to their back instead',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=deep+half+guard+BJJ+waiter+sweep+back+take+tutorial',
+  },
 
   // Guard Passing (2xx)
   {
@@ -338,6 +424,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 2,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Toreando Pass', 'Matador Pass', 'Bullfighter Pass'],
     description:
       'Using grips on the knees/ankles to swing the legs aside and pass laterally.',
@@ -356,6 +444,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 2,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Double Unders', 'Double Underhook Pass'],
     description:
       'Shooting both arms under the legs to stack and pass the guard.',
@@ -374,6 +464,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 2,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'One arm over one leg and one arm under the other, a powerful pressure pass.',
     cues: [
@@ -391,6 +483,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 2,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Leg Drag Pass'],
     description:
       'Dragging one leg across the body while maintaining hip connection to create an angle for passing.',
@@ -409,6 +503,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 2,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Knee Cut Pass', 'Knee Slide Pass'],
     description:
       'Driving the knee through the guard while controlling the hip.',
@@ -427,6 +523,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 2,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       "Stacking the opponent's legs while driving forward to flatten and pass.",
     cues: [
@@ -444,6 +542,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 2,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Gripping both ankles/knees and redirecting the legs to either side.',
     cues: [
@@ -461,6 +561,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 2,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Headquarters Position', 'HQ'],
     description:
       'Neutral passing position inside the guard, used to control and set up leg locks or passes.',
@@ -479,6 +581,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 2,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Chest-to-hip passing style using a tight body lock to flatten and clear the legs.',
     cues: [
@@ -496,6 +600,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 2,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Dynamic passing movement stepping deep around the guard to expose side control.',
     cues: [
@@ -515,6 +621,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 3,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Sit-Up Sweep'],
     description:
       'Posting the hand and bumping the hip forward from closed guard to take top position.',
@@ -533,6 +641,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 3,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Using a scissoring motion of the legs from closed guard to knock the opponent over.',
     cues: [
@@ -550,6 +660,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 3,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Pendulum Sweep'],
     description:
       'From closed guard, hooking a leg and sweeping with a pendulum motion.',
@@ -568,6 +680,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 3,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Hook Sweep', 'Elevator Sweep'],
     description:
       'Using butterfly hooks to off-balance the opponent and sweep to the side.',
@@ -586,6 +700,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 3,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Sweeping from X-guard by extending the legs to dump the opponent forward or backward.',
     cues: [
@@ -603,6 +719,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 3,
     difficulty: 'ELITE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'A spinning inversion from De La Riva to take the back or gain dominant position.',
     cues: [
@@ -626,6 +744,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 3,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['DLR Sweep'],
     description:
       'Various sweeps from the De La Riva guard attacking the near or far leg.',
@@ -644,6 +764,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 3,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Using foot on the hip and foot on the bicep to sweep the opponent.',
     cues: [
@@ -661,6 +783,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 3,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Sweep from seated guard by elevating one leg and chopping the post leg.',
     cues: [
@@ -678,6 +802,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 3,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Floating sweep from open guard that elevates opponent overhead before top transition.',
     cues: [
@@ -689,6 +815,66 @@ export const prefilledTechniques: Technique[] = [
     youtubeUrl:
       'https://www.youtube.com/results?search_query=balloon+sweep+bjj',
   },
+  {
+    id: 311,
+    name: 'Old School Half Guard Sweep',
+    categoryId: 3,
+    difficulty: 'BEGINNER',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Old School Sweep', 'Gordo Sweep'],
+    description:
+      "A fundamental bottom half-guard sweep using an underhook and a grip on the opponent's far ankle to tilt them over. Popularised by Roberto 'Gordo' Correa, typically the first half-guard sweep taught.",
+    cues: [
+      "Secure a deep underhook on the opponent's near arm, then duck your head under their torso",
+      'Reach under their free leg and grip the toes (not the ankle) for maximum lever length',
+      'Release the underhook, reinforce the toe grip with both hands, then drive your hips in and lift',
+      'If they base out with their free leg, transition to taking their back instead of completing the sweep',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=old+school+half+guard+sweep+BJJ+tutorial',
+  },
+  {
+    id: 312,
+    name: 'Kimura Sweep',
+    categoryId: 3,
+    difficulty: 'BEGINNER',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Kimura Sweep from Closed Guard'],
+    description:
+      'A closed-guard sweep using the kimura grip (figure-four on the wrist) to off-balance and reverse the opponent. If the sweep is denied, the same grip transitions directly into the kimura submission or opens a triangle.',
+    cues: [
+      "Break opponent's posture, isolate one wrist, and establish the double-wristlock (kimura) grip",
+      'Pull the arm across your centre line; when they post their hand to prevent the submission, use that post to elevate and sweep',
+      'If the sweep fails, roll to your side and finish the kimura submission from bottom',
+      'Failed sweep also opens guard-bottom triangle and guillotine — stay active on the grip',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=kimura+sweep+from+closed+guard+BJJ',
+  },
+  {
+    id: 313,
+    name: 'John Wayne Sweep',
+    categoryId: 3,
+    difficulty: 'INTERMEDIATE',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Knee Lever Sweep', 'Knee Lever', 'Half Guard Knee Lever'],
+    description:
+      "A half-guard sweep using the free knee as a lever against the opponent's far ankle to tip them sideways. Named for the casual, rolling motion it produces.",
+    cues: [
+      'From half guard with an underhook, open your guard and post your top foot while your bottom leg controls just above their ankle',
+      'Swing your free (top) knee upward and over in an arc like a windshield wiper, driving it through their ankle line',
+      'Combine the knee lever with a bridge-push from your posted foot to generate rotation',
+      'Follow the sweep to come on top directly into side control or half guard top',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=john+wayne+sweep+knee+lever+half+guard+BJJ',
+  },
 
   // Submissions (4xx)
   {
@@ -697,6 +883,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Juji Gatame', 'Cross Armlock', 'Arm Bar'],
     description:
       'Hyperextending the elbow joint by controlling the arm across the body — applied from many positions.',
@@ -723,6 +911,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Sankaku Jime'],
     description:
       'Locking the head and arm with the legs in a figure-4 to cut off blood flow to the brain.',
@@ -749,6 +939,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Double Wristlock', 'Ude Garami', 'Chicken Wing'],
     description:
       'A figure-4 grip on the wrist rotating the shoulder joint — applied from many positions.',
@@ -775,6 +967,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Coil Lock', 'Ashi Sankaku Garami'],
     description:
       'Shoulder lock using the legs to control the arm and rotate the shoulder.',
@@ -801,6 +995,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['RNC', 'Mata Leão', 'Hadaka Jime'],
     description:
       'Blood choke from the back — arm under the chin, arm behind the head.',
@@ -827,6 +1023,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Guillotine', 'Mae Hadaka Jime'],
     description:
       'Arm around the neck cutting off blood flow, applied from standing or guard.',
@@ -851,6 +1049,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Rotating the heel outward to attack the lateral structures of the knee.',
     cues: [
@@ -874,6 +1074,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'ELITE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Rotating the heel inward to attack the medial structures of the knee — highly dangerous.',
     cues: [
@@ -897,6 +1099,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Achilles Lock', 'Straight Footlock', 'Botinha'],
     description:
       'Applying pressure against the Achilles tendon to attack the ankle.',
@@ -921,6 +1125,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Knee Bar', 'Hiza Juji Gatame'],
     description:
       'Hyperextending the knee joint, similar to an armbar but on the leg.',
@@ -945,6 +1151,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ["D'Arce Choke", 'Brabo Choke'],
     description:
       'Arm-in choke using a figure-4 through the neck, applied from turtle or guard.',
@@ -969,6 +1177,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Similar to the Darce but with a different arm position, often from front headlock.',
     cues: [
@@ -992,6 +1202,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: false,
     description:
       'Powerful collar choke from the back using the belt/pants grip for finishing leverage.',
     cues: [
@@ -1009,6 +1221,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: false,
     aliases: ['Cross Choke', 'X Choke', 'Juji Jime'],
     description:
       'Double collar grip from mount or guard crossing over to choke.',
@@ -1027,6 +1241,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Sode Guruma Jime', 'Estrangulamento Ezequiel'],
     description:
       "Sleeve-grip choke from mount, can even be applied inside the opponent's guard.",
@@ -1051,6 +1267,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Keylock', 'Figure-Four Armlock', 'V-Lock'],
     description:
       'Figure-4 shoulder lock bending the wrist upward — applied from mount or side control.',
@@ -1075,6 +1293,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Head and Arm Choke', 'Kata Gatame', 'Side Choke'],
     description:
       'Head-and-arm blood choke finished from mount or side control with shoulder pressure.',
@@ -1099,6 +1319,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 4,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Choke from north-south using shoulder and lat pressure around the neck.',
     cues: [
@@ -1110,6 +1332,86 @@ export const prefilledTechniques: Technique[] = [
     youtubeUrl:
       'https://www.youtube.com/results?search_query=north+south+choke+bjj',
   },
+  {
+    id: 419,
+    name: 'Reverse Armbar',
+    categoryId: 4,
+    difficulty: 'INTERMEDIATE',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Reverse Armlock', 'Arm Crush', 'Cutting Armbar', 'Razor Lock'],
+    description:
+      'A palm-up armbar variant applied from closed or butterfly guard that hyperextends the elbow in the opposite direction to the standard armbar. If it fails, it flows naturally back into the regular armbar.',
+    cues: [
+      'From closed guard, isolate one arm and shift your weight in the direction of the attack to load pressure onto their elbow',
+      'Keep their palm facing up (supinated); your leg presses over their forearm to apply the lever',
+      'Pull their wrist toward your shoulder and press your shin downward for the finish',
+      'If they stack or posture, transition immediately to the standard armbar by swinging the leg over the head',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=reverse+armbar+from+closed+guard+BJJ',
+  },
+  {
+    id: 420,
+    name: 'Toe Hold',
+    categoryId: 4,
+    difficulty: 'ADVANCED',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Ashi Dori Garami', 'Foot Lock'],
+    description:
+      'A leg lock targeting the ankle and foot using a kimura-style figure-four grip on the foot, twisting the foot inward to tear ankle ligaments. Most commonly applied from ashi garami, 50/50, or half guard entanglements.',
+    cues: [
+      'Trap the leg to prevent escape; grab the top of the foot (pinky finger aligned with pinky toe) and loop the other arm under their shin to lock on your own wrist',
+      'Keep their foot to your chest — any gap allows them to wiggle free',
+      'Rotate your entire body to crank the foot inward (toward their opposite hip) rather than just using arm strength',
+      'Control the knee line before applying pressure; an uncontrolled knee will allow them to roll and escape',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=toe+hold+BJJ+leg+lock+tutorial',
+  },
+  {
+    id: 421,
+    name: 'Calf Slicer',
+    categoryId: 4,
+    difficulty: 'ADVANCED',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Calf Crusher', 'Leg Slicer', 'Compression Lock'],
+    description:
+      "A compression lock that wedges the shin behind the opponent's knee and folds the leg, crushing the calf muscle against the shin bone. Common setups include turtle position, deep half guard, and X-guard.",
+    cues: [
+      "Wedge your shin behind the opponent's knee joint as a fulcrum; the deeper the shin, the more efficient the pressure",
+      'Secure a figure-four with your legs and control their instep or ankle with both hands',
+      'Turn your shin blade into their calf (like dorsiflexing your ankle) while pulling their ankle toward you',
+      'Pressure develops quickly — finish before they roll out; use a seatbelt grip or hook if available to block the roll',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=calf+slicer+BJJ+compression+lock+tutorial',
+  },
+  {
+    id: 422,
+    name: 'Mounted Triangle',
+    categoryId: 4,
+    difficulty: 'ADVANCED',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Top Triangle', 'Triangle from Mount'],
+    description:
+      'A blood choke applied from the top mount by swinging one leg over the neck and locking a figure-four with the other leg, similar to a closed-guard triangle but with the weight advantage of being on top.',
+    cues: [
+      "From high mount, climb knees past the opponent's elbows so their arms are above the elbow plane",
+      'Isolate one arm by controlling the wrist; swing the outside leg over the neck to begin the triangle lock',
+      'Lock the figure-four (shin behind knee) and adjust the angle using hip pressure rather than inverting',
+      'Squeeze your knees together and press the trapped arm across the centreline to tighten the choke',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=mounted+triangle+BJJ+submission+from+mount',
+  },
 
   // Takedowns & Throws (5xx)
   {
@@ -1118,6 +1420,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 5,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Double Leg', 'Morote Gari'],
     description:
       'Shooting in on both legs and driving to lift/trip the opponent to the ground.',
@@ -1144,6 +1448,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 5,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Single Leg'],
     description:
       'Controlling one leg and using trips or lifts to bring the opponent down.',
@@ -1168,6 +1474,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 5,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Loading the opponent onto the hip and rotating to throw them to the ground.',
     cues: [
@@ -1193,6 +1501,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 5,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Shoulder Throw'],
     description: 'Pulling the opponent over the shoulder for a large throw.',
     cues: [
@@ -1218,6 +1528,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 5,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Inner Thigh Throw'],
     description:
       "Sweeping inside the opponent's leg while breaking their balance.",
@@ -1244,6 +1556,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 5,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Major Outer Reap', 'Large Outer Reap'],
     description:
       "Reaping the opponent's leg from the outside while pushing them backward.",
@@ -1270,6 +1584,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 5,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Grabbing the ankle while pushing the head to trip the opponent.',
     cues: [
@@ -1287,6 +1603,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 5,
     difficulty: 'ADVANCED',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Kata Guruma'],
     description:
       'Loading the opponent across the back by gripping arm and ankle.',
@@ -1305,6 +1623,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 5,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Timing-based sweep that removes a stepping foot to take the opponent down cleanly.',
     cues: [
@@ -1330,6 +1650,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 5,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Pulling opponent head and posture down to secure front headlock control and attacks.',
     cues: [
@@ -1337,9 +1659,50 @@ export const prefilledTechniques: Technique[] = [
       'Step back as you snap down',
       'Circle to angle off immediately',
       'Secure chin strap and elbow control',
+      'For a back take instead of front headlock, circle laterally behind the hip rather than clamping down in front — see Snap Down to Back Take (511)',
     ],
     youtubeUrl:
       'https://www.youtube.com/results?search_query=snap+down+front+headlock+bjj',
+  },
+  {
+    id: 511,
+    name: 'Snap Down to Back Take',
+    categoryId: 5,
+    difficulty: 'INTERMEDIATE',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Snap Down Back Take'],
+    description:
+      "A snap-down that, instead of landing in a front headlock, uses the opponent's momentum to spin directly behind them and secure back control. Distinguished from the Snap Down to Front Headlock by circling behind the hip rather than securing a front position.",
+    cues: [
+      'From a collar-tie, execute a sharp downward snap to break posture and drive the head below your hips',
+      'As they post or scramble forward, release the head and step laterally behind their hip rather than clamping down in front',
+      'Reach around the torso with the seatbelt grip (one arm over, one arm under) before they can stand back up',
+      'Finish the back take by inserting both hooks for back control',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=snap+down+to+back+take+BJJ+takedown',
+  },
+  {
+    id: 512,
+    name: 'Arm Drag to Back Take',
+    categoryId: 5,
+    difficulty: 'INTERMEDIATE',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Arm Drag Back Take', 'Arm Drag'],
+    description:
+      "A takedown entry that uses a two-handed arm drag (wrist and tricep grip) to redirect the opponent's arm across the body and step behind them into back control. Highly adaptable from standing, seated, and butterfly guard.",
+    cues: [
+      "Grab the opponent's same-side wrist with a thumb-down grip; simultaneously reach deep to their tricep with your other hand",
+      'Pull the arm sharply across your centreline while stepping your same-side foot laterally behind their hip — keep your head glued to their chest',
+      'Wrap your outside arm around their waist and lock your hand on their far hip; this blocks their rotation',
+      'Complete the back take by bringing them to the mat with a mat return or foot sweep, then insert hooks',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=arm+drag+to+back+take+BJJ+takedown',
   },
 
   // Escapes (6xx)
@@ -1349,6 +1712,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 6,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Explosive bridge from mount to roll the opponent, recovering guard or taking top.',
     cues: [
@@ -1366,6 +1731,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 6,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Elbow Escape', 'Shrimp Escape', 'Knee-Elbow Escape'],
     description:
       'Creating space by shrimping the hips out and replacing guard from underneath.',
@@ -1384,6 +1751,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 6,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Using the shrimp movement to recover guard from side control.',
     cues: [
@@ -1401,6 +1770,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 6,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Protecting the neck, working the seat belt off, and recovering guard from back control.',
     cues: [
@@ -1418,13 +1789,16 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 6,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
-      'Posturing up, turning into the choke, and finding the neck to escape.',
+      'Posturing up, turning into the choke, and finding the neck to escape a guillotine from top/mount or wrestling positions.',
     cues: [
       'Posture up immediately — do not tuck chin',
       'Turn toward the arm that is choking you',
       'Stack and drive forward to take pressure off',
       'Find their neck to control them as you escape',
+      'This covers guillotines from top/mount wrestling positions; for guard-pull guillotine defense see Guillotine Escape from Guard Pull (611)',
     ],
     youtubeUrl:
       'https://www.youtube.com/results?search_query=guillotine+choke+defense+escape+bjj',
@@ -1435,6 +1809,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 6,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Stacking, posturing, and using grip breaks to escape the triangle choke.',
     cues: [
@@ -1452,6 +1828,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 6,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Escape sequence to remove knee pressure and recover guard or half guard.',
     cues: [
@@ -1463,6 +1841,126 @@ export const prefilledTechniques: Technique[] = [
     youtubeUrl:
       'https://www.youtube.com/results?search_query=knee+on+belly+escape+bjj',
   },
+  {
+    id: 608,
+    name: 'Armbar Escape',
+    categoryId: 6,
+    difficulty: 'BEGINNER',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Armbar Defense', 'Stack Escape'],
+    description:
+      'A family of escapes from the armbar submission, with the stack defense being the primary option for beginners. Posture, thumb rotation, and body weight stacking combine to relieve elbow pressure and extract the arm.',
+    cues: [
+      'The instant the armbar is secured, grip your own forearm to create a two-arm connection and buy time',
+      'Post on your toes and stack your chest downward onto the opponent, lifting their hips off the mat to remove the fulcrum',
+      'Rotate your thumb upward (supinate) as you pull your elbow across their legs — this changes the angle and slips the elbow free',
+      'Step your legs wide and base out to prevent them from re-closing on the arm',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=armbar+escape+BJJ+defense+stack+technique',
+  },
+  {
+    id: 609,
+    name: 'Triangle Escape',
+    categoryId: 6,
+    difficulty: 'BEGINNER',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Triangle Defense', 'Triangle Choke Escape'],
+    description:
+      'Posture-based escape from a triangle choke applied from guard. Stack, posture up, and break the grip before blood flow is cut off — time is the critical factor.',
+    cues: [
+      "Tuck the trapped arm's elbow toward your centreline immediately to slow the choke",
+      "Posture up hard and stack the hips toward the opponent's head, loading your body weight to reduce their leverage",
+      'Walk your feet toward them, straighten your back, and pop the lock by pushing their knee away with your free hand',
+      'Once the lock breaks, pass the guard or secure a defensive position before they re-establish',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=triangle+choke+escape+BJJ+posture+stack',
+  },
+  {
+    id: 610,
+    name: 'Mounted Triangle Escape',
+    categoryId: 6,
+    difficulty: 'ADVANCED',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Defending Mounted Triangle', 'Top Triangle Escape'],
+    description:
+      'A last-resort escape from the mounted triangle — among the most difficult positions to escape from. Requires lifting the hips explosively and rotating to create separation before blood flow stops.',
+    cues: [
+      'Post your free arm under their armpit (not across the body) to prevent them from locking the arm into the triangle',
+      'Lock your hands together and extend arms toward their far hip to create even minimal separation',
+      'Explosively bridge your hips upward into their lower back while they are still adjusting the lock',
+      'Step over their body to rotate — even landing in side control bottom is a victory over being choked',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=mounted+triangle+escape+BJJ+defense',
+  },
+  {
+    id: 611,
+    name: 'Guillotine Escape from Guard Pull',
+    categoryId: 6,
+    difficulty: 'INTERMEDIATE',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Guard Pull Guillotine Defense'],
+    description:
+      'Defense against a guillotine caught during the guard-pull phase or takedown transitions — distinct from guillotine defense from top/wrestling positions. The attacker has a head-and-arm grip as you go to the ground.',
+    cues: [
+      'The moment the guillotine is secured, tuck your chin hard to the shoulder of the trapped arm to protect the trachea',
+      'Post both hands on their hips and posture up — never duck your head further in, which tightens the choke',
+      'Walk your feet around toward the same side as the trapped arm (the arm-in side) to relieve pressure',
+      'Once the angle is broken, reach your outside arm over their shoulder and pull down to break the grip',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=guillotine+escape+from+guard+pull+BJJ',
+  },
+  {
+    id: 612,
+    name: 'Granby Roll',
+    categoryId: 6,
+    difficulty: 'INTERMEDIATE',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Turtle Escape', 'Shoulder Roll Escape'],
+    description:
+      'An inversion escape from turtle position: rolling over one shoulder (without exposing the neck) to recover guard or reach a neutral scramble. Named after Granby High School wrestling.',
+    cues: [
+      'Tuck the rolling shoulder under; never expose the back of the neck — head stays down',
+      'Keep the toes of the lead foot on the mat throughout to roll in a controlled straight line',
+      'Drive hips and legs up and over in an arc; they should land toward the opponent to create immediate guard frames',
+      'The moment hips hit the mat, shoot both legs out as guard frames — the roll is only complete when guard is re-established',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=granby+roll+turtle+escape+BJJ+guard+recovery',
+  },
+  {
+    id: 613,
+    name: 'Headlock Escape',
+    categoryId: 6,
+    difficulty: 'BEGINNER',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Side Headlock Escape', 'Kesa Gatame Escape'],
+    description:
+      'Escape from a seated side headlock (kesa gatame / scarf hold), where the opponent sits beside you controlling your head and arm. Uses bridging and hip movement to unbalance and recover.',
+    cues: [
+      'Protect the trapped arm by keeping it bent and close to the body — do not straighten it or the choke tightens',
+      'Bridge into the opponent to load your weight onto them, then use the bridge momentum to roll them over your body',
+      'If they post to stop the roll, shrimp your hips away in the opposite direction to free your head',
+      'Once your head is free, immediately recover guard or scramble to a neutral position',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=headlock+escape+kesa+gatame+BJJ+tutorial',
+  },
 
   // Positions (7xx)
   {
@@ -1471,6 +1969,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 7,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Full Mount', 'Tate Shiho Gatame'],
     description:
       "Sitting on top of the opponent's torso — one of the most dominant positions in BJJ.",
@@ -1497,6 +1997,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 7,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Side Mount', 'Cross Side', 'Yoko Shiho Gatame'],
     description:
       'Controlling the opponent from the side with chest-to-chest pressure.',
@@ -1523,6 +2025,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 7,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Back Mount', 'Rear Mount'],
     description:
       "Attaching to the opponent's back with hooks in, the most dangerous position in BJJ.",
@@ -1531,6 +2035,7 @@ export const prefilledTechniques: Technique[] = [
       'Seatbelt: palm-in on the choking arm',
       'Keep your hips lower than theirs',
       'Two-on-one control before going for the choke',
+      'When the opponent attempts to escape, reassert the seatbelt and re-insert the bottom hook first; losing a hook is recoverable, losing the seatbelt usually loses the position',
     ],
     youtubeUrl:
       'https://www.youtube.com/results?search_query=back+control+bjj+seat+belt+hooks+finishing',
@@ -1549,6 +2054,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 7,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Kami Shiho Gatame'],
     description:
       'Controlling the opponent head-to-head, perpendicular to their body.',
@@ -1575,6 +2082,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 7,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Knee on Stomach', 'Knee Mount', 'Knee Ride'],
     description:
       "Driving the knee into the opponent's belly — a transitional and attacking position.",
@@ -1599,6 +2108,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 7,
     difficulty: 'BEGINNER',
     isCustom: false,
+    gi: true,
+    noGi: true,
     aliases: ['Turtle', "Referee's Position"],
     description:
       'Defensive position on all fours — the opponent must break it open to attack.',
@@ -1623,6 +2134,8 @@ export const prefilledTechniques: Technique[] = [
     categoryId: 7,
     difficulty: 'INTERMEDIATE',
     isCustom: false,
+    gi: true,
+    noGi: true,
     description:
       'Top control position while opponent has one leg trapped, ideal for pressure passing.',
     cues: [
@@ -1639,6 +2152,46 @@ export const prefilledTechniques: Technique[] = [
         label: 'Wikipedia: Half Guard',
       },
     ],
+  },
+  {
+    id: 708,
+    name: 'S-Mount',
+    categoryId: 7,
+    difficulty: 'ADVANCED',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['S Mount', 'High Mount Variation', 'Technical Mount'],
+    description:
+      "An advanced mount variation where one knee is posted high near the opponent's ear while the opposite foot stays on the mat, forming an S-shape with the legs. This configuration isolates one arm and creates an extremely tight platform for armbar and triangle finishes.",
+    cues: [
+      'From high mount, wait for the opponent to push elbows upward as a frame — that gap is the S-mount entry window',
+      'Slide (not step) one knee up to their ear along the mat; stepping gives them room to recover',
+      'Close all space immediately after sliding; posting your opposite foot stabilises the position',
+      'The armbar is the primary finish — the S position pre-loads the arm; move directly to it without resetting',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=S-mount+BJJ+entry+armbar+from+high+mount',
+  },
+  {
+    id: 709,
+    name: 'Crucifix',
+    categoryId: 7,
+    difficulty: 'ADVANCED',
+    isCustom: false,
+    gi: true,
+    noGi: true,
+    aliases: ['Crucifixion', 'Double Arm Control'],
+    description:
+      "A control position attacking a turtled opponent where one arm is trapped by the legs and the other by the hands, immobilising both of the opponent's arms simultaneously. Entry is typically from a sprawl or back attack on the turtle.",
+    cues: [
+      'From a sprawl or back-attack position, circle to one side and wedge your close knee into the turtle to open it',
+      'Thread your near arm under their far arm, catching it with your elbow; your legs trap the near arm in a figure-four',
+      'Maintain heavy chest-on-back pressure throughout; any space lets them pull their arm free',
+      'Primary attacks: rear naked choke (free arm goes under the chin), collar/lapel choke, and kimura from the far arm',
+    ],
+    youtubeUrl:
+      'https://www.youtube.com/results?search_query=crucifix+position+BJJ+attacks+turtled+opponent',
   },
 ]
 
@@ -1788,9 +2341,82 @@ export const prefilledConnections: TechniqueConnection[] = [
   { fromTechniqueId: 306, toTechniqueId: 703, connectionType: 'TRANSITION' },
   // Anaconda → back (roll-through finish)
   { fromTechniqueId: 412, toTechniqueId: 703, connectionType: 'TRANSITION' },
-  // SETUP connections — feints and opportunities (first use of the SETUP type)
+  // SETUP connections — feints and opportunities
   { fromTechniqueId: 302, toTechniqueId: 301, connectionType: 'SETUP' }, // Scissor Sweep threat sets up Hip Bump
   { fromTechniqueId: 301, toTechniqueId: 302, connectionType: 'SETUP' }, // Hip Bump threat sets up Scissor Sweep
   { fromTechniqueId: 501, toTechniqueId: 502, connectionType: 'SETUP' }, // Double Leg shot sets up Single Leg
   { fromTechniqueId: 502, toTechniqueId: 501, connectionType: 'SETUP' }, // Single Leg level-change sets up Double Leg
+
+  // New connections — sweeps
+  { fromTechniqueId: 102, toTechniqueId: 311, connectionType: 'FOLLOW_UP' }, // Half Guard → Old School Sweep
+  { fromTechniqueId: 311, toTechniqueId: 703, connectionType: 'TRANSITION' }, // Old School Sweep → Back Control (opponent defends)
+  { fromTechniqueId: 101, toTechniqueId: 312, connectionType: 'FOLLOW_UP' }, // Closed Guard → Kimura Sweep
+  { fromTechniqueId: 312, toTechniqueId: 403, connectionType: 'TRANSITION' }, // Kimura Sweep → Kimura (same grip)
+  { fromTechniqueId: 403, toTechniqueId: 312, connectionType: 'SETUP' }, // Kimura threat opens the sweep
+  { fromTechniqueId: 312, toTechniqueId: 402, connectionType: 'FOLLOW_UP' }, // Kimura Sweep → Triangle (opponent defends)
+  { fromTechniqueId: 102, toTechniqueId: 313, connectionType: 'FOLLOW_UP' }, // Half Guard → John Wayne Sweep
+  { fromTechniqueId: 111, toTechniqueId: 313, connectionType: 'FOLLOW_UP' }, // Z Guard → John Wayne Sweep
+  { fromTechniqueId: 313, toTechniqueId: 311, connectionType: 'SETUP' }, // John Wayne ↔ Old School (mutual setups)
+
+  // New connections — submissions
+  { fromTechniqueId: 101, toTechniqueId: 419, connectionType: 'FOLLOW_UP' }, // Closed Guard → Reverse Armbar
+  { fromTechniqueId: 419, toTechniqueId: 401, connectionType: 'TRANSITION' }, // Reverse Armbar → standard Armbar
+  { fromTechniqueId: 401, toTechniqueId: 419, connectionType: 'SETUP' }, // Standard Armbar threat exposes reverse
+  { fromTechniqueId: 109, toTechniqueId: 420, connectionType: 'FOLLOW_UP' }, // SLX → Toe Hold
+  { fromTechniqueId: 106, toTechniqueId: 420, connectionType: 'FOLLOW_UP' }, // X-Guard → Toe Hold
+  { fromTechniqueId: 420, toTechniqueId: 407, connectionType: 'TRANSITION' }, // Toe Hold → Outside Heel Hook
+  { fromTechniqueId: 706, toTechniqueId: 421, connectionType: 'FOLLOW_UP' }, // Turtle → Calf Slicer
+  { fromTechniqueId: 106, toTechniqueId: 421, connectionType: 'FOLLOW_UP' }, // X-Guard → Calf Slicer
+  { fromTechniqueId: 421, toTechniqueId: 408, connectionType: 'TRANSITION' }, // Calf Slicer → Inside Heel Hook
+  { fromTechniqueId: 701, toTechniqueId: 422, connectionType: 'FOLLOW_UP' }, // Mount → Mounted Triangle
+  { fromTechniqueId: 422, toTechniqueId: 401, connectionType: 'FOLLOW_UP' }, // Mounted Triangle → Armbar
+  { fromTechniqueId: 610, toTechniqueId: 422, connectionType: 'COUNTER' }, // Mounted Triangle Escape counters Mounted Triangle
+  { fromTechniqueId: 422, toTechniqueId: 610, connectionType: 'COUNTER' }, // Reciprocal
+
+  // New connections — takedowns
+  { fromTechniqueId: 511, toTechniqueId: 703, connectionType: 'TRANSITION' }, // Snap Down Back Take → Back Control
+  { fromTechniqueId: 510, toTechniqueId: 511, connectionType: 'TRANSITION' }, // Snap Down Front HL → Snap Down Back Take
+  { fromTechniqueId: 512, toTechniqueId: 703, connectionType: 'TRANSITION' }, // Arm Drag → Back Control
+  { fromTechniqueId: 512, toTechniqueId: 405, connectionType: 'FOLLOW_UP' }, // Arm Drag → RNC
+
+  // New connections — escapes (reciprocal counters)
+  { fromTechniqueId: 608, toTechniqueId: 401, connectionType: 'COUNTER' }, // Armbar Escape counters Armbar
+  { fromTechniqueId: 401, toTechniqueId: 608, connectionType: 'COUNTER' }, // Reciprocal
+  { fromTechniqueId: 609, toTechniqueId: 402, connectionType: 'COUNTER' }, // Triangle Escape counters Triangle
+  { fromTechniqueId: 402, toTechniqueId: 609, connectionType: 'COUNTER' }, // Reciprocal
+  { fromTechniqueId: 611, toTechniqueId: 406, connectionType: 'COUNTER' }, // Guillotine Escape GP counters Guillotine
+  { fromTechniqueId: 406, toTechniqueId: 611, connectionType: 'COUNTER' }, // Reciprocal
+  { fromTechniqueId: 612, toTechniqueId: 706, connectionType: 'COUNTER' }, // Granby Roll escapes turtle
+  { fromTechniqueId: 612, toTechniqueId: 101, connectionType: 'TRANSITION' }, // Granby Roll recovers closed guard
+  { fromTechniqueId: 613, toTechniqueId: 702, connectionType: 'COUNTER' }, // Headlock Escape counters side headlock
+
+  // New connections — new guards
+  { fromTechniqueId: 105, toTechniqueId: 113, connectionType: 'TRANSITION' }, // DLR → Reverse DLR (rotate hook)
+  { fromTechniqueId: 113, toTechniqueId: 703, connectionType: 'FOLLOW_UP' }, // RDLR → Back Control (Kiss of the Dragon)
+  { fromTechniqueId: 113, toTechniqueId: 109, connectionType: 'TRANSITION' }, // RDLR → Single Leg X
+  { fromTechniqueId: 113, toTechniqueId: 407, connectionType: 'FOLLOW_UP' }, // RDLR → Outside Heel Hook
+  { fromTechniqueId: 109, toTechniqueId: 114, connectionType: 'TRANSITION' }, // SLX → 50/50
+  { fromTechniqueId: 114, toTechniqueId: 409, connectionType: 'FOLLOW_UP' }, // 50/50 → Straight Ankle Lock
+  { fromTechniqueId: 114, toTechniqueId: 407, connectionType: 'FOLLOW_UP' }, // 50/50 → Outside Heel Hook
+  { fromTechniqueId: 114, toTechniqueId: 408, connectionType: 'FOLLOW_UP' }, // 50/50 → Inside Heel Hook
+  { fromTechniqueId: 114, toTechniqueId: 420, connectionType: 'FOLLOW_UP' }, // 50/50 → Toe Hold
+  { fromTechniqueId: 102, toTechniqueId: 115, connectionType: 'TRANSITION' }, // Half Guard → Deep Half Guard
+  { fromTechniqueId: 115, toTechniqueId: 702, connectionType: 'FOLLOW_UP' }, // Deep Half → Side Control (waiter sweep)
+  { fromTechniqueId: 115, toTechniqueId: 703, connectionType: 'FOLLOW_UP' }, // Deep Half → Back Control
+  { fromTechniqueId: 115, toTechniqueId: 421, connectionType: 'FOLLOW_UP' }, // Deep Half → Calf Slicer
+
+  // New connections — guard-to-guard transitions
+  { fromTechniqueId: 101, toTechniqueId: 102, connectionType: 'TRANSITION' }, // Closed Guard → Half Guard (retention)
+  { fromTechniqueId: 101, toTechniqueId: 103, connectionType: 'TRANSITION' }, // Closed Guard → Butterfly Guard
+  { fromTechniqueId: 102, toTechniqueId: 103, connectionType: 'TRANSITION' }, // Half Guard → Butterfly Guard
+
+  // New connections — positions
+  { fromTechniqueId: 701, toTechniqueId: 708, connectionType: 'TRANSITION' }, // Mount → S-Mount
+  { fromTechniqueId: 708, toTechniqueId: 401, connectionType: 'FOLLOW_UP' }, // S-Mount → Armbar
+  { fromTechniqueId: 708, toTechniqueId: 402, connectionType: 'FOLLOW_UP' }, // S-Mount → Triangle
+  { fromTechniqueId: 708, toTechniqueId: 422, connectionType: 'TRANSITION' }, // S-Mount → Mounted Triangle
+  { fromTechniqueId: 706, toTechniqueId: 709, connectionType: 'TRANSITION' }, // Turtle → Crucifix
+  { fromTechniqueId: 709, toTechniqueId: 405, connectionType: 'FOLLOW_UP' }, // Crucifix → RNC
+  { fromTechniqueId: 709, toTechniqueId: 403, connectionType: 'FOLLOW_UP' }, // Crucifix → Kimura
+  { fromTechniqueId: 709, toTechniqueId: 703, connectionType: 'TRANSITION' }, // Crucifix → Back Control
 ]

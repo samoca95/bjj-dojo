@@ -169,6 +169,40 @@ export class BJJDatabase extends Dexie {
         })
       })
 
+    this.version(8)
+      .stores({
+        categories: 'id, name',
+        techniques: 'id, categoryId, name',
+        techniqueConnections:
+          '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+        sessions: '++id, date, clubId',
+        sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
+        sessionTaps: '++id, sessionId, techniqueId',
+        clubs: '++id, sortOrder, name',
+        drillPlans: '++id, name, createdAt',
+      })
+      .upgrade(async () => {
+        // Backfill gi/noGi and sync new prefilled techniques.
+        await this.transaction(
+          'rw',
+          [this.techniques, this.techniqueConnections],
+          async () => {
+            // Techniques that only work in the gi (require collar/sleeve/lapel grips).
+            const GI_ONLY = new Set([104, 107, 110, 413, 414])
+            const all = (await this.techniques.toArray()) as Technique[]
+            const normalized = all.map((t) => ({
+              ...t,
+              gi: t.gi ?? true,
+              noGi: t.noGi ?? (t.isCustom ? true : !GI_ONLY.has(t.id)),
+            }))
+            if (normalized.length > 0) await this.techniques.bulkPut(normalized)
+            // Sync new prefilled techniques and connections added in this version.
+            await this.techniques.bulkPut(prefilledTechniques)
+            await this.techniqueConnections.bulkPut(prefilledConnections)
+          },
+        )
+      })
+
     // Populate on first creation — registered here so every instance gets it
     // (including isolated test instances).
     this.on('populate', async () => {
@@ -380,6 +414,10 @@ function validateTechniques(records: unknown[]): Technique[] {
     }
     if (rec.isFavorite !== undefined && typeof rec.isFavorite !== 'boolean')
       throw new Error(`${ctx}: 'isFavorite' must be a boolean`)
+    if (rec.gi !== undefined && typeof rec.gi !== 'boolean')
+      throw new Error(`${ctx}: 'gi' must be a boolean`)
+    if (rec.noGi !== undefined && typeof rec.noGi !== 'boolean')
+      throw new Error(`${ctx}: 'noGi' must be a boolean`)
     if (rec.referenceLinks !== undefined) {
       if (!Array.isArray(rec.referenceLinks))
         throw new Error(`${ctx}: 'referenceLinks' must be an array`)
