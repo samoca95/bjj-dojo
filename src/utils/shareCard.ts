@@ -5,6 +5,7 @@ import { sessionTypeLabel } from '../i18n'
 import type { BeltColor } from './beltRank'
 import type { SessionExportData } from './exportSession'
 import qrcode from 'qrcode-generator'
+import bjjIconUrl from '/bjj-icon.svg'
 
 /**
  * Renders a training session as a polished, social-media-ready PNG using the
@@ -143,6 +144,7 @@ interface CardLabels {
   received: string
   more: string
   noTechniques: string
+  notes: string
   footer: string
   scanApp: string
 }
@@ -158,6 +160,7 @@ const LABELS: Record<AppLanguage, CardLabels> = {
     received: 'received',
     more: 'more',
     noTechniques: 'Open mat — just rolling',
+    notes: 'Notes',
     footer: 'Tracked with BJJ Dojo',
     scanApp: 'SCAN TO GET THE APP',
   },
@@ -171,6 +174,7 @@ const LABELS: Record<AppLanguage, CardLabels> = {
     received: 'recibidas',
     more: 'más',
     noTechniques: 'Rodando libre',
+    notes: 'Notas',
     footer: 'Registrado con BJJ Dojo',
     scanApp: 'ESCANEA PARA LA APP',
   },
@@ -184,6 +188,7 @@ const LABELS: Record<AppLanguage, CardLabels> = {
     received: 'subies',
     more: 'de plus',
     noTechniques: 'Open mat',
+    notes: 'Notes',
     footer: 'Suivi avec BJJ Dojo',
     scanApp: 'SCANNEZ POUR L’APP',
   },
@@ -439,6 +444,19 @@ function drawQrCode(
   }
 }
 
+let appLogoPromise: Promise<HTMLImageElement | null> | null = null
+
+async function getAppLogoImage(): Promise<HTMLImageElement | null> {
+  if (appLogoPromise) return appLogoPromise
+  appLogoPromise = new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => resolve(null)
+    img.src = bjjIconUrl
+  })
+  return await appLogoPromise
+}
+
 export async function renderShareCard(
   data: SessionExportData,
   language: AppLanguage,
@@ -521,6 +539,27 @@ export async function renderShareCard(
   ctx.fillText(L.brand, PAD, y + 12)
   setLetterSpacing(ctx, '0px')
 
+  const logo = await getAppLogoImage()
+  if (logo) {
+    const logoSize = 72
+    const logoX = w - PAD - logoSize
+    const logoY = y + 2
+    roundRectPath(ctx, logoX - 8, logoY - 8, logoSize + 16, logoSize + 16, 20)
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'
+    ctx.fill()
+    ctx.drawImage(logo, logoX, logoY, logoSize, logoSize)
+  }
+
+  y += 96
+
+  // --- Belt + name (optional) --------------------------------------------
+  if (options.belt) {
+    y += drawBeltBlock(ctx, PAD, y, contentW, options.belt) + 34
+  }
+
+  // --- Date ---------------------------------------------------------------
+  ctx.fillStyle = '#ffffff'
+  ctx.font = `800 60px ${FONT}`
   const typeLabel = sessionTypeLabel(
     session.sessionType,
     SESSION_TYPE_LABELS[session.sessionType],
@@ -532,8 +571,21 @@ export async function renderShareCard(
   const badgePadX = 26
   const badgeH = 58
   const badgeW = ctx.measureText(typeLabel).width + badgePadX * 2
-  const badgeX = w - PAD - badgeW
-  const badgeY = y + 2
+  const dateMaxW = Math.max(340, contentW - badgeW - 24)
+  ctx.font = `800 60px ${FONT}`
+  const dateLines = wrapText(
+    ctx,
+    formatCardDate(session.date, locale),
+    dateMaxW,
+    2,
+  )
+  const dateStartY = y
+  for (const line of dateLines) {
+    ctx.fillText(line, PAD, y)
+    y += 72
+  }
+  const badgeX = PAD + dateMaxW + 24
+  const badgeY = dateStartY + 4
   ctx.fillStyle = badge.bg
   roundRectPath(ctx, badgeX, badgeY, badgeW, badgeH, badgeH / 2)
   ctx.fill()
@@ -542,31 +594,12 @@ export async function renderShareCard(
   roundRectPath(ctx, badgeX, badgeY, badgeW, badgeH, badgeH / 2)
   ctx.stroke()
   ctx.fillStyle = badge.fg
+  ctx.font = `700 26px ${FONT}`
   ctx.textBaseline = 'middle'
   ctx.fillText(typeLabel, badgeX + badgePadX, badgeY + badgeH / 2 + 2)
-  setLetterSpacing(ctx, '0px')
   ctx.textBaseline = 'top'
-
-  y += badgeH + 34
-
-  // --- Belt + name (optional) --------------------------------------------
-  if (options.belt) {
-    y += drawBeltBlock(ctx, PAD, y, contentW, options.belt) + 34
-  }
-
-  // --- Date ---------------------------------------------------------------
-  ctx.fillStyle = '#ffffff'
-  ctx.font = `800 60px ${FONT}`
-  const dateLines = wrapText(
-    ctx,
-    formatCardDate(session.date, locale),
-    contentW,
-    2,
-  )
-  for (const line of dateLines) {
-    ctx.fillText(line, PAD, y)
-    y += 72
-  }
+  setLetterSpacing(ctx, '0px')
+  y = Math.max(y, badgeY + badgeH + 12)
   y += 14
 
   // Theme divider.
@@ -649,6 +682,40 @@ export async function renderShareCard(
   })
   y += tileH + 44
 
+  // --- Taps / submissions highlight --------------------------------------
+  const totalTaps = givenTaps.length + receivedTaps.length
+  if (totalTaps > 0) {
+    const tapsH = 132
+    roundRectPath(ctx, PAD, y, contentW, tapsH, 22)
+    ctx.fillStyle = 'rgba(255,255,255,0.09)'
+    ctx.fill()
+    ctx.strokeStyle = theme.accent
+    ctx.lineWidth = 2
+    withAlpha(ctx, 0.45, () => {
+      roundRectPath(ctx, PAD, y, contentW, tapsH, 22)
+      ctx.stroke()
+    })
+    ctx.fillStyle = theme.accentLight
+    ctx.font = `800 24px ${FONT}`
+    setLetterSpacing(ctx, '2px')
+    ctx.fillText(L.taps.toUpperCase(), PAD + 26, y + 20)
+    setLetterSpacing(ctx, '0px')
+    const half = contentW / 2
+    ctx.font = `800 56px ${FONT}`
+    ctx.fillStyle = '#22c55e'
+    ctx.fillText(`${givenTaps.length}`, PAD + 26, y + 54)
+    ctx.fillStyle = 'rgba(255,255,255,0.8)'
+    ctx.font = `700 22px ${FONT}`
+    ctx.fillText(L.given.toUpperCase(), PAD + 26, y + 94)
+    ctx.font = `800 56px ${FONT}`
+    ctx.fillStyle = '#f87171'
+    ctx.fillText(`${receivedTaps.length}`, PAD + half + 26, y + 54)
+    ctx.fillStyle = 'rgba(255,255,255,0.8)'
+    ctx.font = `700 22px ${FONT}`
+    ctx.fillText(L.received.toUpperCase(), PAD + half + 26, y + 94)
+    y += tapsH + 28
+  }
+
   // --- Techniques ---------------------------------------------------------
   ctx.fillStyle = theme.accent
   ctx.font = `800 26px ${FONT}`
@@ -658,37 +725,86 @@ export async function renderShareCard(
   y += 50
 
   const bottomLimit = h - PAD - FOOTER_H
-  const techFontSize = 36
-  const techLineHeight = 47
-  let shown = 0
+  const hasNotes = Boolean(session.notes && session.notes.trim())
+  const notesReserve = hasNotes ? (options.format === 'square' ? 170 : 200) : 0
+  const techBottomLimit = bottomLimit - notesReserve
 
   if (techniques.length === 0) {
     ctx.fillStyle = 'rgba(255,255,255,0.65)'
     ctx.font = `italic 600 34px ${FONT}`
     ctx.fillText(L.noTechniques, PAD, y + 4)
   } else {
-    for (const { technique } of techniques) {
-      ctx.font = `500 ${techFontSize}px ${FONT}`
-      const lines = wrapText(ctx, technique.name, contentW - 44, 2)
-      const blockH = lines.length * techLineHeight + 14
-      if (y + blockH > bottomLimit) break
-      ctx.fillStyle = theme.accent
-      roundRectPath(ctx, PAD, y + 11, 14, 14, 4)
-      ctx.fill()
-      ctx.fillStyle = '#f4f4f5'
-      ctx.font = `500 ${techFontSize}px ${FONT}`
-      lines.forEach((line, li) => {
-        ctx.fillText(line, PAD + 38, y + li * techLineHeight)
+    if (options.format === 'square') {
+      const techCount = techniques.length
+      const rowH = techCount > 36 ? 22 : techCount > 22 ? 26 : 30
+      const maxRows = Math.max(1, Math.floor((techBottomLimit - y) / rowH))
+      const cols = Math.min(3, Math.max(1, Math.ceil(techCount / maxRows)))
+      const colGap = 14
+      const colW = (contentW - colGap * (cols - 1)) / cols
+      ctx.font = `500 ${rowH - 7}px ${FONT}`
+      techniques.forEach(({ technique }, i) => {
+        const row = Math.floor(i / cols)
+        const col = i % cols
+        const tx = PAD + col * (colW + colGap)
+        const ty = y + row * rowH
+        ctx.fillStyle = theme.accent
+        roundRectPath(ctx, tx, ty + 7, 10, 10, 3)
+        ctx.fill()
+        ctx.fillStyle = '#f4f4f5'
+        ctx.fillText(
+          truncateToWidth(ctx, technique.name, colW - 24),
+          tx + 18,
+          ty,
+        )
       })
-      y += blockH
-      shown++
+      y += Math.ceil(techCount / cols) * rowH + 16
+    } else {
+      const techFontSize = 36
+      const techLineHeight = 47
+      let shown = 0
+      for (const { technique } of techniques) {
+        ctx.font = `500 ${techFontSize}px ${FONT}`
+        const lines = wrapText(ctx, technique.name, contentW - 44, 2)
+        const blockH = lines.length * techLineHeight + 14
+        if (y + blockH > techBottomLimit) break
+        ctx.fillStyle = theme.accent
+        roundRectPath(ctx, PAD, y + 11, 14, 14, 4)
+        ctx.fill()
+        ctx.fillStyle = '#f4f4f5'
+        ctx.font = `500 ${techFontSize}px ${FONT}`
+        lines.forEach((line, li) => {
+          ctx.fillText(line, PAD + 38, y + li * techLineHeight)
+        })
+        y += blockH
+        shown++
+      }
+      const remaining = techniques.length - shown
+      if (remaining > 0 && y + 44 <= techBottomLimit) {
+        ctx.fillStyle = theme.accentLight
+        ctx.font = `700 30px ${FONT}`
+        ctx.fillText(`+${remaining} ${L.more}`, PAD + 38, y + 4)
+      }
     }
-    const remaining = techniques.length - shown
-    if (remaining > 0 && y + 44 <= bottomLimit) {
-      ctx.fillStyle = theme.accentLight
-      ctx.font = `700 30px ${FONT}`
-      ctx.fillText(`+${remaining} ${L.more}`, PAD + 38, y + 4)
-    }
+  }
+
+  // --- Session notes ------------------------------------------------------
+  if (hasNotes && y + 44 <= bottomLimit) {
+    const notesText = session.notes!.trim()
+    ctx.fillStyle = theme.accent
+    ctx.font = `800 24px ${FONT}`
+    setLetterSpacing(ctx, '2px')
+    ctx.fillText(L.notes.toUpperCase(), PAD, y)
+    setLetterSpacing(ctx, '0px')
+    y += 38
+    ctx.fillStyle = 'rgba(244,244,245,0.9)'
+    ctx.font = `500 26px ${FONT}`
+    const maxLines = Math.max(1, Math.floor((bottomLimit - y) / 32))
+    const lines = wrapText(ctx, notesText, contentW, maxLines)
+    lines.forEach((line) => {
+      if (y + 28 > bottomLimit) return
+      ctx.fillText(line, PAD, y)
+      y += 32
+    })
   }
 
   // --- Footer -------------------------------------------------------------
@@ -709,24 +825,6 @@ export async function renderShareCard(
   setLetterSpacing(ctx, '1px')
   ctx.fillText(L.footer, PAD, footerLineY + 26)
   setLetterSpacing(ctx, '0px')
-
-  const totalTaps = givenTaps.length + receivedTaps.length
-  if (totalTaps > 0) {
-    const tapText = `${L.taps}: ${givenTaps.length} ${L.given} · ${receivedTaps.length} ${L.received}`
-    ctx.fillStyle = 'rgba(255,255,255,0.75)'
-    ctx.font = `600 26px ${FONT}`
-    if (options.qrUrl) {
-      ctx.fillText(
-        truncateToWidth(ctx, tapText, footerRight - PAD),
-        PAD,
-        footerLineY + 64,
-      )
-    } else {
-      ctx.textAlign = 'right'
-      ctx.fillText(tapText, w - PAD, footerLineY + 26)
-      ctx.textAlign = 'left'
-    }
-  }
 
   // --- QR code (optional) -------------------------------------------------
   if (options.qrUrl) {
