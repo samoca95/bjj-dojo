@@ -87,6 +87,7 @@ npm run check          # Full local gate: lint + format check + tests + build
 ## CI Overview
 
 The CI workflow runs:
+
 1. Lint
 2. Format check
 3. Tests
