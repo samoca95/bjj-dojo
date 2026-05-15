@@ -402,7 +402,14 @@ function ScoreHelp({
         <CircleHelp size={13} />
       </button>
       {open && (
-        <div className="fixed left-1/2 top-24 z-30 w-[min(28rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-[11px] leading-relaxed text-zinc-300 shadow-lg max-h-[70vh] overflow-y-auto whitespace-pre-line">
+        <div
+          className={[
+            'fixed left-1/2 top-24 z-30 -translate-x-1/2',
+            'w-[min(28rem,calc(100vw-1.5rem))] max-h-[70vh] overflow-y-auto',
+            'rounded-xl border border-zinc-700 bg-zinc-900 p-3 shadow-lg',
+            'text-[11px] leading-relaxed text-zinc-300 whitespace-pre-line',
+          ].join(' ')}
+        >
           {description}
         </div>
       )}
@@ -978,9 +985,7 @@ export default function HomePage() {
           </span>
           <ScoreLabel
             label={t('Level')}
-            description={t(
-              'Levels and XP:\n• Level 1 starts at 0 XP.\n• Each next level needs 100 XP more than the previous one (L2: 100, L3: 300, L4: 600, L5: 1000...).\nXP gains:\n• 1 XP each 15 min on the mat.\n• +5 XP per tap given.\n• +2 XP per logged session.\nStreaks:\n• Daily streak = consecutive days with at least one logged session.\n• Weekly streak = consecutive weeks with at least one logged session.',
-            )}
+            description={t('Level help details')}
           />
         </div>
         <span

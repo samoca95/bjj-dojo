@@ -227,7 +227,7 @@ const ES_TRANSLATIONS = {
   XP: 'XP',
   'Your level increases as your total XP grows. Levels get progressively harder to reach.':
     'Tu nivel sube cuando aumentan tus XP totales. Cada nivel requiere más progreso.',
-  'Levels and XP:\n• Level 1 starts at 0 XP.\n• Each next level needs 100 XP more than the previous one (L2: 100, L3: 300, L4: 600, L5: 1000...).\nXP gains:\n• 1 XP each 15 min on the mat.\n• +5 XP per tap given.\n• +2 XP per logged session.\nStreaks:\n• Daily streak = consecutive days with at least one logged session.\n• Weekly streak = consecutive weeks with at least one logged session.':
+  'Level help details':
     'Niveles y XP:\n• El nivel 1 empieza con 0 XP.\n• Cada nivel siguiente requiere 100 XP más que el anterior (N2: 100, N3: 300, N4: 600, N5: 1000...).\nGanancia de XP:\n• 1 XP cada 15 min en tatami.\n• +5 XP por sumisión aplicada.\n• +2 XP por sesión registrada.\nRachas:\n• Racha diaria = días consecutivos con al menos una sesión registrada.\n• Racha semanal = semanas consecutivas con al menos una sesión registrada.',
   'XP comes from mat time, submissions given, and sessions logged. Mat time gives 1 XP every 15 minutes.':
     'Los XP vienen del tiempo en tatami, sumisiones aplicadas y sesiones registradas. El tatami da 1 XP cada 15 minutos.',
