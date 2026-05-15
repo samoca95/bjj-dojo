@@ -12,27 +12,19 @@ import {
   Download,
   Camera,
   Image as ImageIcon,
-  Copy,
-  FileText,
   Loader2,
   Check,
-  MessageCircle,
-  Send,
   Palette,
   Award,
-  QrCode,
   RotateCcw,
   Move,
   ChevronDown,
 } from 'lucide-react'
 import type { SessionExportData } from '../utils/exportSession'
 import {
-  exportSession,
   buildShareCaption,
   shareSessionImage,
-  openWhatsAppShare,
-  openTwitterShare,
-  copyToClipboard,
+  downloadSessionPdf,
   downloadBlob,
 } from '../utils/exportSession'
 import {
@@ -90,16 +82,13 @@ interface ShareSheetLabels {
   beltHint: string
   stripes: string
   qrCode: string
-  qrHint: string
-  on: string
   share: string
   savePng: string
+  savePdf: string
   whatsapp: string
-  twitter: string
-  copyCaption: string
-  exportText: string
+  x: string
+  instagram: string
   rendering: string
-  copied: string
   savedHint: string
   shareError: string
   imageError: string
@@ -131,16 +120,13 @@ const LABELS: Record<AppLanguage, ShareSheetLabels> = {
     beltHint: 'Belt',
     stripes: 'stripes',
     qrCode: 'QR code',
-    qrHint: 'Adds a scannable link to the app',
-    on: 'On',
     share: 'Share',
     savePng: 'Save PNG',
+    savePdf: 'Save PDF',
     whatsapp: 'WhatsApp',
-    twitter: 'X',
-    copyCaption: 'Copy caption',
-    exportText: 'Export as text',
+    x: 'X',
+    instagram: 'Instagram',
     rendering: 'Building image…',
-    copied: 'Caption copied',
     savedHint: 'Image saved — open Instagram or your gallery to post',
     shareError: 'Could not share — please try again',
     imageError: 'Could not load that image',
@@ -171,16 +157,13 @@ const LABELS: Record<AppLanguage, ShareSheetLabels> = {
     beltHint: 'Cinturón',
     stripes: 'grados',
     qrCode: 'Código QR',
-    qrHint: 'Añade un enlace escaneable a la app',
-    on: 'Activado',
     share: 'Compartir',
     savePng: 'Guardar PNG',
+    savePdf: 'Guardar PDF',
     whatsapp: 'WhatsApp',
-    twitter: 'X',
-    copyCaption: 'Copiar texto',
-    exportText: 'Exportar como texto',
+    x: 'X',
+    instagram: 'Instagram',
     rendering: 'Generando imagen…',
-    copied: 'Texto copiado',
     savedHint: 'Imagen guardada — abre Instagram o tu galería para publicar',
     shareError: 'No se pudo compartir, inténtalo de nuevo',
     imageError: 'No se pudo cargar la imagen',
@@ -211,16 +194,13 @@ const LABELS: Record<AppLanguage, ShareSheetLabels> = {
     beltHint: 'Ceinture',
     stripes: 'barrettes',
     qrCode: 'QR code',
-    qrHint: 'Ajoute un lien scannable vers l’app',
-    on: 'Activé',
     share: 'Partager',
     savePng: 'Enregistrer PNG',
+    savePdf: 'Enregistrer PDF',
     whatsapp: 'WhatsApp',
-    twitter: 'X',
-    copyCaption: 'Copier le texte',
-    exportText: 'Exporter en texte',
+    x: 'X',
+    instagram: 'Instagram',
     rendering: 'Création de l’image…',
-    copied: 'Texte copié',
     savedHint: 'Image enregistrée — ouvrez Instagram ou votre galerie',
     shareError: 'Échec du partage, réessayez',
     imageError: 'Impossible de charger cette image',
@@ -291,7 +271,7 @@ function CollapsibleSection({
 }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="rounded-xl bg-zinc-800/40 border border-zinc-800">
+    <div className="rounded-xl bg-zinc-900/40 border border-zinc-800/60">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-2.5 px-3 py-3 text-left"
@@ -312,6 +292,56 @@ function CollapsibleSection({
       </button>
       {open && <div className="px-3 pb-3 pt-0.5 space-y-2">{children}</div>}
     </div>
+  )
+}
+
+function SocialIcon({ app }: { app: 'whatsapp' | 'x' | 'instagram' }) {
+  if (app === 'whatsapp') {
+    return (
+      <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true">
+        <circle cx="12" cy="12" r="11" fill="#25D366" />
+        <path
+          d="M7.6 18.2l.8-3A6.2 6.2 0 1 1 18 9.8a6.2 6.2 0 0 1-8.8 5.5l-1.6 2.9z"
+          fill="#fff"
+        />
+        <path
+          d="M14.7 12.9c-.2-.1-1-.5-1.2-.5-.1-.1-.2-.1-.3.1-.1.2-.4.5-.5.6-.1.1-.2.1-.4 0-.2-.1-.8-.3-1.5-.9-.6-.5-.9-1.1-1-1.3-.1-.2 0-.2.1-.3.1-.1.2-.2.2-.3.1-.1.1-.2.1-.3 0-.1 0-.2 0-.3 0-.1-.3-.8-.5-1.1-.1-.2-.2-.2-.3-.2h-.3c-.1 0-.3.1-.4.2-.1.2-.5.5-.5 1.2s.5 1.4.6 1.5c.1.1 1 1.7 2.5 2.3.3.2.6.3.8.3.3.1.6.1.9.1.3 0 1-.4 1.1-.8.1-.4.1-.7.1-.8-.1-.2-.2-.2-.3-.3z"
+          fill="#25D366"
+        />
+      </svg>
+    )
+  }
+  if (app === 'instagram') {
+    return (
+      <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true">
+        <defs>
+          <linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#feda75" />
+            <stop offset="45%" stopColor="#d62976" />
+            <stop offset="100%" stopColor="#4f5bd5" />
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="22" height="22" rx="6" fill="url(#ig)" />
+        <circle
+          cx="12"
+          cy="12"
+          r="5"
+          fill="none"
+          stroke="#fff"
+          strokeWidth="2"
+        />
+        <circle cx="17.5" cy="6.5" r="1.2" fill="#fff" />
+      </svg>
+    )
+  }
+  return (
+    <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true">
+      <rect x="1" y="1" width="22" height="22" rx="6" fill="#111827" />
+      <path
+        d="M6 6h2.8l4 5.3L16.9 6H19l-5.2 6.8L19 18h-2.8l-4.2-5.5L7 18H5l5.3-6.9L6 6z"
+        fill="#fff"
+      />
+    </svg>
   )
 }
 
@@ -531,6 +561,18 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
     }
   }
 
+  const doSavePdf = async (opts: ShareCardOptions) => {
+    setBusy(true)
+    try {
+      const blob = await renderShareCard(sessionData, language, locale, opts)
+      await downloadSessionPdf(blob, sessionData.session)
+    } catch {
+      showToast(L.shareError)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const doSave = async (opts: ShareCardOptions) => {
     setBusy(true)
     try {
@@ -583,20 +625,6 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
     }
     if (action === 'share') void doShare(opts)
     else if (action === 'save') void doSave(opts)
-  }
-
-  const handleCopy = async () => {
-    if (await copyToClipboard(caption)) showToast(L.copied)
-  }
-
-  const handleExportText = async () => {
-    if (busy) return
-    setBusy(true)
-    try {
-      await exportSession(sessionData, language, locale)
-    } finally {
-      setBusy(false)
-    }
   }
 
   const updateName = (value: string) => {
@@ -720,14 +748,14 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => cameraInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-sm font-semibold text-zinc-200 active:bg-zinc-700"
+                className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-zinc-900 text-sm font-semibold text-zinc-200 border border-zinc-700/70 active:bg-zinc-800"
               >
                 <Camera size={16} strokeWidth={2} />
                 {L.camera}
               </button>
               <button
                 onClick={() => galleryInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-sm font-semibold text-zinc-200 active:bg-zinc-700"
+                className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-zinc-900 text-sm font-semibold text-zinc-200 border border-zinc-700/70 active:bg-zinc-800"
               >
                 <ImageIcon size={16} strokeWidth={2} />
                 {L.gallery}
@@ -828,23 +856,23 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
 
           {/* QR code */}
           <CollapsibleSection
-            icon={<QrCode size={16} strokeWidth={2} />}
+            icon={<ImageIcon size={16} strokeWidth={2} />}
             title={L.qrCode}
-            summary={showQr ? L.on : undefined}
+            summary={showQr ? '•' : undefined}
           >
             <button
               onClick={() => setShowQr((v) => !v)}
               className="w-full flex items-center gap-3 py-1 text-left"
             >
               <span className="flex-1 text-sm font-semibold text-zinc-200">
-                {L.qrHint}
+                {L.qrCode}
               </span>
               <Toggle on={showQr} />
             </button>
           </CollapsibleSection>
 
           {/* Primary actions */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="grid grid-cols-3 gap-2 pt-1">
             <button
               onClick={handleShare}
               disabled={busy || rendering}
@@ -865,46 +893,46 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
               <Download size={16} strokeWidth={2.5} />
               {L.savePng}
             </button>
+            <button
+              onClick={() => {
+                if (busy || rendering) return
+                void doSavePdf(exportOptions())
+              }}
+              disabled={busy || rendering}
+              className="flex items-center justify-center gap-2 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-sm font-bold text-zinc-100 active:bg-zinc-700 disabled:opacity-50"
+            >
+              <Download size={16} strokeWidth={2.5} />
+              {L.savePdf}
+            </button>
           </div>
 
           {/* Quick share targets */}
           <div className="grid grid-cols-3 gap-2">
             <button
-              onClick={() => openWhatsAppShare(caption)}
-              className="flex flex-col items-center gap-1 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 active:bg-zinc-700"
+              onClick={handleShare}
+              aria-label={L.whatsapp}
+              title={L.whatsapp}
+              className="flex items-center justify-center py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 active:bg-zinc-700"
             >
-              <MessageCircle
-                size={18}
-                strokeWidth={2}
-                className="text-green-400"
-              />
-              {L.whatsapp}
+              <SocialIcon app="whatsapp" />
             </button>
             <button
-              onClick={() => openTwitterShare(caption)}
-              className="flex flex-col items-center gap-1 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 active:bg-zinc-700"
+              onClick={handleShare}
+              aria-label={L.x}
+              title={L.x}
+              className="flex items-center justify-center py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 active:bg-zinc-700"
             >
-              <Send size={18} strokeWidth={2} className="text-sky-400" />
-              {L.twitter}
+              <SocialIcon app="x" />
             </button>
             <button
-              onClick={() => void handleCopy()}
-              className="flex flex-col items-center gap-1 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 active:bg-zinc-700"
+              onClick={handleShare}
+              aria-label={L.instagram}
+              title={L.instagram}
+              className="flex items-center justify-center py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 active:bg-zinc-700"
             >
-              <Copy size={18} strokeWidth={2} className="text-gold" />
-              {L.copyCaption}
+              <SocialIcon app="instagram" />
             </button>
           </div>
-
-          {/* Text export fallback */}
-          <button
-            onClick={() => void handleExportText()}
-            disabled={busy}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-zinc-400 active:text-zinc-200 disabled:opacity-50"
-          >
-            <FileText size={15} strokeWidth={2} />
-            {L.exportText}
-          </button>
         </div>
 
         {toast && (

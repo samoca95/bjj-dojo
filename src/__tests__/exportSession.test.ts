@@ -4,9 +4,25 @@ import {
   buildSessionHtml,
   buildShareCaption,
   exportSession,
+  shareSessionImage,
+  downloadSessionPdf,
   type SessionExportData,
 } from '../utils/exportSession'
 import type { Session, Technique } from '../types'
+
+const pdfSpies = vi.hoisted(() => ({
+  addImage: vi.fn(),
+  save: vi.fn(),
+}))
+
+vi.mock('jspdf', () => ({
+  jsPDF: vi.fn(function MockJsPdf() {
+    return {
+      addImage: pdfSpies.addImage,
+      save: pdfSpies.save,
+    }
+  }),
+}))
 
 function makeSession(overrides?: Partial<Session>): Session {
   return {
@@ -222,6 +238,8 @@ describe('exportSession', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
+    pdfSpies.addImage.mockReset()
+    pdfSpies.save.mockReset()
     delete (URL as Partial<typeof URL>).createObjectURL
     delete (URL as Partial<typeof URL>).revokeObjectURL
   })
@@ -291,5 +309,48 @@ describe('exportSession', () => {
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock-url')
 
     vi.useRealTimers()
+  })
+})
+
+describe('image and PDF export helpers', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+    pdfSpies.addImage.mockReset()
+    pdfSpies.save.mockReset()
+  })
+
+  it('shares a PNG file via Web Share API when available', async () => {
+    const share = vi.fn().mockResolvedValue(undefined)
+    const canShare = vi.fn().mockReturnValue(true)
+    vi.stubGlobal('navigator', { share, canShare })
+    const session = makeSession()
+    const result = await shareSessionImage(
+      new Blob(['png'], { type: 'image/png' }),
+      session,
+      'caption',
+      'en',
+    )
+    expect(result).toEqual({ method: 'share' })
+    expect(share).toHaveBeenCalledTimes(1)
+    const arg = share.mock.calls[0][0]
+    expect(arg.files).toHaveLength(1)
+    expect(arg.files[0].type).toBe('image/png')
+  })
+
+  it('creates a PDF from a rendered PNG image', async () => {
+    vi.stubGlobal(
+      'createImageBitmap',
+      vi.fn().mockResolvedValue({ width: 1080, height: 1080, close: vi.fn() }),
+    )
+    await downloadSessionPdf(
+      new Blob(['png'], { type: 'image/png' }),
+      makeSession(),
+    )
+    expect(pdfSpies.addImage).toHaveBeenCalledTimes(1)
+    expect(pdfSpies.save).toHaveBeenCalledTimes(1)
+    expect(pdfSpies.save.mock.calls[0][0]).toMatch(
+      /^bjj-session-\d{4}-\d{2}-\d{2}\.pdf$/,
+    )
   })
 })
