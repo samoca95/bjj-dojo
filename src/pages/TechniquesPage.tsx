@@ -91,9 +91,7 @@ function TechniqueRow({
         className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity"
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-semibold text-zinc-100 text-sm">
-            {name}
-          </span>
+          <span className="font-semibold text-zinc-100 text-sm">{name}</span>
           <DifficultyBadge difficulty={technique.difficulty} />
           {practiceCount > 0 && (
             <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300">
@@ -403,7 +401,14 @@ export default function TechniquesPage() {
       })
       return { items: filtered, freqMap }
     },
-    [debouncedSearch, categoryId, favoritesOnly, difficultyFilter, sortBy, language],
+    [
+      debouncedSearch,
+      categoryId,
+      favoritesOnly,
+      difficultyFilter,
+      sortBy,
+      language,
+    ],
     null as null | { items: Technique[]; freqMap: Map<number, number> },
   )
 

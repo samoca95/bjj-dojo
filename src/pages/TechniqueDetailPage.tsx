@@ -317,7 +317,9 @@ export default function TechniqueDetailPage() {
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="font-bold text-zinc-100 truncate">{getTechniqueName(technique, language)}</h1>
+          <h1 className="font-bold text-zinc-100 truncate">
+            {getTechniqueName(technique, language)}
+          </h1>
           {(technique.aliases?.length ?? 0) > 0 && (
             <p className="text-xs text-zinc-500 truncate">
               {technique.aliases!.join(' · ')}

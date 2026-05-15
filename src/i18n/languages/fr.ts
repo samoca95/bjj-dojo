@@ -71,7 +71,8 @@ const FR_TRANSLATIONS = {
   Given: 'Réussies',
   Received: 'Subies',
   NOTES: 'NOTES',
-  'What clicked? What to fix?': "Qu'est-ce qui a bien marché ? Quoi améliorer ?",
+  'What clicked? What to fix?':
+    "Qu'est-ce qui a bien marché ? Quoi améliorer ?",
   'What did you work on? Any insights?':
     'Sur quoi avez-vous travaillé ? Des observations ?',
   'Select Techniques': 'Sélectionner des techniques',
