@@ -783,7 +783,7 @@ export default function HomePage() {
               )}
             />
           </div>
-          <div className="grid grid-cols-[1fr_1fr_1.2fr] gap-3 items-end">
+          <div className="grid grid-cols-[1fr_1fr_1.55fr] gap-3 items-end">
             <div>
               <div className="text-xl font-bold text-zinc-100 tabular-nums flex items-center gap-1">
                 {tapCounts?.received ?? 0}
@@ -798,24 +798,26 @@ export default function HomePage() {
               </div>
               <div className="text-xs text-zinc-500">{t('Given')}</div>
             </div>
-            <div className="space-y-2">
-              <div className="text-xl font-bold text-sky-400 tabular-nums">
-                {givenTapTrend.avgGiven.toFixed(1)}
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <div className="text-xl font-bold text-sky-400 tabular-nums">
+                  {givenTapTrend.avgGiven.toFixed(1)}
+                </div>
+                <div className="text-xs text-zinc-500">{t('Avg')}</div>
               </div>
-              <div className="text-xs text-zinc-500">{t('Avg')}</div>
               <div className="flex items-end gap-1.5 pt-0.5">
                 {givenTapTrend.paddedCounts.map((count, idx) => (
                   <div
                     key={idx}
-                    className="h-8 w-3 overflow-hidden rounded-[3px] bg-zinc-700/70"
+                    className="relative h-8 w-3 overflow-hidden rounded-[3px] border border-sky-400/90 bg-transparent"
                   >
                     <div
-                      className="w-full rounded-[3px]"
+                      className="absolute bottom-0 left-0 w-full rounded-[2px]"
                       style={{
                         height: `${Math.round((count / givenTapTrend.maxGiven) * 100)}%`,
-                        backgroundColor: '#38bdf8',
+                        backgroundColor: 'rgba(56,189,248,0.2)',
                         backgroundImage:
-                          'repeating-linear-gradient(-45deg, rgba(255,255,255,0.32) 0 2px, transparent 2px 5px)',
+                          'repeating-linear-gradient(-45deg, rgba(56,189,248,0.95) 0 2px, transparent 2px 5px)',
                       }}
                     />
                   </div>
@@ -1024,64 +1026,52 @@ export default function HomePage() {
     t('Consecutive weeks with at least one logged training session.'),
   ].join('\n\n')
 
+  const showStreaks = cardVisible('gamification', 'streaks')
+
   const levelCard = (
     <div key="level" className="bg-zinc-900 rounded-2xl px-4 py-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
+        {/* Level label */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <Trophy size={14} className="text-gold" />
           <span className="text-sm font-bold tabular-nums text-zinc-100">
             {levelInfo.level}
           </span>
           <ScoreLabel label={t('Level')} description={levelHelpDescription} />
         </div>
+        {/* XP counter — fills available space */}
         <span
-          className="text-sm text-zinc-500 tabular-nums flex items-center gap-1.5"
+          className="flex-1 text-sm text-zinc-500 tabular-nums flex items-center gap-1.5"
           aria-label={`${levelInfo.xp} ${t('XP')} total`}
         >
           <Sparkles size={14} className="text-gold" />
           {levelInfo.xpIntoLevel}/{levelInfo.xpForNext} {t('XP')}
         </span>
+        {/* Streak badges — inline, same row */}
+        {showStreaks && (
+          <div className="flex items-center gap-2 rounded-lg bg-zinc-950/80 px-2.5 py-1 shrink-0">
+            <span className="flex items-center gap-1 text-sky-400 text-sm font-bold tabular-nums leading-none">
+              {dailyStreak.current}
+              <span className="text-[10px] font-semibold uppercase text-sky-400/70">
+                {t('d.')}
+              </span>
+              <Flame size={13} strokeWidth={1.75} />
+            </span>
+            <span className="flex items-center gap-1 text-orange-400 text-sm font-bold tabular-nums leading-none">
+              {trainingWeekStreak}
+              <span className="text-[10px] font-semibold uppercase text-orange-400/70">
+                {t('w.')}
+              </span>
+              <CalendarDays size={13} strokeWidth={1.75} />
+            </span>
+          </div>
+        )}
       </div>
       <div className="h-1.5 mt-1.5 rounded-full bg-zinc-800 overflow-hidden">
         <div
           className="h-full bg-gold"
           style={{ width: `${levelInfo.pct}%` }}
         />
-      </div>
-    </div>
-  )
-
-  const streaksCard = (
-    <div key="streaks" className="bg-zinc-900 rounded-2xl px-4 py-3">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex items-center justify-between rounded-xl bg-zinc-950/70 px-3 py-2">
-          <div>
-            <div className="text-xs text-zinc-500">{t('Daily streak')}</div>
-            <div className="text-lg font-bold text-sky-400 mt-0.5 tabular-nums">
-              {dailyStreak.current}
-              <span className="text-[10px] uppercase tracking-wide text-sky-400/70 ml-1">
-                {t('d.')}
-              </span>
-            </div>
-          </div>
-          <Flame size={18} className="text-sky-400" strokeWidth={1.75} />
-        </div>
-        <div className="flex items-center justify-between rounded-xl bg-zinc-950/70 px-3 py-2">
-          <div>
-            <div className="text-xs text-zinc-500">{t('Weekly streak')}</div>
-            <div className="text-lg font-bold text-orange-400 mt-0.5 tabular-nums">
-              {trainingWeekStreak}
-              <span className="text-[10px] uppercase tracking-wide text-orange-400/70 ml-1">
-                {t('w.')}
-              </span>
-            </div>
-          </div>
-          <CalendarDays
-            size={18}
-            className="text-orange-400"
-            strokeWidth={1.75}
-          />
-        </div>
       </div>
     </div>
   )
@@ -1105,12 +1095,6 @@ export default function HomePage() {
     fullWidth?: boolean
   }[] = [
     { id: 'level', labelKey: 'Level', node: levelCard, fullWidth: true },
-    {
-      id: 'streaks',
-      labelKey: 'Streaks',
-      node: streaksCard,
-      fullWidth: true,
-    },
     {
       id: 'achievements',
       labelKey: 'Achievements',

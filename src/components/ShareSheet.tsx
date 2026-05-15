@@ -269,7 +269,7 @@ function Switch({
     >
       <span
         className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-          checked ? 'translate-x-[1.875rem]' : 'translate-x-0'
+          checked ? 'translate-x-[1.125rem]' : 'translate-x-0'
         }`}
       />
     </button>
@@ -839,6 +839,34 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
             }
           />
 
+          {/* Quick share targets */}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={handleShare}
+              aria-label={L.whatsapp}
+              title={L.whatsapp}
+              className="flex items-center justify-center py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 active:bg-zinc-700"
+            >
+              <SocialIcon app="whatsapp" />
+            </button>
+            <button
+              onClick={handleShare}
+              aria-label={L.x}
+              title={L.x}
+              className="flex items-center justify-center py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 active:bg-zinc-700"
+            >
+              <SocialIcon app="x" />
+            </button>
+            <button
+              onClick={handleShare}
+              aria-label={L.instagram}
+              title={L.instagram}
+              className="flex items-center justify-center py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 active:bg-zinc-700"
+            >
+              <SocialIcon app="instagram" />
+            </button>
+          </div>
+
           {/* Primary actions */}
           <div className="grid grid-cols-3 gap-2 pt-1">
             <button
@@ -871,34 +899,6 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
             >
               <Download size={16} strokeWidth={2.5} />
               {L.savePdf}
-            </button>
-          </div>
-
-          {/* Quick share targets */}
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={handleShare}
-              aria-label={L.whatsapp}
-              title={L.whatsapp}
-              className="flex items-center justify-center py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 active:bg-zinc-700"
-            >
-              <SocialIcon app="whatsapp" />
-            </button>
-            <button
-              onClick={handleShare}
-              aria-label={L.x}
-              title={L.x}
-              className="flex items-center justify-center py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 active:bg-zinc-700"
-            >
-              <SocialIcon app="x" />
-            </button>
-            <button
-              onClick={handleShare}
-              aria-label={L.instagram}
-              title={L.instagram}
-              className="flex items-center justify-center py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 active:bg-zinc-700"
-            >
-              <SocialIcon app="instagram" />
             </button>
           </div>
         </div>
