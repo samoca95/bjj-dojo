@@ -94,7 +94,14 @@ export default function AchievementsCard({
                 <CircleHelp size={13} />
               </button>
               {showInfo && (
-                <div className="absolute left-0 z-20 mt-1 w-56 rounded-xl border border-zinc-700 bg-zinc-900 p-2.5 text-[11px] leading-relaxed text-zinc-300 shadow-lg">
+                <div className="absolute left-0 z-20 mt-1 w-56 rounded-xl border border-zinc-700 bg-zinc-900 p-2.5 pr-8 text-[11px] leading-relaxed text-zinc-300 shadow-lg">
+                  <button
+                    onClick={() => setShowInfo(false)}
+                    aria-label="Close help"
+                    className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full border border-zinc-600 text-zinc-400 flex items-center justify-center active:bg-zinc-800"
+                  >
+                    <X size={11} />
+                  </button>
                   {infoText}
                 </div>
               )}

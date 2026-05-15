@@ -27,9 +27,7 @@ export default function SettingsGoalsPage() {
   void tick
   const levelCards = [
     { id: 'level', label: t('Level') },
-    { id: 'xp', label: t('XP') },
-    { id: 'dailyStreak', label: t('Daily streak') },
-    { id: 'weeklyStreak', label: t('Weekly streak') },
+    { id: 'streaks', label: t('Streaks') },
     { id: 'achievements', label: t('Achievements') },
   ]
 
