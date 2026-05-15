@@ -1076,7 +1076,11 @@ export default function HomePage() {
               </span>
             </div>
           </div>
-          <CalendarDays size={18} className="text-orange-400" strokeWidth={1.75} />
+          <CalendarDays
+            size={18}
+            className="text-orange-400"
+            strokeWidth={1.75}
+          />
         </div>
       </div>
     </div>

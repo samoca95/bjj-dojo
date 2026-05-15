@@ -582,7 +582,12 @@ export async function renderShareCard(
   const inlineBadge = contentW - badgeW - 24 >= 340
   const dateMaxW = inlineBadge ? contentW - badgeW - 24 : contentW
   ctx.font = `800 54px ${FONT}`
-  const dateLines = wrapText(ctx, formatCardDate(session.date, locale), dateMaxW, 2)
+  const dateLines = wrapText(
+    ctx,
+    formatCardDate(session.date, locale),
+    dateMaxW,
+    2,
+  )
   const dateStartY = y
   for (const line of dateLines) {
     ctx.fillText(line, PAD, y)

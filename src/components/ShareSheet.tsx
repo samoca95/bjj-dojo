@@ -309,7 +309,12 @@ function SocialIcon({ app }: { app: 'whatsapp' | 'x' | 'instagram' }) {
         ? instagramLogo
         : xLogo
   return (
-    <img src={src} alt="" className="h-6 w-6 object-contain" aria-hidden="true" />
+    <img
+      src={src}
+      alt=""
+      className="h-6 w-6 object-contain"
+      aria-hidden="true"
+    />
   )
 }
 
