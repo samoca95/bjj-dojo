@@ -216,6 +216,7 @@ export type TranslationKey =
   | 'Level'
   | 'XP'
   | 'Your level increases as your total XP grows. Levels get progressively harder to reach.'
+  | 'Levels and XP:\n• Level 1 starts at 0 XP.\n• Each next level needs 100 XP more than the previous one (L2: 100, L3: 300, L4: 600, L5: 1000...).\nXP gains:\n• 1 XP each 15 min on the mat.\n• +5 XP per tap given.\n• +2 XP per logged session.\nStreaks:\n• Daily streak = consecutive days with at least one logged session.\n• Weekly streak = consecutive weeks with at least one logged session.'
   | 'XP comes from mat time, submissions given, and sessions logged. Mat time gives 1 XP every 15 minutes.'
   | '1 XP each 15 min • +5 per tap given • +2 per session'
   | 'Consecutive days with at least one logged training session.'

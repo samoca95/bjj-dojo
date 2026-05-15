@@ -1055,7 +1055,12 @@ export default function HomePage() {
     fullWidth?: boolean
   }[] = [
     { id: 'level', labelKey: 'Level', node: levelCard, fullWidth: true },
-    { id: 'streaks', labelKey: 'Daily streak', node: streaksCard, fullWidth: true },
+    {
+      id: 'streaks',
+      labelKey: 'Daily streak',
+      node: streaksCard,
+      fullWidth: true,
+    },
     {
       id: 'achievements',
       labelKey: 'Achievements',
