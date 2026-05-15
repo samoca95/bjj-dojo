@@ -76,4 +76,20 @@ describe('ShareSheet', () => {
     expect(screen.getByRole('button', { name: 'Save PNG' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save PDF' })).toBeInTheDocument()
   })
+
+  it('shows minimalist switches for belt branding and QR code', () => {
+    render(
+      <ShareSheet
+        data={makeData()}
+        language="en"
+        locale="en-US"
+        onClose={() => {}}
+      />,
+    )
+
+    expect(
+      screen.getByRole('switch', { name: 'Show belt & name' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('switch', { name: 'QR code' })).toBeInTheDocument()
+  })
 })

@@ -126,7 +126,7 @@ const ES_TRANSLATIONS = {
   Filter: 'Filtrar',
   FILTERS: 'FILTROS',
   'Weekly goal': 'Meta semanal',
-  'Avg Given': 'Prom. Aplicadas',
+  Avg: 'Prom.',
   'Avg taps': 'Prom. taps',
   weeks: 'semanas',
   'w.': 's.',
@@ -136,8 +136,8 @@ const ES_TRANSLATIONS = {
   'No focus techniques selected': 'No hay técnicas de enfoque seleccionadas',
   'Given submissions': 'Sumisiones aplicadas',
   Submissions: 'Sumisiones',
-  'Given: total submissions you finished.\nReceived: total submissions you got caught in.\nAvg Given: average Given submissions across your last 5 logged sessions.\nThe 5 blue bars show Given submissions for each of those sessions (oldest to newest).':
-    'Aplicadas: total de sumisiones que finalizaste.\nRecibidas: total de sumisiones en las que te sometieron.\nProm. Aplicadas: promedio de sumisiones aplicadas en tus últimas 5 sesiones registradas.\nLas 5 barras azules muestran las sumisiones aplicadas en cada una de esas sesiones (de la más antigua a la más reciente).',
+  'Received: total submissions you got caught in.\nGiven: total submissions you finished.\nAvg: average Given submissions across your last 5 logged sessions.\nThe 5 blue bars show Given submissions for each of those sessions (oldest to newest).':
+    'Recibidas: total de sumisiones en las que te sometieron.\nAplicadas: total de sumisiones que finalizaste.\nProm.: promedio de sumisiones aplicadas en tus últimas 5 sesiones registradas.\nLas 5 barras azules muestran las sumisiones aplicadas en cada una de esas sesiones (de la más antigua a la más reciente).',
   Icons: 'Iconos',
   Emoji: 'Emoji',
   Suggested: 'Sugeridos',

@@ -130,7 +130,7 @@ const FR_TRANSLATIONS = {
   Filter: 'Filtrer',
   FILTERS: 'FILTRES',
   'Weekly goal': 'Objectif hebdomadaire',
-  'Avg Given': 'Moy. Réussies',
+  Avg: 'Moy.',
   'Avg taps': 'Moy. soumissions',
   weeks: 'semaines',
   'w.': 's.',
@@ -140,8 +140,8 @@ const FR_TRANSLATIONS = {
   'No focus techniques selected': 'Aucune technique cible sélectionnée',
   'Given submissions': 'Soumissions réussies',
   Submissions: 'Soumissions',
-  'Given: total submissions you finished.\nReceived: total submissions you got caught in.\nAvg Given: average Given submissions across your last 5 logged sessions.\nThe 5 blue bars show Given submissions for each of those sessions (oldest to newest).':
-    'Réussies : total des soumissions que vous avez terminées.\nSubies : total des soumissions que vous avez subies.\nMoy. Réussies : moyenne des soumissions réussies sur vos 5 dernières sessions enregistrées.\nLes 5 barres bleues montrent les soumissions réussies pour chacune de ces sessions (de la plus ancienne à la plus récente).',
+  'Received: total submissions you got caught in.\nGiven: total submissions you finished.\nAvg: average Given submissions across your last 5 logged sessions.\nThe 5 blue bars show Given submissions for each of those sessions (oldest to newest).':
+    'Subies : total des soumissions que vous avez subies.\nRéussies : total des soumissions que vous avez terminées.\nMoy. : moyenne des soumissions réussies sur vos 5 dernières sessions enregistrées.\nLes 5 barres bleues montrent les soumissions réussies pour chacune de ces sessions (de la plus ancienne à la plus récente).',
   Icons: 'Icônes',
   Emoji: 'Émoji',
   Suggested: 'Suggéré',
