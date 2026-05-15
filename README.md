@@ -15,12 +15,14 @@ No account required. No backend required.
 BJJ Dojo is a PWA, so you can install it from your browser and use it like any other app.
 
 ### Android (Chrome)
+
 1. Open **https://samoca95.github.io/bjj-dojo/**
 2. Tap the browser menu (**⋮**)
 3. Tap **Install app** / **Add to Home screen**
 4. Confirm install
 
 ### iPhone (Safari)
+
 1. Open **https://samoca95.github.io/bjj-dojo/**
 2. Tap **Share** (square with arrow)
 3. Tap **Add to Home Screen**
@@ -38,25 +40,30 @@ Once installed, open BJJ Dojo from your home screen just like any other app.
 ## 🛠️ Core Features
 
 ### 📝 Session Tracking
+
 - Log date, duration, session type, energy, notes, taps, and techniques.
 - Keep clubs organized and select the right one per session.
 
 ### 📚 Technique Library
+
 - Browse and search techniques quickly.
 - Filter by category and difficulty.
 - Create custom techniques and map follow-ups/counters.
 
 ### ⚙️ Personalization
+
 - Set belt rank and stripes.
 - Customize category icons (emoji or built-in icons).
 - Reorder home sections and set weekly mat-time goals.
 - Switch theme and language in Settings.
 
 ### 💾 Backup & Recovery
+
 - Export your data to JSON.
 - Import backups to restore your progress on the same or another device.
 
 ### 📡 Offline-First Experience
+
 - Works without internet after initial load.
 - Perfect for gyms with unstable connection.
 
