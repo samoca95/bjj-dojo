@@ -2,6 +2,7 @@ import type { Session, Technique } from '../types'
 import { SESSION_TYPE_LABELS } from '../types'
 import type { AppLanguage } from '../i18n'
 import { sessionTypeLabel } from '../i18n'
+import { jsPDF } from 'jspdf'
 
 export interface SessionExportData {
   session: Session
@@ -422,28 +423,63 @@ export async function shareSessionImage(
   return { method: 'download' }
 }
 
-export function openWhatsAppShare(text: string) {
-  window.open(
-    `https://wa.me/?text=${encodeURIComponent(text)}`,
-    '_blank',
-    'noopener',
-  )
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(new Error('Could not read image'))
+    reader.readAsDataURL(blob)
+  })
 }
 
-export function openTwitterShare(text: string) {
-  window.open(
-    `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
-    '_blank',
-    'noopener',
-  )
-}
-
-export async function copyToClipboard(text: string): Promise<boolean> {
-  try {
-    if (typeof navigator === 'undefined' || !navigator.clipboard) return false
-    await navigator.clipboard.writeText(text)
-    return true
-  } catch {
-    return false
+async function getImageSize(
+  blob: Blob,
+): Promise<{ width: number; height: number }> {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(blob)
+      const size = { width: bitmap.width, height: bitmap.height }
+      bitmap.close()
+      return size
+    } catch {
+      // Fall through to <img> loader.
+    }
   }
+
+  const url = URL.createObjectURL(blob)
+  try {
+    return await new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () =>
+        resolve({
+          width: img.naturalWidth || 1080,
+          height: img.naturalHeight || 1080,
+        })
+      img.onerror = () => reject(new Error('Could not load image size'))
+      img.src = url
+    })
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+/**
+ * Creates and downloads a one-page PDF containing the rendered session PNG.
+ */
+export async function downloadSessionPdf(
+  blob: Blob,
+  session: Session,
+): Promise<void> {
+  const [{ width, height }, imageDataUrl] = await Promise.all([
+    getImageSize(blob),
+    blobToDataUrl(blob),
+  ])
+  const orientation = width >= height ? 'landscape' : 'portrait'
+  const pdf = new jsPDF({
+    orientation,
+    unit: 'px',
+    format: [width, height],
+  })
+  pdf.addImage(imageDataUrl, 'PNG', 0, 0, width, height, undefined, 'FAST')
+  pdf.save(`${fileBaseName(session)}.pdf`)
 }
