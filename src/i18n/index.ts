@@ -106,6 +106,15 @@ export function getCategoryDescription(
   return pack.categoryContent[category.id]?.description ?? category.description
 }
 
+export function getTechniqueName(
+  technique: Technique,
+  language: AppLanguage,
+): string {
+  if (language === 'en' || technique.isCustom) return technique.name
+  const pack = getLanguagePack(language)
+  return pack.techniqueContent[technique.id]?.name ?? technique.name
+}
+
 export function getTechniqueDescription(
   technique: Technique,
   language: AppLanguage,

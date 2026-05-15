@@ -241,6 +241,7 @@ const FR_CATEGORY_CONTENT: LanguagePack['categoryContent'] = {
 const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
   // Guards (1xx)
   101: {
+    name: 'Garde Fermée',
     description:
       "Garde classique avec les jambes verrouillées derrière le dos de l'adversaire, contrôlant la posture et créant des angles d'attaque.",
     cues: [
@@ -251,6 +252,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   102: {
+    name: 'Demi-garde',
     description:
       "Une jambe piège une jambe de l'adversaire, offrant une rétention de garde et des opportunités de balayage.",
     cues: [
@@ -261,6 +263,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   103: {
+    name: 'Garde Papillon',
     description:
       "Garde assise utilisant les crochets (cous-de-pied) contre les cuisses de l'adversaire pour déséquilibrer et balayer.",
     cues: [
@@ -271,6 +274,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   104: {
+    name: 'Garde Araignée',
     description:
       "Saisir les manches de l'adversaire tout en utilisant les pieds sur les biceps pour contrôler la distance et attaquer.",
     cues: [
@@ -281,6 +285,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   105: {
+    name: 'Garde De La Riva',
     description:
       "Un crochet sur l'extérieur de la jambe de l'adversaire avec contrôle de la manche et de la cheville.",
     cues: [
@@ -291,6 +296,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   106: {
+    name: 'Garde en X',
     description:
       "Les deux crochets sous les cuisses de l'adversaire en forme de X, créant un déséquilibre extrême pour les balayages.",
     cues: [
@@ -301,6 +307,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   107: {
+    name: 'Garde Lasso',
     description:
       "Enrouler le bras dans un lasso avec la jambe pour immobiliser le bras et créer des angles d'attaque.",
     cues: [
@@ -311,6 +318,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   108: {
+    name: 'Rubber Guard',
     description:
       'Position de garde haute avec la jambe derrière la nuque, popularisée par Eddie Bravo.',
     cues: [
@@ -321,6 +329,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   109: {
+    name: 'Single Leg X (SLX)',
     description:
       "Un crochet entre les jambes de l'adversaire contrôlant une seule jambe pour les balayages et entrées en clé de jambe.",
     cues: [
@@ -331,6 +340,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   110: {
+    name: 'Worm Guard',
     description:
       'Variation De La Riva utilisant le revers enfilé autour de la jambe pour un contrôle extrême et des balayages.',
     cues: [
@@ -341,6 +351,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   111: {
+    name: 'Garde Z',
     description:
       'Un solide cadre de demi-garde avec bouclier de genou pour contrôler la distance et récupérer les attaques.',
     cues: [
@@ -351,6 +362,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   112: {
+    name: 'Garde K',
     description:
       'Variation de garde inversée utilisée pour entrer dans les enchevêtrements de jambes et les prises de dos.',
     cues: [
@@ -362,6 +374,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
   },
   // Guard Passing (2xx)
   201: {
+    name: 'Passage Toréador',
     description:
       'Utiliser des prises sur les genoux et chevilles pour balancer les jambes de côté et passer latéralement.',
     cues: [
@@ -372,6 +385,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   202: {
+    name: 'Double Passage en Dessous',
     description:
       'Placer les deux bras sous les jambes pour empiler et passer la garde.',
     cues: [
@@ -382,6 +396,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   203: {
+    name: 'Passage Par-dessus/Par-dessous',
     description:
       "Un bras au-dessus d'une jambe et l'autre sous l'autre, un puissant passage de pression.",
     cues: [
@@ -392,6 +407,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   204: {
+    name: 'Leg Drag',
     description:
       'Tirer une jambe à travers le corps tout en maintenant le contact de hanche pour créer un angle de passage.',
     cues: [
@@ -402,6 +418,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   205: {
+    name: 'Passage Genou au Sol',
     description:
       'Conduire le genou à travers la garde tout en contrôlant la hanche.',
     cues: [
@@ -412,6 +429,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   206: {
+    name: 'Smash Pass',
     description:
       "Empiler les jambes de l'adversaire en avançant pour les aplatir et passer.",
     cues: [
@@ -422,6 +440,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   207: {
+    name: 'Passage Toréador (variante)',
     description:
       'Saisir les deux chevilles et genoux et rediriger les jambes de chaque côté.',
     cues: [
@@ -432,6 +451,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   208: {
+    name: 'HQ / Headquarters',
     description:
       "Position de passage neutre à l'intérieur de la garde, utilisée pour contrôler et préparer les clés de jambe ou les passages.",
     cues: [
@@ -442,6 +462,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   209: {
+    name: 'Passage en Verrou',
     description:
       'Style de passage poitrine-hanche utilisant un verrou de corps serré pour aplatir et dégager les jambes.',
     cues: [
@@ -452,6 +473,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   210: {
+    name: 'Passage Long Step',
     description:
       'Mouvement de passage dynamique avec un grand pas autour de la garde pour exposer le contrôle latéral.',
     cues: [
@@ -463,6 +485,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
   },
   // Sweeps (3xx)
   301: {
+    name: 'Balayage de Hanche',
     description:
       "Poser la main et pousser la hanche vers l'avant depuis la garde fermée pour prendre la position supérieure.",
     cues: [
@@ -473,6 +496,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   302: {
+    name: 'Balayage en Ciseaux',
     description:
       "Utiliser un mouvement en ciseaux des jambes depuis la garde fermée pour renverser l'adversaire.",
     cues: [
@@ -483,6 +507,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   303: {
+    name: 'Balayage Pendule',
     description:
       'Depuis la garde fermée, accrocher une jambe et balayer avec un mouvement de pendule.',
     cues: [
@@ -493,6 +518,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   304: {
+    name: 'Balayage Papillon',
     description:
       "Utiliser les crochets papillon pour déséquilibrer l'adversaire et le balayer de côté.",
     cues: [
@@ -503,6 +529,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   305: {
+    name: 'Balayage Garde en X',
     description:
       "Balayer depuis la garde en X en étendant les jambes pour faire tomber l'adversaire vers l'avant ou l'arrière.",
     cues: [
@@ -513,6 +540,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   306: {
+    name: 'Berimbolo',
     description:
       'Une inversion tournante depuis De La Riva pour prendre le dos ou gagner une position dominante.',
     cues: [
@@ -523,6 +551,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   307: {
+    name: 'Balayage De La Riva',
     description:
       'Divers balayages depuis la garde De La Riva attaquant la jambe proche ou lointaine.',
     cues: [
@@ -533,6 +562,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   308: {
+    name: 'Balayage Trépied',
     description:
       "Utiliser le pied sur la hanche et le pied sur le bicep pour balayer l'adversaire.",
     cues: [
@@ -543,6 +573,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   309: {
+    name: 'Balayage du Bûcheron',
     description:
       "Balayage depuis la garde assise en soulevant une jambe et en coupant la jambe d'appui.",
     cues: [
@@ -553,6 +584,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   310: {
+    name: 'Balayage Globe',
     description:
       "Balayage flottant depuis la garde ouverte qui élève l'adversaire au-dessus avant la transition supérieure.",
     cues: [
@@ -564,6 +596,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
   },
   // Submissions (4xx)
   401: {
+    name: 'Armbar',
     description:
       "Hyperextension de l'articulation du coude en contrôlant le bras à travers le corps — appliqué depuis de nombreuses positions.",
     cues: [
@@ -574,6 +607,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   402: {
+    name: 'Triangle',
     description:
       'Verrouiller la tête et le bras avec les jambes en figure 4 pour couper le flux sanguin vers le cerveau.',
     cues: [
@@ -584,6 +618,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   403: {
+    name: 'Kimura',
     description:
       "Une prise en figure 4 sur le poignet faisant pivoter l'articulation de l'épaule — appliqué depuis de nombreuses positions.",
     cues: [
@@ -594,6 +629,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   404: {
+    name: 'Omoplata',
     description:
       "Clé d'épaule utilisant les jambes pour contrôler le bras et faire pivoter l'épaule.",
     cues: [
@@ -604,6 +640,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   405: {
+    name: 'Étranglement de Dos',
     description:
       'Étranglement sanguin depuis le dos — bras sous le menton, bras derrière la tête.',
     cues: [
@@ -614,6 +651,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   406: {
+    name: 'Guillotine',
     description:
       'Bras autour du cou coupant le flux sanguin, appliqué debout ou depuis la garde.',
     cues: [
@@ -624,6 +662,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   407: {
+    name: 'Heel Hook Extérieur',
     description:
       "Pivoter le talon vers l'extérieur pour attaquer les structures latérales du genou.",
     cues: [
@@ -634,6 +673,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   408: {
+    name: 'Heel Hook Intérieur',
     description:
       "Pivoter le talon vers l'intérieur pour attaquer les structures médiales du genou — extrêmement dangereux.",
     cues: [
@@ -644,6 +684,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   409: {
+    name: 'Clé de Cheville',
     description:
       "Appliquer une pression contre le tendon d'Achille pour attaquer la cheville.",
     cues: [
@@ -654,6 +695,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   410: {
+    name: 'Kneebar',
     description:
       "Hyperextension de l'articulation du genou, similaire à un armbar mais sur la jambe.",
     cues: [
@@ -664,6 +706,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   411: {
+    name: 'Darce',
     description:
       'Étranglement bras-dedans utilisant une figure 4 à travers le cou, appliqué depuis la tortue ou la garde.',
     cues: [
@@ -674,6 +717,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   412: {
+    name: 'Anaconda',
     description:
       'Similaire au Darce mais avec une position de bras différente, souvent depuis le headlock frontal.',
     cues: [
@@ -684,6 +728,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   413: {
+    name: 'Arc-en-ciel (Bow and Arrow)',
     description:
       'Puissant étranglement de revers depuis le dos utilisant la prise de ceinture et pantalon pour le levier final.',
     cues: [
@@ -694,6 +739,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   414: {
+    name: 'Étranglement en Croix',
     description:
       'Double prise de revers depuis la monture ou la garde en croisant pour étrangler.',
     cues: [
@@ -704,6 +750,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   415: {
+    name: 'Ezekiel',
     description:
       "Étranglement par prise de manche depuis la monture, peut même être appliqué à l'intérieur de la garde de l'adversaire.",
     cues: [
@@ -714,6 +761,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   416: {
+    name: 'Americana',
     description:
       "Clé d'épaule en figure 4 pliant le poignet vers le haut — appliqué depuis la monture ou le contrôle latéral.",
     cues: [
@@ -724,6 +772,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   417: {
+    name: 'Triangle Bras',
     description:
       "Étranglement sanguin tête-et-bras fini depuis la monture ou le contrôle latéral avec pression d'épaule.",
     cues: [
@@ -734,6 +783,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   418: {
+    name: 'Étranglement Nord-Sud',
     description:
       "Étranglement nord-sud utilisant la pression de l'épaule et du grand dorsal autour du cou.",
     cues: [
@@ -745,6 +795,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
   },
   // Takedowns & Throws (5xx)
   501: {
+    name: 'Double Jambe',
     description:
       "Pénétrer sur les deux jambes et pousser pour soulever ou faire trébucher l'adversaire au sol.",
     cues: [
@@ -755,6 +806,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   502: {
+    name: 'Simple Jambe',
     description:
       "Contrôler une jambe et utiliser des crochets ou des soulèvements pour faire tomber l'adversaire.",
     cues: [
@@ -765,6 +817,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   503: {
+    name: 'Projection de Hanche (O-goshi)',
     description:
       "Charger l'adversaire sur la hanche et pivoter pour le projeter au sol.",
     cues: [
@@ -775,6 +828,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   504: {
+    name: 'Seoi Nage',
     description:
       "Tirer l'adversaire par-dessus l'épaule pour une grande projection.",
     cues: [
@@ -785,6 +839,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   505: {
+    name: 'Uchi Mata',
     description:
       "Balayer l'intérieur de la jambe de l'adversaire en brisant son équilibre.",
     cues: [
@@ -795,6 +850,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   506: {
+    name: 'Osoto Gari',
     description:
       "Faucher la jambe de l'adversaire par l'extérieur en le poussant en arrière.",
     cues: [
@@ -805,6 +861,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   507: {
+    name: 'Ankle Pick',
     description:
       "Saisir la cheville en poussant la tête pour faire trébucher l'adversaire.",
     cues: [
@@ -815,6 +872,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   508: {
+    name: "Fireman's Carry",
     description:
       "Charger l'adversaire sur le dos en saisissant le bras et la cheville.",
     cues: [
@@ -825,6 +883,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   509: {
+    name: 'De Ashi Barai',
     description:
       "Balayage basé sur le timing qui retire un pied en mouvement pour faire tomber l'adversaire proprement.",
     cues: [
@@ -835,6 +894,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   510: {
+    name: 'Clinch Frontal',
     description:
       "Tirer la tête et la posture de l'adversaire vers le bas pour sécuriser le contrôle en headlock frontal.",
     cues: [
@@ -846,6 +906,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
   },
   // Escapes (6xx)
   601: {
+    name: 'Pont et Retournement (Upa)',
     description:
       "Pont explosif depuis la monture pour renverser l'adversaire, récupérer la garde ou prendre la position supérieure.",
     cues: [
@@ -856,6 +917,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   602: {
+    name: 'Escape de Crevette',
     description:
       "Créer de l'espace en faisant la crevette et replacer la garde depuis le dessous.",
     cues: [
@@ -866,6 +928,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   603: {
+    name: 'Escape du Contrôle Latéral',
     description:
       'Utiliser le mouvement de crevette pour récupérer la garde depuis le contrôle latéral.',
     cues: [
@@ -876,6 +939,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   604: {
+    name: 'Escape du Dos',
     description:
       'Protéger le cou, retirer la ceinture de sécurité et récupérer la garde depuis le contrôle de dos.',
     cues: [
@@ -886,6 +950,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   605: {
+    name: 'Défense Guillotine',
     description:
       "Se redresser, tourner vers l'étranglement et trouver le cou pour s'échapper.",
     cues: [
@@ -896,6 +961,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   606: {
+    name: 'Défense Triangle',
     description:
       "Empiler, se redresser et utiliser des ruptures de prise pour s'échapper du triangle.",
     cues: [
@@ -906,6 +972,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   607: {
+    name: 'Escape du Genou au Ventre',
     description:
       "Séquence d'échappée pour retirer la pression du genou et récupérer la garde ou la demi-garde.",
     cues: [
@@ -917,6 +984,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
   },
   // Positions (7xx)
   701: {
+    name: 'Monture',
     description:
       "S'asseoir sur le torse de l'adversaire — l'une des positions les plus dominantes en BJJ.",
     cues: [
@@ -927,6 +995,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   702: {
+    name: 'Contrôle Latéral',
     description:
       "Contrôler l'adversaire depuis le côté avec une pression poitrine à poitrine.",
     cues: [
@@ -937,6 +1006,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   703: {
+    name: 'Contrôle de Dos',
     description:
       "S'attacher au dos de l'adversaire avec des crochets à l'intérieur, la position la plus dangereuse en BJJ.",
     cues: [
@@ -947,6 +1017,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   704: {
+    name: 'Nord-Sud',
     description:
       "Contrôler l'adversaire tête à tête, perpendiculaire à son corps.",
     cues: [
@@ -957,6 +1028,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   705: {
+    name: 'Genou au Ventre',
     description:
       "Enfoncer le genou dans le ventre de l'adversaire — une position transitionnelle et d'attaque.",
     cues: [
@@ -967,6 +1039,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   706: {
+    name: 'Position Tortue',
     description:
       "Position de la tortue — position défensive à quatre pattes que l'adversaire doit ouvrir pour attaquer.",
     cues: [
@@ -977,6 +1050,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
     ],
   },
   707: {
+    name: 'Demi-garde Supérieure',
     description:
       "Position de contrôle supérieur pendant que l'adversaire a une jambe piégée, idéale pour les passages sous pression.",
     cues: [

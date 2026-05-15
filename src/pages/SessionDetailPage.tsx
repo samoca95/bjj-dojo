@@ -21,7 +21,7 @@ import {
   getSessionTypeIcons,
   SESSION_TYPE_ICONS_UPDATED_EVENT,
 } from '../utils/sessionTypeIcons'
-import { sessionTypeLabel, useI18n, type AppLanguage } from '../i18n'
+import { sessionTypeLabel, getTechniqueName, useI18n, type AppLanguage } from '../i18n'
 import { useUndo } from '../components/undo'
 import ShareSheet from '../components/ShareSheet'
 
@@ -113,9 +113,9 @@ export default function SessionDetailPage() {
         return { taps: [], techMap: new Map<number, string>() }
       const ids = [...new Set(taps.map((t) => t.techniqueId))]
       const techs = await db.techniques.where('id').anyOf(ids).toArray()
-      return { taps, techMap: new Map(techs.map((t) => [t.id, t.name])) }
+      return { taps, techMap: new Map(techs.map((t) => [t.id, getTechniqueName(t, language)])) }
     },
-    [id],
+    [id, language],
     { taps: [] as SessionTap[], techMap: new Map<number, string>() },
   )
 
@@ -302,7 +302,7 @@ export default function SessionDetailPage() {
                   />
                   <span className="flex-1 min-w-0">
                     <span className="block text-sm text-zinc-100">
-                      {tech.name}
+                      {getTechniqueName(tech, language)}
                     </span>
                     {techNote && (
                       <span className="block text-xs text-zinc-400 mt-1 whitespace-pre-wrap">
@@ -431,7 +431,7 @@ export default function SessionDetailPage() {
                 ) : (
                   <ul className="space-y-1 list-disc list-inside text-zinc-200">
                     {techniqueEntries.map(({ technique }) => (
-                      <li key={technique.id}>{technique.name}</li>
+                      <li key={technique.id}>{getTechniqueName(technique, language)}</li>
                     ))}
                   </ul>
                 )}

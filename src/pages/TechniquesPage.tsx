@@ -27,6 +27,7 @@ import {
   useI18n,
   difficultyLabel,
   getCategoryName,
+  getTechniqueName,
   getTechniqueDescription,
 } from '../i18n'
 import {
@@ -63,6 +64,7 @@ ListInner.displayName = 'ListInner'
 
 function TechniqueRow({
   technique,
+  name,
   categoryName,
   categoryIcon,
   description,
@@ -72,6 +74,7 @@ function TechniqueRow({
   onToggleFavorite,
 }: {
   technique: Technique
+  name: string
   categoryName: string
   categoryIcon?: string
   description: string
@@ -88,7 +91,7 @@ function TechniqueRow({
       >
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold text-zinc-100 text-sm">
-            {technique.name}
+            {name}
           </span>
           <DifficultyBadge difficulty={technique.difficulty} />
           {practiceCount > 0 && (
@@ -134,6 +137,7 @@ function MeasuredTechniqueRow({
   onHeightChange,
   techniqueId,
   technique,
+  name,
   categoryName,
   categoryIcon,
   description,
@@ -147,6 +151,7 @@ function MeasuredTechniqueRow({
   techniqueId: number
   onHeightChange: (index: number, techniqueId: number, height: number) => void
   technique: Technique
+  name: string
   categoryName: string
   categoryIcon?: string
   description: string
@@ -177,7 +182,7 @@ function MeasuredTechniqueRow({
     techniqueId,
     onHeightChange,
     technique.isFavorite,
-    technique.name,
+    name,
     technique.difficulty,
     categoryName,
     categoryIcon,
@@ -198,6 +203,7 @@ function MeasuredTechniqueRow({
       <div ref={rowRef}>
         <TechniqueRow
           technique={technique}
+          name={name}
           categoryName={categoryName}
           categoryIcon={categoryIcon}
           description={description}
@@ -359,17 +365,19 @@ export default function TechniquesPage() {
         return true
       })
       const compareBySort = (a: Technique, b: Technique) => {
-        if (sortBy === 'name_desc') return b.name.localeCompare(a.name)
+        const aName = getTechniqueName(a, language)
+        const bName = getTechniqueName(b, language)
+        if (sortBy === 'name_desc') return bName.localeCompare(aName)
         if (sortBy === 'level') {
           const levelDelta =
             DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty]
-          return levelDelta !== 0 ? levelDelta : a.name.localeCompare(b.name)
+          return levelDelta !== 0 ? levelDelta : aName.localeCompare(bName)
         }
         if (sortBy === 'frequency') {
           const freqDelta = (freqMap.get(b.id) ?? 0) - (freqMap.get(a.id) ?? 0)
-          return freqDelta !== 0 ? freqDelta : a.name.localeCompare(b.name)
+          return freqDelta !== 0 ? freqDelta : aName.localeCompare(bName)
         }
-        return a.name.localeCompare(b.name)
+        return aName.localeCompare(bName)
       }
       filtered.sort((a, b) => {
         if (debouncedSearch.trim()) {
@@ -388,7 +396,7 @@ export default function TechniquesPage() {
       })
       return { items: filtered, freqMap }
     },
-    [debouncedSearch, categoryId, favoritesOnly, difficultyFilter, sortBy],
+    [debouncedSearch, categoryId, favoritesOnly, difficultyFilter, sortBy, language],
     null as null | { items: Technique[]; freqMap: Map<number, number> },
   )
 
@@ -436,6 +444,7 @@ export default function TechniquesPage() {
         onHeightChange={handleRowHeightChange}
         techniqueId={technique.id}
         technique={technique}
+        name={getTechniqueName(technique, language)}
         categoryName={catMap.get(technique.categoryId) ?? ''}
         categoryIcon={catIconMap.get(technique.categoryId)}
         description={getTechniqueDescription(technique, language)}
