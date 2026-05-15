@@ -18,7 +18,7 @@ import {
   Award,
   RotateCcw,
   Move,
-  ChevronDown,
+  QrCode,
 } from 'lucide-react'
 import type { SessionExportData } from '../utils/exportSession'
 import {
@@ -58,6 +58,9 @@ import {
 } from '../utils/userName'
 import { getBeltColor, getBeltStripes, type BeltColor } from '../utils/beltRank'
 import type { AppLanguage } from '../i18n'
+import whatsappLogo from '../../assets/whatsapp.svg'
+import xLogo from '../../assets/twitter-X.svg'
+import instagramLogo from '../../assets/instagram.svg'
 
 /** Preview render resolution — a fraction of the 1080px export for snappiness. */
 const PREVIEW_SCALE = 0.5
@@ -244,104 +247,69 @@ interface Props {
   onClose: () => void
 }
 
-function Toggle({ on }: { on: boolean }) {
+function Switch({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean
+  onChange: () => void
+  label: string
+}) {
   return (
-    <span
-      className={`relative w-11 h-6 rounded-full shrink-0 transition-colors ${on ? 'bg-gold' : 'bg-zinc-700'}`}
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={onChange}
+      className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${
+        checked ? 'bg-gold' : 'bg-zinc-700'
+      }`}
     >
       <span
-        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
-          on ? 'translate-x-5' : 'translate-x-0'
+        className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+          checked ? 'translate-x-4' : 'translate-x-0'
         }`}
       />
-    </span>
+    </button>
   )
 }
 
-function CollapsibleSection({
+function OptionSection({
   icon,
   title,
-  summary,
+  action,
   children,
 }: {
   icon: ReactNode
   title: string
-  summary?: string
-  children: ReactNode
+  action?: ReactNode
+  children?: ReactNode
 }) {
-  const [open, setOpen] = useState(false)
   return (
-    <div className="rounded-xl bg-zinc-900/40 border border-zinc-800/60">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-2.5 px-3 py-3 text-left"
-        aria-expanded={open}
-      >
+    <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/30 px-3 py-3">
+      <div className="flex items-center gap-2.5">
         <span className="text-gold shrink-0">{icon}</span>
         <span className="flex-1 text-sm font-semibold text-zinc-200">
           {title}
         </span>
-        {summary && !open && (
-          <span className="text-xs text-gold-light">{summary}</span>
-        )}
-        <ChevronDown
-          size={16}
-          strokeWidth={2}
-          className={`text-zinc-500 transition-transform ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {open && <div className="px-3 pb-3 pt-0.5 space-y-2">{children}</div>}
+        {action}
+      </div>
+      {children ? <div className="mt-3 space-y-2">{children}</div> : null}
     </div>
   )
 }
 
 function SocialIcon({ app }: { app: 'whatsapp' | 'x' | 'instagram' }) {
-  if (app === 'whatsapp') {
-    return (
-      <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true">
-        <circle cx="12" cy="12" r="11" fill="#25D366" />
-        <path
-          d="M7.6 18.2l.8-3A6.2 6.2 0 1 1 18 9.8a6.2 6.2 0 0 1-8.8 5.5l-1.6 2.9z"
-          fill="#fff"
-        />
-        <path
-          d="M14.7 12.9c-.2-.1-1-.5-1.2-.5-.1-.1-.2-.1-.3.1-.1.2-.4.5-.5.6-.1.1-.2.1-.4 0-.2-.1-.8-.3-1.5-.9-.6-.5-.9-1.1-1-1.3-.1-.2 0-.2.1-.3.1-.1.2-.2.2-.3.1-.1.1-.2.1-.3 0-.1 0-.2 0-.3 0-.1-.3-.8-.5-1.1-.1-.2-.2-.2-.3-.2h-.3c-.1 0-.3.1-.4.2-.1.2-.5.5-.5 1.2s.5 1.4.6 1.5c.1.1 1 1.7 2.5 2.3.3.2.6.3.8.3.3.1.6.1.9.1.3 0 1-.4 1.1-.8.1-.4.1-.7.1-.8-.1-.2-.2-.2-.3-.3z"
-          fill="#25D366"
-        />
-      </svg>
-    )
-  }
-  if (app === 'instagram') {
-    return (
-      <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true">
-        <defs>
-          <linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#feda75" />
-            <stop offset="45%" stopColor="#d62976" />
-            <stop offset="100%" stopColor="#4f5bd5" />
-          </linearGradient>
-        </defs>
-        <rect x="1" y="1" width="22" height="22" rx="6" fill="url(#ig)" />
-        <circle
-          cx="12"
-          cy="12"
-          r="5"
-          fill="none"
-          stroke="#fff"
-          strokeWidth="2"
-        />
-        <circle cx="17.5" cy="6.5" r="1.2" fill="#fff" />
-      </svg>
-    )
-  }
+  const src =
+    app === 'whatsapp'
+      ? whatsappLogo
+      : app === 'instagram'
+        ? instagramLogo
+        : xLogo
   return (
-    <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true">
-      <rect x="1" y="1" width="22" height="22" rx="6" fill="#111827" />
-      <path
-        d="M6 6h2.8l4 5.3L16.9 6H19l-5.2 6.8L19 18h-2.8l-4.2-5.5L7 18H5l5.3-6.9L6 6z"
-        fill="#fff"
-      />
-    </svg>
+    <img src={src} alt="" className="h-6 w-6 object-contain" aria-hidden="true" />
   )
 }
 
@@ -740,31 +708,37 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
           </div>
 
           {/* Background photo */}
-          <CollapsibleSection
+          <OptionSection
             icon={<ImageIcon size={16} strokeWidth={2} />}
             title={L.background}
-            summary={background ? L.photoAdded : undefined}
+            action={
+              background ? (
+                <span className="text-[11px] font-medium text-gold-light">
+                  {L.photoAdded}
+                </span>
+              ) : null
+            }
           >
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => cameraInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-zinc-900 text-sm font-semibold text-zinc-200 border border-zinc-700/70 active:bg-zinc-800"
+                className="flex items-center justify-center gap-2 rounded-lg bg-zinc-800/70 px-3 py-2 text-sm font-semibold text-zinc-200 active:bg-zinc-700"
               >
-                <Camera size={16} strokeWidth={2} />
+                <Camera size={15} strokeWidth={2} />
                 {L.camera}
               </button>
               <button
                 onClick={() => galleryInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-zinc-900 text-sm font-semibold text-zinc-200 border border-zinc-700/70 active:bg-zinc-800"
+                className="flex items-center justify-center gap-2 rounded-lg bg-zinc-800/70 px-3 py-2 text-sm font-semibold text-zinc-200 active:bg-zinc-700"
               >
-                <ImageIcon size={16} strokeWidth={2} />
+                <ImageIcon size={15} strokeWidth={2} />
                 {L.gallery}
               </button>
             </div>
             {background && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-400 w-10">{L.zoom}</span>
+                  <span className="w-10 text-xs text-zinc-400">{L.zoom}</span>
                   <input
                     type="range"
                     min={1}
@@ -788,7 +762,7 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
                     setBackground(null)
                     setTransform(DEFAULT_TRANSFORM)
                   }}
-                  className="w-full py-2 rounded-lg bg-zinc-800/60 text-xs font-semibold text-zinc-400 active:bg-zinc-700"
+                  className="w-full rounded-lg bg-zinc-800/70 py-2 text-xs font-semibold text-zinc-400 active:bg-zinc-700"
                 >
                   {L.removePhoto}
                 </button>
@@ -815,27 +789,20 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
                 e.target.value = ''
               }}
             />
-          </CollapsibleSection>
+          </OptionSection>
 
           {/* Belt + name branding */}
-          <CollapsibleSection
+          <OptionSection
             icon={<Award size={16} strokeWidth={2} />}
             title={L.beltSection}
-            summary={
-              showBelt
-                ? name.trim() || BELT_LABELS[language][beltColor]
-                : undefined
+            action={
+              <Switch
+                checked={showBelt}
+                onChange={() => setShowBelt((v) => !v)}
+                label={L.beltBranding}
+              />
             }
           >
-            <button
-              onClick={() => setShowBelt((v) => !v)}
-              className="w-full flex items-center gap-3 py-1 text-left"
-            >
-              <span className="flex-1 text-sm font-semibold text-zinc-200">
-                {L.beltBranding}
-              </span>
-              <Toggle on={showBelt} />
-            </button>
             {showBelt && (
               <div className="space-y-2">
                 <input
@@ -844,7 +811,7 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
                   maxLength={MAX_USER_NAME_LENGTH}
                   onChange={(e) => updateName(e.target.value)}
                   placeholder={L.namePlaceholder}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500"
+                  className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500"
                 />
                 <p className="text-xs text-zinc-500">
                   {L.beltHint}: {BELT_LABELS[language][beltColor]} ·{' '}
@@ -852,24 +819,20 @@ export default function ShareSheet({ data, language, locale, onClose }: Props) {
                 </p>
               </div>
             )}
-          </CollapsibleSection>
+          </OptionSection>
 
           {/* QR code */}
-          <CollapsibleSection
-            icon={<ImageIcon size={16} strokeWidth={2} />}
+          <OptionSection
+            icon={<QrCode size={16} strokeWidth={2} />}
             title={L.qrCode}
-            summary={showQr ? '•' : undefined}
-          >
-            <button
-              onClick={() => setShowQr((v) => !v)}
-              className="w-full flex items-center gap-3 py-1 text-left"
-            >
-              <span className="flex-1 text-sm font-semibold text-zinc-200">
-                {L.qrCode}
-              </span>
-              <Toggle on={showQr} />
-            </button>
-          </CollapsibleSection>
+            action={
+              <Switch
+                checked={showQr}
+                onChange={() => setShowQr((v) => !v)}
+                label={L.qrCode}
+              />
+            }
+          />
 
           {/* Primary actions */}
           <div className="grid grid-cols-3 gap-2 pt-1">

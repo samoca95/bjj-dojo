@@ -779,18 +779,11 @@ export default function HomePage() {
             <ScoreHelp
               label={t('Submissions')}
               description={t(
-                'Given: total submissions you finished.\nReceived: total submissions you got caught in.\nAvg Given: average Given submissions across your last 5 logged sessions.\nThe 5 blue bars show Given submissions for each of those sessions (oldest to newest).',
+                'Received: total submissions you got caught in.\nGiven: total submissions you finished.\nAvg: average Given submissions across your last 5 logged sessions.\nThe 5 blue bars show Given submissions for each of those sessions (oldest to newest).',
               )}
             />
           </div>
-          <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
-            <div>
-              <div className="text-xl font-bold text-zinc-100 tabular-nums flex items-center gap-1">
-                {tapCounts?.given ?? 0}
-                <Zap size={16} className="text-green-500" strokeWidth={2} />
-              </div>
-              <div className="text-xs text-zinc-500">{t('Given')}</div>
-            </div>
+          <div className="grid grid-cols-[1fr_1fr_1.2fr] gap-3 items-end">
             <div>
               <div className="text-xl font-bold text-zinc-100 tabular-nums flex items-center gap-1">
                 {tapCounts?.received ?? 0}
@@ -799,25 +792,35 @@ export default function HomePage() {
               <div className="text-xs text-zinc-500">{t('Received')}</div>
             </div>
             <div>
+              <div className="text-xl font-bold text-zinc-100 tabular-nums flex items-center gap-1">
+                {tapCounts?.given ?? 0}
+                <Zap size={16} className="text-green-500" strokeWidth={2} />
+              </div>
+              <div className="text-xs text-zinc-500">{t('Given')}</div>
+            </div>
+            <div className="space-y-2">
               <div className="text-xl font-bold text-sky-400 tabular-nums">
                 {givenTapTrend.avgGiven.toFixed(1)}
               </div>
-              <div className="text-xs text-zinc-500">{t('Avg Given')}</div>
-            </div>
-            <div className="flex items-end gap-1">
-              {givenTapTrend.paddedCounts.map((count, idx) => (
-                <div
-                  key={idx}
-                  className="h-16 w-4 rounded-md border border-sky-500/90 bg-zinc-950/40 overflow-hidden flex items-end"
-                >
+              <div className="text-xs text-zinc-500">{t('Avg')}</div>
+              <div className="flex items-end gap-1.5 pt-0.5">
+                {givenTapTrend.paddedCounts.map((count, idx) => (
                   <div
-                    className="w-full bg-sky-500"
-                    style={{
-                      height: `${Math.round((count / givenTapTrend.maxGiven) * 100)}%`,
-                    }}
-                  />
-                </div>
-              ))}
+                    key={idx}
+                    className="h-8 w-3 overflow-hidden rounded-[3px] bg-zinc-700/70"
+                  >
+                    <div
+                      className="w-full rounded-[3px]"
+                      style={{
+                        height: `${Math.round((count / givenTapTrend.maxGiven) * 100)}%`,
+                        backgroundColor: '#38bdf8',
+                        backgroundImage:
+                          'repeating-linear-gradient(-45deg, rgba(255,255,255,0.32) 0 2px, transparent 2px 5px)',
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -1073,12 +1076,7 @@ export default function HomePage() {
               </span>
             </div>
           </div>
-          <Flame
-            size={18}
-            className="text-orange-400"
-            fill="currentColor"
-            strokeWidth={0}
-          />
+          <CalendarDays size={18} className="text-orange-400" strokeWidth={1.75} />
         </div>
       </div>
     </div>
