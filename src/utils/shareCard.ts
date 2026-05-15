@@ -6,7 +6,7 @@ import type { BeltColor } from './beltRank'
 import type { SessionExportData } from './exportSession'
 import qrcode from 'qrcode-generator'
 import bjjIconUrl from '/bjj-icon.svg'
-import jujitsuKanjiVerticalUrl from '../../icons/jujitsu_kanji_vertical.svg'
+import jujitsuKanjiVerticalUrl from '/icons/jujitsu_kanji_vertical.svg'
 
 /**
  * Renders a training session as a polished, social-media-ready PNG using the
