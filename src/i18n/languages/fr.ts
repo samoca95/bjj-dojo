@@ -857,21 +857,21 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
   },
   602: {
     description:
-      "Créer de l'espace en glissant les hanches et replacer la garde depuis le dessous.",
+      "Créer de l'espace en faisant la crevette et replacer la garde depuis le dessous.",
     cues: [
-      'Créer un cadre sur la hanche avant de glisser',
-      "Glisser les hanches vers l'extérieur — créer de l'espace pour le genou",
+      'Créer un cadre sur la hanche avant de faire la crevette',
+      "Faire la crevette vers l'extérieur — créer de l'espace pour le genou",
       "Pousser le genou vers l'intérieur pour replacer la garde",
       'Rester sur le côté — jamais à plat sur le dos',
     ],
   },
   603: {
     description:
-      'Utiliser le mouvement de glissement pour récupérer la garde depuis le contrôle latéral.',
+      'Utiliser le mouvement de crevette pour récupérer la garde depuis le contrôle latéral.',
     cues: [
       'Cadrer sur la hanche et le cou simultanément',
-      "Pont pour créer de l'espace pour glisser",
-      "Glisser les hanches vers l'extérieur et replacer le genou de garde",
+      "Pont pour créer de l'espace puis faire la crevette",
+      "Faire la crevette vers l'extérieur et replacer le genou de garde",
       'Rester sur le côté tout au long — jamais à plat',
     ],
   },
@@ -910,7 +910,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
       "Séquence d'échappée pour retirer la pression du genou et récupérer la garde ou la demi-garde.",
     cues: [
       'Cadrer sur leur genou et hanche',
-      'Pont puis glisser sous la pression',
+      'Pont puis faire la crevette sous la pression',
       "Attraper leur jambe d'avancée pour la demi-garde",
       'Ne pas pousser avec les bras tendus',
     ],
@@ -968,7 +968,7 @@ const FR_TECHNIQUE_CONTENT: LanguagePack['techniqueContent'] = {
   },
   706: {
     description:
-      "Position défensive à quatre pattes — l'adversaire doit l'ouvrir pour attaquer.",
+      "Position de la tortue — position défensive à quatre pattes que l'adversaire doit ouvrir pour attaquer.",
     cues: [
       'Menton sur la poitrine — protéger toujours le cou',
       'Prendre appui sur la tête et les mains pour la structure',
@@ -1000,11 +1000,11 @@ const FR_SESSION_TYPES: LanguagePack['sessionTypes'] = {
   NOGI: 'No-Gi',
   OPEN_MAT: 'Open mat',
   COMPETITION: 'Compétition',
-  DRILLING: 'Exercices',
+  DRILLING: 'Drills',
 }
 
 const FR_CONNECTION_TYPES: LanguagePack['connectionTypes'] = {
-  FOLLOW_UP: 'Suite',
+  FOLLOW_UP: 'Enchaînement',
   COUNTER: 'Contre',
   SETUP: 'Mise en place',
   TRANSITION: 'Transition',

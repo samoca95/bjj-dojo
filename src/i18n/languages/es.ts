@@ -218,7 +218,7 @@ export const ES_CATEGORY_CONTENT: Record<
     description: 'Posiciones sobre tu espalda controlando al oponente',
   },
   2: {
-    name: 'Pasaje de Guardia',
+    name: 'Pase de Guardia',
     description: 'Técnicas para superar la guardia del oponente',
   },
   3: {
@@ -500,7 +500,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
   },
   304: {
     description:
-      'Usar los ganchos de mariposa para desequilibrar al oponente y barrelo hacia el lado.',
+      'Usar los ganchos de mariposa para desequilibrar al oponente y barrerlo hacia el lado.',
     cues: [
       'El gancho bajo crea el ángulo para la barrida',
       'Eleva con el gancho mientras caes de lado',
@@ -865,7 +865,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
       'Crear espacio haciendo camarón con las caderas y recuperar la guardia desde abajo.',
     cues: [
       'Crea un marco en la cadera antes de hacer camarón',
-      'Camarón las caderas hacia afuera — crea espacio para la rodilla',
+      'Haz el camarón de caderas hacia afuera — crea espacio para la rodilla',
       'Empuja la rodilla hacia adentro para recuperar guardia',
       'Mantente de lado — nunca plano sobre tu espalda',
     ],
@@ -876,7 +876,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
     cues: [
       'Marco en cadera y cuello simultáneamente',
       'Puente para crear espacio para hacer camarón',
-      'Camarón las caderas hacia afuera y recupera la rodilla de guardia',
+      'Haz el camarón de caderas hacia afuera y recupera la rodilla de guardia',
       'Mantente de lado durante todo el movimiento — nunca plano',
     ],
   },
@@ -973,7 +973,7 @@ export const ES_TECHNIQUE_CONTENT: Record<
   },
   706: {
     description:
-      'Posición defensiva en cuatro apoyos — el oponente debe abrirla para atacar.',
+      'Posición tortuga — posición defensiva en cuatro apoyos que el oponente debe abrir para atacar.',
     cues: [
       'Mentón al pecho — protege el cuello siempre',
       'Apoya en cabeza y manos para estructura',
@@ -1003,7 +1003,7 @@ export const ES_DIFFICULTY: Record<Difficulty, string> = {
 export const ES_SESSION_TYPES: Record<SessionType, string> = {
   GI: 'Gi',
   NOGI: 'No-Gi',
-  OPEN_MAT: 'Entrenamiento Libre',
+  OPEN_MAT: 'Open Mat',
   COMPETITION: 'Competición',
   DRILLING: 'Drills',
 }
