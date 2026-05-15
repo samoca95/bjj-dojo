@@ -319,7 +319,7 @@ export const prefilledTechniques: Technique[] = [
       'Frame at shoulder and bicep',
       'Keep hips angled on your side',
       'Underhook when they pressure in',
-      'The Z-guard knee shield frames directly into the Choi Bar (an omoplata variation) — monitor the opponent\'s near arm when they post on the knee shield',
+      "The Z-guard knee shield frames directly into the Choi Bar (an omoplata variation) — monitor the opponent's near arm when they post on the knee shield",
     ],
     youtubeUrl:
       'https://www.youtube.com/results?search_query=z+guard+bjj+knee+shield',
@@ -386,9 +386,9 @@ export const prefilledTechniques: Technique[] = [
     noGi: true,
     aliases: ['50/50', 'Fifty-Fifty Guard', 'Neutral Leg Entanglement'],
     description:
-      'A neutral leg-entanglement guard where both practitioners mirror each other\'s leg position, creating equal offensive and defensive opportunities. Primarily a platform for leg locks; both players can attack ankle locks, heel hooks, and toe holds simultaneously.',
+      "A neutral leg-entanglement guard where both practitioners mirror each other's leg position, creating equal offensive and defensive opportunities. Primarily a platform for leg locks; both players can attack ankle locks, heel hooks, and toe holds simultaneously.",
     cues: [
-      'Cup your opponent\'s knee with your top hand and hide your own heel behind their thigh — exposing your heel is the fastest way to lose',
+      "Cup your opponent's knee with your top hand and hide your own heel behind their thigh — exposing your heel is the fastest way to lose",
       'Stay at an angle rather than straight-on; direct alignment lets them mirror your leg lock attempt simultaneously',
       'Ankle lock and inside heel hook are the highest-percentage finishes; establish a tight hip connection before reaching for the heel',
       'To sweep: rotate your outside knee toward the mat to buckle their lead knee, then disengage and establish top position',
@@ -408,7 +408,7 @@ export const prefilledTechniques: Technique[] = [
     description:
       "An extension of the half guard where the bottom player pulls their body fully beneath the opponent's centre of gravity with head near their knee, arm wrapped around one leg, and hips tight underneath. Primary attacks are the waiter sweep, Homer Simpson sweep, and back take.",
     cues: [
-      'Enter by pulling your hip deep beneath the opponent\'s base; your face should be near their knee, not their hip',
+      "Enter by pulling your hip deep beneath the opponent's base; your face should be near their knee, not their hip",
       'Keep both arms in: one wraps the leg, the other controls their far knee or ankle; this prevents the cross-face and the kimura',
       'Waiter sweep: thread your outside leg under their near leg, elevate it, and sweep toward your head',
       'When they post to stop the sweep, use that post as a pivot point to rotate to their back instead',
@@ -827,7 +827,7 @@ export const prefilledTechniques: Technique[] = [
     description:
       "A fundamental bottom half-guard sweep using an underhook and a grip on the opponent's far ankle to tilt them over. Popularised by Roberto 'Gordo' Correa, typically the first half-guard sweep taught.",
     cues: [
-      'Secure a deep underhook on the opponent\'s near arm, then duck your head under their torso',
+      "Secure a deep underhook on the opponent's near arm, then duck your head under their torso",
       'Reach under their free leg and grip the toes (not the ankle) for maximum lever length',
       'Release the underhook, reinforce the toe grip with both hands, then drive your hips in and lift',
       'If they base out with their free leg, transition to taking their back instead of completing the sweep',
@@ -847,7 +847,7 @@ export const prefilledTechniques: Technique[] = [
     description:
       'A closed-guard sweep using the kimura grip (figure-four on the wrist) to off-balance and reverse the opponent. If the sweep is denied, the same grip transitions directly into the kimura submission or opens a triangle.',
     cues: [
-      'Break opponent\'s posture, isolate one wrist, and establish the double-wristlock (kimura) grip',
+      "Break opponent's posture, isolate one wrist, and establish the double-wristlock (kimura) grip",
       'Pull the arm across your centre line; when they post their hand to prevent the submission, use that post to elevate and sweep',
       'If the sweep fails, roll to your side and finish the kimura submission from bottom',
       'Failed sweep also opens guard-bottom triangle and guillotine — stay active on the grip',
@@ -865,7 +865,7 @@ export const prefilledTechniques: Technique[] = [
     noGi: true,
     aliases: ['Knee Lever Sweep', 'Knee Lever', 'Half Guard Knee Lever'],
     description:
-      'A half-guard sweep using the free knee as a lever against the opponent\'s far ankle to tip them sideways. Named for the casual, rolling motion it produces.',
+      "A half-guard sweep using the free knee as a lever against the opponent's far ankle to tip them sideways. Named for the casual, rolling motion it produces.",
     cues: [
       'From half guard with an underhook, open your guard and post your top foot while your bottom leg controls just above their ankle',
       'Swing your free (top) knee upward and over in an arc like a windshield wiper, driving it through their ankle line',
@@ -1677,7 +1677,7 @@ export const prefilledTechniques: Technique[] = [
       "A snap-down that, instead of landing in a front headlock, uses the opponent's momentum to spin directly behind them and secure back control. Distinguished from the Snap Down to Front Headlock by circling behind the hip rather than securing a front position.",
     cues: [
       'From a collar-tie, execute a sharp downward snap to break posture and drive the head below your hips',
-      "As they post or scramble forward, release the head and step laterally behind their hip rather than clamping down in front",
+      'As they post or scramble forward, release the head and step laterally behind their hip rather than clamping down in front',
       'Reach around the torso with the seatbelt grip (one arm over, one arm under) before they can stand back up',
       'Finish the back take by inserting both hooks for back control',
     ],
@@ -1694,9 +1694,9 @@ export const prefilledTechniques: Technique[] = [
     noGi: true,
     aliases: ['Arm Drag Back Take', 'Arm Drag'],
     description:
-      'A takedown entry that uses a two-handed arm drag (wrist and tricep grip) to redirect the opponent\'s arm across the body and step behind them into back control. Highly adaptable from standing, seated, and butterfly guard.',
+      "A takedown entry that uses a two-handed arm drag (wrist and tricep grip) to redirect the opponent's arm across the body and step behind them into back control. Highly adaptable from standing, seated, and butterfly guard.",
     cues: [
-      'Grab the opponent\'s same-side wrist with a thumb-down grip; simultaneously reach deep to their tricep with your other hand',
+      "Grab the opponent's same-side wrist with a thumb-down grip; simultaneously reach deep to their tricep with your other hand",
       'Pull the arm sharply across your centreline while stepping your same-side foot laterally behind their hip — keep your head glued to their chest',
       'Wrap your outside arm around their waist and lock your hand on their far hip; this blocks their rotation',
       'Complete the back take by bringing them to the mat with a mat return or foot sweep, then insert hooks',
@@ -1873,8 +1873,8 @@ export const prefilledTechniques: Technique[] = [
     description:
       'Posture-based escape from a triangle choke applied from guard. Stack, posture up, and break the grip before blood flow is cut off — time is the critical factor.',
     cues: [
-      'Tuck the trapped arm\'s elbow toward your centreline immediately to slow the choke',
-      'Posture up hard and stack the hips toward the opponent\'s head, loading your body weight to reduce their leverage',
+      "Tuck the trapped arm's elbow toward your centreline immediately to slow the choke",
+      "Posture up hard and stack the hips toward the opponent's head, loading your body weight to reduce their leverage",
       'Walk your feet toward them, straighten your back, and pop the lock by pushing their knee away with your free hand',
       'Once the lock breaks, pass the guard or secure a defensive position before they re-establish',
     ],
@@ -1931,7 +1931,7 @@ export const prefilledTechniques: Technique[] = [
     noGi: true,
     aliases: ['Turtle Escape', 'Shoulder Roll Escape'],
     description:
-      "An inversion escape from turtle position: rolling over one shoulder (without exposing the neck) to recover guard or reach a neutral scramble. Named after Granby High School wrestling.",
+      'An inversion escape from turtle position: rolling over one shoulder (without exposing the neck) to recover guard or reach a neutral scramble. Named after Granby High School wrestling.',
     cues: [
       'Tuck the rolling shoulder under; never expose the back of the neck — head stays down',
       'Keep the toes of the lead foot on the mat throughout to roll in a controlled straight line',
@@ -2165,7 +2165,7 @@ export const prefilledTechniques: Technique[] = [
     description:
       "An advanced mount variation where one knee is posted high near the opponent's ear while the opposite foot stays on the mat, forming an S-shape with the legs. This configuration isolates one arm and creates an extremely tight platform for armbar and triangle finishes.",
     cues: [
-      "From high mount, wait for the opponent to push elbows upward as a frame — that gap is the S-mount entry window",
+      'From high mount, wait for the opponent to push elbows upward as a frame — that gap is the S-mount entry window',
       'Slide (not step) one knee up to their ear along the mat; stepping gives them room to recover',
       'Close all space immediately after sliding; posting your opposite foot stabilises the position',
       'The armbar is the primary finish — the S position pre-loads the arm; move directly to it without resetting',
@@ -2352,16 +2352,16 @@ export const prefilledConnections: TechniqueConnection[] = [
   { fromTechniqueId: 311, toTechniqueId: 703, connectionType: 'TRANSITION' }, // Old School Sweep → Back Control (opponent defends)
   { fromTechniqueId: 101, toTechniqueId: 312, connectionType: 'FOLLOW_UP' }, // Closed Guard → Kimura Sweep
   { fromTechniqueId: 312, toTechniqueId: 403, connectionType: 'TRANSITION' }, // Kimura Sweep → Kimura (same grip)
-  { fromTechniqueId: 403, toTechniqueId: 312, connectionType: 'SETUP' },     // Kimura threat opens the sweep
+  { fromTechniqueId: 403, toTechniqueId: 312, connectionType: 'SETUP' }, // Kimura threat opens the sweep
   { fromTechniqueId: 312, toTechniqueId: 402, connectionType: 'FOLLOW_UP' }, // Kimura Sweep → Triangle (opponent defends)
   { fromTechniqueId: 102, toTechniqueId: 313, connectionType: 'FOLLOW_UP' }, // Half Guard → John Wayne Sweep
   { fromTechniqueId: 111, toTechniqueId: 313, connectionType: 'FOLLOW_UP' }, // Z Guard → John Wayne Sweep
-  { fromTechniqueId: 313, toTechniqueId: 311, connectionType: 'SETUP' },     // John Wayne ↔ Old School (mutual setups)
+  { fromTechniqueId: 313, toTechniqueId: 311, connectionType: 'SETUP' }, // John Wayne ↔ Old School (mutual setups)
 
   // New connections — submissions
   { fromTechniqueId: 101, toTechniqueId: 419, connectionType: 'FOLLOW_UP' }, // Closed Guard → Reverse Armbar
   { fromTechniqueId: 419, toTechniqueId: 401, connectionType: 'TRANSITION' }, // Reverse Armbar → standard Armbar
-  { fromTechniqueId: 401, toTechniqueId: 419, connectionType: 'SETUP' },     // Standard Armbar threat exposes reverse
+  { fromTechniqueId: 401, toTechniqueId: 419, connectionType: 'SETUP' }, // Standard Armbar threat exposes reverse
   { fromTechniqueId: 109, toTechniqueId: 420, connectionType: 'FOLLOW_UP' }, // SLX → Toe Hold
   { fromTechniqueId: 106, toTechniqueId: 420, connectionType: 'FOLLOW_UP' }, // X-Guard → Toe Hold
   { fromTechniqueId: 420, toTechniqueId: 407, connectionType: 'TRANSITION' }, // Toe Hold → Outside Heel Hook
@@ -2370,8 +2370,8 @@ export const prefilledConnections: TechniqueConnection[] = [
   { fromTechniqueId: 421, toTechniqueId: 408, connectionType: 'TRANSITION' }, // Calf Slicer → Inside Heel Hook
   { fromTechniqueId: 701, toTechniqueId: 422, connectionType: 'FOLLOW_UP' }, // Mount → Mounted Triangle
   { fromTechniqueId: 422, toTechniqueId: 401, connectionType: 'FOLLOW_UP' }, // Mounted Triangle → Armbar
-  { fromTechniqueId: 610, toTechniqueId: 422, connectionType: 'COUNTER' },   // Mounted Triangle Escape counters Mounted Triangle
-  { fromTechniqueId: 422, toTechniqueId: 610, connectionType: 'COUNTER' },   // Reciprocal
+  { fromTechniqueId: 610, toTechniqueId: 422, connectionType: 'COUNTER' }, // Mounted Triangle Escape counters Mounted Triangle
+  { fromTechniqueId: 422, toTechniqueId: 610, connectionType: 'COUNTER' }, // Reciprocal
 
   // New connections — takedowns
   { fromTechniqueId: 511, toTechniqueId: 703, connectionType: 'TRANSITION' }, // Snap Down Back Take → Back Control
@@ -2380,15 +2380,15 @@ export const prefilledConnections: TechniqueConnection[] = [
   { fromTechniqueId: 512, toTechniqueId: 405, connectionType: 'FOLLOW_UP' }, // Arm Drag → RNC
 
   // New connections — escapes (reciprocal counters)
-  { fromTechniqueId: 608, toTechniqueId: 401, connectionType: 'COUNTER' },   // Armbar Escape counters Armbar
-  { fromTechniqueId: 401, toTechniqueId: 608, connectionType: 'COUNTER' },   // Reciprocal
-  { fromTechniqueId: 609, toTechniqueId: 402, connectionType: 'COUNTER' },   // Triangle Escape counters Triangle
-  { fromTechniqueId: 402, toTechniqueId: 609, connectionType: 'COUNTER' },   // Reciprocal
-  { fromTechniqueId: 611, toTechniqueId: 406, connectionType: 'COUNTER' },   // Guillotine Escape GP counters Guillotine
-  { fromTechniqueId: 406, toTechniqueId: 611, connectionType: 'COUNTER' },   // Reciprocal
-  { fromTechniqueId: 612, toTechniqueId: 706, connectionType: 'COUNTER' },   // Granby Roll escapes turtle
+  { fromTechniqueId: 608, toTechniqueId: 401, connectionType: 'COUNTER' }, // Armbar Escape counters Armbar
+  { fromTechniqueId: 401, toTechniqueId: 608, connectionType: 'COUNTER' }, // Reciprocal
+  { fromTechniqueId: 609, toTechniqueId: 402, connectionType: 'COUNTER' }, // Triangle Escape counters Triangle
+  { fromTechniqueId: 402, toTechniqueId: 609, connectionType: 'COUNTER' }, // Reciprocal
+  { fromTechniqueId: 611, toTechniqueId: 406, connectionType: 'COUNTER' }, // Guillotine Escape GP counters Guillotine
+  { fromTechniqueId: 406, toTechniqueId: 611, connectionType: 'COUNTER' }, // Reciprocal
+  { fromTechniqueId: 612, toTechniqueId: 706, connectionType: 'COUNTER' }, // Granby Roll escapes turtle
   { fromTechniqueId: 612, toTechniqueId: 101, connectionType: 'TRANSITION' }, // Granby Roll recovers closed guard
-  { fromTechniqueId: 613, toTechniqueId: 702, connectionType: 'COUNTER' },   // Headlock Escape counters side headlock
+  { fromTechniqueId: 613, toTechniqueId: 702, connectionType: 'COUNTER' }, // Headlock Escape counters side headlock
 
   // New connections — new guards
   { fromTechniqueId: 105, toTechniqueId: 113, connectionType: 'TRANSITION' }, // DLR → Reverse DLR (rotate hook)
