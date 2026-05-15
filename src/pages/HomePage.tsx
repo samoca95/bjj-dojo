@@ -15,12 +15,12 @@ import {
   Trophy,
   Sparkles,
   X,
+  CircleHelp,
 } from 'lucide-react'
 import { db } from '../db/database'
 import { useI18n, withLocalizedName, type TranslationKey } from '../i18n'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { BELT } from '../constants/themeColors'
-import { getGoalMatTime } from '../utils/goalMatTime'
 import {
   getFocusTechniqueIds,
   setFocusTechniqueIds,
@@ -54,7 +54,6 @@ import {
   type FocusProgress,
 } from '../utils/focusGoals'
 import { computeDailyStreak } from '../utils/dailyStreak'
-import { computeRank } from '../utils/rankLadder'
 import { computeXp, computeLevel } from '../utils/xpLevel'
 import {
   ACHIEVEMENTS,
@@ -146,12 +145,6 @@ function BeltDisplay({
   )
 }
 
-function startOfDay(epoch: number): number {
-  const day = new Date(epoch)
-  day.setHours(0, 0, 0, 0)
-  return day.getTime()
-}
-
 function startOfWeek(epoch: number): number {
   const day = new Date(epoch)
   day.setHours(0, 0, 0, 0)
@@ -179,12 +172,14 @@ function SectionHeader({
   editing,
   onToggleEdit,
   cards,
+  showEditButton = true,
 }: {
   title: string
   sectionId: string
   editing: boolean
   onToggleEdit: () => void
   cards: { id: string; label: string }[]
+  showEditButton?: boolean
 }) {
   return (
     <div className="px-1 mb-3">
@@ -192,15 +187,19 @@ function SectionHeader({
         <h2 className="text-xs font-semibold tracking-widest text-gold">
           {title}
         </h2>
-        <button
-          onClick={onToggleEdit}
-          aria-label="Edit cards"
-          className={`p-1.5 -mr-1 rounded-lg ${
-            editing ? 'bg-gold text-black' : 'text-zinc-500 active:bg-zinc-800'
-          }`}
-        >
-          {editing ? <X size={14} /> : <Pencil size={14} />}
-        </button>
+        {showEditButton && (
+          <button
+            onClick={onToggleEdit}
+            aria-label="Edit cards"
+            className={`p-1.5 -mr-1 rounded-lg ${
+              editing
+                ? 'bg-gold text-black'
+                : 'text-zinc-500 active:bg-zinc-800'
+            }`}
+          >
+            {editing ? <X size={14} /> : <Pencil size={14} />}
+          </button>
+        )}
       </div>
       {editing && <SectionCardEditor sectionId={sectionId} cards={cards} />}
     </div>
@@ -385,6 +384,47 @@ function StatCard({
   )
 }
 
+function ScoreHelp({
+  label,
+  description,
+}: {
+  label: string
+  description: string
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        aria-label={`${label} info`}
+        className="text-zinc-500 active:text-zinc-300"
+      >
+        <CircleHelp size={13} />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-zinc-700 bg-zinc-900 p-2.5 text-[11px] leading-relaxed text-zinc-300 shadow-lg">
+          {description}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ScoreLabel({
+  label,
+  description,
+}: {
+  label: string
+  description: string
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-xs text-zinc-500">{label}</span>
+      <ScoreHelp label={label} description={description} />
+    </div>
+  )
+}
+
 export default function HomePage() {
   const navigate = useNavigate()
   const { t, language } = useI18n()
@@ -468,11 +508,8 @@ export default function HomePage() {
     window.addEventListener(ACHIEVEMENTS_UPDATED_EVENT, sync)
     return () => window.removeEventListener(ACHIEVEMENTS_UPDATED_EVENT, sync)
   }, [])
-  const todayStart = startOfDay(Date.now())
-  const weekStart = todayStart - 6 * DAY_MS
   const currentWeekStart = startOfWeek(Date.now())
   const previousWeekStart = currentWeekStart - 7 * DAY_MS
-  const weeklyGoalMinutes = getGoalMatTime()
 
   const sessionCount = useLiveQuery(() => db.sessions.count(), [], 0)
   const sessions = useLiveQuery(() => db.sessions.toArray(), [], [])
@@ -491,11 +528,6 @@ export default function HomePage() {
     },
     [],
     { given: 0, received: 0 },
-  )
-  const weeklySessions = useLiveQuery(
-    () => db.sessions.where('date').aboveOrEqual(weekStart).toArray(),
-    [weekStart],
-    [],
   )
   const recentSessions = useLiveQuery(
     () => db.sessions.orderBy('date').reverse().limit(5).toArray(),
@@ -557,26 +589,14 @@ export default function HomePage() {
     const m = totalMinutes % 60
     return h > 0 ? `${h}h ${m}m` : `${m}m`
   }, [totalMinutes])
-  const weeklyMinutes = useMemo(
-    () => (weeklySessions ?? []).reduce((sum, s) => sum + s.durationMinutes, 0),
-    [weeklySessions],
-  )
-  const weeklyGoalPct = useMemo(
-    () => Math.min(100, Math.round((weeklyMinutes / weeklyGoalMinutes) * 100)),
-    [weeklyMinutes, weeklyGoalMinutes],
-  )
-
-  const { last5TapCounts, avgTaps5, maxTaps5 } = useMemo(() => {
+  const avgTaps5 = useMemo(() => {
     const sorted = [...(recentSessions ?? [])].sort((a, b) => a.date - b.date)
     const last5TapCounts = sorted.map(
       (s) => tapCountsBySessionId.get(s.id ?? -1) ?? 0,
     )
-    const avgTaps5 =
-      last5TapCounts.length === 0
-        ? 0
-        : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
-    const maxTaps5 = Math.max(...last5TapCounts, 1)
-    return { last5TapCounts, avgTaps5, maxTaps5 }
+    return last5TapCounts.length === 0
+      ? 0
+      : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
   }, [recentSessions, tapCountsBySessionId])
   const focusTechniques = useMemo(
     () => (techniques ?? []).filter((t) => focusTechniqueIds.includes(t.id)),
@@ -622,8 +642,6 @@ export default function HomePage() {
     () => computeDailyStreak(sessions ?? [], Date.now()),
     [sessions],
   )
-
-  const rankProgress = useMemo(() => computeRank(totalMinutes), [totalMinutes])
 
   const levelInfo = useMemo(
     () =>
@@ -699,13 +717,16 @@ export default function HomePage() {
 
   const cardVisible = (sectionId: HomeSectionId, cardId: string) => {
     void cardVisTick
-    return getCardVisible(sectionId, cardId, true)
+    const fallback =
+      sectionId === 'gamification' && cardId === 'achievements' ? false : true
+    return getCardVisible(sectionId, cardId, fallback)
   }
 
   const statsCardDefs: {
     id: string
     labelKey: TranslationKey
     node: ReactNode
+    fullWidth?: boolean
   }[] = [
     {
       id: 'matTime',
@@ -730,24 +751,37 @@ export default function HomePage() {
       ),
     },
     {
-      id: 'tapsGiven',
-      labelKey: 'Taps Given',
+      id: 'taps',
+      labelKey: 'Submissions',
       node: (
-        <StatCard
-          key="tapsGiven"
-          label={t('Taps Given')}
-          value={String(tapCounts?.given ?? 0)}
-        />
+        <div key="taps" className="bg-zinc-900 rounded-2xl px-4 py-3">
+          <div className="text-xs text-zinc-500 mb-2">{t('Submissions')}</div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <div className="text-xl font-bold text-zinc-100 tabular-nums">
+                {tapCounts?.given ?? 0}
+              </div>
+              <div className="text-xs text-zinc-500">{t('Taps Given')}</div>
+            </div>
+            <div>
+              <div className="text-xl font-bold text-zinc-100 tabular-nums">
+                {tapCounts?.received ?? 0}
+              </div>
+              <div className="text-xs text-zinc-500">{t('Taps Received')}</div>
+            </div>
+          </div>
+        </div>
       ),
+      fullWidth: true,
     },
     {
-      id: 'tapsReceived',
-      labelKey: 'Taps Received',
+      id: 'avgTaps',
+      labelKey: 'Avg taps',
       node: (
         <StatCard
-          key="tapsReceived"
-          label={t('Taps Received')}
-          value={String(tapCounts?.received ?? 0)}
+          key="avgTaps"
+          label={t('Avg taps')}
+          value={avgTaps5.toFixed(1)}
         />
       ),
     },
@@ -767,87 +801,34 @@ export default function HomePage() {
           label: t(c.labelKey),
         }))}
       />
-      <div className="grid grid-cols-2 gap-3">
-        {statsCardDefs
-          .filter((c) => cardVisible('stats', c.id))
-          .map((c) => c.node)}
-      </div>
-    </section>
-  )
-
-  const sparklineCard = (
-    <div
-      key="sparkline"
-      className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center gap-4"
-    >
-      <div className="flex-1">
-        <div className="text-xs text-zinc-500">{t('Avg taps')}</div>
-        <div className="text-xl font-bold text-blue-400 mt-0.5">
-          {avgTaps5.toFixed(1)}
-        </div>
-      </div>
-      {last5TapCounts.length > 0 && (
-        <div className="flex items-end gap-1 h-6">
-          {last5TapCounts.map((count, i) => (
-            <div
-              key={i}
-              className="w-2 rounded-sm bg-blue-400/60"
-              style={{
-                height: `${Math.max(3, Math.round((count / maxTaps5) * 24))}px`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-
-  const weeklyGoalCard = (
-    <div key="weeklyGoal" className="bg-zinc-900 rounded-2xl px-4 py-3">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-zinc-400">{t('Weekly goal')}</span>
-        <span className="text-xs text-zinc-500 tabular-nums">
-          {weeklyMinutes}/{weeklyGoalMinutes}m
-        </span>
-      </div>
-      <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-        <div
-          className="h-full bg-gold"
-          style={{ width: `${weeklyGoalPct}%` }}
-        />
-      </div>
-    </div>
-  )
-
-  const trendingCardDefs: {
-    id: string
-    labelKey: TranslationKey
-    node: ReactNode
-  }[] = [
-    { id: 'sparkline', labelKey: 'Sparkline', node: sparklineCard },
-    { id: 'weeklyGoal', labelKey: 'Weekly goal', node: weeklyGoalCard },
-  ]
-
-  const trendingSection = (
-    <section key="trending">
-      <SectionHeader
-        title={t('THIS WEEK')}
-        sectionId="trending"
-        editing={editingCardsForSection === 'trending'}
-        onToggleEdit={() =>
-          setEditingCardsForSection((cur) =>
-            cur === 'trending' ? null : 'trending',
+      <div className="space-y-3">
+        {(() => {
+          const visible = statsCardDefs.filter((c) =>
+            cardVisible('stats', c.id),
           )
-        }
-        cards={trendingCardDefs.map((c) => ({
-          id: c.id,
-          label: t(c.labelKey),
-        }))}
-      />
-      <div className="grid grid-cols-2 gap-3">
-        {trendingCardDefs
-          .filter((c) => cardVisible('trending', c.id))
-          .map((c) => c.node)}
+          const out: ReactNode[] = []
+          let pending: typeof visible = []
+          const flush = () => {
+            if (pending.length === 0) return
+            out.push(
+              <div key={`row-${out.length}`} className="grid grid-cols-2 gap-3">
+                {pending.map((c) => c.node)}
+              </div>,
+            )
+            pending = []
+          }
+          for (const card of visible) {
+            if (card.fullWidth) {
+              flush()
+              out.push(card.node)
+            } else {
+              pending.push(card)
+              if (pending.length === 2) flush()
+            }
+          }
+          flush()
+          return out
+        })()}
       </div>
     </section>
   )
@@ -987,42 +968,18 @@ export default function HomePage() {
     </section>
   )
 
-  const rankCard = (
-    <div
-      key="rank"
-      className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center gap-3"
-    >
-      <div className="w-10 h-10 rounded-xl bg-gold/15 text-gold flex items-center justify-center shrink-0">
-        <Trophy size={22} strokeWidth={1.75} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-zinc-100 truncate">
-            {t(rankProgress.tier.nameKey)}
-          </span>
-          <span className="text-[11px] text-zinc-500 tabular-nums">
-            {Math.floor(rankProgress.hours)}h
-            {rankProgress.next ? ` / ${rankProgress.next.hours}h` : ''}
-          </span>
-        </div>
-        <div className="h-1.5 mt-1.5 rounded-full bg-zinc-800 overflow-hidden">
-          <div
-            className="h-full bg-gold"
-            style={{ width: `${rankProgress.pct}%` }}
-          />
-        </div>
-      </div>
-    </div>
-  )
-
-  const xpCard = (
-    <div key="xp" className="bg-zinc-900 rounded-2xl px-4 py-3">
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-2">
-          <Sparkles size={14} className="text-gold" />
-          <span className="text-sm font-bold text-zinc-100">
-            {t('Level')} {levelInfo.level}
-          </span>
+  const levelCard = (
+    <div key="level" className="bg-zinc-900 rounded-2xl px-4 py-3">
+      <div className="flex items-center justify-between">
+        <ScoreLabel
+          label={t('Level')}
+          description={t(
+            'Your level increases as your total XP grows. Levels get progressively harder to reach.',
+          )}
+        />
+        <div className="flex items-center gap-1.5 text-gold">
+          <Trophy size={14} />
+          <span className="text-sm font-bold">{levelInfo.level}</span>
         </div>
         <span
           className="text-[11px] text-zinc-500 tabular-nums"
@@ -1031,11 +988,33 @@ export default function HomePage() {
           {levelInfo.xpIntoLevel}/{levelInfo.xpForNext} {t('XP')}
         </span>
       </div>
-      <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+      <div className="h-1.5 mt-1.5 rounded-full bg-zinc-800 overflow-hidden">
         <div
           className="h-full bg-gold"
           style={{ width: `${levelInfo.pct}%` }}
         />
+      </div>
+    </div>
+  )
+
+  const xpCard = (
+    <div key="xp" className="bg-zinc-900 rounded-2xl px-4 py-3">
+      <div className="flex items-center justify-between mb-1.5">
+        <ScoreLabel
+          label={t('XP')}
+          description={t(
+            'XP comes from mat time, submissions given, and sessions logged. Mat time gives 1 XP every 15 minutes.',
+          )}
+        />
+        <div className="flex items-center gap-1.5">
+          <Sparkles size={14} className="text-gold" />
+          <span className="text-sm font-bold text-zinc-100">
+            {levelInfo.xp}
+          </span>
+        </div>
+      </div>
+      <div className="text-[11px] text-zinc-500">
+        {t('1 XP each 15 min • +5 per tap given • +2 per session')}
       </div>
     </div>
   )
@@ -1046,7 +1025,12 @@ export default function HomePage() {
       className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center justify-between"
     >
       <div>
-        <div className="text-xs text-zinc-500">{t('Daily streak')}</div>
+        <ScoreLabel
+          label={t('Daily streak')}
+          description={t(
+            'Consecutive days with at least one logged training session.',
+          )}
+        />
         <div className="text-xl font-bold text-sky-400 mt-0.5 tabular-nums">
           {dailyStreak.current}
           <span className="text-[10px] uppercase tracking-wide text-sky-400/70 ml-1">
@@ -1064,7 +1048,12 @@ export default function HomePage() {
       className="bg-zinc-900 rounded-2xl px-4 py-3 flex items-center justify-between"
     >
       <div>
-        <div className="text-xs text-zinc-500">{t('Weekly streak')}</div>
+        <ScoreLabel
+          label={t('Weekly streak')}
+          description={t(
+            'Consecutive weeks with at least one logged training session.',
+          )}
+        />
         <div className="text-xl font-bold text-orange-400 mt-0.5 tabular-nums">
           {trainingWeekStreak}
           <span className="text-[10px] uppercase tracking-wide text-orange-400/70 ml-1">
@@ -1087,6 +1076,9 @@ export default function HomePage() {
       achievements={ACHIEVEMENTS}
       earnedAt={earnedAt}
       ctx={achievementCtx}
+      infoText={t(
+        'Milestones unlocked from your long-term training consistency and progress.',
+      )}
     />
   )
 
@@ -1096,8 +1088,8 @@ export default function HomePage() {
     node: ReactNode
     fullWidth?: boolean
   }[] = [
-    { id: 'rank', labelKey: 'Rank', node: rankCard, fullWidth: true },
-    { id: 'xp', labelKey: 'Level', node: xpCard, fullWidth: true },
+    { id: 'level', labelKey: 'Level', node: levelCard, fullWidth: true },
+    { id: 'xp', labelKey: 'XP', node: xpCard, fullWidth: true },
     { id: 'dailyStreak', labelKey: 'Daily streak', node: dailyStreakCard },
     { id: 'weeklyStreak', labelKey: 'Weekly streak', node: weeklyStreakCard },
     {
@@ -1111,23 +1103,21 @@ export default function HomePage() {
   const visibleGamificationCards = gamificationCardDefs.filter((c) =>
     cardVisible('gamification', c.id),
   )
+  const isGamificationFirstVisible =
+    sectionOrder.find((id) => sectionVisibility[id]) === 'gamification'
 
   const gamificationSection = (
     <section key="gamification">
-      <SectionHeader
-        title={t('GAMIFICATION')}
-        sectionId="gamification"
-        editing={editingCardsForSection === 'gamification'}
-        onToggleEdit={() =>
-          setEditingCardsForSection((cur) =>
-            cur === 'gamification' ? null : 'gamification',
-          )
-        }
-        cards={gamificationCardDefs.map((c) => ({
-          id: c.id,
-          label: t(c.labelKey),
-        }))}
-      />
+      {!isGamificationFirstVisible && (
+        <SectionHeader
+          title={t('LEVEL AND SCORES')}
+          sectionId="gamification"
+          editing={false}
+          onToggleEdit={() => {}}
+          cards={[]}
+          showEditButton={false}
+        />
+      )}
       <div className="space-y-3">
         {(() => {
           const out: ReactNode[] = []
@@ -1227,14 +1217,6 @@ export default function HomePage() {
         fallback={(retry) => <SectionErrorCard onRetry={retry} />}
       >
         {gamificationSection}
-      </ErrorBoundary>
-    ),
-    trending: (
-      <ErrorBoundary
-        key="trending"
-        fallback={(retry) => <SectionErrorCard onRetry={retry} />}
-      >
-        {trendingSection}
       </ErrorBoundary>
     ),
     stats: (

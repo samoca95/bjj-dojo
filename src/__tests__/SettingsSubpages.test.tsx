@@ -36,7 +36,7 @@ describe('Settings subpages', () => {
     await user.click(screen.getAllByLabelText('Hide section')[0])
 
     expect(localStorage.getItem(HOME_SECTION_VISIBILITY_STORAGE_KEY)).toContain(
-      '"focus":false',
+      '"gamification":false',
     )
   })
 

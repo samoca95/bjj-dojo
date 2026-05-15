@@ -15,6 +15,8 @@ describe('FirstLaunchSetupPrompt', () => {
     localStorage.removeItem(APP_LANGUAGE_STORAGE_KEY)
     localStorage.removeItem(BELT_STORAGE_KEY)
     localStorage.removeItem(STRIPES_STORAGE_KEY)
+    localStorage.removeItem('bjj-dojo:user-name')
+    localStorage.removeItem('bjj-dojo:user-name-prompted')
   })
 
   it('requires setup on first app open', () => {
@@ -26,11 +28,12 @@ describe('FirstLaunchSetupPrompt', () => {
     expect(isInitialSetupRequired()).toBe(false)
   })
 
-  it('saves language, belt, and stripes', async () => {
+  it('saves language, belt, stripes, and user name prompt state', async () => {
     const user = userEvent.setup()
     const onComplete = vi.fn()
     render(<FirstLaunchSetupPrompt onComplete={onComplete} />)
 
+    await user.type(screen.getByPlaceholderText('Your name'), 'Ana')
     await user.click(screen.getByRole('button', { name: 'ES' }))
     await user.click(screen.getByRole('button', { name: 'Azul' }))
     await user.click(screen.getByRole('button', { name: 'Aumentar grados' }))
@@ -39,6 +42,8 @@ describe('FirstLaunchSetupPrompt', () => {
     expect(localStorage.getItem(APP_LANGUAGE_STORAGE_KEY)).toBe('es')
     expect(localStorage.getItem(BELT_STORAGE_KEY)).toBe('blue')
     expect(localStorage.getItem(STRIPES_STORAGE_KEY)).toBe('1')
+    expect(localStorage.getItem('bjj-dojo:user-name')).toBe('Ana')
+    expect(localStorage.getItem('bjj-dojo:user-name-prompted')).toBe('true')
     expect(localStorage.getItem(INITIAL_SETUP_COMPLETED_STORAGE_KEY)).toBe('1')
     expect(onComplete).toHaveBeenCalledTimes(1)
   })

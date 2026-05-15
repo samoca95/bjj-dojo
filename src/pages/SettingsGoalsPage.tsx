@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Eye, EyeOff } from 'lucide-react'
 import { useI18n } from '../i18n'
 import {
   getGoalMatTime,
   setGoalMatTime,
   DEFAULT_WEEKLY_GOAL_MINUTES,
 } from '../utils/goalMatTime'
+import { getCardVisible, setCardVisible } from '../utils/homeCardVisibility'
 
 export default function SettingsGoalsPage() {
   const navigate = useNavigate()
   const { language, t } = useI18n()
   const [goalInput, setGoalInput] = useState(String(getGoalMatTime()))
+  const [tick, setTick] = useState(0)
 
   const handleGoalSave = () => {
     const n = Number(goalInput)
@@ -21,6 +23,15 @@ export default function SettingsGoalsPage() {
       setGoalInput(String(getGoalMatTime()))
     }
   }
+
+  void tick
+  const levelCards = [
+    { id: 'level', label: t('Level') },
+    { id: 'xp', label: t('XP') },
+    { id: 'dailyStreak', label: t('Daily streak') },
+    { id: 'weeklyStreak', label: t('Weekly streak') },
+    { id: 'achievements', label: t('Achievements') },
+  ]
 
   return (
     <div className="min-h-full bg-zinc-950">
@@ -33,10 +44,10 @@ export default function SettingsGoalsPage() {
         </button>
         <h1 className="flex-1 font-bold text-zinc-100">
           {language === 'es'
-            ? 'Objetivos'
+            ? 'Objetivos y logros'
             : language === 'fr'
-              ? 'Objectifs'
-              : 'Goals'}
+              ? 'Objectifs et réalisations'
+              : 'Goals and Achievements'}
         </h1>
       </div>
 
@@ -67,6 +78,43 @@ export default function SettingsGoalsPage() {
           <p className="text-xs text-zinc-500">
             {t('Default:')} {DEFAULT_WEEKLY_GOAL_MINUTES} {t('min')}
           </p>
+        </div>
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">
+            {t('LEVEL AND SCORES VIEW')}
+          </h2>
+          <p className="text-xs text-zinc-500">
+            {t('Choose which level and score cards are shown on Home.')}
+          </p>
+          <div className="space-y-2">
+            {levelCards.map((card) => {
+              const fallback = card.id === 'achievements' ? false : true
+              const visible = getCardVisible('gamification', card.id, fallback)
+              return (
+                <button
+                  key={card.id}
+                  onClick={() => {
+                    setCardVisible('gamification', card.id, !visible)
+                    setTick((n) => n + 1)
+                  }}
+                  className="w-full flex items-center gap-2 bg-zinc-800 rounded-xl px-3 py-2 active:bg-zinc-700"
+                >
+                  <span className="flex-1 text-sm text-zinc-100 text-left">
+                    {card.label}
+                  </span>
+                  {visible ? (
+                    <Eye size={16} strokeWidth={2} className="text-zinc-300" />
+                  ) : (
+                    <EyeOff
+                      size={16}
+                      strokeWidth={2}
+                      className="text-zinc-500"
+                    />
+                  )}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
     </div>

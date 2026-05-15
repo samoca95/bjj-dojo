@@ -12,12 +12,12 @@ export interface LevelInfo {
   pct: number
 }
 
-export const XP_PER_30MIN = 1
+export const XP_PER_15MIN = 1
 export const XP_PER_GIVEN_TAP = 5
 export const XP_PER_SESSION = 2
 
 export function computeXp(inputs: XpInputs): number {
-  const matXp = Math.floor(inputs.totalMinutes / 30) * XP_PER_30MIN
+  const matXp = Math.floor(inputs.totalMinutes / 15) * XP_PER_15MIN
   const tapXp = inputs.givenTaps * XP_PER_GIVEN_TAP
   const sessionXp = inputs.sessionCount * XP_PER_SESSION
   return matXp + tapXp + sessionXp

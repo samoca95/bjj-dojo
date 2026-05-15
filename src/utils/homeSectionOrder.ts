@@ -1,7 +1,6 @@
 export type HomeSectionId =
-  | 'focus'
   | 'gamification'
-  | 'trending'
+  | 'focus'
   | 'stats'
   | 'calendar'
   | 'quickAccess'
@@ -14,26 +13,23 @@ export const HOME_SECTION_ORDER_UPDATED_EVENT =
   'bjj-dojo:home-section-order-updated'
 
 export const DEFAULT_HOME_SECTION_ORDER: HomeSectionId[] = [
-  'focus',
   'gamification',
-  'trending',
+  'focus',
   'stats',
   'calendar',
   'quickAccess',
 ]
 export const DEFAULT_HOME_SECTION_VISIBILITY: HomeSectionVisibility = {
-  focus: true,
   gamification: true,
-  trending: true,
+  focus: true,
   stats: true,
   calendar: true,
   quickAccess: false,
 }
 
 const ALL: HomeSectionId[] = [
-  'focus',
   'gamification',
-  'trending',
+  'focus',
   'stats',
   'calendar',
   'quickAccess',
