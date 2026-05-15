@@ -783,7 +783,7 @@ export default function HomePage() {
               )}
             />
           </div>
-          <div className="grid grid-cols-[1fr_1fr_1.2fr] gap-3 items-end">
+          <div className="grid grid-cols-[1fr_1fr_1.55fr] gap-3 items-end">
             <div>
               <div className="text-xl font-bold text-zinc-100 tabular-nums flex items-center gap-1">
                 {tapCounts?.received ?? 0}
@@ -798,24 +798,26 @@ export default function HomePage() {
               </div>
               <div className="text-xs text-zinc-500">{t('Given')}</div>
             </div>
-            <div className="space-y-2">
-              <div className="text-xl font-bold text-sky-400 tabular-nums">
-                {givenTapTrend.avgGiven.toFixed(1)}
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <div className="text-xl font-bold text-sky-400 tabular-nums">
+                  {givenTapTrend.avgGiven.toFixed(1)}
+                </div>
+                <div className="text-xs text-zinc-500">{t('Avg')}</div>
               </div>
-              <div className="text-xs text-zinc-500">{t('Avg')}</div>
               <div className="flex items-end gap-1.5 pt-0.5">
                 {givenTapTrend.paddedCounts.map((count, idx) => (
                   <div
                     key={idx}
-                    className="h-8 w-3 overflow-hidden rounded-[3px] bg-zinc-700/70"
+                    className="relative h-8 w-3 overflow-hidden rounded-[3px] border border-sky-400/90 bg-transparent"
                   >
                     <div
-                      className="w-full rounded-[3px]"
+                      className="absolute bottom-0 left-0 w-full rounded-[2px]"
                       style={{
                         height: `${Math.round((count / givenTapTrend.maxGiven) * 100)}%`,
-                        backgroundColor: '#38bdf8',
+                        backgroundColor: 'rgba(56,189,248,0.2)',
                         backgroundImage:
-                          'repeating-linear-gradient(-45deg, rgba(255,255,255,0.32) 0 2px, transparent 2px 5px)',
+                          'repeating-linear-gradient(-45deg, rgba(56,189,248,0.95) 0 2px, transparent 2px 5px)',
                       }}
                     />
                   </div>

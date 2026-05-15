@@ -6,6 +6,7 @@ import type { BeltColor } from './beltRank'
 import type { SessionExportData } from './exportSession'
 import qrcode from 'qrcode-generator'
 import bjjIconUrl from '/bjj-icon.svg'
+import jujitsuKanjiVerticalUrl from '../../icons/jujitsu_kanji_vertical.svg'
 
 /**
  * Renders a training session as a polished, social-media-ready PNG using the
@@ -461,6 +462,7 @@ function drawCompactStat(
 }
 
 let appLogoPromise: Promise<HTMLImageElement | null> | null = null
+let kanjiWatermarkPromise: Promise<HTMLImageElement | null> | null = null
 
 async function getAppLogoImage(): Promise<HTMLImageElement | null> {
   if (appLogoPromise) return appLogoPromise
@@ -471,6 +473,17 @@ async function getAppLogoImage(): Promise<HTMLImageElement | null> {
     img.src = bjjIconUrl
   })
   return await appLogoPromise
+}
+
+async function getKanjiWatermarkImage(): Promise<HTMLImageElement | null> {
+  if (kanjiWatermarkPromise) return kanjiWatermarkPromise
+  kanjiWatermarkPromise = new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => resolve(null)
+    img.src = jujitsuKanjiVerticalUrl
+  })
+  return await kanjiWatermarkPromise
 }
 
 export async function renderShareCard(
@@ -529,6 +542,16 @@ export async function renderShareCard(
     glow.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = glow
     ctx.fillRect(0, 0, w, h)
+    const watermark = await getKanjiWatermarkImage()
+    if (watermark) {
+      const watermarkH = h * 0.68
+      const watermarkW = (watermark.naturalWidth / watermark.naturalHeight) * watermarkH
+      const watermarkX = (w - watermarkW) / 2
+      const watermarkY = (h - watermarkH) / 2
+      withAlpha(ctx, 0.12, () => {
+        ctx.drawImage(watermark, watermarkX, watermarkY, watermarkW, watermarkH)
+      })
+    }
   }
 
   // Legibility scrim — keeps text readable over any photo.
@@ -552,7 +575,7 @@ export async function renderShareCard(
 
   const logo = await getAppLogoImage()
   if (logo) {
-    const logoSize = 56
+    const logoSize = 72
     const logoX = w - PAD - logoSize
     const logoY = y
     ctx.drawImage(logo, logoX, logoY, logoSize, logoSize)
