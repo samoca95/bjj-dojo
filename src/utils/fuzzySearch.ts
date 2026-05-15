@@ -45,29 +45,50 @@ export function techniqueMatchesQuery(
 }
 
 /**
- * Returns the first alias that matches the query, but only when the technique
- * name itself does not match — so callers can show "why" this result appeared.
+ * Returns the first alias (or English name) that matches the query, but only
+ * when the displayed name itself does not match — so callers can show "why"
+ * this result appeared.
+ *
+ * Pass `displayName` when showing a localized name: if the English
+ * `technique.name` is what matched (not the localized display name), it is
+ * returned so the UI can surface it as an indicator.
  */
 export function getMatchingAlias(
   technique: Technique,
   query: string,
+  displayName?: string,
 ): string | null {
-  if (!query.trim() || !technique.aliases?.length) return null
+  if (!query.trim()) return null
 
   const normQuery = normalize(query)
-  const normName = normalize(technique.name)
   const tokens = normQuery.split(/\s+/).filter(Boolean)
+  const normDisplayName = normalize(displayName ?? technique.name)
 
-  const nameMatches =
-    normName === normQuery ||
-    normName.startsWith(normQuery) ||
-    normName.includes(normQuery) ||
-    isSubsequence(normName, normQuery) ||
-    (tokens.length > 1 && tokens.every((token) => normName.includes(token)))
+  const displayNameMatches =
+    normDisplayName === normQuery ||
+    normDisplayName.startsWith(normQuery) ||
+    normDisplayName.includes(normQuery) ||
+    isSubsequence(normDisplayName, normQuery) ||
+    (tokens.length > 1 &&
+      tokens.every((token) => normDisplayName.includes(token)))
 
-  if (nameMatches) return null
+  if (displayNameMatches) return null
 
-  for (const alias of technique.aliases) {
+  // When a localized name is displayed and the English name is what matched,
+  // surface the English name as the match indicator.
+  if (displayName && displayName !== technique.name) {
+    const normEnglish = normalize(technique.name)
+    const englishMatches =
+      normEnglish === normQuery ||
+      normEnglish.startsWith(normQuery) ||
+      normEnglish.includes(normQuery) ||
+      isSubsequence(normEnglish, normQuery) ||
+      (tokens.length > 1 &&
+        tokens.every((token) => normEnglish.includes(token)))
+    if (englishMatches) return technique.name
+  }
+
+  for (const alias of technique.aliases ?? []) {
     if (fuzzyMatch(alias, query)) return alias
   }
   return null

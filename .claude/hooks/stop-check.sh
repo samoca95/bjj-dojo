@@ -37,6 +37,16 @@ ${eslint_out}
 "
 fi
 
+if ! prettier_out=$(npx prettier --check . 2>&1); then
+  failed=1
+  report="${report}Prettier formatting check failed:
+${prettier_out}
+
+Run \`npm run format\` to fix.
+
+"
+fi
+
 if [ "$failed" -eq 1 ]; then
   {
     echo "Code quality checks failed — fix these before finishing:"
