@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   fill="#000000"
+   class="bi bi-twitter-x"
+   viewBox="0 0 16 14.5"
+   id="Twitter-X--Streamline-Bootstrap"
+   height="14.5"
+   width="16"
+   version="1.1"
+   sodipodi:docname="twitter-X.svg"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   inkscape:export-filename="twitter-X.png"
+   inkscape:export-xdpi="888"
+   inkscape:export-ydpi="888"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs9" />
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="55.0625"
+     inkscape:cx="1.7253121"
+     inkscape:cy="7.3098751"
+     inkscape:window-width="1920"
+     inkscape:window-height="1013"
+     inkscape:window-x="-9"
+     inkscape:window-y="1341"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="Twitter-X--Streamline-Bootstrap" />
+  <desc
+     id="desc2">
+    Twitter X Streamline Icon: https://streamlinehq.com
+  </desc>
+  <path
+     d="m 12.6,0 h 2.454 L 9.694,6.142 16,14.5 H 11.063 L 7.196,9.43 2.771,14.5 H 0.316 L 6.049,7.93 0,0 H 5.063 L 8.558,4.633 12.601,0 Z M 11.74,13.028 H 13.1 L 4.323,1.395 H 2.865 Z"
+     stroke-width="1"
+     id="path4" />
+</svg>
