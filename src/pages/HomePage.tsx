@@ -406,10 +406,17 @@ function ScoreHelp({
           className={[
             'fixed left-1/2 top-24 z-30 -translate-x-1/2',
             'w-[min(28rem,calc(100vw-1.5rem))] max-h-[70vh] overflow-y-auto',
-            'rounded-xl border border-zinc-700 bg-zinc-900 p-3 shadow-lg',
+            'rounded-xl border border-zinc-700 bg-zinc-900 p-3 pr-9 shadow-lg',
             'text-[11px] leading-relaxed text-zinc-300 whitespace-pre-line',
           ].join(' ')}
         >
+          <button
+            onClick={() => setOpen(false)}
+            aria-label="Close help"
+            className="absolute top-2 right-2 w-6 h-6 rounded-full border border-zinc-600 text-zinc-400 flex items-center justify-center active:bg-zinc-800"
+          >
+            <X size={13} />
+          </button>
           {description}
         </div>
       )}
@@ -596,14 +603,19 @@ export default function HomePage() {
     const m = totalMinutes % 60
     return h > 0 ? `${h}h ${m}m` : `${m}m`
   }, [totalMinutes])
-  const avgTaps5 = useMemo(() => {
+  const givenTapTrend = useMemo(() => {
     const sorted = [...(recentSessions ?? [])].sort((a, b) => a.date - b.date)
-    const last5TapCounts = sorted.map(
-      (s) => tapCountsBySessionId.get(s.id ?? -1) ?? 0,
-    )
-    return last5TapCounts.length === 0
-      ? 0
-      : last5TapCounts.reduce((a, b) => a + b, 0) / last5TapCounts.length
+    const counts = sorted.map((s) => tapCountsBySessionId.get(s.id ?? -1) ?? 0)
+    const avgGiven =
+      counts.length === 0
+        ? 0
+        : counts.reduce((sum, value) => sum + value, 0) / counts.length
+    const paddedCounts = [
+      ...Array(Math.max(0, 5 - counts.length)).fill(0),
+      ...counts,
+    ]
+    const maxGiven = Math.max(1, ...paddedCounts)
+    return { avgGiven, paddedCounts, maxGiven }
   }, [recentSessions, tapCountsBySessionId])
   const focusTechniques = useMemo(
     () => (techniques ?? []).filter((t) => focusTechniqueIds.includes(t.id)),
@@ -762,35 +774,55 @@ export default function HomePage() {
       labelKey: 'Submissions',
       node: (
         <div key="taps" className="bg-zinc-900 rounded-2xl px-4 py-3">
-          <div className="text-xs text-zinc-500 mb-2">{t('Submissions')}</div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs text-zinc-500">{t('Submissions')}</span>
+            <ScoreHelp
+              label={t('Submissions')}
+              description={t(
+                'Given: total submissions you finished.\nReceived: total submissions you got caught in.\nAvg Given: average Given submissions across your last 5 logged sessions.\nThe 5 blue bars show Given submissions for each of those sessions (oldest to newest).',
+              )}
+            />
+          </div>
+          <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
             <div>
-              <div className="text-xl font-bold text-zinc-100 tabular-nums">
+              <div className="text-xl font-bold text-zinc-100 tabular-nums flex items-center gap-1">
                 {tapCounts?.given ?? 0}
+                <Zap size={16} className="text-green-500" strokeWidth={2} />
               </div>
-              <div className="text-xs text-zinc-500">{t('Taps Given')}</div>
+              <div className="text-xs text-zinc-500">{t('Given')}</div>
             </div>
             <div>
-              <div className="text-xl font-bold text-zinc-100 tabular-nums">
+              <div className="text-xl font-bold text-zinc-100 tabular-nums flex items-center gap-1">
                 {tapCounts?.received ?? 0}
+                <Hand size={16} className="text-red-400" strokeWidth={2} />
               </div>
-              <div className="text-xs text-zinc-500">{t('Taps Received')}</div>
+              <div className="text-xs text-zinc-500">{t('Received')}</div>
+            </div>
+            <div>
+              <div className="text-xl font-bold text-sky-400 tabular-nums">
+                {givenTapTrend.avgGiven.toFixed(1)}
+              </div>
+              <div className="text-xs text-zinc-500">{t('Avg Given')}</div>
+            </div>
+            <div className="flex items-end gap-1">
+              {givenTapTrend.paddedCounts.map((count, idx) => (
+                <div
+                  key={idx}
+                  className="h-16 w-4 rounded-md border border-sky-500/90 bg-zinc-950/40 overflow-hidden flex items-end"
+                >
+                  <div
+                    className="w-full bg-sky-500"
+                    style={{
+                      height: `${Math.round((count / givenTapTrend.maxGiven) * 100)}%`,
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>
       ),
       fullWidth: true,
-    },
-    {
-      id: 'avgTaps',
-      labelKey: 'Avg taps',
-      node: (
-        <StatCard
-          key="avgTaps"
-          label={t('Avg taps')}
-          value={avgTaps5.toFixed(1)}
-        />
-      ),
     },
   ]
 
@@ -1073,7 +1105,7 @@ export default function HomePage() {
     { id: 'level', labelKey: 'Level', node: levelCard, fullWidth: true },
     {
       id: 'streaks',
-      labelKey: 'Daily streak',
+      labelKey: 'Streaks',
       node: streaksCard,
       fullWidth: true,
     },
