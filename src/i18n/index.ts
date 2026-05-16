@@ -148,36 +148,6 @@ export function getTechniqueCues(
   return pack.techniqueContent[technique.id]?.cues ?? technique.cues ?? []
 }
 
-export function translateCategoryForExport(
-  category: Category,
-  language: AppLanguage,
-): Category {
-  if (language === 'en') return category
-  const pack = getLanguagePack(language)
-  const localized = pack.categoryContent[category.id]
-  if (!localized) return category
-  return {
-    ...category,
-    name: localized.name,
-    description: localized.description,
-  }
-}
-
-export function translateTechniqueForExport(
-  technique: Technique,
-  language: AppLanguage,
-): Technique {
-  if (language === 'en' || technique.isCustom) return technique
-  const pack = getLanguagePack(language)
-  const localized = pack.techniqueContent[technique.id]
-  if (!localized) return technique
-  return {
-    ...technique,
-    description: localized.description,
-    cues: localized.cues,
-  }
-}
-
 export function useI18n() {
   const [language, setLanguageState] = useState<AppLanguage>(getAppLanguage())
 

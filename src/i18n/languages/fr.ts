@@ -308,6 +308,50 @@ const FR_TRANSLATIONS = {
   Rank: 'Rang',
   Sparkline: 'Sparkline',
   'Mat time': 'Temps sur tatami',
+  // Auto-backup
+  'Auto-backup': 'Sauvegarde automatique',
+  'Auto-backup is off — your data only lives in this browser.':
+    'La sauvegarde automatique est désactivée — vos données ne vivent que dans ce navigateur.',
+  'Back up to a folder': 'Sauvegarder dans un dossier',
+  'Back up to GitHub': 'Sauvegarder sur GitHub',
+  'Choose folder': 'Choisir un dossier',
+  'Reconnect folder': 'Reconnecter le dossier',
+  'Disconnect folder': 'Déconnecter le dossier',
+  'Backup now': 'Sauvegarder maintenant',
+  'Last backup': 'Dernière sauvegarde',
+  Never: 'Jamais',
+  'GitHub token': 'Jeton GitHub',
+  'Personal access token': 'Jeton d’accès personnel',
+  'Repository (owner/repo)': 'Dépôt (utilisateur/dépôt)',
+  'Gist ID': 'ID du gist',
+  'Test connection': 'Tester la connexion',
+  'Connected as': 'Connecté en tant que',
+  'Folder backup is only available in Chromium-based browsers.':
+    'La sauvegarde dossier est disponible uniquement sur les navigateurs Chromium.',
+  'Use a fine-grained token scoped to one repo. Revoke it if your device is lost.':
+    'Utilisez un jeton fine-grained limité à un seul dépôt. Révoquez-le en cas de perte de l’appareil.',
+  'Auto-backup failed': 'Échec de la sauvegarde automatique',
+  'Could not write backup to the chosen destination.':
+    'Impossible d’écrire la sauvegarde dans la destination choisie.',
+  // Setup restore prompt
+  'Restore from backup': 'Restaurer depuis une sauvegarde',
+  'Set up backup': 'Configurer la sauvegarde',
+  'Where should we keep your backups?': 'Où conserver vos sauvegardes ?',
+  'A folder on your device': 'Un dossier sur votre appareil',
+  'A GitHub repo or gist': 'Un dépôt ou gist GitHub',
+  'Skip — start fresh in this browser':
+    'Passer — repartir de zéro dans ce navigateur',
+  'No previous backup here — starting fresh.':
+    'Pas de sauvegarde précédente ici — on part de zéro.',
+  'Found a backup': 'Sauvegarde trouvée',
+  'Restore this backup': 'Restaurer cette sauvegarde',
+  'Ignore — start fresh': 'Ignorer — repartir de zéro',
+  'Choose a backup to restore': 'Choisissez une sauvegarde à restaurer',
+  'Connected. Looking for backups…': 'Connecté. Recherche des sauvegardes…',
+  sessions: 'sessions',
+  techniques: 'techniques',
+  'How backups work': 'Comment fonctionnent les sauvegardes',
+  'Need help?': 'Besoin d’aide ?',
 } satisfies Record<TranslationKey, string>
 
 const FR_CATEGORY_CONTENT: LanguagePack['categoryContent'] = {

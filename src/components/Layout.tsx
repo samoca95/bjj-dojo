@@ -4,7 +4,11 @@ import BottomNav from './BottomNav'
 import OfflineNotice from './OfflineNotice'
 import PwaUpdatePrompt from './PwaUpdatePrompt'
 import FirstLaunchSetupPrompt from './FirstLaunchSetupPrompt'
-import { isInitialSetupRequired } from './firstLaunchSetup'
+import SetupRestorePrompt from './SetupRestorePrompt'
+import {
+  isInitialSetupRequired,
+  isRestorePromptRequired,
+} from './firstLaunchSetup'
 import OnboardingFlow from './OnboardingFlow'
 import { isOnboardingRequired } from './onboarding'
 import QuotaErrorModal from './QuotaErrorModal'
@@ -12,11 +16,17 @@ import { UndoProvider, UndoSnackbar } from './UndoContext'
 
 function LayoutInner() {
   const navigate = useNavigate()
-  const [showInitialSetup, setShowInitialSetup] = useState(() =>
-    isInitialSetupRequired(),
+  const [showRestorePrompt, setShowRestorePrompt] = useState(() =>
+    isRestorePromptRequired(),
+  )
+  const [showInitialSetup, setShowInitialSetup] = useState(
+    () => !isRestorePromptRequired() && isInitialSetupRequired(),
   )
   const [showOnboarding, setShowOnboarding] = useState(
-    () => !isInitialSetupRequired() && isOnboardingRequired(),
+    () =>
+      !isRestorePromptRequired() &&
+      !isInitialSetupRequired() &&
+      isOnboardingRequired(),
   )
 
   return (
@@ -29,7 +39,18 @@ function LayoutInner() {
       <PwaUpdatePrompt />
       <QuotaErrorModal />
       <UndoSnackbar />
-      {showInitialSetup && (
+      {showRestorePrompt && (
+        <SetupRestorePrompt
+          onComplete={() => {
+            setShowRestorePrompt(false)
+            // After restore the initial-setup flag is set, so isInitialSetupRequired() is false.
+            if (isInitialSetupRequired()) setShowInitialSetup(true)
+            else if (isOnboardingRequired()) setShowOnboarding(true)
+            navigate('/', { replace: true })
+          }}
+        />
+      )}
+      {!showRestorePrompt && showInitialSetup && (
         <FirstLaunchSetupPrompt
           onComplete={() => {
             setShowInitialSetup(false)
@@ -38,7 +59,7 @@ function LayoutInner() {
           }}
         />
       )}
-      {!showInitialSetup && showOnboarding && (
+      {!showRestorePrompt && !showInitialSetup && showOnboarding && (
         <OnboardingFlow onComplete={() => setShowOnboarding(false)} />
       )}
     </div>
