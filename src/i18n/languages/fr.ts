@@ -363,6 +363,9 @@ const FR_TRANSLATIONS = {
   'Where should we keep your backups?': 'Où conserver vos sauvegardes ?',
   'A folder on your device': 'Un dossier sur votre appareil',
   'A GitHub repo or gist': 'Un dépôt ou gist GitHub',
+  'You can enable folder and GitHub backups together later in Settings.':
+    'Vous pourrez activer dossier et GitHub ensemble plus tard dans Réglages.',
+  'Omit for now': 'Passer pour le moment',
   'Skip — start fresh in this browser':
     'Passer — repartir de zéro dans ce navigateur',
   'No previous backup here — starting fresh.':

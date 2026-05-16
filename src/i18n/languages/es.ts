@@ -360,6 +360,9 @@ const ES_TRANSLATIONS = {
   'Where should we keep your backups?': '¿Dónde guardamos tus copias?',
   'A folder on your device': 'Una carpeta en tu dispositivo',
   'A GitHub repo or gist': 'Un repo o gist de GitHub',
+  'You can enable folder and GitHub backups together later in Settings.':
+    'Luego puedes activar carpeta y GitHub juntos desde Ajustes.',
+  'Omit for now': 'Omitir por ahora',
   'Skip — start fresh in this browser':
     'Omitir — empezar desde cero en este navegador',
   'No previous backup here — starting fresh.':
