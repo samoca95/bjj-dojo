@@ -1,4 +1,4 @@
-export type PlannedSessionKind = 'gi' | 'nogi' | 'gym'
+export type PlannedSessionKind = 'gi' | 'nogi' | 'gym' | 'stretch'
 
 export const PLANNED_SESSIONS_STORAGE_KEY = 'bjj-dojo:planned-sessions'
 export const PLANNED_SESSIONS_ROLLOVER_KEY =
@@ -8,8 +8,14 @@ export const PLANNED_SESSIONS_UPDATED_EVENT =
 
 export type PlannedSessionsMap = Record<string, PlannedSessionKind>
 
-const VALID: PlannedSessionKind[] = ['gi', 'nogi', 'gym']
-const CYCLE: (PlannedSessionKind | null)[] = [null, 'gi', 'nogi', 'gym']
+const VALID: PlannedSessionKind[] = ['gi', 'nogi', 'gym', 'stretch']
+const CYCLE: (PlannedSessionKind | null)[] = [
+  null,
+  'gi',
+  'nogi',
+  'gym',
+  'stretch',
+]
 
 export function startOfDay(epoch: number): number {
   const d = new Date(epoch)
