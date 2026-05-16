@@ -13,6 +13,8 @@
 const DEVICE_CODE_URL = 'https://github.com/login/device/code'
 const ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 const REQUIRED_SCOPE = 'repo'
+const OAUTH_BROWSER_ERROR =
+  'GitHub OAuth cannot be completed from this browser build because GitHub blocks cross-origin device-flow requests (CORS).'
 
 export interface DeviceCodeResponse {
   device_code: string
@@ -59,11 +61,19 @@ export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
       'not_configured',
     )
   }
-  const res = await fetch(DEVICE_CODE_URL, {
-    method: 'POST',
-    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ client_id: clientId, scope: REQUIRED_SCOPE }),
-  })
+  let res: Response
+  try {
+    res = await fetch(DEVICE_CODE_URL, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ client_id: clientId, scope: REQUIRED_SCOPE }),
+    })
+  } catch {
+    throw new DeviceFlowError(OAUTH_BROWSER_ERROR, 'network')
+  }
   if (!res.ok) {
     throw new DeviceFlowError(
       `Device code request failed (${res.status}).`,
@@ -111,18 +121,23 @@ export async function pollForToken(
       throw new DeviceFlowError('Cancelled.', 'unknown')
     }
 
-    const res = await fetch(ACCESS_TOKEN_URL, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        client_id: clientId,
-        device_code: deviceCode,
-        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-      }),
-    })
+    let res: Response
+    try {
+      res = await fetch(ACCESS_TOKEN_URL, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: clientId,
+          device_code: deviceCode,
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+        }),
+      })
+    } catch {
+      throw new DeviceFlowError(OAUTH_BROWSER_ERROR, 'network')
+    }
     if (!res.ok) {
       throw new DeviceFlowError(
         `Token request failed (${res.status}).`,

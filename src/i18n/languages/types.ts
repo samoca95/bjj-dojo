@@ -327,6 +327,8 @@ export type TranslationKey =
   | 'Where should we keep your backups?'
   | 'A folder on your device'
   | 'A GitHub repo or gist'
+  | 'You can enable folder and GitHub backups together later in Settings.'
+  | 'Omit for now'
   | 'Skip — start fresh in this browser'
   | 'No previous backup here — starting fresh.'
   | 'Found a backup'
