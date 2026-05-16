@@ -1,0 +1,46 @@
+name: Deploy OAuth Proxy (Cloudflare Worker)
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'oauth-proxy/**'
+      - '.github/workflows/deploy-oauth-proxy.yml'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Deploy worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: oauth-proxy
+          command: deploy
+
+      - name: Print proxy URL hint
+        run: |
+          echo ""
+          echo "==========================================================="
+          echo "  OAuth proxy deployed."
+          echo ""
+          echo "  Find the worker URL above (looks like:"
+          echo "    https://bjj-dojo-oauth-proxy.<account>.workers.dev)"
+          echo ""
+          echo "  Save it as a repo secret named:"
+          echo "    VITE_GITHUB_OAUTH_PROXY_URL"
+          echo "==========================================================="

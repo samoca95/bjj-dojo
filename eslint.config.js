@@ -13,6 +13,7 @@ export default tseslint.config(
       'node_modules',
       '**/*.tsbuildinfo',
       'public/offline.html',
+      'oauth-proxy/**',
     ],
   },
   {

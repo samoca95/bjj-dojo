@@ -74,6 +74,42 @@ describe('requestDeviceCode', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(errResp(500))
     await expect(requestDeviceCode()).rejects.toBeInstanceOf(DeviceFlowError)
   })
+
+  it('routes requests through the proxy URL when configured', async () => {
+    vi.stubEnv('VITE_GITHUB_OAUTH_PROXY_URL', 'https://oauth.test/proxy')
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      okJson({
+        device_code: 'dev',
+        user_code: 'USER-CODE',
+        verification_uri: 'https://github.com/login/device',
+        interval: 5,
+        expires_in: 900,
+      }),
+    )
+    await requestDeviceCode()
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://oauth.test/proxy/device/code',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('falls back to github.com directly when no proxy URL is set', async () => {
+    vi.stubEnv('VITE_GITHUB_OAUTH_PROXY_URL', '')
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      okJson({
+        device_code: 'dev',
+        user_code: 'USER-CODE',
+        verification_uri: 'https://github.com/login/device',
+        interval: 5,
+        expires_in: 900,
+      }),
+    )
+    await requestDeviceCode()
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://github.com/login/device/code',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
 })
 
 describe('pollForToken', () => {
