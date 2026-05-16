@@ -137,7 +137,13 @@ describe('Backup round-trip parity', () => {
     })
 
     const sessionIds: number[] = []
-    for (const type of ['GI', 'NOGI', 'OPEN_MAT', 'COMPETITION', 'DRILLING'] as const) {
+    for (const type of [
+      'GI',
+      'NOGI',
+      'OPEN_MAT',
+      'COMPETITION',
+      'DRILLING',
+    ] as const) {
       const id = (await db.sessions.add({
         date: Date.now() + sessionIds.length * 1000,
         durationMinutes: 60,
@@ -365,7 +371,11 @@ describe('Referential integrity', () => {
   it('rejects a techniqueConnection with a dangling toTechniqueId', async () => {
     const bad = fixture()
     bad.techniqueConnections = [
-      { fromTechniqueId: 101, toTechniqueId: 4242, connectionType: 'FOLLOW_UP' },
+      {
+        fromTechniqueId: 101,
+        toTechniqueId: 4242,
+        connectionType: 'FOLLOW_UP',
+      },
     ]
     await expect(importDatabaseBackup(bad, db)).rejects.toThrow(
       /techniqueConnections\[0\]: 'toTechniqueId' 4242 does not match/,

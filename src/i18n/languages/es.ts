@@ -304,6 +304,48 @@ const ES_TRANSLATIONS = {
   Rank: 'Rango',
   Sparkline: 'Sparkline',
   'Mat time': 'Tiempo en tatami',
+  // Auto-backup
+  'Auto-backup': 'Copia automática',
+  'Auto-backup is off — your data only lives in this browser.':
+    'La copia automática está desactivada — tus datos solo viven en este navegador.',
+  'Back up to a folder': 'Copia a una carpeta',
+  'Back up to GitHub': 'Copia a GitHub',
+  'Choose folder': 'Elegir carpeta',
+  'Reconnect folder': 'Reconectar carpeta',
+  'Disconnect folder': 'Desconectar carpeta',
+  'Backup now': 'Hacer copia ahora',
+  'Last backup': 'Última copia',
+  Never: 'Nunca',
+  'GitHub token': 'Token de GitHub',
+  'Personal access token': 'Token de acceso personal',
+  'Repository (owner/repo)': 'Repositorio (usuario/repo)',
+  'Gist ID': 'ID del gist',
+  'Test connection': 'Probar conexión',
+  'Connected as': 'Conectado como',
+  'Folder backup is only available in Chromium-based browsers.':
+    'La copia a carpeta solo está disponible en navegadores basados en Chromium.',
+  'Use a fine-grained token scoped to one repo. Revoke it if your device is lost.':
+    'Usa un token de grano fino limitado a un repo. Revócalo si pierdes tu dispositivo.',
+  'Auto-backup failed': 'Falló la copia automática',
+  'Could not write backup to the chosen destination.':
+    'No se pudo guardar la copia en el destino elegido.',
+  // Setup restore prompt
+  'Restore from backup': 'Restaurar desde una copia',
+  'Set up backup': 'Configurar copia de seguridad',
+  'Where should we keep your backups?': '¿Dónde guardamos tus copias?',
+  'A folder on your device': 'Una carpeta en tu dispositivo',
+  'A GitHub repo or gist': 'Un repo o gist de GitHub',
+  'Skip — start fresh in this browser':
+    'Omitir — empezar desde cero en este navegador',
+  'No previous backup here — starting fresh.':
+    'No hay copias previas aquí — empezando desde cero.',
+  'Found a backup': 'Encontramos una copia',
+  'Restore this backup': 'Restaurar esta copia',
+  'Ignore — start fresh': 'Ignorar — empezar desde cero',
+  'Choose a backup to restore': 'Elige una copia para restaurar',
+  'Connected. Looking for backups…': 'Conectado. Buscando copias…',
+  sessions: 'sesiones',
+  techniques: 'técnicas',
 } satisfies Record<TranslationKey, string>
 
 export const ES_CATEGORY_CONTENT: Record<

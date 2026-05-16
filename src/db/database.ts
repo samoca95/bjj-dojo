@@ -21,6 +21,12 @@ import {
   restoreBackupPreferences,
 } from '../utils/backupPreferences'
 
+/** Generic key/value blob stored in the appState table (auto-backup config, FS handle, …). */
+export interface AppStateRecord {
+  key: string
+  value: unknown
+}
+
 export class BJJDatabase extends Dexie {
   categories!: Table<Category, number>
   techniques!: Table<Technique, number>
@@ -30,6 +36,7 @@ export class BJJDatabase extends Dexie {
   sessionTaps!: Table<SessionTap, number>
   clubs!: Table<Club, number>
   drillPlans!: Table<DrillPlan, number>
+  appState!: Table<AppStateRecord, string>
 
   constructor(name = 'bjj-dojo') {
     super(name)
@@ -203,6 +210,19 @@ export class BJJDatabase extends Dexie {
         )
       })
 
+    this.version(9).stores({
+      categories: 'id, name',
+      techniques: 'id, categoryId, name',
+      techniqueConnections:
+        '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+      sessions: '++id, date, clubId',
+      sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
+      sessionTaps: '++id, sessionId, techniqueId',
+      clubs: '++id, sortOrder, name',
+      drillPlans: '++id, name, createdAt',
+      appState: 'key',
+    })
+
     // Populate on first creation — registered here so every instance gets it
     // (including isolated test instances).
     this.on('populate', async () => {
@@ -214,6 +234,29 @@ export class BJJDatabase extends Dexie {
 }
 
 export const db = new BJJDatabase()
+
+export async function getAppStateValue<T = unknown>(
+  key: string,
+  database: BJJDatabase = db,
+): Promise<T | undefined> {
+  const record = await database.appState.get(key)
+  return record ? (record.value as T) : undefined
+}
+
+export async function setAppStateValue(
+  key: string,
+  value: unknown,
+  database: BJJDatabase = db,
+): Promise<void> {
+  await database.appState.put({ key, value })
+}
+
+export async function deleteAppStateValue(
+  key: string,
+  database: BJJDatabase = db,
+): Promise<void> {
+  await database.appState.delete(key)
+}
 
 export async function resetPrefilledTechniques(database: BJJDatabase = db) {
   const prefilledIds = prefilledTechniques.map((t) => t.id)
@@ -271,7 +314,10 @@ export interface DatabaseBackup {
 /** Stable fingerprint of the live schema — table names + index strings. */
 function computeSchemaSignature(database: BJJDatabase): string {
   return database.tables
-    .map((t) => `${t.name}:${t.schema.primKey.src}|${t.schema.indexes.map((i) => i.src).join(',')}`)
+    .map(
+      (t) =>
+        `${t.name}:${t.schema.primKey.src}|${t.schema.indexes.map((i) => i.src).join(',')}`,
+    )
     .sort()
     .join(';')
 }
@@ -323,8 +369,7 @@ export async function exportDatabaseBackup(
 /** Returns [] for missing keys (backward-compatible) but throws on wrong types. */
 function asArrayStrict<T>(value: unknown, fieldName: string): T[] {
   if (value === undefined || value === null) return []
-  if (!Array.isArray(value))
-    throw new Error(`${fieldName}: expected an array`)
+  if (!Array.isArray(value)) throw new Error(`${fieldName}: expected an array`)
   return value as T[]
 }
 

@@ -36,6 +36,7 @@ import {
 } from '../utils/validation'
 import { runWithTelemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
+import { scheduleAfterMutation } from '../utils/autoBackup'
 
 function toDateInput(epoch: number) {
   const d = new Date(epoch)
@@ -244,6 +245,7 @@ export default function AddEditSessionPage() {
           )
         }
       })
+      scheduleAfterMutation()
       navigate(
         `/sessions/${sid}`,
         isEdit ? undefined : { replace: true, state: { justCreated: true } },
