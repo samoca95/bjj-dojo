@@ -394,6 +394,7 @@ const ES_TRANSLATIONS = {
   FLOWS: 'FLOWS',
   'Open Flows': 'Open Flows',
   'Reset flow icon': 'Reset flow icon',
+  'Strategic combination of techniques': 'Combinación estratégica de técnicas',
 } satisfies Record<TranslationKey, string>
 
 export const ES_CATEGORY_CONTENT: Record<

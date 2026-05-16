@@ -53,37 +53,35 @@ export default function CategoriesPage() {
       </div>
 
       <div className="px-4 pb-6 space-y-3">
-        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
-          <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {t('FLOWS')}
-          </h2>
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0">
-              <CategoryIcon value={flowIcon} size={20} className="text-gold" />
-            </div>
-            <div className="flex-1 text-sm text-zinc-300">
-              {t('Flow button icon')}
-            </div>
-            {flowIcon !== DEFAULT_FLOW_ICON && (
-              <button
-                onClick={() => {
-                  setFlowIcon(DEFAULT_FLOW_ICON)
-                  setFlowIconState(DEFAULT_FLOW_ICON)
-                }}
-                aria-label={t('Reset flow icon')}
-                className="p-2 text-zinc-500 active:text-zinc-200"
-              >
-                <RotateCcw size={16} strokeWidth={2} />
-              </button>
-            )}
-            <button
-              onClick={() => setFlowPickerOpen(true)}
-              aria-label={t('Edit')}
-              className="p-2 text-zinc-600 active:text-zinc-200"
-            >
-              <Pencil size={18} strokeWidth={2} />
-            </button>
+        <div className="bg-zinc-900 rounded-2xl p-4 flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0">
+            <CategoryIcon value={flowIcon} size={20} className="text-gold" />
           </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-zinc-100">{t('Flows')}</div>
+            <div className="text-xs text-zinc-500 mt-1 line-clamp-2">
+              {t('Strategic combination of techniques')}
+            </div>
+          </div>
+          {flowIcon !== DEFAULT_FLOW_ICON && (
+            <button
+              onClick={() => {
+                setFlowIcon(DEFAULT_FLOW_ICON)
+                setFlowIconState(DEFAULT_FLOW_ICON)
+              }}
+              aria-label={t('Reset flow icon')}
+              className="p-2 text-zinc-500 active:text-zinc-200"
+            >
+              <RotateCcw size={16} strokeWidth={2} />
+            </button>
+          )}
+          <button
+            onClick={() => setFlowPickerOpen(true)}
+            aria-label={t('Edit')}
+            className="p-2 text-zinc-600 active:text-zinc-200"
+          >
+            <Pencil size={18} strokeWidth={2} />
+          </button>
         </div>
 
         {categories?.map((category) => {

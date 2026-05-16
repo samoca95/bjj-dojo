@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Rotate3d } from 'lucide-react'
 
 export default function FlowsPage() {
   const navigate = useNavigate()
@@ -19,6 +19,21 @@ export default function FlowsPage() {
       <div className="px-4 pb-6 flex items-center justify-center min-h-48">
         <p className="text-sm text-zinc-500">Coming soon</p>
       </div>
+
+      <button
+        onClick={() =>
+          window.open(
+            'https://eel.is/GrappleMap/index.html',
+            '_blank',
+            'noopener,noreferrer',
+          )
+        }
+        aria-label="Open GrappleMap 3D"
+        className="fixed bottom-20 left-4 h-10 pl-3 pr-4 rounded-full bg-gold text-black active:bg-gold-light flex items-center gap-2 transition-colors z-40"
+      >
+        <Rotate3d size={16} className="text-black" />
+        <span className="text-sm font-semibold leading-none">3D</span>
+      </button>
     </div>
   )
 }
