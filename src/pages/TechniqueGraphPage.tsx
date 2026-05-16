@@ -37,10 +37,13 @@ const DIMMED_NODE_OPACITY = 0.26
 const DIMMED_EDGE_OPACITY = 0.14
 const GLOBAL_LABEL_MAX_CHARS_PER_LINE = 14
 const GLOBAL_LABEL_MAX_LINES = 2
+// Approximate average glyph width for the current graph label font at size 12.
+// If graph font family/size changes, this estimate may need adjustment.
 const GLOBAL_LABEL_APPROX_CHAR_WIDTH = 6.1
 const GLOBAL_LABEL_MARGIN = 7
 const MIN_NODE_FOOTPRINT_RADIUS = 22
 const GLOBAL_LAYOUT_MIN_FOOTPRINT_GAP = 6
+const MAX_FORCE_WEIGHT_BONUS = 0.8
 const EDGE_COLORS: Record<ConnectionType, string> = {
   FOLLOW_UP: '#fcd34d',
   COUNTER: '#fca5a5',
@@ -227,7 +230,7 @@ export default function TechniqueGraphPage() {
     const range = Math.max(maxFootprint - minFootprint, 0.001)
     for (const [id, footprint] of nodeFootprints.entries()) {
       const normalized = (footprint - minFootprint) / range
-      forceById.set(id, 1 + normalized * 0.8)
+      forceById.set(id, 1 + normalized * MAX_FORCE_WEIGHT_BONUS)
     }
     return forceById
   }, [nodeFootprints])

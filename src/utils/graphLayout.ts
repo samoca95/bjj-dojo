@@ -23,6 +23,8 @@ export interface ForceDirectedLayoutOptions {
   minFootprintGap?: number
 }
 
+const OVERLAP_CORRECTION_FACTOR = 1.05
+
 /**
  * Fruchterman-Reingold style force-directed layout for the full technique
  * graph. Deterministic given the same inputs (no randomness) so the graph
@@ -200,7 +202,7 @@ function runForceLayout(
         const minDistance = footprintA + footprintB + minFootprintGap
         if (dist < minDistance) {
           const overlap = minDistance - dist
-          const overlapForce = overlap * 1.05
+          const overlapForce = overlap * OVERLAP_CORRECTION_FACTOR
           const ofx = (dx / dist) * overlapForce
           const ofy = (dy / dist) * overlapForce
           di.x += ofx
