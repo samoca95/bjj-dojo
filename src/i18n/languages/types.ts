@@ -328,6 +328,12 @@ export type TranslationKey =
   | 'Backup up to date'
   | 'Backup out of date'
   | 'No backup configured'
+  // Flows
+  | 'Flows'
+  | 'Flow button icon'
+  | 'FLOWS'
+  | 'Open Flows'
+  | 'Reset flow icon'
 
 export interface LanguagePack {
   /**

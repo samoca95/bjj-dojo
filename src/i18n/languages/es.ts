@@ -361,6 +361,12 @@ const ES_TRANSLATIONS = {
   'Backup up to date': 'Copia al día',
   'Backup out of date': 'Copia desactualizada',
   'No backup configured': 'Sin copia configurada',
+  // Flows — kept in English per product requirement
+  Flows: 'Flows',
+  'Flow button icon': 'Flow button icon',
+  FLOWS: 'FLOWS',
+  'Open Flows': 'Open Flows',
+  'Reset flow icon': 'Reset flow icon',
 } satisfies Record<TranslationKey, string>
 
 export const ES_CATEGORY_CONTENT: Record<
