@@ -15,6 +15,14 @@ export interface ViewBox {
   height: number
 }
 
+export interface ForceDirectedLayoutOptions {
+  iterations?: number
+  spacing?: number
+  footprints?: Map<number, number>
+  nodeForces?: Map<number, number>
+  minFootprintGap?: number
+}
+
 /**
  * Fruchterman-Reingold style force-directed layout for the full technique
  * graph. Deterministic given the same inputs (no randomness) so the graph
@@ -23,10 +31,13 @@ export interface ViewBox {
 export function forceDirectedLayout(
   nodeIds: number[],
   edges: LayoutEdge[],
-  options?: { iterations?: number; spacing?: number },
+  options?: ForceDirectedLayoutOptions,
 ): Map<number, GraphNodePosition> {
   const iterations = options?.iterations ?? 300
   const k = options?.spacing ?? 56
+  const footprints = options?.footprints ?? new Map<number, number>()
+  const nodeForces = options?.nodeForces ?? new Map<number, number>()
+  const minFootprintGap = options?.minFootprintGap ?? 0
   const pos = new Map<number, GraphNodePosition>()
   if (nodeIds.length === 0) return pos
   if (nodeIds.length === 1) {
@@ -85,8 +96,11 @@ export function forceDirectedLayout(
       componentEdges,
       iterations,
       k,
+      footprints,
+      nodeForces,
+      minFootprintGap,
     )
-    const bounds = computeBounds(componentPositions)
+    const bounds = computeBounds(componentPositions, footprints)
     componentLayouts.push({ ids, positions: componentPositions, ...bounds })
   }
 
@@ -118,7 +132,7 @@ export function forceDirectedLayout(
     rowHeight = Math.max(rowHeight, height)
   }
 
-  const allBounds = computeBounds(pos)
+  const allBounds = computeBounds(pos, footprints)
   const centerX = (allBounds.minX + allBounds.maxX) / 2
   const centerY = (allBounds.minY + allBounds.maxY) / 2
   for (const p of pos.values()) {
@@ -134,6 +148,9 @@ function runForceLayout(
   edges: LayoutEdge[],
   iterations: number,
   k: number,
+  footprints: Map<number, number>,
+  nodeForces: Map<number, number>,
+  minFootprintGap: number,
 ): Map<number, GraphNodePosition> {
   const n = nodeIds.length
   const pos = new Map<number, GraphNodePosition>()
@@ -165,7 +182,10 @@ function runForceLayout(
           dy = 0.01 * (j + 1)
           dist = Math.sqrt(dx * dx + dy * dy)
         }
-        const force = (k * k) / dist
+        const distSquared = Math.max(dist * dist, 0.0001)
+        const forceScaleA = nodeForces.get(nodeIds[i]) ?? 1
+        const forceScaleB = nodeForces.get(nodeIds[j]) ?? 1
+        const force = ((k * k) / distSquared) * forceScaleA * forceScaleB
         const fx = (dx / dist) * force
         const fy = (dy / dist) * force
         const di = disp.get(nodeIds[i])!
@@ -174,6 +194,20 @@ function runForceLayout(
         di.y += fy
         dj.x -= fx
         dj.y -= fy
+
+        const footprintA = footprints.get(nodeIds[i]) ?? 0
+        const footprintB = footprints.get(nodeIds[j]) ?? 0
+        const minDistance = footprintA + footprintB + minFootprintGap
+        if (dist < minDistance) {
+          const overlap = minDistance - dist
+          const overlapForce = overlap * 1.05
+          const ofx = (dx / dist) * overlapForce
+          const ofy = (dy / dist) * overlapForce
+          di.x += ofx
+          di.y += ofy
+          dj.x -= ofx
+          dj.y -= ofy
+        }
       }
     }
 
@@ -209,13 +243,46 @@ function runForceLayout(
       p.y *= 0.965
     }
 
+    // Hard-separate overlapped node+label footprints to prevent visual collisions.
+    for (let i = 0; i < n; i++) {
+      const idA = nodeIds[i]
+      const a = pos.get(idA)!
+      const footprintA = footprints.get(idA) ?? 0
+      for (let j = i + 1; j < n; j++) {
+        const idB = nodeIds[j]
+        const b = pos.get(idB)!
+        const footprintB = footprints.get(idB) ?? 0
+        const minDistance = footprintA + footprintB + minFootprintGap
+        if (minDistance <= 0) continue
+        let dx = b.x - a.x
+        let dy = b.y - a.y
+        let dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < 0.01) {
+          dx = 0.01 * (i + 1)
+          dy = 0.01 * (j + 1)
+          dist = Math.sqrt(dx * dx + dy * dy)
+        }
+        if (dist >= minDistance) continue
+        const correction = (minDistance - dist) / 2
+        const ux = dx / dist
+        const uy = dy / dist
+        a.x -= ux * correction
+        a.y -= uy * correction
+        b.x += ux * correction
+        b.y += uy * correction
+      }
+    }
+
     temp *= cooling
   }
 
   return pos
 }
 
-function computeBounds(positions: Map<number, GraphNodePosition>): {
+function computeBounds(
+  positions: Map<number, GraphNodePosition>,
+  footprints: Map<number, number>,
+): {
   minX: number
   maxX: number
   minY: number
@@ -225,11 +292,12 @@ function computeBounds(positions: Map<number, GraphNodePosition>): {
   let minY = Infinity
   let maxX = -Infinity
   let maxY = -Infinity
-  for (const { x, y } of positions.values()) {
-    if (x < minX) minX = x
-    if (y < minY) minY = y
-    if (x > maxX) maxX = x
-    if (y > maxY) maxY = y
+  for (const [id, { x, y }] of positions.entries()) {
+    const footprint = footprints.get(id) ?? 0
+    if (x - footprint < minX) minX = x - footprint
+    if (y - footprint < minY) minY = y - footprint
+    if (x + footprint > maxX) maxX = x + footprint
+    if (y + footprint > maxY) maxY = y + footprint
   }
   return { minX, maxX, minY, maxY }
 }
