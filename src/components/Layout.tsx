@@ -17,8 +17,8 @@ import BackupSyncIndicator from './BackupSyncIndicator'
 
 function LayoutInner() {
   const navigate = useNavigate()
-  const [showInitialSetup, setShowInitialSetup] = useState(
-    () => isInitialSetupRequired(),
+  const [showInitialSetup, setShowInitialSetup] = useState(() =>
+    isInitialSetupRequired(),
   )
   const [showRestorePrompt, setShowRestorePrompt] = useState(
     () => !isInitialSetupRequired() && isRestorePromptRequired(),

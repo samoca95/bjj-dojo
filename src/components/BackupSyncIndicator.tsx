@@ -28,17 +28,23 @@ export default function BackupSyncIndicator() {
   >({})
   const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null)
   const [offlineToasts, setOfflineToasts] = useState<OfflineToast[]>([])
-  const successTimers = useRef<Partial<Record<DestinationId, ReturnType<typeof setTimeout>>>>({})
+  const successTimers = useRef<
+    Partial<Record<DestinationId, ReturnType<typeof setTimeout>>>
+  >({})
   const toastCounter = useRef(0)
 
   useEffect(() => {
     const handleStarted = (e: Event) => {
-      const { destinationId } = (e as CustomEvent<{ destinationId: DestinationId }>).detail
+      const { destinationId } = (
+        e as CustomEvent<{ destinationId: DestinationId }>
+      ).detail
       setDestStates((prev) => ({ ...prev, [destinationId]: 'syncing' }))
     }
 
     const handleSucceeded = (e: Event) => {
-      const { destinationId } = (e as CustomEvent<{ destinationId: DestinationId }>).detail
+      const { destinationId } = (
+        e as CustomEvent<{ destinationId: DestinationId }>
+      ).detail
       setDestStates((prev) => ({ ...prev, [destinationId]: 'success' }))
       if (successTimers.current[destinationId])
         clearTimeout(successTimers.current[destinationId])
@@ -66,14 +72,23 @@ export default function BackupSyncIndicator() {
     window.addEventListener('bjj-dojo:backup-dest-started', handleStarted)
     window.addEventListener('bjj-dojo:backup-dest-succeeded', handleSucceeded)
     window.addEventListener('bjj-dojo:backup-dest-failed', handleFailed)
-    window.addEventListener('bjj-dojo:backup-offline-skipped', handleOfflineSkipped)
+    window.addEventListener(
+      'bjj-dojo:backup-offline-skipped',
+      handleOfflineSkipped,
+    )
 
     const timers = successTimers.current
     return () => {
       window.removeEventListener('bjj-dojo:backup-dest-started', handleStarted)
-      window.removeEventListener('bjj-dojo:backup-dest-succeeded', handleSucceeded)
+      window.removeEventListener(
+        'bjj-dojo:backup-dest-succeeded',
+        handleSucceeded,
+      )
       window.removeEventListener('bjj-dojo:backup-dest-failed', handleFailed)
-      window.removeEventListener('bjj-dojo:backup-offline-skipped', handleOfflineSkipped)
+      window.removeEventListener(
+        'bjj-dojo:backup-offline-skipped',
+        handleOfflineSkipped,
+      )
       Object.values(timers).forEach((t) => t && clearTimeout(t))
     }
   }, [])
@@ -129,7 +144,9 @@ export default function BackupSyncIndicator() {
               {t('Backup failed')}
             </h2>
             <p className="text-sm text-zinc-300">
-              <span className="capitalize">{DEST_LABELS[errorInfo.destinationId]}</span>
+              <span className="capitalize">
+                {DEST_LABELS[errorInfo.destinationId]}
+              </span>
               {': '}
               {errorInfo.error}
             </p>
