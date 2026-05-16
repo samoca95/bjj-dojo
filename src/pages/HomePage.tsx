@@ -69,6 +69,7 @@ import {
   HOME_CARD_VISIBILITY_UPDATED_EVENT,
 } from '../utils/homeCardVisibility'
 import AchievementsCard from '../components/AchievementBadge'
+import PlannedSessions from '../components/PlannedSessions'
 import { PlainLogo } from '../components/PlainLogo'
 import jujitsuKanjiHorizontal from '../../icons/jujitsu_kanji_horizontal.svg'
 
@@ -1205,6 +1206,8 @@ export default function HomePage() {
     </section>
   )
 
+  const plannedSessionsSection = <PlannedSessions key="plannedSessions" />
+
   const sectionMap: Record<HomeSectionId, ReactNode> = {
     focus: (
       <ErrorBoundary
@@ -1228,6 +1231,14 @@ export default function HomePage() {
         fallback={(retry) => <SectionErrorCard onRetry={retry} />}
       >
         {statsSection}
+      </ErrorBoundary>
+    ),
+    plannedSessions: (
+      <ErrorBoundary
+        key="plannedSessions"
+        fallback={(retry) => <SectionErrorCard onRetry={retry} />}
+      >
+        {plannedSessionsSection}
       </ErrorBoundary>
     ),
     calendar: (
