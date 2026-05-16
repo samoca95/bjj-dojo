@@ -24,6 +24,11 @@ import {
 } from '../settings'
 
 const HANDLE_KEY = 'autoBackup.fsHandle'
+const BACKUP_JSON_INDENT = 2
+
+function serializeBackup(payload: DatabaseBackup): string {
+  return `${JSON.stringify(payload, null, BACKUP_JSON_INDENT)}\n`
+}
 
 // Window-level types — the FS Access API isn't in TS's default lib.dom in all
 // configs. Keep narrow surface area to avoid pulling in a polyfill type pkg.
@@ -135,7 +140,7 @@ export const fileSystemDestination: BackupDestination = {
       )
     }
     const fileHandle = await handle.getFileHandle(filename, { create: true })
-    const serialized = JSON.stringify(payload)
+    const serialized = serializeBackup(payload)
     const writable = await fileHandle.createWritable()
     await writable.write(serialized)
     await writable.close()

@@ -34,6 +34,19 @@ export default function BackupSyncIndicator() {
   const toastCounter = useRef(0)
 
   useEffect(() => {
+    const handleTriggered = (e: Event) => {
+      const { destinationIds } = (
+        e as CustomEvent<{ destinationIds: DestinationId[] }>
+      ).detail
+      setDestStates((prev) => {
+        const next = { ...prev }
+        for (const destinationId of destinationIds) {
+          next[destinationId] = 'syncing'
+        }
+        return next
+      })
+    }
+
     const handleStarted = (e: Event) => {
       const { destinationId } = (
         e as CustomEvent<{ destinationId: DestinationId }>
@@ -69,6 +82,7 @@ export default function BackupSyncIndicator() {
       }, 6000)
     }
 
+    window.addEventListener('bjj-dojo:backup-triggered', handleTriggered)
     window.addEventListener('bjj-dojo:backup-dest-started', handleStarted)
     window.addEventListener('bjj-dojo:backup-dest-succeeded', handleSucceeded)
     window.addEventListener('bjj-dojo:backup-dest-failed', handleFailed)
@@ -79,6 +93,7 @@ export default function BackupSyncIndicator() {
 
     const timers = successTimers.current
     return () => {
+      window.removeEventListener('bjj-dojo:backup-triggered', handleTriggered)
       window.removeEventListener('bjj-dojo:backup-dest-started', handleStarted)
       window.removeEventListener(
         'bjj-dojo:backup-dest-succeeded',

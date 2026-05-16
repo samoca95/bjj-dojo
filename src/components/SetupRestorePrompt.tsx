@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { HelpCircle } from 'lucide-react'
 import { useI18n, setAppLanguage, type AppLanguage } from '../i18n'
 import BackupHelpModal from './BackupHelpModal'
@@ -15,15 +15,21 @@ import {
   fileSystemDestination,
   isFileSystemDestinationSupported,
 } from '../utils/autoBackup/destinations/fileSystem'
-import { githubDestination } from '../utils/autoBackup/destinations/github'
-import { verifyGithubToken } from '../utils/autoBackup/destinations/github'
 import {
+  githubDestination,
+  listWritableRepos,
+  verifyGithubToken,
+  type GithubRepoSummary,
+} from '../utils/autoBackup/destinations/github'
+import {
+  getGithubToken,
   setFsBackupEnabled,
   setGithubBackupEnabled,
   setGithubToken,
   setGithubTarget,
-  type GithubTarget,
 } from '../utils/autoBackup/settings'
+import { isDeviceFlowConfigured } from '../utils/autoBackup/githubAuth'
+import DeviceFlowDialog from './DeviceFlowDialog'
 import { telemetry } from '../utils/telemetry'
 import type {
   DiscoveredBackup,
@@ -33,7 +39,6 @@ import { completeRestorePrompt } from './firstLaunchSetup'
 
 type Step =
   | 'choose'
-  | 'github-form'
   | 'searching'
   | 'pick-backup'
   | 'no-backup'
@@ -54,15 +59,31 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [pickedDestination, setPickedDestination] =
     useState<BackupDestination | null>(null)
-  const [githubToken, setGhToken] = useState('')
-  const [githubRepo, setGhRepo] = useState('')
-  const [githubGist, setGhGist] = useState('')
-  const [githubMode, setGhMode] = useState<'repo' | 'gist'>('repo')
   const [busy, setBusy] = useState(false)
+  const [showDeviceFlow, setShowDeviceFlow] = useState(false)
+  const [ghLogin, setGhLogin] = useState<string | null>(null)
+  const [ghRepos, setGhRepos] = useState<GithubRepoSummary[] | null>(null)
+  const [ghReposLoading, setGhReposLoading] = useState(false)
+  const [ghReposError, setGhReposError] = useState<string | null>(null)
+  const ghToken = getGithubToken()
+  const ghConfigured = isDeviceFlowConfigured()
 
   const finishAndSkip = () => {
     completeRestorePrompt()
     onComplete(false)
+  }
+
+  const loadGhRepos = async (token: string) => {
+    setGhReposLoading(true)
+    setGhReposError(null)
+    try {
+      const repos = await listWritableRepos(token)
+      setGhRepos(repos)
+    } catch (err) {
+      setGhReposError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setGhReposLoading(false)
+    }
   }
 
   const connectFolder = async () => {
@@ -85,22 +106,28 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
     }
   }
 
-  const connectGithub = async () => {
+  const handleDeviceFlowAuthorized = async (token: string) => {
+    setShowDeviceFlow(false)
+    try {
+      const user = await verifyGithubToken(token)
+      setGithubToken(token)
+      setGhLogin(user.login)
+      await loadGhRepos(token)
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : String(err))
+      setStep('error')
+    }
+  }
+
+  const handleSelectRepo = async (repo: GithubRepoSummary) => {
     try {
       setBusy(true)
-      setErrorMessage('')
-      await verifyGithubToken(githubToken)
-      let target: GithubTarget
-      if (githubMode === 'gist') {
-        if (!githubGist.trim()) throw new Error('Gist ID is required.')
-        target = { kind: 'gist', gistId: githubGist.trim() }
-      } else {
-        const [owner, repo] = githubRepo.split('/').map((s) => s.trim())
-        if (!owner || !repo) throw new Error('Use owner/repo format.')
-        target = { kind: 'repo', owner, repo }
-      }
-      setGithubToken(githubToken)
-      setGithubTarget(target)
+      setGithubTarget({
+        kind: 'repo',
+        owner: repo.owner,
+        repo: repo.name,
+        branch: repo.defaultBranch,
+      })
       setGithubBackupEnabled(true)
       setPickedDestination(githubDestination)
       await searchDestination(githubDestination)
@@ -110,6 +137,15 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
     } finally {
       setBusy(false)
     }
+  }
+
+  const handleDisconnectGithub = () => {
+    setGithubBackupEnabled(false)
+    setGithubToken(null)
+    setGithubTarget(null)
+    setGhLogin(null)
+    setGhRepos(null)
+    setGhReposError(null)
   }
 
   const searchDestination = async (destination: BackupDestination) => {
@@ -144,6 +180,26 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
       setBusy(false)
     }
   }
+
+  useEffect(() => {
+    if (!ghToken || ghLogin) return
+    let cancelled = false
+    void verifyGithubToken(ghToken)
+      .then((u) => {
+        if (!cancelled) setGhLogin(u.login)
+      })
+      .catch(() => {
+        // stale token — keep login unknown
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [ghToken, ghLogin])
+
+  useEffect(() => {
+    if (!ghToken || ghRepos || ghReposLoading) return
+    void loadGhRepos(ghToken)
+  }, [ghToken, ghRepos, ghReposLoading])
 
   return (
     <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm p-4 flex items-center justify-center">
@@ -192,18 +248,74 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
                 )}
               </p>
             )}
-            <div className="flex gap-1.5">
-              <button
-                onClick={() => setStep('github-form')}
-                disabled={busy}
-                className="flex-1 rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700 disabled:opacity-60"
-              >
-                {t('A GitHub repo or gist')}
-              </button>
+            <div className="space-y-2 rounded-xl bg-zinc-800/40 p-2">
+              {!ghToken ? (
+                ghConfigured ? (
+                  <button
+                    onClick={() => setShowDeviceFlow(true)}
+                    disabled={busy}
+                    className="w-full rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700 disabled:opacity-60"
+                  >
+                    {t('Connect GitHub')}
+                  </button>
+                ) : (
+                  <p className="text-xs text-zinc-500 px-2 py-1">
+                    {t('GitHub login is not configured in this build.')}
+                  </p>
+                )
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-2 px-2 py-1">
+                    <p className="text-xs text-zinc-400">
+                      {t('Signed in as')}{' '}
+                      <span className="text-zinc-200">@{ghLogin ?? '…'}</span>
+                    </p>
+                    <button
+                      onClick={handleDisconnectGithub}
+                      className="rounded-lg bg-zinc-800 text-zinc-300 text-[11px] font-semibold px-2 py-1 active:bg-zinc-700"
+                    >
+                      {t('Sign out')}
+                    </button>
+                  </div>
+
+                  {ghReposLoading ? (
+                    <p className="text-xs text-zinc-500 px-2 py-1">
+                      {t('Loading repositories…')}
+                    </p>
+                  ) : ghReposError ? (
+                    <p className="text-xs text-red-300 px-2 py-1">{ghReposError}</p>
+                  ) : ghRepos && ghRepos.length === 0 ? (
+                    <p className="text-xs text-zinc-500 px-2 py-1">
+                      {t('No repositories with write access.')}
+                    </p>
+                  ) : (
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const repo = ghRepos?.find(
+                          (r) => r.fullName === e.target.value,
+                        )
+                        if (repo) void handleSelectRepo(repo)
+                      }}
+                      className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
+                    >
+                      <option value="" disabled>
+                        {t('Select a repository')}
+                      </option>
+                      {ghRepos?.map((r) => (
+                        <option key={r.fullName} value={r.fullName}>
+                          {r.fullName}
+                          {r.private ? ' · 🔒' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </>
+              )}
               <button
                 onClick={() => setHelpTab('github')}
                 aria-label={t('Need help?')}
-                className="w-10 rounded-xl bg-zinc-800 text-zinc-400 active:bg-zinc-700 flex items-center justify-center"
+                className="w-full rounded-xl bg-zinc-800 text-zinc-400 active:bg-zinc-700 flex items-center justify-center py-2"
               >
                 <HelpCircle size={16} strokeWidth={2.5} />
               </button>
@@ -214,78 +326,6 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
             >
               {t('Skip — start fresh in this browser')}
             </button>
-          </div>
-        )}
-
-        {step === 'github-form' && (
-          <div className="space-y-3">
-            <div className="flex bg-zinc-800 rounded-lg p-0.5 gap-0.5">
-              <button
-                onClick={() => setGhMode('repo')}
-                className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition-colors ${
-                  githubMode === 'repo'
-                    ? 'bg-gold text-black'
-                    : 'text-zinc-400 active:text-zinc-200'
-                }`}
-              >
-                Repo
-              </button>
-              <button
-                onClick={() => setGhMode('gist')}
-                className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition-colors ${
-                  githubMode === 'gist'
-                    ? 'bg-gold text-black'
-                    : 'text-zinc-400 active:text-zinc-200'
-                }`}
-              >
-                Gist
-              </button>
-            </div>
-            <input
-              type="password"
-              placeholder={t('GitHub token')}
-              value={githubToken}
-              onChange={(e) => setGhToken(e.target.value)}
-              className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
-            />
-            {githubMode === 'repo' ? (
-              <input
-                type="text"
-                placeholder="owner/repo"
-                value={githubRepo}
-                onChange={(e) => setGhRepo(e.target.value)}
-                className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
-              />
-            ) : (
-              <input
-                type="text"
-                placeholder={t('Gist ID')}
-                value={githubGist}
-                onChange={(e) => setGhGist(e.target.value)}
-                className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
-              />
-            )}
-            <p className="text-xs text-zinc-500">
-              {t(
-                'Use a fine-grained token scoped to one repo. Revoke it if your device is lost.',
-              )}
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setStep('choose')}
-                disabled={busy}
-                className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 active:bg-zinc-700 disabled:opacity-60"
-              >
-                {t('Cancel')}
-              </button>
-              <button
-                onClick={() => void connectGithub()}
-                disabled={busy || !githubToken}
-                className="rounded-xl bg-gold text-black text-sm font-semibold py-2.5 disabled:opacity-60"
-              >
-                {t('Test connection')}
-              </button>
-            </div>
           </div>
         )}
 
@@ -368,6 +408,13 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
         <BackupHelpModal
           initialTab={helpTab}
           onClose={() => setHelpTab(null)}
+        />
+      )}
+
+      {showDeviceFlow && (
+        <DeviceFlowDialog
+          onClose={() => setShowDeviceFlow(false)}
+          onAuthorized={(token) => void handleDeviceFlowAuthorized(token)}
         />
       )}
     </div>

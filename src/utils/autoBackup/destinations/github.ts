@@ -25,6 +25,11 @@ import {
 const API_BASE = 'https://api.github.com'
 const GIST_FILENAME = 'bjj-dojo-backup.json'
 const REPO_BACKUPS_DIR = 'backups'
+const BACKUP_JSON_INDENT = 2
+
+function serializeBackup(payload: DatabaseBackup): string {
+  return `${JSON.stringify(payload, null, BACKUP_JSON_INDENT)}\n`
+}
 
 function authHeaders(token: string): HeadersInit {
   return {
@@ -147,8 +152,9 @@ async function gistWrite(
   gistId: string,
   payload: DatabaseBackup,
 ): Promise<BackupResult> {
+  const content = serializeBackup(payload)
   const body = JSON.stringify({
-    files: { [GIST_FILENAME]: { content: JSON.stringify(payload) } },
+    files: { [GIST_FILENAME]: { content } },
   })
   const res = await fetch(`${API_BASE}/gists/${gistId}`, {
     method: 'PATCH',
@@ -156,7 +162,7 @@ async function gistWrite(
     body,
   })
   if (!res.ok) await ghError(res, 'GitHub gist write failed')
-  return { filename: GIST_FILENAME, bytesWritten: body.length }
+  return { filename: GIST_FILENAME, bytesWritten: content.length }
 }
 
 async function repoGetFileSha(
@@ -186,7 +192,7 @@ async function repoWrite(
 ): Promise<BackupResult> {
   const path = `${REPO_BACKUPS_DIR}/${filename}`
   const sha = await repoGetFileSha(token, owner, repo, path, branch)
-  const content = JSON.stringify(payload)
+  const content = serializeBackup(payload)
   const body = JSON.stringify({
     message: `auto-backup: ${filename}`,
     content: btoa(unescape(encodeURIComponent(content))),
