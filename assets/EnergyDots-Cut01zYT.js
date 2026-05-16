@@ -1,0 +1,1 @@
+import{j as s}from"./index-BXN4O-QP.js";function a({level:e}){return s.jsx("div",{className:"flex gap-1",children:Array.from({length:5},(n,r)=>s.jsx("div",{className:`w-2 h-2 rounded-sm ${r<e?"bg-gold":"bg-zinc-700"}`},r))})}export{a as E};
