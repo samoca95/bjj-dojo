@@ -8,10 +8,9 @@ export const RESTORE_PROMPT_DECIDED_STORAGE_KEY =
 
 export function isRestorePromptRequired(): boolean {
   if (typeof window === 'undefined') return false
-  return (
-    window.localStorage.getItem(RESTORE_PROMPT_DECIDED_STORAGE_KEY) !== '1' &&
-    window.localStorage.getItem(INITIAL_SETUP_COMPLETED_STORAGE_KEY) !== '1'
-  )
+  if (window.localStorage.getItem(INITIAL_SETUP_COMPLETED_STORAGE_KEY) !== '1')
+    return false
+  return window.localStorage.getItem(RESTORE_PROMPT_DECIDED_STORAGE_KEY) !== '1'
 }
 
 export function completeRestorePrompt() {

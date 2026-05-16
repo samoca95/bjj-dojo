@@ -39,6 +39,9 @@ async function activeDestinations(): Promise<BackupDestination[]> {
 }
 
 function recordResult(report: RunReport) {
+  // Offline-skipped is not an error; leave existing error/run state alone.
+  if (!report.success && report.error === 'offline-skipped') return
+
   if (report.destinationId === 'fileSystem') {
     if (report.success) {
       setFsLastRun(Date.now())
@@ -67,8 +70,34 @@ export async function runBackupNow(
     const filename = backupFilenameForDate()
     const reports = await Promise.all(
       targets.map(async (destination): Promise<RunReport> => {
+        if (
+          destination.id === 'github' &&
+          typeof navigator !== 'undefined' &&
+          !navigator.onLine
+        ) {
+          window.dispatchEvent(
+            new CustomEvent('bjj-dojo:backup-offline-skipped', {
+              detail: { destinationId: destination.id },
+            }),
+          )
+          return {
+            destinationId: destination.id,
+            success: false,
+            error: 'offline-skipped',
+          }
+        }
+        window.dispatchEvent(
+          new CustomEvent('bjj-dojo:backup-dest-started', {
+            detail: { destinationId: destination.id },
+          }),
+        )
         try {
           const result = await destination.write(payload, filename)
+          window.dispatchEvent(
+            new CustomEvent('bjj-dojo:backup-dest-succeeded', {
+              detail: { destinationId: destination.id },
+            }),
+          )
           return {
             destinationId: destination.id,
             success: true,
@@ -77,6 +106,11 @@ export async function runBackupNow(
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
           telemetry.error('backup.auto_failed', err)
+          window.dispatchEvent(
+            new CustomEvent('bjj-dojo:backup-dest-failed', {
+              detail: { destinationId: destination.id, error: message },
+            }),
+          )
           return {
             destinationId: destination.id,
             success: false,

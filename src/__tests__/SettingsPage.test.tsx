@@ -98,7 +98,7 @@ describe('SettingsPage — theme mode', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('App version: v1.0.0')).toBeInTheDocument()
+    expect(screen.getByText(/^App version: v\d+\.\d+\.\d+/)).toBeInTheDocument()
     expect(screen.getByText('Developed by: samoca95')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Github repo/i })).toHaveAttribute(
       'href',

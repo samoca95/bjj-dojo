@@ -41,7 +41,7 @@ type Step =
   | 'error'
 
 interface Props {
-  onComplete: () => void
+  onComplete: (restored: boolean) => void
 }
 
 export default function SetupRestorePrompt({ onComplete }: Props) {
@@ -62,7 +62,7 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
 
   const finishAndSkip = () => {
     completeRestorePrompt()
-    onComplete()
+    onComplete(false)
   }
 
   const connectFolder = async () => {
@@ -135,7 +135,7 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
       completeRestorePrompt()
       // Mark initial setup completed too — they came in with existing data.
       window.localStorage.setItem('bjj-dojo:initial-setup-completed', '1')
-      onComplete()
+      onComplete(true)
     } catch (err) {
       telemetry.error('backup.restore_failed', err)
       setErrorMessage(err instanceof Error ? err.message : String(err))

@@ -349,6 +349,18 @@ const ES_TRANSLATIONS = {
   techniques: 'técnicas',
   'How backups work': 'Cómo funcionan las copias',
   'Need help?': '¿Necesitas ayuda?',
+  // Backup sync indicator
+  'Backup failed': 'Copia fallida',
+  'Your data is still safely stored in this browser.':
+    'Tus datos siguen guardados de forma segura en este navegador.',
+  'No network — backup will be retried next time you save a session with a connection.':
+    'Sin conexión — se reintentará la copia la próxima vez que guardes una sesión con conexión.',
+  'Existing backup found': 'Copia existente encontrada',
+  'Restore backup': 'Restaurar copia',
+  'Keep current data': 'Conservar datos actuales',
+  'Backup up to date': 'Copia al día',
+  'Backup out of date': 'Copia desactualizada',
+  'No backup configured': 'Sin copia configurada',
 } satisfies Record<TranslationKey, string>
 
 export const ES_CATEGORY_CONTENT: Record<
