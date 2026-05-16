@@ -108,6 +108,10 @@ function renderPage() {
           element={<div data-testid="technique-graph-page" />}
         />
         <Route
+          path="/flows"
+          element={<div data-testid="flows-page" />}
+        />
+        <Route
           path="/techniques/:id"
           element={<div data-testid="technique-detail" />}
         />
@@ -157,18 +161,15 @@ describe('TechniquesPage — structure', () => {
     expect(screen.getByTestId('new-technique-page')).toBeInTheDocument()
   })
 
-  it('bottom-right graph button opens the global graph page', async () => {
+  it('bottom-right Flows button opens the Flows page', async () => {
     setupMocks()
     const user = userEvent.setup()
     renderPage()
-    const graphButton = screen.getByRole('button', {
-      name: 'Open technique graph',
-    })
-    expect(graphButton.className).toContain('w-10')
-    expect(graphButton.className).toContain('h-10')
-    expect(graphButton.className).not.toContain('shadow')
-    await user.click(graphButton)
-    expect(screen.getByTestId('technique-graph-page')).toBeInTheDocument()
+    const flowsButton = screen.getByRole('button', { name: 'Open Flows' })
+    expect(flowsButton.className).toContain('rounded-full')
+    expect(flowsButton.className).toContain('bg-gold')
+    await user.click(flowsButton)
+    expect(screen.getByTestId('flows-page')).toBeInTheDocument()
   })
 
   it('shows technique count', () => {

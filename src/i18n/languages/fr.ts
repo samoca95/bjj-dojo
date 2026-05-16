@@ -365,6 +365,12 @@ const FR_TRANSLATIONS = {
   'Backup up to date': 'Sauvegarde à jour',
   'Backup out of date': 'Sauvegarde obsolète',
   'No backup configured': 'Aucune sauvegarde configurée',
+  // Flows — kept in English per product requirement
+  Flows: 'Flows',
+  'Flow button icon': 'Flow button icon',
+  FLOWS: 'FLOWS',
+  'Open Flows': 'Open Flows',
+  'Reset flow icon': 'Reset flow icon',
 } satisfies Record<TranslationKey, string>
 
 const FR_CATEGORY_CONTENT: LanguagePack['categoryContent'] = {

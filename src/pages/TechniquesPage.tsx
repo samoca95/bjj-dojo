@@ -10,14 +10,7 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { VariableSizeList, type ListChildComponentProps } from 'react-window'
-import {
-  Search,
-  X,
-  Plus,
-  Star,
-  SlidersHorizontal,
-  Waypoints,
-} from 'lucide-react'
+import { Search, X, Plus, Star, SlidersHorizontal } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
 import type { Category, Difficulty, Technique } from '../types'
@@ -36,6 +29,10 @@ import {
   techniqueScore,
   getMatchingAlias,
 } from '../utils/fuzzySearch'
+import {
+  getFlowIcon,
+  FLOW_ICON_UPDATED_EVENT,
+} from '../utils/flowIcon'
 
 const ROW_GAP = 12
 const DEFAULT_ITEM_SIZE = 116 // estimated card height (~104px) + fixed gap (12px)
@@ -237,6 +234,14 @@ export default function TechniquesPage() {
   const [initialScrollOffset, setInitialScrollOffset] = useState(0)
   const listRef = useRef<VariableSizeList | null>(null)
   const rowHeightsRef = useRef<Record<number, number>>({})
+
+  const [flowIcon, setFlowIconState] = useState(getFlowIcon)
+
+  useEffect(() => {
+    const handler = () => setFlowIconState(getFlowIcon())
+    window.addEventListener(FLOW_ICON_UPDATED_EVENT, handler)
+    return () => window.removeEventListener(FLOW_ICON_UPDATED_EVENT, handler)
+  }, [])
 
   const headerRef = useRef<HTMLDivElement>(null)
   const [listHeight, setListHeight] = useState(() => window.innerHeight - 200)
@@ -780,11 +785,12 @@ export default function TechniquesPage() {
         {renderRow}
       </VariableSizeList>
       <button
-        onClick={() => navigate('/techniques/graph')}
-        aria-label={t('Open technique graph')}
-        className="fixed bottom-20 right-4 w-10 h-10 rounded-full bg-gold text-black active:bg-gold-light flex items-center justify-center transition-colors z-40"
+        onClick={() => navigate('/flows')}
+        aria-label={t('Open Flows')}
+        className="fixed bottom-20 right-4 h-10 pl-3 pr-4 rounded-full bg-gold text-black active:bg-gold-light flex items-center gap-2 transition-colors z-40"
       >
-        <Waypoints size={18} strokeWidth={2.2} />
+        <CategoryIcon value={flowIcon} size={16} className="text-black" />
+        <span className="text-sm font-semibold leading-none">Flows</span>
       </button>
     </div>
   )

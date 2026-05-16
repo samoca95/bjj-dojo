@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, Pencil, RotateCcw } from 'lucide-react'
@@ -10,6 +10,12 @@ import IconPickerModal from '../components/IconPickerModal'
 import { useI18n, getCategoryName, getCategoryDescription } from '../i18n'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
 import { prefilledCategories } from '../db/prefilled'
+import {
+  getFlowIcon,
+  setFlowIcon,
+  DEFAULT_FLOW_ICON,
+  FLOW_ICON_UPDATED_EVENT,
+} from '../utils/flowIcon'
 
 const defaultCategoryIcons = new Map(
   prefilledCategories.map((c) => [c.id, c.icon]),
@@ -19,6 +25,15 @@ export default function CategoriesPage() {
   const navigate = useNavigate()
   const { language, t } = useI18n()
   const [activeCategory, setActiveCategory] = useState<Category | null>(null)
+  const [flowIcon, setFlowIconState] = useState(getFlowIcon)
+  const [flowPickerOpen, setFlowPickerOpen] = useState(false)
+
+  useEffect(() => {
+    const handler = () => setFlowIconState(getFlowIcon())
+    window.addEventListener(FLOW_ICON_UPDATED_EVENT, handler)
+    return () => window.removeEventListener(FLOW_ICON_UPDATED_EVENT, handler)
+  }, [])
+
   const categories = useLiveQuery(
     () => getCategoryMap().then((m) => [...m.values()]),
     [],
@@ -38,6 +53,39 @@ export default function CategoriesPage() {
       </div>
 
       <div className="px-4 pb-6 space-y-3">
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">
+            {t('FLOWS')}
+          </h2>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0">
+              <CategoryIcon value={flowIcon} size={20} className="text-gold" />
+            </div>
+            <div className="flex-1 text-sm text-zinc-300">
+              {t('Flow button icon')}
+            </div>
+            {flowIcon !== DEFAULT_FLOW_ICON && (
+              <button
+                onClick={() => {
+                  setFlowIcon(DEFAULT_FLOW_ICON)
+                  setFlowIconState(DEFAULT_FLOW_ICON)
+                }}
+                aria-label={t('Reset flow icon')}
+                className="p-2 text-zinc-500 active:text-zinc-200"
+              >
+                <RotateCcw size={16} strokeWidth={2} />
+              </button>
+            )}
+            <button
+              onClick={() => setFlowPickerOpen(true)}
+              aria-label={t('Edit')}
+              className="p-2 text-zinc-600 active:text-zinc-200"
+            >
+              <Pencil size={18} strokeWidth={2} />
+            </button>
+          </div>
+        </div>
+
         {categories?.map((category) => {
           const defaultIcon = defaultCategoryIcons.get(category.id)
           const isDefault = !defaultIcon || category.icon === defaultIcon
@@ -93,6 +141,18 @@ export default function CategoriesPage() {
           )
         })}
       </div>
+
+      {flowPickerOpen && (
+        <IconPickerModal
+          title="Flow button icon"
+          value={flowIcon}
+          onClose={() => setFlowPickerOpen(false)}
+          onSelect={(icon) => {
+            setFlowIcon(icon.trim())
+            setFlowIconState(icon.trim())
+          }}
+        />
+      )}
 
       {activeCategory && (
         <IconPickerModal

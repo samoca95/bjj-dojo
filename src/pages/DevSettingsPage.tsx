@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Waypoints } from 'lucide-react'
 import { telemetry } from '../utils/telemetry'
 import { useI18n } from '../i18n'
 
@@ -66,6 +66,30 @@ export default function DevSettingsPage() {
               : language === 'fr'
                 ? 'Effacer le journal'
                 : 'Clear logs'}
+          </button>
+        </div>
+
+        <div className="bg-zinc-900 rounded-2xl p-4 space-y-3">
+          <h2 className="text-xs text-gold font-semibold tracking-widest">
+            TECHNIQUE GRAPH
+          </h2>
+          <p className="text-sm text-zinc-300">
+            {language === 'es'
+              ? 'Vista de grafo global de técnicas.'
+              : language === 'fr'
+                ? 'Vue du graphe global des techniques.'
+                : 'Global technique graph visualisation.'}
+          </p>
+          <button
+            onClick={() => navigate('/techniques/graph')}
+            className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 px-3 active:bg-zinc-700 flex items-center gap-2"
+          >
+            <Waypoints size={16} strokeWidth={2} />
+            {language === 'es'
+              ? 'Abrir grafo'
+              : language === 'fr'
+                ? 'Ouvrir le graphe'
+                : 'Open graph'}
           </button>
         </div>
       </div>
