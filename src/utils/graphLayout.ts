@@ -25,6 +25,8 @@ export interface ForceDirectedLayoutOptions {
 
 const OVERLAP_CORRECTION_FACTOR = 1.05
 const MIN_NODE_DELTA = 0.01
+// Prevent division by zero and excessive repulsion at tiny separations.
+const MIN_SQUARED_DISTANCE = 0.0001
 
 function ensureNonZeroDelta(
   dx: number,
@@ -197,7 +199,7 @@ function runForceLayout(
         const dx = adjusted.dx
         const dy = adjusted.dy
         const dist = adjusted.dist
-        const distSquared = Math.max(dist * dist, 0.0001)
+        const distSquared = Math.max(dist * dist, MIN_SQUARED_DISTANCE)
         const forceScaleA = nodeForces.get(nodeIds[i]) ?? 1
         const forceScaleB = nodeForces.get(nodeIds[j]) ?? 1
         const force = ((k * k) / distSquared) * forceScaleA * forceScaleB
