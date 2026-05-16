@@ -161,7 +161,9 @@ export function scheduleAfterMutation(database: BJJDatabase = db): void {
   const destinationIds = getEnabledDestinationIds()
   if (destinationIds.length === 0) return
   window.dispatchEvent(
-    new CustomEvent('bjj-dojo:backup-triggered', { detail: { destinationIds } }),
+    new CustomEvent('bjj-dojo:backup-triggered', {
+      detail: { destinationIds },
+    }),
   )
   if (runInFlight) {
     rerunRequested = true

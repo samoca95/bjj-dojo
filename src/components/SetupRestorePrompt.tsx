@@ -283,7 +283,9 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
                       {t('Loading repositories…')}
                     </p>
                   ) : ghReposError ? (
-                    <p className="text-xs text-red-300 px-2 py-1">{ghReposError}</p>
+                    <p className="text-xs text-red-300 px-2 py-1">
+                      {ghReposError}
+                    </p>
                   ) : ghRepos && ghRepos.length === 0 ? (
                     <p className="text-xs text-zinc-500 px-2 py-1">
                       {t('No repositories with write access.')}

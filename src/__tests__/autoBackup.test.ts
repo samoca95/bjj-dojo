@@ -130,11 +130,10 @@ describe('scheduleAfterMutation', () => {
     scheduleAfterMutation(db)
     scheduleAfterMutation(db)
     scheduleAfterMutation(db)
-    await Promise.resolve()
-    await Promise.resolve()
-    await Promise.resolve()
 
-    expect(fetchSpy).toHaveBeenCalledTimes(2)
+    await vi.waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledTimes(2)
+    })
   })
 })
 
