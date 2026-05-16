@@ -22,6 +22,7 @@ import {
   isFsBackupEnabled,
   setFsFolderName,
 } from '../settings'
+import { isNative } from '../../../platform'
 
 const HANDLE_KEY = 'autoBackup.fsHandle'
 const BACKUP_JSON_INDENT = 2
@@ -120,6 +121,9 @@ export const fileSystemDestination: BackupDestination = {
   id: 'fileSystem',
 
   async isEnabled() {
+    // On native, `nativeFileSystemDestination` takes over the 'fileSystem'
+    // slot; the web destination must be inert to avoid double-writes.
+    if (isNative) return false
     if (!isFsBackupEnabled()) return false
     const handle = await getStoredFolderHandle()
     if (!handle) return false

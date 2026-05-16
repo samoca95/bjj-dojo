@@ -10,6 +10,7 @@
 import { db, exportDatabaseBackup, type BJJDatabase } from '../../db/database'
 import { telemetry } from '../telemetry'
 import { fileSystemDestination } from './destinations/fileSystem'
+import { nativeFileSystemDestination } from './destinations/nativeFileSystem'
 import { githubDestination } from './destinations/github'
 import {
   backupFilenameForDate,
@@ -28,6 +29,7 @@ let queuedDatabase: BJJDatabase | null = null
 
 const allDestinations: BackupDestination[] = [
   fileSystemDestination,
+  nativeFileSystemDestination,
   githubDestination,
 ]
 

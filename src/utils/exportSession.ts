@@ -3,6 +3,18 @@ import { SESSION_TYPE_LABELS } from '../types'
 import type { AppLanguage } from '../i18n'
 import { sessionTypeLabel } from '../i18n'
 import { jsPDF } from 'jspdf'
+import { isNative, shareFile } from '../platform'
+
+function mimeFromFilename(filename: string): string {
+  const lower = filename.toLowerCase()
+  if (lower.endsWith('.png')) return 'image/png'
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg'
+  if (lower.endsWith('.pdf')) return 'application/pdf'
+  if (lower.endsWith('.html')) return 'text/html'
+  if (lower.endsWith('.txt')) return 'text/plain'
+  if (lower.endsWith('.json')) return 'application/json'
+  return 'application/octet-stream'
+}
 
 export interface SessionExportData {
   session: Session
@@ -254,6 +266,17 @@ function fileBaseName(session: Session): string {
 }
 
 export function downloadBlob(blob: Blob, filename: string) {
+  if (isNative) {
+    // Native: route through the system share sheet rather than triggering
+    // an anchor click (which is a no-op inside the WebView). Fire and
+    // forget — callers don't await this today.
+    void shareFile({
+      filename,
+      blob,
+      mimeType: blob.type || mimeFromFilename(filename),
+    })
+    return
+  }
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -277,6 +300,17 @@ export async function exportSession(
   const html = buildSessionHtml(data, language, locale)
   const base = fileBaseName(data.session)
   const title = LABELS[language].title
+
+  if (isNative) {
+    await shareFile({
+      filename: `${base}.txt`,
+      blob: new Blob([text], { type: 'text/plain;charset=utf-8' }),
+      mimeType: 'text/plain',
+      title,
+      text,
+    })
+    return { method: 'share' }
+  }
 
   const nav = typeof navigator !== 'undefined' ? navigator : undefined
 
@@ -400,6 +434,18 @@ export async function shareSessionImage(
 ): Promise<ImageShareResult> {
   const filename = `${fileBaseName(session)}.png`
   const title = LABELS[language].title
+
+  if (isNative) {
+    await shareFile({
+      filename,
+      blob,
+      mimeType: 'image/png',
+      title,
+      text: caption,
+    })
+    return { method: 'share' }
+  }
+
   const nav = typeof navigator !== 'undefined' ? navigator : undefined
 
   if (
