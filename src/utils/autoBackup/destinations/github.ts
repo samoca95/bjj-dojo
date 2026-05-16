@@ -16,6 +16,7 @@ import type {
   DiscoveredBackup,
 } from '../types'
 import {
+  getBackupRetentionCount,
   getGithubTarget,
   getGithubToken,
   isGithubBackupEnabled,
@@ -118,7 +119,63 @@ async function repoWrite(
     },
   )
   if (!res.ok) await ghError(res, 'GitHub repo write failed')
+  await repoRotateOldBackups(token, owner, repo, path, branch)
   return { filename: path, bytesWritten: content.length }
+}
+
+const DATED_BACKUP_PATTERN = /^bjj-dojo-backup-\d{4}-\d{2}-\d{2}\.json$/
+
+/**
+ * Keep the N most recent dated backups in the repo's backups/ dir. The date
+ * lives in the filename, so a descending name sort is equivalent to mtime sort
+ * and avoids an extra commit lookup per file. Per-file deletes are best-effort.
+ */
+async function repoRotateOldBackups(
+  token: string,
+  owner: string,
+  repo: string,
+  justWrittenPath: string,
+  branch?: string,
+): Promise<void> {
+  const keep = getBackupRetentionCount()
+  const dirUrl = `${API_BASE}/repos/${owner}/${repo}/contents/${REPO_BACKUPS_DIR}${
+    branch ? `?ref=${encodeURIComponent(branch)}` : ''
+  }`
+  const res = await fetch(dirUrl, { headers: authHeaders(token) })
+  if (!res.ok) return
+  const entries = (await res.json()) as Array<{
+    name: string
+    type: string
+    path: string
+    sha: string
+  }>
+  const dated = entries
+    .filter((e) => e.type === 'file' && DATED_BACKUP_PATTERN.test(e.name))
+    .filter((e) => e.path !== justWrittenPath)
+    .sort((a, b) => (a.name < b.name ? 1 : -1))
+  const toDelete = dated.slice(Math.max(0, keep - 1))
+  for (const entry of toDelete) {
+    try {
+      const body = JSON.stringify({
+        message: `auto-backup: prune ${entry.name}`,
+        sha: entry.sha,
+        ...(branch ? { branch } : {}),
+      })
+      await fetch(
+        `${API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(entry.path)}`,
+        {
+          method: 'DELETE',
+          headers: {
+            ...authHeaders(token),
+            'Content-Type': 'application/json',
+          },
+          body,
+        },
+      )
+    } catch {
+      // best effort — one failure must not abort the run
+    }
+  }
 }
 
 async function repoListBackups(

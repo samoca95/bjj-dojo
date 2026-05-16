@@ -17,7 +17,11 @@ import type {
   BackupResult,
   DiscoveredBackup,
 } from '../types'
-import { isFsBackupEnabled, setFsFolderName } from '../settings'
+import {
+  getBackupRetentionCount,
+  isFsBackupEnabled,
+  setFsFolderName,
+} from '../settings'
 
 const HANDLE_KEY = 'autoBackup.fsHandle'
 
@@ -171,9 +175,9 @@ export const fileSystemDestination: BackupDestination = {
   },
 }
 
-/** Keep the 7 most recent daily backups; remove older same-pattern files. */
+/** Keep the N most recent daily backups (N from settings); remove older same-pattern files. */
 async function rotateOldBackups(handle: DirectoryHandle, justWritten: string) {
-  const KEEP = 7
+  const KEEP = getBackupRetentionCount()
   const files = await listBackupFiles(handle)
   // Skip the file we just wrote — its lastModified is current
   const dated = await Promise.all(

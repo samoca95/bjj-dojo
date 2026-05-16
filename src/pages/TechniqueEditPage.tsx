@@ -24,6 +24,7 @@ import {
 import { runWithTelemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
 import { useUndo } from '../components/undo'
+import { notifyDbMutation } from '../utils/autoBackup/notify'
 
 const inputCls =
   'w-full bg-zinc-800 rounded-xl px-4 py-3 text-zinc-100 text-sm outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600'
@@ -191,6 +192,7 @@ export default function TechniqueEditPage() {
             ),
           )
         }
+        notifyDbMutation()
         navigate(`/techniques/${newId}`)
       } else {
         await runWithTelemetry('technique.update_failed', () =>
@@ -227,6 +229,7 @@ export default function TechniqueEditPage() {
             ),
           )
         }
+        notifyDbMutation()
         navigate(-1)
       }
     } catch (err) {
@@ -285,8 +288,10 @@ export default function TechniqueEditPage() {
           await db.techniques.put(technique)
           if (savedConnections.length > 0)
             await db.techniqueConnections.bulkPut(savedConnections)
+          notifyDbMutation()
         },
       })
+      notifyDbMutation()
       setShowDeleteModal(false)
       navigate(-1)
     } catch (err) {
