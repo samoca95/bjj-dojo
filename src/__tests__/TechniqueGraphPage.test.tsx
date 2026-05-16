@@ -134,7 +134,8 @@ describe('TechniqueGraphPage', () => {
     const highlightedTypeLabels = [
       ...container.querySelectorAll('text'),
     ].filter((node) => node.textContent?.trim() === 'Follow-up')
-    expect(highlightedTypeLabels).toHaveLength(0)
+    expect(highlightedTypeLabels.length).toBeGreaterThan(0)
+    expect(highlightedTypeLabels[0].getAttribute('font-size')).toBe('8')
   })
 
   it('dims non-highlighted techniques when a node is highlighted', () => {
@@ -190,7 +191,7 @@ describe('TechniqueGraphPage', () => {
     const highlightedTypeLabels = [
       ...container.querySelectorAll('text'),
     ].filter((node) => node.textContent?.trim() === 'Follow-up')
-    expect(highlightedTypeLabels).toHaveLength(0)
+    expect(highlightedTypeLabels.length).toBeGreaterThan(0)
     expect(container.querySelector('line[marker-end]')).not.toBeNull()
   })
 
@@ -258,6 +259,17 @@ describe('TechniqueGraphPage', () => {
     const { getByText } = renderPage()
     expect(getByText('Guards')).toBeInTheDocument()
     expect(getByText('Submissions')).toBeInTheDocument()
+  })
+
+  it('renders technique labels in the current app language', () => {
+    window.localStorage.setItem('bjj-dojo:language', 'es')
+    setupMocks()
+    const { container } = renderPage()
+    const titles = [
+      ...container.querySelectorAll('g[role="button"] title'),
+    ].map((node) => node.textContent)
+    expect(titles).toContain('Guardia Cerrada')
+    expect(titles).toContain('Triángulo')
   })
 
   it('restores a previously saved view from session storage', () => {

@@ -6,7 +6,12 @@ import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
 import type { Category, ConnectionType } from '../types'
 import { CONNECTION_LABELS } from '../types'
-import { useI18n, connectionTypeLabel, getCategoryName } from '../i18n'
+import {
+  useI18n,
+  connectionTypeLabel,
+  getCategoryName,
+  getTechniqueName,
+} from '../i18n'
 import { categoryColor } from '../utils/categoryColor'
 import {
   forceDirectedLayout,
@@ -25,6 +30,7 @@ const WHEEL_PINCH_ZOOM_SENSITIVITY = 0.0025
 const DEFAULT_EDGE_COLOR = '#52525b'
 const DIMMED_NODE_OPACITY = 0.26
 const DIMMED_EDGE_OPACITY = 0.14
+const HIGHLIGHTED_EDGE_LABEL_FONT_SIZE = 8
 const EDGE_COLORS: Record<ConnectionType, string> = {
   FOLLOW_UP: '#fcd34d',
   COUNTER: '#fca5a5',
@@ -297,6 +303,16 @@ export default function TechniqueGraphPage() {
       .sort((a, b) => a.id - b.id)
   }, [techniques, catMap])
 
+  const nodeLabelCenter = useMemo(() => {
+    const pts = [...positions.values()]
+    if (pts.length === 0) return { x: 0, y: 0 }
+    const sum = pts.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), {
+      x: 0,
+      y: 0,
+    })
+    return { x: sum.x / pts.length, y: sum.y / pts.length }
+  }, [positions])
+
   return (
     <div className="h-full flex flex-col bg-zinc-950">
       {/* Header */}
@@ -381,6 +397,23 @@ export default function TechniqueGraphPage() {
                           : undefined
                       }
                     />
+                    {highlighted && (
+                      <text
+                        x={(x1 + x2) / 2 + (-dy / dist) * 7}
+                        y={(y1 + y2) / 2 + (dx / dist) * 7}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fontSize={HIGHLIGHTED_EDGE_LABEL_FONT_SIZE}
+                        fontWeight={600}
+                        fill={edgeColor}
+                        fillOpacity={0.92}
+                        stroke="#09090b"
+                        strokeWidth={0.65}
+                        paintOrder="stroke"
+                      >
+                        {typeLabel}
+                      </text>
+                    )}
                     {!isTouchGraph && <title>{typeLabel}</title>}
                   </g>
                 )
@@ -393,6 +426,7 @@ export default function TechniqueGraphPage() {
                 const color = categoryColor(tech.categoryId)
                 const highlighted = highlightedNodeIds.has(tech.id)
                 const dimmed = activeNodeId !== null && !highlighted
+                const localizedName = getTechniqueName(tech, language)
                 return (
                   <g
                     key={tech.id}
@@ -425,25 +459,15 @@ export default function TechniqueGraphPage() {
                         navigate(`/techniques/${tech.id}`)
                       }
                     }}
-                    aria-label={tech.name}
+                    aria-label={localizedName}
                   >
-                    {highlighted && (
-                      <circle
-                        cx={p.x}
-                        cy={p.y}
-                        r={NODE_RADIUS + 4.5}
-                        fill="none"
-                        stroke={color}
-                        strokeWidth={3}
-                      />
-                    )}
                     <circle
                       cx={p.x}
                       cy={p.y}
                       r={NODE_RADIUS}
                       fill="#18181b"
-                      stroke="#3f3f46"
-                      strokeWidth={1.4}
+                      stroke={highlighted ? color : '#3f3f46'}
+                      strokeWidth={highlighted ? 2.6 : 1.4}
                     />
                     <circle
                       cx={p.x}
@@ -452,22 +476,43 @@ export default function TechniqueGraphPage() {
                       fill={color}
                       fillOpacity={highlighted ? 0.5 : 0.28}
                     />
-                    {showLabels && (
-                      <text
-                        x={p.x}
-                        y={p.y + NODE_RADIUS + LABEL_FONT_SIZE}
-                        textAnchor="middle"
-                        fontSize={LABEL_FONT_SIZE}
-                        fill="#d4d4d8"
-                        fillOpacity={dimmed ? 0 : 1}
-                      >
-                        {truncate(tech.name, 22)}
-                      </text>
-                    )}
-                    {!isTouchGraph && <title>{tech.name}</title>}
+                    {!isTouchGraph && <title>{localizedName}</title>}
                   </g>
                 )
               })}
+              {showLabels &&
+                (techniques ?? []).map((tech) => {
+                  const p = positions.get(tech.id)
+                  if (!p) return null
+                  const highlighted = highlightedNodeIds.has(tech.id)
+                  const dimmed = activeNodeId !== null && !highlighted
+                  const localizedName = getTechniqueName(tech, language)
+                  const dx = p.x - nodeLabelCenter.x
+                  const dy = p.y - nodeLabelCenter.y
+                  const distance = Math.hypot(dx, dy)
+                  const ux = distance > 0 ? dx / distance : 0
+                  const uy = distance > 0 ? dy / distance : 1
+                  const labelX = p.x + ux * (NODE_RADIUS + 8)
+                  const labelY = p.y + uy * (NODE_RADIUS + 8)
+                  const anchor =
+                    ux > 0.3 ? 'start' : ux < -0.3 ? 'end' : 'middle'
+                  const baseline =
+                    uy > 0.3 ? 'hanging' : uy < -0.3 ? 'auto' : 'central'
+                  return (
+                    <text
+                      key={`label-${tech.id}`}
+                      x={labelX}
+                      y={labelY}
+                      textAnchor={anchor}
+                      dominantBaseline={baseline}
+                      fontSize={LABEL_FONT_SIZE}
+                      fill="#d4d4d8"
+                      fillOpacity={dimmed ? 0 : 1}
+                    >
+                      {truncate(localizedName, 22)}
+                    </text>
+                  )
+                })}
               <defs>
                 {Object.entries(EDGE_COLORS).map(([type, color]) => (
                   <marker
