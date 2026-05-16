@@ -89,8 +89,11 @@ lint/tmp/
 # Android Profiling
 *.hprof
 
-# Cordova plugins for Capacitor
-capacitor-cordova-android-plugins
+# Cordova plugins for Capacitor — track the folder itself (Gradle imports
+# capacitor-cordova-android-plugins/cordova.variables.gradle from
+# app/capacitor.build.gradle, and `cap sync` does not always regenerate
+# it in fresh CI checkouts). Build outputs inside are still ignored.
+capacitor-cordova-android-plugins/build/
 
 # Copied web assets
 app/src/main/assets/public
