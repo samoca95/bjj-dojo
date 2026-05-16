@@ -565,7 +565,8 @@ export default function TechniqueGraphPage() {
                 const highlighted = highlightedNodeIds.has(tech.id)
                 const dimmed = activeNodeId !== null && !highlighted
                 const localizedName = getTechniqueName(tech, language)
-                const nodeRadius = nodeRadiusById.get(tech.id) ?? BASE_NODE_RADIUS
+                const nodeRadius =
+                  nodeRadiusById.get(tech.id) ?? BASE_NODE_RADIUS
                 return (
                   <g
                     key={tech.id}
@@ -607,7 +608,9 @@ export default function TechniqueGraphPage() {
                       fill="#18181b"
                       stroke={highlighted ? color : '#3f3f46'}
                       strokeWidth={
-                        highlighted ? NODE_STROKE_HIGHLIGHT : NODE_STROKE_DEFAULT
+                        highlighted
+                          ? NODE_STROKE_HIGHLIGHT
+                          : NODE_STROKE_DEFAULT
                       }
                     />
                     <circle
@@ -628,7 +631,8 @@ export default function TechniqueGraphPage() {
                   const highlighted = highlightedNodeIds.has(tech.id)
                   const dimmed = activeNodeId !== null && !highlighted
                   const localizedName = getTechniqueName(tech, language)
-                  const nodeRadius = nodeRadiusById.get(tech.id) ?? BASE_NODE_RADIUS
+                  const nodeRadius =
+                    nodeRadiusById.get(tech.id) ?? BASE_NODE_RADIUS
                   const labelX = p.x
                   const labelY = p.y + nodeRadius + GLOBAL_LABEL_MARGIN
                   const lines = wrapText(
