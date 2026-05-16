@@ -30,6 +30,64 @@ function truncate(text: string, max: number): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text
 }
 
+function normalizeAngle(angle: number): number {
+  const twoPi = Math.PI * 2
+  let a = angle % twoPi
+  if (a <= -Math.PI) a += twoPi
+  if (a > Math.PI) a -= twoPi
+  return a
+}
+
+function estimateCompositeRadius(label: string, nodeR: number): number {
+  const capped = truncate(label, 20)
+  const approximateLabelWidth = Math.max(22, capped.length * 5.1)
+  return nodeR + 8 + approximateLabelWidth / 2
+}
+
+function distributeAnglesWithOverlapAvoidance(
+  labels: string[],
+  nodeR: number,
+  initialRadius: number,
+): { angles: number[]; radius: number } {
+  const n = labels.length
+  if (n === 0) return { angles: [], radius: initialRadius }
+
+  const footprints = labels.map((label) => estimateCompositeRadius(label, nodeR))
+  const maxFootprint = Math.max(...footprints)
+  const radius = Math.max(initialRadius, (n * maxFootprint) / Math.PI + 8)
+  const initialAngles = Array.from(
+    { length: n },
+    (_, i) => -Math.PI / 2 + (i * 2 * Math.PI) / n,
+  )
+  const angles = [...initialAngles]
+
+  for (let iter = 0; iter < 90; iter++) {
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const delta = normalizeAngle(angles[j] - angles[i])
+        const absDelta = Math.abs(delta)
+        const minDelta =
+          2 *
+          Math.asin(
+            Math.min(0.98, (footprints[i] + footprints[j]) / (2 * radius)),
+          )
+        if (absDelta >= minDelta) continue
+        const push = (minDelta - absDelta) * 0.52
+        const sign = delta >= 0 ? 1 : -1
+        angles[i] = normalizeAngle(angles[i] - sign * push)
+        angles[j] = normalizeAngle(angles[j] + sign * push)
+      }
+    }
+
+    for (let i = 0; i < n; i++) {
+      const drift = normalizeAngle(angles[i] - initialAngles[i])
+      angles[i] = normalizeAngle(angles[i] - drift * 0.07)
+    }
+  }
+
+  return { angles, radius }
+}
+
 export default function ConnectionGraph({
   centerName,
   centerCategoryId,
@@ -69,11 +127,17 @@ export default function ConnectionGraph({
   const H = 320
   const cx = W / 2
   const cy = H / 2
-  const R = 96
+  const baseR = 96
   const centerR = 32
   const nodeR = n > 8 ? 13 : 16
   const useRadialLabels = n > 6
   const usedTypes = [...new Set(connections.map((c) => c.connectionType))]
+  const neighbourNames = neighbours.map((nb) => techniqueName(nb.technique))
+  const { angles, radius: R } = distributeAnglesWithOverlapAvoidance(
+    neighbourNames,
+    nodeR,
+    baseR,
+  )
 
   return (
     <div className="bg-zinc-900 rounded-2xl p-4">
@@ -102,7 +166,7 @@ export default function ConnectionGraph({
 
         {/* Edges (drawn first so nodes sit on top) */}
         {neighbours.map((nb, i) => {
-          const angle = -Math.PI / 2 + (i * 2 * Math.PI) / n
+          const angle = angles[i] ?? -Math.PI / 2 + (i * 2 * Math.PI) / n
           const x = cx + R * Math.cos(angle)
           const y = cy + R * Math.sin(angle)
           const ux = Math.cos(angle)
@@ -161,7 +225,7 @@ export default function ConnectionGraph({
 
         {/* Neighbour nodes */}
         {neighbours.map((nb, i) => {
-          const angle = -Math.PI / 2 + (i * 2 * Math.PI) / n
+          const angle = angles[i] ?? -Math.PI / 2 + (i * 2 * Math.PI) / n
           const x = cx + R * Math.cos(angle)
           const y = cy + R * Math.sin(angle)
           const ux = Math.cos(angle)

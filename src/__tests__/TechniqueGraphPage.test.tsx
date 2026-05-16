@@ -125,17 +125,21 @@ describe('TechniqueGraphPage', () => {
     expect(container.querySelectorAll('line')).toHaveLength(2)
   })
 
-  it('shows highlighted edge arrows when a node is hovered', () => {
+  it('shows highlighted edge arrows and renders indicator legend entries when a node is hovered', () => {
     setupMocks()
     const { container } = renderPage()
     const firstNode = container.querySelector('g[role="button"]')!
     fireEvent.pointerEnter(firstNode)
     expect(container.querySelector('line[marker-end]')).not.toBeNull()
-    const highlightedTypeLabels = [
+    const indicatorLegend = container.querySelector(
+      '[data-testid="indicator-legend"]',
+    )
+    expect(indicatorLegend).not.toBeNull()
+    expect(indicatorLegend?.textContent).toContain('Follow-up')
+    const inlineHighlightedTypeLabels = [
       ...container.querySelectorAll('text'),
-    ].filter((node) => node.textContent?.trim() === 'Follow-up')
-    expect(highlightedTypeLabels.length).toBeGreaterThan(0)
-    expect(highlightedTypeLabels[0].getAttribute('font-size')).toBe('8')
+    ].filter((node) => node.getAttribute('font-size') === '8')
+    expect(inlineHighlightedTypeLabels).toHaveLength(0)
   })
 
   it('dims non-highlighted techniques when a node is highlighted', () => {
@@ -173,7 +177,7 @@ describe('TechniqueGraphPage', () => {
     }
   })
 
-  it('does not render highlighted white/black type boxes on touch screens', () => {
+  it('renders highlighted indicator legend on touch screens after selecting a node', () => {
     vi.mocked(window.matchMedia).mockImplementation(() => ({
       matches: true,
       media: '(hover: none), (pointer: coarse)',
@@ -188,11 +192,12 @@ describe('TechniqueGraphPage', () => {
     const { container } = renderPage()
     const firstNode = container.querySelector('g[role="button"]')!
     fireEvent.click(firstNode)
-    const highlightedTypeLabels = [
-      ...container.querySelectorAll('text'),
-    ].filter((node) => node.textContent?.trim() === 'Follow-up')
-    expect(highlightedTypeLabels.length).toBeGreaterThan(0)
     expect(container.querySelector('line[marker-end]')).not.toBeNull()
+    const indicatorLegend = container.querySelector(
+      '[data-testid="indicator-legend"]',
+    )
+    expect(indicatorLegend).not.toBeNull()
+    expect(indicatorLegend?.textContent).toContain('Follow-up')
   })
 
   it('supports wheel zoom on laptop input devices', async () => {
@@ -270,6 +275,31 @@ describe('TechniqueGraphPage', () => {
     ].map((node) => node.textContent)
     expect(titles).toContain('Guardia Cerrada')
     expect(titles).toContain('Triángulo')
+  })
+
+  it('renders global labels below nodes and wraps long names', () => {
+    const longName =
+      'Very Long Global Label Name That Should Wrap Across Two Lines'
+    window.sessionStorage.setItem(
+      GRAPH_VIEW_KEY,
+      JSON.stringify({ x: -120, y: -120, width: 10, height: 10 }),
+    )
+    setupMocks({
+      techniques: [
+        {
+          ...techniques[0],
+          name: longName,
+        },
+        techniques[1],
+      ],
+      connections: [{ fromTechniqueId: 101, toTechniqueId: 401, connectionType: 'FOLLOW_UP' }],
+    })
+    const { container } = renderPage()
+    const label = container.querySelector('[data-testid="global-node-label-101"]')
+    expect(label).not.toBeNull()
+    expect(label?.getAttribute('text-anchor')).toBe('middle')
+    expect(label?.getAttribute('dominant-baseline')).toBe('hanging')
+    expect(label?.querySelectorAll('tspan').length).toBeGreaterThan(1)
   })
 
   it('restores a previously saved view from session storage', () => {
