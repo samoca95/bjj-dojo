@@ -1,0 +1,1 @@
+const c={DEFAULT:"#d4a017",dim:"#8a6a00"},e={border:"#3f3f46",text:"#ffffff"},a={text:"#18181b"},i={black:"#18181b",redTip:"#b91c1c"},s=t=>({primary:t==="light"?a.text:e.text,inverted:t==="light"?e.text:a.text,goldAccent:t==="light"?c.dim:c.DEFAULT});export{i as B,e as D,c as G,s as t};
