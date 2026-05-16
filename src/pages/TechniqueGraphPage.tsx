@@ -42,10 +42,6 @@ const EDGE_COLORS: Record<ConnectionType, string> = {
 // returns the graph to the exact same coordinates.
 const GRAPH_VIEW_KEY = 'bjj-dojo.techniques.graph-view'
 
-function truncate(text: string, max: number): string {
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text
-}
-
 function wrapText(
   text: string,
   maxCharsPerLine: number,
@@ -83,13 +79,11 @@ function wrapText(
 
   if (lines.length <= maxLines) return lines
   const clipped = lines.slice(0, maxLines)
-  clipped[maxLines - 1] = truncate(clipped[maxLines - 1], maxCharsPerLine)
-  if (!clipped[maxLines - 1].endsWith('…')) {
-    clipped[maxLines - 1] = truncate(
-      `${clipped[maxLines - 1].replace(/\s+$/, '')}…`,
-      maxCharsPerLine,
-    )
-  }
+  const last = clipped[maxLines - 1].replace(/\s+$/, '').replace(/…+$/, '')
+  clipped[maxLines - 1] =
+    last.length >= maxCharsPerLine
+      ? `${last.slice(0, maxCharsPerLine - 1)}…`
+      : `${last}…`
   return clipped
 }
 

@@ -9,6 +9,9 @@ const GRAPH_COLORS: Record<ConnectionType, string> = {
   SETUP: '#86efac',
   TRANSITION: '#93c5fd',
 }
+const OVERLAP_LAYOUT_ITERATIONS = 90
+const OVERLAP_PUSH_FACTOR = 0.52
+const ANGLE_RESTORE_FACTOR = 0.07
 
 export interface GraphConnection {
   technique: Technique
@@ -63,7 +66,7 @@ function distributeAnglesWithOverlapAvoidance(
   )
   const angles = [...initialAngles]
 
-  for (let iter = 0; iter < 90; iter++) {
+  for (let iter = 0; iter < OVERLAP_LAYOUT_ITERATIONS; iter++) {
     for (let i = 0; i < n; i++) {
       for (let j = i + 1; j < n; j++) {
         const delta = normalizeAngle(angles[j] - angles[i])
@@ -74,7 +77,7 @@ function distributeAnglesWithOverlapAvoidance(
             Math.min(0.98, (footprints[i] + footprints[j]) / (2 * radius)),
           )
         if (absDelta >= minDelta) continue
-        const push = (minDelta - absDelta) * 0.52
+        const push = (minDelta - absDelta) * OVERLAP_PUSH_FACTOR
         const sign = delta >= 0 ? 1 : -1
         angles[i] = normalizeAngle(angles[i] - sign * push)
         angles[j] = normalizeAngle(angles[j] + sign * push)
@@ -83,7 +86,7 @@ function distributeAnglesWithOverlapAvoidance(
 
     for (let i = 0; i < n; i++) {
       const drift = normalizeAngle(angles[i] - initialAngles[i])
-      angles[i] = normalizeAngle(angles[i] - drift * 0.07)
+      angles[i] = normalizeAngle(angles[i] - drift * ANGLE_RESTORE_FACTOR)
     }
   }
 
