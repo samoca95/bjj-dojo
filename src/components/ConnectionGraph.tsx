@@ -11,6 +11,8 @@ const GRAPH_COLORS: Record<ConnectionType, string> = {
 }
 const MIN_APPROX_LABEL_WIDTH = 22
 const APPROX_LABEL_CHAR_WIDTH = 5.1
+// Keep asin input away from 1 to avoid unstable jumps near the singularity.
+const MAX_ASIN_CLAMP = 0.98
 const OVERLAP_LAYOUT_ITERATIONS = 90
 const OVERLAP_PUSH_FACTOR = 0.52
 const ANGLE_RESTORE_FACTOR = 0.07
@@ -79,7 +81,10 @@ function distributeAnglesWithOverlapAvoidance(
         const minDelta =
           2 *
           Math.asin(
-            Math.min(0.98, (footprints[i] + footprints[j]) / (2 * radius)),
+            Math.min(
+              MAX_ASIN_CLAMP,
+              (footprints[i] + footprints[j]) / (2 * radius),
+            ),
           )
         if (absDelta >= minDelta) continue
         const push = (minDelta - absDelta) * OVERLAP_PUSH_FACTOR

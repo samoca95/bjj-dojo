@@ -81,7 +81,7 @@ function wrapText(
   const clipped = lines.slice(0, maxLines)
   const last = clipped[maxLines - 1].replace(/\s+$/, '').replace(/…$/, '')
   clipped[maxLines - 1] =
-    last.length >= maxCharsPerLine
+    last.length > maxCharsPerLine - 1
       ? `${last.slice(0, maxCharsPerLine - 1)}…`
       : `${last}…`
   return clipped
