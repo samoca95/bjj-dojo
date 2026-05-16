@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:native": "tsc -b && CAPACITOR_BUILD=1 vite build && cap copy",
+    "build:native": "tsc -b && CAPACITOR_BUILD=1 vite build && cap sync",
     "android:dev": "CAPACITOR_BUILD=1 vite build && cap sync android && cap open android",
     "android:run": "CAPACITOR_BUILD=1 vite build && cap sync android && cap run android",
     "ios:dev": "CAPACITOR_BUILD=1 vite build && cap sync ios && cap open ios",
