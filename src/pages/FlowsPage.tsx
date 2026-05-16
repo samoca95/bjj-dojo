@@ -29,7 +29,7 @@ export default function FlowsPage() {
           )
         }
         aria-label="Open GrappleMap 3D"
-        className="fixed bottom-20 left-4 h-10 pl-3 pr-4 rounded-full bg-gold text-black active:bg-gold-light flex items-center gap-2 transition-colors z-40"
+        className="fixed bottom-20 right-4 h-10 pl-3 pr-4 rounded-full bg-gold text-black active:bg-gold-light flex items-center gap-2 transition-colors z-40"
       >
         <Rotate3d size={16} className="text-black" />
         <span className="text-sm font-semibold leading-none">3D</span>
