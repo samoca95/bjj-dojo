@@ -21,7 +21,12 @@ import {
   type ViewBox,
 } from '../utils/graphLayout'
 
-const NODE_RADIUS = 14
+const BASE_NODE_RADIUS = 14
+const MIN_NODE_SIZE_SCALE = 0.75
+const MAX_NODE_SIZE_SCALE = 1.5
+const NODE_INNER_FILL_OFFSET = 5
+const NODE_STROKE_DEFAULT = 1.4
+const NODE_STROKE_HIGHLIGHT = 2.6
 const LABEL_FONT_SIZE = 12
 const MIN_PINCH_ZOOM_FACTOR = 0.35
 const MAX_PINCH_ZOOM_FACTOR = 3.2
@@ -32,6 +37,16 @@ const DIMMED_NODE_OPACITY = 0.26
 const DIMMED_EDGE_OPACITY = 0.14
 const GLOBAL_LABEL_MAX_CHARS_PER_LINE = 14
 const GLOBAL_LABEL_MAX_LINES = 2
+// Approximate average glyph width for the current graph label styling
+// (system sans font stack at LABEL_FONT_SIZE = 12). If that styling changes,
+// this estimate may need adjustment.
+const GLOBAL_LABEL_APPROX_CHAR_WIDTH = 6.1
+const GLOBAL_LABEL_MARGIN = 7
+const GLOBAL_LABEL_HORIZONTAL_PADDING = 3
+const MIN_NODE_FOOTPRINT_RADIUS = 22
+const GLOBAL_LAYOUT_MIN_FOOTPRINT_GAP = 6
+const MAX_FORCE_WEIGHT_BONUS = 0.8
+const MIN_FOOTPRINT_RANGE = 0.001
 const EDGE_COLORS: Record<ConnectionType, string> = {
   FOLLOW_UP: '#fcd34d',
   COUNTER: '#fca5a5',
@@ -87,6 +102,32 @@ function wrapText(
   return clipped
 }
 
+function estimateNodeFootprintRadius(name: string, nodeRadius: number): number {
+  const wrapped = wrapText(
+    name,
+    GLOBAL_LABEL_MAX_CHARS_PER_LINE,
+    GLOBAL_LABEL_MAX_LINES,
+  )
+  const maxLineChars = Math.max(
+    1,
+    ...wrapped.map((line) => line.replace(/…$/, '').length),
+  )
+  const labelWidth = maxLineChars * GLOBAL_LABEL_APPROX_CHAR_WIDTH
+  const lineCount = Math.max(1, wrapped.length)
+  const labelHeight = lineCount * LABEL_FONT_SIZE
+  const horizontalReach = Math.max(
+    nodeRadius,
+    labelWidth / 2 + GLOBAL_LABEL_HORIZONTAL_PADDING,
+  )
+  const verticalReach = nodeRadius + GLOBAL_LABEL_MARGIN + labelHeight
+  return Math.max(
+    MIN_NODE_FOOTPRINT_RADIUS,
+    horizontalReach,
+    verticalReach,
+    nodeRadius,
+  )
+}
+
 interface PanState {
   pointerId: number
   clientX: number
@@ -139,6 +180,67 @@ export default function TechniqueGraphPage() {
     new Map<number, Category>(),
   )
 
+  const nodeConnectionCounts = useMemo(() => {
+    const counts = new Map<number, number>()
+    for (const tech of techniques ?? []) counts.set(tech.id, 0)
+    for (const conn of connections ?? []) {
+      counts.set(
+        conn.fromTechniqueId,
+        (counts.get(conn.fromTechniqueId) ?? 0) + 1,
+      )
+      counts.set(conn.toTechniqueId, (counts.get(conn.toTechniqueId) ?? 0) + 1)
+    }
+    return counts
+  }, [techniques, connections])
+
+  const nodeRadiusById = useMemo(() => {
+    const radiusById = new Map<number, number>()
+    const nodes = techniques ?? []
+    const maxConnections = Math.max(
+      0,
+      ...nodes.map((tech) => nodeConnectionCounts.get(tech.id) ?? 0),
+    )
+    const minRadius = BASE_NODE_RADIUS * MIN_NODE_SIZE_SCALE
+    const maxRadius = BASE_NODE_RADIUS * MAX_NODE_SIZE_SCALE
+    for (const tech of nodes) {
+      const degree = nodeConnectionCounts.get(tech.id) ?? 0
+      const normalized = maxConnections > 0 ? degree / maxConnections : 0
+      radiusById.set(tech.id, minRadius + (maxRadius - minRadius) * normalized)
+    }
+    return radiusById
+  }, [techniques, nodeConnectionCounts])
+
+  const localizedTechniqueNamesById = useMemo(() => {
+    const names = new Map<number, string>()
+    for (const tech of techniques ?? []) {
+      names.set(tech.id, getTechniqueName(tech, language))
+    }
+    return names
+  }, [techniques, language])
+
+  const nodeFootprints = useMemo(() => {
+    const footprints = new Map<number, number>()
+    for (const tech of techniques ?? []) {
+      const radius = nodeRadiusById.get(tech.id) ?? BASE_NODE_RADIUS
+      const name = localizedTechniqueNamesById.get(tech.id) ?? tech.name
+      footprints.set(tech.id, estimateNodeFootprintRadius(name, radius))
+    }
+    return footprints
+  }, [techniques, nodeRadiusById, localizedTechniqueNamesById])
+
+  const nodeForceWeights = useMemo(() => {
+    const forceById = new Map<number, number>()
+    const values = [...nodeFootprints.values()]
+    const minFootprint = values.length > 0 ? Math.min(...values) : 1
+    const maxFootprint = values.length > 0 ? Math.max(...values) : 1
+    const range = Math.max(maxFootprint - minFootprint, MIN_FOOTPRINT_RANGE)
+    for (const [id, footprint] of nodeFootprints.entries()) {
+      const normalized = (footprint - minFootprint) / range
+      forceById.set(id, 1 + normalized * MAX_FORCE_WEIGHT_BONUS)
+    }
+    return forceById
+  }, [nodeFootprints])
+
   // Force-directed layout — recomputed only when the graph data actually changes.
   const { positions, fittedViewBox } = useMemo(() => {
     const ids = (techniques ?? []).map((tech) => tech.id)
@@ -146,9 +248,17 @@ export default function TechniqueGraphPage() {
       from: c.fromTechniqueId,
       to: c.toTechniqueId,
     }))
-    const pos = forceDirectedLayout(ids, edges)
-    return { positions: pos, fittedViewBox: computeViewBox(pos, 32) }
-  }, [techniques, connections])
+    const pos = forceDirectedLayout(ids, edges, {
+      footprints: nodeFootprints,
+      nodeForces: nodeForceWeights,
+      minFootprintGap: GLOBAL_LAYOUT_MIN_FOOTPRINT_GAP,
+    })
+    const maxFootprint = Math.max(32, ...nodeFootprints.values())
+    return {
+      positions: pos,
+      fittedViewBox: computeViewBox(pos, maxFootprint + GLOBAL_LABEL_MARGIN),
+    }
+  }, [techniques, connections, nodeFootprints, nodeForceWeights])
 
   // Restore a previously saved view (kept across navigation); otherwise null
   // until the data loads and we can fit the whole graph.
@@ -415,8 +525,12 @@ export default function TechniqueGraphPage() {
                 const dx = b.x - a.x
                 const dy = b.y - a.y
                 const dist = Math.max(Math.hypot(dx, dy), 0.001)
-                const sourcePad = NODE_RADIUS + (highlighted ? 4.5 : 0.75)
-                const targetPad = NODE_RADIUS + (highlighted ? 4.5 : 0.75)
+                const sourceRadius =
+                  nodeRadiusById.get(c.fromTechniqueId) ?? BASE_NODE_RADIUS
+                const targetRadius =
+                  nodeRadiusById.get(c.toTechniqueId) ?? BASE_NODE_RADIUS
+                const sourcePad = sourceRadius + (highlighted ? 4.5 : 0.75)
+                const targetPad = targetRadius + (highlighted ? 4.5 : 0.75)
                 const x1 = a.x + (dx / dist) * sourcePad
                 const y1 = a.y + (dy / dist) * sourcePad
                 const x2 = b.x - (dx / dist) * targetPad
@@ -460,6 +574,8 @@ export default function TechniqueGraphPage() {
                 const highlighted = highlightedNodeIds.has(tech.id)
                 const dimmed = activeNodeId !== null && !highlighted
                 const localizedName = getTechniqueName(tech, language)
+                const nodeRadius =
+                  nodeRadiusById.get(tech.id) ?? BASE_NODE_RADIUS
                 return (
                   <g
                     key={tech.id}
@@ -497,15 +613,19 @@ export default function TechniqueGraphPage() {
                     <circle
                       cx={p.x}
                       cy={p.y}
-                      r={NODE_RADIUS}
+                      r={nodeRadius}
                       fill="#18181b"
                       stroke={highlighted ? color : '#3f3f46'}
-                      strokeWidth={highlighted ? 2.6 : 1.4}
+                      strokeWidth={
+                        highlighted
+                          ? NODE_STROKE_HIGHLIGHT
+                          : NODE_STROKE_DEFAULT
+                      }
                     />
                     <circle
                       cx={p.x}
                       cy={p.y}
-                      r={NODE_RADIUS - 5}
+                      r={Math.max(1, nodeRadius - NODE_INNER_FILL_OFFSET)}
                       fill={color}
                       fillOpacity={highlighted ? 0.5 : 0.28}
                     />
@@ -520,8 +640,10 @@ export default function TechniqueGraphPage() {
                   const highlighted = highlightedNodeIds.has(tech.id)
                   const dimmed = activeNodeId !== null && !highlighted
                   const localizedName = getTechniqueName(tech, language)
+                  const nodeRadius =
+                    nodeRadiusById.get(tech.id) ?? BASE_NODE_RADIUS
                   const labelX = p.x
-                  const labelY = p.y + NODE_RADIUS + 7
+                  const labelY = p.y + nodeRadius + GLOBAL_LABEL_MARGIN
                   const lines = wrapText(
                     localizedName,
                     GLOBAL_LABEL_MAX_CHARS_PER_LINE,

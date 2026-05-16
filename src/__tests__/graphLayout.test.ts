@@ -103,6 +103,33 @@ describe('forceDirectedLayout', () => {
     const centreB = { x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 }
     expect(dist(centreA, centreB)).toBeLessThan(500)
   })
+
+  it('respects minimum distance between node footprints when configured', () => {
+    const ids = [1, 2, 3]
+    const footprints = new Map<number, number>([
+      [1, 36],
+      [2, 24],
+      [3, 28],
+    ])
+    const minGap = 8
+    const pos = forceDirectedLayout(ids, [], {
+      iterations: 260,
+      spacing: 56,
+      footprints,
+      nodeForces: new Map([[1, 1.7]]),
+      minFootprintGap: minGap,
+    })
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        const a = ids[i]
+        const b = ids[j]
+        const centerDistance = dist(pos.get(a)!, pos.get(b)!)
+        const requiredDistance =
+          (footprints.get(a) ?? 0) + (footprints.get(b) ?? 0) + minGap
+        expect(centerDistance).toBeGreaterThanOrEqual(requiredDistance - 0.5)
+      }
+    }
+  })
 })
 
 describe('computeViewBox', () => {
