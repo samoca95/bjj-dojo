@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Dumbbell, Accessibility } from 'lucide-react'
+import { Dumbbell, Sprout } from 'lucide-react'
 import { useI18n } from '../i18n'
 import { CategoryIcon } from './CategoryIcon'
 import {
@@ -45,9 +45,7 @@ function PlannedIcon({
       />
     )
   if (kind === 'stretch')
-    return (
-      <Accessibility size={16} className="text-orange-400" strokeWidth={2} />
-    )
+    return <Sprout size={16} className="text-orange-400" strokeWidth={2} />
   return <Dumbbell size={16} className="text-purple-400" strokeWidth={2} />
 }
 
