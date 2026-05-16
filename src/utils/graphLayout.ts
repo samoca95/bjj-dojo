@@ -24,6 +24,24 @@ export interface ForceDirectedLayoutOptions {
 }
 
 const OVERLAP_CORRECTION_FACTOR = 1.05
+const MIN_NODE_DELTA = 0.01
+
+function ensureNonZeroDelta(
+  dx: number,
+  dy: number,
+  i: number,
+  j: number,
+): { dx: number; dy: number; dist: number } {
+  let adjustedDx = dx
+  let adjustedDy = dy
+  let dist = Math.sqrt(adjustedDx * adjustedDx + adjustedDy * adjustedDy)
+  if (dist < MIN_NODE_DELTA) {
+    adjustedDx = MIN_NODE_DELTA * (i + 1)
+    adjustedDy = MIN_NODE_DELTA * (j + 1)
+    dist = Math.sqrt(adjustedDx * adjustedDx + adjustedDy * adjustedDy)
+  }
+  return { dx: adjustedDx, dy: adjustedDy, dist }
+}
 
 /**
  * Fruchterman-Reingold style force-directed layout for the full technique
@@ -175,15 +193,10 @@ function runForceLayout(
       const a = pos.get(nodeIds[i])!
       for (let j = i + 1; j < n; j++) {
         const b = pos.get(nodeIds[j])!
-        let dx = a.x - b.x
-        let dy = a.y - b.y
-        let dist = Math.sqrt(dx * dx + dy * dy)
-        if (dist < 0.01) {
-          // Two nodes on the same spot — nudge deterministically.
-          dx = 0.01 * (i + 1)
-          dy = 0.01 * (j + 1)
-          dist = Math.sqrt(dx * dx + dy * dy)
-        }
+        const adjusted = ensureNonZeroDelta(a.x - b.x, a.y - b.y, i, j)
+        const dx = adjusted.dx
+        const dy = adjusted.dy
+        const dist = adjusted.dist
         const distSquared = Math.max(dist * dist, 0.0001)
         const forceScaleA = nodeForces.get(nodeIds[i]) ?? 1
         const forceScaleB = nodeForces.get(nodeIds[j]) ?? 1
@@ -256,14 +269,10 @@ function runForceLayout(
         const footprintB = footprints.get(idB) ?? 0
         const minDistance = footprintA + footprintB + minFootprintGap
         if (minDistance <= 0) continue
-        let dx = b.x - a.x
-        let dy = b.y - a.y
-        let dist = Math.sqrt(dx * dx + dy * dy)
-        if (dist < 0.01) {
-          dx = 0.01 * (i + 1)
-          dy = 0.01 * (j + 1)
-          dist = Math.sqrt(dx * dx + dy * dy)
-        }
+        const adjusted = ensureNonZeroDelta(b.x - a.x, b.y - a.y, i, j)
+        const dx = adjusted.dx
+        const dy = adjusted.dy
+        const dist = adjusted.dist
         if (dist >= minDistance) continue
         const correction = (minDistance - dist) / 2
         const ux = dx / dist

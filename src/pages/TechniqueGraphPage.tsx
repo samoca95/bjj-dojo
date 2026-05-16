@@ -41,6 +41,7 @@ const GLOBAL_LABEL_MAX_LINES = 2
 // If graph font family/size changes, this estimate may need adjustment.
 const GLOBAL_LABEL_APPROX_CHAR_WIDTH = 6.1
 const GLOBAL_LABEL_MARGIN = 7
+const GLOBAL_LABEL_HORIZONTAL_PADDING = 3
 const MIN_NODE_FOOTPRINT_RADIUS = 22
 const GLOBAL_LAYOUT_MIN_FOOTPRINT_GAP = 6
 const MAX_FORCE_WEIGHT_BONUS = 0.8
@@ -112,7 +113,10 @@ function estimateNodeFootprintRadius(name: string, nodeRadius: number): number {
   const labelWidth = maxLineChars * GLOBAL_LABEL_APPROX_CHAR_WIDTH
   const lineCount = Math.max(1, wrapped.length)
   const labelHeight = lineCount * LABEL_FONT_SIZE
-  const horizontalReach = Math.max(nodeRadius, labelWidth / 2 + 3)
+  const horizontalReach = Math.max(
+    nodeRadius,
+    labelWidth / 2 + GLOBAL_LABEL_HORIZONTAL_PADDING,
+  )
   const verticalReach = nodeRadius + GLOBAL_LABEL_MARGIN + labelHeight
   return Math.max(
     MIN_NODE_FOOTPRINT_RADIUS,
