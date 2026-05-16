@@ -107,10 +107,7 @@ function renderPage() {
           path="/techniques/graph"
           element={<div data-testid="technique-graph-page" />}
         />
-        <Route
-          path="/flows"
-          element={<div data-testid="flows-page" />}
-        />
+        <Route path="/flows" element={<div data-testid="flows-page" />} />
         <Route
           path="/techniques/:id"
           element={<div data-testid="technique-detail" />}

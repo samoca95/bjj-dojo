@@ -29,10 +29,7 @@ import {
   techniqueScore,
   getMatchingAlias,
 } from '../utils/fuzzySearch'
-import {
-  getFlowIcon,
-  FLOW_ICON_UPDATED_EVENT,
-} from '../utils/flowIcon'
+import { getFlowIcon, FLOW_ICON_UPDATED_EVENT } from '../utils/flowIcon'
 
 const ROW_GAP = 12
 const DEFAULT_ITEM_SIZE = 116 // estimated card height (~104px) + fixed gap (12px)
