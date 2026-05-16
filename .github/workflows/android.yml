@@ -45,9 +45,28 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Build web bundle for native
-        run: npm run build:native
+        # Use vite + cap copy directly (NOT `npm run build:native`, which
+        # also runs `cap sync` — sync rewrites the android/ tree and on
+        # some CI runs leaves capacitor-cordova-android-plugins/ missing
+        # the cordova.variables.gradle file that Gradle imports.
+        run: |
+          npx tsc -b
+          CAPACITOR_BUILD=1 npx vite build
+          npx cap copy android
         env:
           VITE_GITHUB_OAUTH_CLIENT_ID: ${{ secrets.VITE_GITHUB_OAUTH_CLIENT_ID }}
+
+      - name: Diagnose cordova plugin folder
+        run: |
+          echo "Contents of android/capacitor-cordova-android-plugins/:"
+          ls -la android/capacitor-cordova-android-plugins/ || echo "MISSING"
+          echo ""
+          if [ -f android/capacitor-cordova-android-plugins/cordova.variables.gradle ]; then
+            echo "cordova.variables.gradle is present ($(wc -c < android/capacitor-cordova-android-plugins/cordova.variables.gradle) bytes)"
+          else
+            echo "ERROR: cordova.variables.gradle is missing!"
+            exit 1
+          fi
 
       - name: Build debug APK
         working-directory: android
