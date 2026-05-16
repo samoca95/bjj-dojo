@@ -9,6 +9,8 @@ const GRAPH_COLORS: Record<ConnectionType, string> = {
   SETUP: '#86efac',
   TRANSITION: '#93c5fd',
 }
+const MIN_APPROX_LABEL_WIDTH = 22
+const APPROX_LABEL_CHAR_WIDTH = 5.1
 const OVERLAP_LAYOUT_ITERATIONS = 90
 const OVERLAP_PUSH_FACTOR = 0.52
 const ANGLE_RESTORE_FACTOR = 0.07
@@ -43,7 +45,10 @@ function normalizeAngle(angle: number): number {
 
 function estimateCompositeRadius(label: string, nodeR: number): number {
   const capped = truncate(label, 20)
-  const approximateLabelWidth = Math.max(22, capped.length * 5.1)
+  const approximateLabelWidth = Math.max(
+    MIN_APPROX_LABEL_WIDTH,
+    capped.length * APPROX_LABEL_CHAR_WIDTH,
+  )
   return nodeR + 8 + approximateLabelWidth / 2
 }
 
@@ -171,7 +176,8 @@ export default function ConnectionGraph({
 
         {/* Edges (drawn first so nodes sit on top) */}
         {neighbours.map((nb, i) => {
-          const angle = angles[i] ?? -Math.PI / 2 + (i * 2 * Math.PI) / n
+          const angle =
+            angles[i] ?? -Math.PI / 2 + (i * 2 * Math.PI) / neighbours.length
           const x = cx + R * Math.cos(angle)
           const y = cy + R * Math.sin(angle)
           const ux = Math.cos(angle)
@@ -230,7 +236,8 @@ export default function ConnectionGraph({
 
         {/* Neighbour nodes */}
         {neighbours.map((nb, i) => {
-          const angle = angles[i] ?? -Math.PI / 2 + (i * 2 * Math.PI) / n
+          const angle =
+            angles[i] ?? -Math.PI / 2 + (i * 2 * Math.PI) / neighbours.length
           const x = cx + R * Math.cos(angle)
           const y = cy + R * Math.sin(angle)
           const ux = Math.cos(angle)

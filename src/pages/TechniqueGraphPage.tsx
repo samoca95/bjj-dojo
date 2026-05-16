@@ -47,7 +47,7 @@ function wrapText(
   maxCharsPerLine: number,
   maxLines: number,
 ): string[] {
-  if (!text.trim()) return ['']
+  if (!text.trim()) return []
   const words = text.trim().split(/\s+/)
   const lines: string[] = []
   let current = ''
@@ -79,7 +79,7 @@ function wrapText(
 
   if (lines.length <= maxLines) return lines
   const clipped = lines.slice(0, maxLines)
-  const last = clipped[maxLines - 1].replace(/\s+$/, '').replace(/…+$/, '')
+  const last = clipped[maxLines - 1].replace(/\s+$/, '').replace(/…$/, '')
   clipped[maxLines - 1] =
     last.length >= maxCharsPerLine
       ? `${last.slice(0, maxCharsPerLine - 1)}…`
