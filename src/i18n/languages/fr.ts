@@ -334,6 +334,29 @@ const FR_TRANSLATIONS = {
   'Auto-backup failed': 'Échec de la sauvegarde automatique',
   'Could not write backup to the chosen destination.':
     'Impossible d’écrire la sauvegarde dans la destination choisie.',
+  'Connect GitHub': 'Se connecter à GitHub',
+  'Signed in as': 'Connecté en tant que',
+  'Sign out': 'Se déconnecter',
+  'Select a repository': 'Sélectionner un dépôt',
+  'Create new repository': 'Créer un nouveau dépôt',
+  'Repository name': 'Nom du dépôt',
+  'Private repository': 'Dépôt privé',
+  Create: 'Créer',
+  'Loading repositories…': 'Chargement des dépôts…',
+  'No repositories with write access.': 'Aucun dépôt avec accès en écriture.',
+  'Backups to keep': 'Sauvegardes à conserver',
+  'Older backups are deleted automatically.':
+    'Les anciennes sauvegardes sont supprimées automatiquement.',
+  'GitHub login is not configured in this build.':
+    'La connexion GitHub n’est pas configurée dans cette version.',
+  'Enter this code at GitHub': 'Saisissez ce code sur GitHub',
+  'Open GitHub': 'Ouvrir GitHub',
+  'Copy code': 'Copier le code',
+  Copied: 'Copié',
+  'Waiting for authorization…': 'En attente d’autorisation…',
+  'Authorization timed out. Try again.':
+    'Le délai d’autorisation a expiré. Réessayez.',
+  'Authorization was denied.': 'L’autorisation a été refusée.',
   // Setup restore prompt
   'Restore from backup': 'Restaurer depuis une sauvegarde',
   'Set up backup': 'Configurer la sauvegarde',

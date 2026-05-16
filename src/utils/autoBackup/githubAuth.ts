@@ -1,0 +1,170 @@
+/**
+ * GitHub OAuth Device Flow client.
+ *
+ * Browser-callable: GitHub's /login/device/* endpoints have CORS enabled for
+ * the public OAuth App client_id. Tokens land in localStorage via the same
+ * GH_TOKEN_KEY used for PATs, so the rest of the backup pipeline is untouched.
+ *
+ * Bake the OAuth App client_id into the build via
+ * VITE_GITHUB_OAUTH_CLIENT_ID. If unset, the UI must surface the
+ * "not configured" path; never start polling without a client_id.
+ */
+
+const DEVICE_CODE_URL = 'https://github.com/login/device/code'
+const ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token'
+const REQUIRED_SCOPE = 'repo'
+
+export interface DeviceCodeResponse {
+  device_code: string
+  user_code: string
+  verification_uri: string
+  /** Seconds between polls. GitHub default is 5; honour `slow_down` bumps. */
+  interval: number
+  /** Seconds until device_code expires. */
+  expires_in: number
+}
+
+export class DeviceFlowError extends Error {
+  constructor(
+    message: string,
+    public code:
+      | 'access_denied'
+      | 'expired_token'
+      | 'incorrect_device_code'
+      | 'not_configured'
+      | 'network'
+      | 'unknown',
+  ) {
+    super(message)
+    this.name = 'DeviceFlowError'
+  }
+}
+
+export function getOAuthClientId(): string | null {
+  const raw = import.meta.env.VITE_GITHUB_OAUTH_CLIENT_ID
+  if (typeof raw !== 'string') return null
+  const trimmed = raw.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+export function isDeviceFlowConfigured(): boolean {
+  return getOAuthClientId() !== null
+}
+
+export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
+  const clientId = getOAuthClientId()
+  if (!clientId) {
+    throw new DeviceFlowError(
+      'GitHub login is not configured in this build.',
+      'not_configured',
+    )
+  }
+  const res = await fetch(DEVICE_CODE_URL, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ client_id: clientId, scope: REQUIRED_SCOPE }),
+  })
+  if (!res.ok) {
+    throw new DeviceFlowError(
+      `Device code request failed (${res.status}).`,
+      'network',
+    )
+  }
+  return (await res.json()) as DeviceCodeResponse
+}
+
+interface PollOptions {
+  signal?: AbortSignal
+  /** Test seam: replaces window.setTimeout with a sync mock. */
+  sleep?: (ms: number) => Promise<void>
+}
+
+const defaultSleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms))
+
+/**
+ * Polls GitHub's token endpoint until the user authorises, denies, or the
+ * device code expires. `interval` starts from DeviceCodeResponse and is bumped
+ * by 5s on every `slow_down` response per the spec.
+ */
+export async function pollForToken(
+  deviceCode: string,
+  initialIntervalSeconds: number,
+  options: PollOptions = {},
+): Promise<string> {
+  const clientId = getOAuthClientId()
+  if (!clientId) {
+    throw new DeviceFlowError(
+      'GitHub login is not configured in this build.',
+      'not_configured',
+    )
+  }
+  const sleep = options.sleep ?? defaultSleep
+  let intervalSeconds = Math.max(1, initialIntervalSeconds)
+
+  while (true) {
+    if (options.signal?.aborted) {
+      throw new DeviceFlowError('Cancelled.', 'unknown')
+    }
+    await sleep(intervalSeconds * 1000)
+    if (options.signal?.aborted) {
+      throw new DeviceFlowError('Cancelled.', 'unknown')
+    }
+
+    const res = await fetch(ACCESS_TOKEN_URL, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        device_code: deviceCode,
+        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+      }),
+    })
+    if (!res.ok) {
+      throw new DeviceFlowError(
+        `Token request failed (${res.status}).`,
+        'network',
+      )
+    }
+    const body = (await res.json()) as {
+      access_token?: string
+      error?: string
+      error_description?: string
+      interval?: number
+    }
+    if (body.access_token) return body.access_token
+    switch (body.error) {
+      case 'authorization_pending':
+        continue
+      case 'slow_down':
+        intervalSeconds =
+          typeof body.interval === 'number'
+            ? body.interval
+            : intervalSeconds + 5
+        continue
+      case 'expired_token':
+        throw new DeviceFlowError(
+          body.error_description ?? 'Device code expired.',
+          'expired_token',
+        )
+      case 'access_denied':
+        throw new DeviceFlowError(
+          body.error_description ?? 'Authorization was denied.',
+          'access_denied',
+        )
+      case 'incorrect_device_code':
+        throw new DeviceFlowError(
+          body.error_description ?? 'Invalid device code.',
+          'incorrect_device_code',
+        )
+      default:
+        throw new DeviceFlowError(
+          body.error_description ?? body.error ?? 'Unknown error.',
+          'unknown',
+        )
+    }
+  }
+}

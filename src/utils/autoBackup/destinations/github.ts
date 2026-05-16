@@ -59,6 +59,89 @@ export async function verifyGithubToken(
   return (await res.json()) as { login: string }
 }
 
+export interface GithubRepoSummary {
+  owner: string
+  name: string
+  fullName: string
+  private: boolean
+  defaultBranch: string
+}
+
+/**
+ * Lists repos the user has push access to. Paginates the user's affiliated
+ * repos until exhausted (capped at 5 pages = 500 repos to keep memory bounded).
+ */
+export async function listWritableRepos(
+  token: string,
+): Promise<GithubRepoSummary[]> {
+  const results: GithubRepoSummary[] = []
+  const MAX_PAGES = 5
+  const PER_PAGE = 100
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const url = `${API_BASE}/user/repos?per_page=${PER_PAGE}&page=${page}&sort=updated&affiliation=owner,collaborator,organization_member`
+    const res = await fetch(url, { headers: authHeaders(token) })
+    if (!res.ok) await ghError(res, 'GitHub repo list failed')
+    const body = (await res.json()) as Array<{
+      name: string
+      full_name: string
+      private: boolean
+      default_branch: string
+      owner: { login: string }
+      permissions?: { push?: boolean }
+    }>
+    for (const r of body) {
+      if (r.permissions?.push !== false) {
+        results.push({
+          owner: r.owner.login,
+          name: r.name,
+          fullName: r.full_name,
+          private: r.private,
+          defaultBranch: r.default_branch,
+        })
+      }
+    }
+    if (body.length < PER_PAGE) break
+  }
+  return results
+}
+
+export interface CreateRepoOptions {
+  name: string
+  private: boolean
+  description?: string
+}
+
+export async function createBackupRepo(
+  token: string,
+  options: CreateRepoOptions,
+): Promise<GithubRepoSummary> {
+  const res = await fetch(`${API_BASE}/user/repos`, {
+    method: 'POST',
+    headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: options.name,
+      description: options.description,
+      private: options.private,
+      auto_init: true,
+    }),
+  })
+  if (!res.ok) await ghError(res, 'GitHub repo creation failed')
+  const body = (await res.json()) as {
+    name: string
+    full_name: string
+    private: boolean
+    default_branch: string
+    owner: { login: string }
+  }
+  return {
+    owner: body.owner.login,
+    name: body.name,
+    fullName: body.full_name,
+    private: body.private,
+    defaultBranch: body.default_branch,
+  }
+}
+
 async function gistWrite(
   token: string,
   gistId: string,
