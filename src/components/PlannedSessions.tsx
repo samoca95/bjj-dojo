@@ -29,11 +29,25 @@ function PlannedIcon({
   sessionTypeIcons: SessionTypeIconsMap
 }) {
   if (kind === 'gi')
-    return <CategoryIcon value={sessionTypeIcons.GI} size={16} className="text-blue-400" />
+    return (
+      <CategoryIcon
+        value={sessionTypeIcons.GI}
+        size={16}
+        className="text-blue-400"
+      />
+    )
   if (kind === 'nogi')
-    return <CategoryIcon value={sessionTypeIcons.NOGI} size={16} className="text-green-400" />
+    return (
+      <CategoryIcon
+        value={sessionTypeIcons.NOGI}
+        size={16}
+        className="text-green-400"
+      />
+    )
   if (kind === 'stretch')
-    return <Accessibility size={16} className="text-orange-400" strokeWidth={2} />
+    return (
+      <Accessibility size={16} className="text-orange-400" strokeWidth={2} />
+    )
   return <Dumbbell size={16} className="text-purple-400" strokeWidth={2} />
 }
 
