@@ -28,6 +28,8 @@ jobs:
         run: npm run build
         env:
           GITHUB_ACTIONS: 'true'
+          VITE_GITHUB_OAUTH_CLIENT_ID: ${{ secrets.VITE_GITHUB_OAUTH_CLIENT_ID }}
+          VITE_GITHUB_OAUTH_PROXY_URL: ${{ secrets.VITE_GITHUB_OAUTH_PROXY_URL }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

@@ -2,19 +2,44 @@
  * GitHub OAuth Device Flow client.
  *
  * Browser limitation: GitHub's /login/device/* endpoints are not CORS-enabled
- * for static frontend origins, so direct browser fetches can fail with a
- * network error ("Failed to fetch"). Surface a clear message in that case.
+ * for static frontend origins, so direct browser fetches always fail with a
+ * network error ("Failed to fetch"). We work around this with a tiny
+ * stateless proxy worker (see `oauth-proxy/` at the repo root) that forwards
+ * requests to GitHub with permissive CORS. The proxy URL is baked into the
+ * build via VITE_GITHUB_OAUTH_PROXY_URL; when set, requests go through it
+ * instead of github.com directly. When unset (e.g. local dev without the
+ * env var) the original direct fetch still runs so the CORS error surfaces
+ * clearly.
  *
  * Bake the OAuth App client_id into the build via
  * VITE_GITHUB_OAUTH_CLIENT_ID. If unset, the UI must surface the
  * "not configured" path; never start polling without a client_id.
  */
 
-const DEVICE_CODE_URL = 'https://github.com/login/device/code'
-const ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token'
+const GH_DEVICE_CODE_URL = 'https://github.com/login/device/code'
+const GH_ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token'
+const PROXY_DEVICE_CODE_PATH = '/device/code'
+const PROXY_ACCESS_TOKEN_PATH = '/access_token'
 const REQUIRED_SCOPE = 'repo'
 const OAUTH_BROWSER_ERROR =
-  'GitHub OAuth cannot be completed from this browser build because GitHub blocks cross-origin device-flow requests (CORS).'
+  'GitHub OAuth cannot be completed from this browser build because GitHub blocks cross-origin device-flow requests (CORS). Configure VITE_GITHUB_OAUTH_PROXY_URL with a deployed proxy worker URL.'
+
+function getProxyBaseUrl(): string | null {
+  const raw = import.meta.env.VITE_GITHUB_OAUTH_PROXY_URL
+  if (typeof raw !== 'string') return null
+  const trimmed = raw.trim().replace(/\/$/, '')
+  return trimmed.length > 0 ? trimmed : null
+}
+
+function deviceCodeEndpoint(): string {
+  const proxy = getProxyBaseUrl()
+  return proxy ? `${proxy}${PROXY_DEVICE_CODE_PATH}` : GH_DEVICE_CODE_URL
+}
+
+function accessTokenEndpoint(): string {
+  const proxy = getProxyBaseUrl()
+  return proxy ? `${proxy}${PROXY_ACCESS_TOKEN_PATH}` : GH_ACCESS_TOKEN_URL
+}
 
 export interface DeviceCodeResponse {
   device_code: string
@@ -63,7 +88,7 @@ export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
   }
   let res: Response
   try {
-    res = await fetch(DEVICE_CODE_URL, {
+    res = await fetch(deviceCodeEndpoint(), {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -123,7 +148,7 @@ export async function pollForToken(
 
     let res: Response
     try {
-      res = await fetch(ACCESS_TOKEN_URL, {
+      res = await fetch(accessTokenEndpoint(), {
         method: 'POST',
         headers: {
           Accept: 'application/json',
