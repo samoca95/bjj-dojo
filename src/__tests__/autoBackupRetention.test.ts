@@ -11,9 +11,9 @@ beforeEach(() => {
 })
 
 describe('backup retention setting', () => {
-  it('defaults to 7 when unset', () => {
+  it('defaults to 50 when unset', () => {
     expect(getBackupRetentionCount()).toBe(DEFAULT_BACKUP_RETENTION)
-    expect(DEFAULT_BACKUP_RETENTION).toBe(7)
+    expect(DEFAULT_BACKUP_RETENTION).toBe(50)
   })
 
   it('persists user-chosen values', () => {

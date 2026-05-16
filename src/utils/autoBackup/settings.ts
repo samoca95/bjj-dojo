@@ -21,7 +21,7 @@ const APP_LAST_RUN_KEY = 'bjj-dojo:auto-backup-last-run'
 const LAST_MUTATION_KEY = 'bjj-dojo:last-mutation-time'
 const RETENTION_KEY = 'bjj-dojo:auto-backup-retention'
 
-export const DEFAULT_BACKUP_RETENTION = 7
+export const DEFAULT_BACKUP_RETENTION = 50
 const MIN_BACKUP_RETENTION = 1
 const MAX_BACKUP_RETENTION = 365
 

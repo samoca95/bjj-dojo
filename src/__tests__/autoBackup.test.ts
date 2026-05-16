@@ -112,21 +112,14 @@ describe('runBackupNow', () => {
 })
 
 describe('scheduleAfterMutation', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
   it('is a no-op when neither destination is enabled', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     scheduleAfterMutation(db)
-    await vi.runAllTimersAsync()
+    await Promise.resolve()
     expect(fetchSpy).not.toHaveBeenCalled()
   })
 
-  it('debounces multiple calls into a single run', async () => {
+  it('queues one follow-up run when mutations happen during an in-flight backup', async () => {
     setGithubToken('t')
     setGithubTarget({ kind: 'gist', gistId: 'g' })
     setGithubBackupEnabled(true)
@@ -138,11 +131,9 @@ describe('scheduleAfterMutation', () => {
     scheduleAfterMutation(db)
     scheduleAfterMutation(db)
 
-    await vi.runAllTimersAsync()
-    // Allow microtasks from the export+write chain
-    await vi.runAllTimersAsync()
-
-    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    await vi.waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledTimes(2)
+    })
   })
 })
 

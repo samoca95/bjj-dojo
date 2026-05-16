@@ -1,10 +1,11 @@
 /**
  * Auto-backup orchestrator.
  *
- * `scheduleAfterMutation()` is wired into the session save/delete paths.
- * It debounces (≥60s between runs), skips if no destination is enabled,
- * and fires destinations in parallel — one failing does not block others.
- * `runBackupNow()` bypasses the debounce for explicit user clicks.
+ * `scheduleAfterMutation()` is wired into mutation paths.
+ * It runs immediately, skips if no destination is enabled, and queues one
+ * follow-up run if additional mutations happen during an in-flight backup.
+ * Destinations run in parallel — one failing does not block others.
+ * `runBackupNow()` is also used for explicit user-triggered backups.
  */
 import { db, exportDatabaseBackup, type BJJDatabase } from '../../db/database'
 import { telemetry } from '../telemetry'
@@ -19,12 +20,11 @@ import {
   setGithubLastRun,
   setOverallLastRun,
 } from './settings'
-import type { BackupDestination, RunReport } from './types'
+import type { BackupDestination, DestinationId, RunReport } from './types'
 
-const MIN_INTERVAL_MS = 60_000
-
-let scheduleTimer: ReturnType<typeof setTimeout> | null = null
 let runInFlight: Promise<RunReport[]> | null = null
+let rerunRequested = false
+let queuedDatabase: BJJDatabase | null = null
 
 const allDestinations: BackupDestination[] = [
   fileSystemDestination,
@@ -130,29 +130,47 @@ export async function runBackupNow(
   }
 }
 
-/**
- * Called from mutation sites (session save/delete, drill plan changes).
- * Defers an actual run to a single debounced timer; bails immediately if
- * the last run was within MIN_INTERVAL_MS.
- */
+function getEnabledDestinationIds(): DestinationId[] {
+  if (typeof window === 'undefined') return []
+  const ids: DestinationId[] = []
+  if (window.localStorage.getItem('bjj-dojo:auto-backup-fs-enabled') === '1') {
+    ids.push('fileSystem')
+  }
+  if (
+    window.localStorage.getItem('bjj-dojo:auto-backup-github-enabled') === '1'
+  ) {
+    ids.push('github')
+  }
+  return ids
+}
+
+async function runScheduledBackups(database: BJJDatabase): Promise<void> {
+  let pendingDatabase: BJJDatabase = database
+  do {
+    rerunRequested = false
+    await runBackupNow(pendingDatabase)
+    if (queuedDatabase) {
+      pendingDatabase = queuedDatabase
+      queuedDatabase = null
+    }
+  } while (rerunRequested)
+}
+
 export function scheduleAfterMutation(database: BJJDatabase = db): void {
   if (typeof window === 'undefined') return
-  // Skip when nothing is enabled — cheap localStorage check, no FS/network.
-  const fsEnabled =
-    window.localStorage.getItem('bjj-dojo:auto-backup-fs-enabled') === '1'
-  const ghEnabled =
-    window.localStorage.getItem('bjj-dojo:auto-backup-github-enabled') === '1'
-  if (!fsEnabled && !ghEnabled) return
-
-  const last = getOverallLastRun() ?? 0
-  const elapsed = Date.now() - last
-  const delay = Math.max(0, MIN_INTERVAL_MS - elapsed)
-
-  if (scheduleTimer) return
-  scheduleTimer = setTimeout(() => {
-    scheduleTimer = null
-    void runBackupNow(database)
-  }, delay)
+  const destinationIds = getEnabledDestinationIds()
+  if (destinationIds.length === 0) return
+  window.dispatchEvent(
+    new CustomEvent('bjj-dojo:backup-triggered', {
+      detail: { destinationIds },
+    }),
+  )
+  if (runInFlight) {
+    rerunRequested = true
+    queuedDatabase = database
+    return
+  }
+  void runScheduledBackups(database)
 }
 
 /** Called on app start; runs if the last backup is older than 24h. */
@@ -164,9 +182,9 @@ export async function runStartupBackupIfDue(
   await runBackupNow(database)
 }
 
-/** Reset of the debounce timer, used in tests. */
+/** Reset scheduler state, used in tests. */
 export function _resetSchedulerForTests() {
-  if (scheduleTimer) clearTimeout(scheduleTimer)
-  scheduleTimer = null
   runInFlight = null
+  rerunRequested = false
+  queuedDatabase = null
 }
