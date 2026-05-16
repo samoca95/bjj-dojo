@@ -186,11 +186,12 @@ export default function ConnectionGraph({
               : uy < -0.3
                 ? 'auto'
                 : 'central'
-          const radialRotation = (() => {
-            const deg = (angle * 180) / Math.PI
-            if (!useRadialLabels) return undefined
-            return deg > 90 || deg < -90 ? deg + 180 : deg
-          })()
+          const degrees = (angle * 180) / Math.PI
+          const radialRotation = useRadialLabels
+            ? degrees > 90 || degrees < -90
+              ? degrees + 180
+              : degrees
+            : undefined
           return (
             <g
               key={`node-${nb.technique.id}`}

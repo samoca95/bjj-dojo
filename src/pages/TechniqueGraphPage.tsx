@@ -304,13 +304,19 @@ export default function TechniqueGraphPage() {
   }, [techniques, catMap])
 
   const nodeLabelCenter = useMemo(() => {
-    const pts = [...positions.values()]
-    if (pts.length === 0) return { x: 0, y: 0 }
-    const sum = pts.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), {
-      x: 0,
-      y: 0,
-    })
-    return { x: sum.x / pts.length, y: sum.y / pts.length }
+    const nodePositions = [...positions.values()]
+    if (nodePositions.length === 0) return { x: 0, y: 0 }
+    const sum = nodePositions.reduce(
+      (acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }),
+      {
+        x: 0,
+        y: 0,
+      },
+    )
+    return {
+      x: sum.x / nodePositions.length,
+      y: sum.y / nodePositions.length,
+    }
   }, [positions])
 
   return (
@@ -491,7 +497,7 @@ export default function TechniqueGraphPage() {
                   const dy = p.y - nodeLabelCenter.y
                   const distance = Math.hypot(dx, dy)
                   const ux = distance > 0 ? dx / distance : 0
-                  const uy = distance > 0 ? dy / distance : 1
+                  const uy = distance > 0 ? dy / distance : 0
                   const labelX = p.x + ux * (NODE_RADIUS + 8)
                   const labelY = p.y + uy * (NODE_RADIUS + 8)
                   const anchor =
