@@ -1,0 +1,1 @@
+const t="bjj-dojo:flow-icon",e="bjj-dojo:flow-icon-updated",n="route";function w(){if(typeof window>"u")return n;const o=window.localStorage.getItem(t);return o&&o.trim()?o:n}function i(o){typeof window>"u"||(window.localStorage.setItem(t,o),window.dispatchEvent(new Event(e)))}export{n as D,e as F,w as g,i as s};
