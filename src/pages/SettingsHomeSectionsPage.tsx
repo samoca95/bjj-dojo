@@ -41,6 +41,7 @@ export default function SettingsHomeSectionsPage() {
     focus: t('FOCUS TECHNIQUES'),
     gamification: t('LEVEL AND SCORES'),
     stats: t('YOUR STATS'),
+    plannedSessions: t('PLANNED SESSIONS'),
     calendar: t('TRAINING CALENDAR'),
     quickAccess: t('QUICK ACCESS'),
   }

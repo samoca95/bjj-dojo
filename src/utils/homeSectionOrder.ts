@@ -2,6 +2,7 @@ export type HomeSectionId =
   | 'gamification'
   | 'focus'
   | 'stats'
+  | 'plannedSessions'
   | 'calendar'
   | 'quickAccess'
 export type HomeSectionVisibility = Record<HomeSectionId, boolean>
@@ -16,6 +17,7 @@ export const DEFAULT_HOME_SECTION_ORDER: HomeSectionId[] = [
   'gamification',
   'focus',
   'stats',
+  'plannedSessions',
   'calendar',
   'quickAccess',
 ]
@@ -23,6 +25,7 @@ export const DEFAULT_HOME_SECTION_VISIBILITY: HomeSectionVisibility = {
   gamification: true,
   focus: true,
   stats: true,
+  plannedSessions: true,
   calendar: true,
   quickAccess: false,
 }
@@ -31,6 +34,7 @@ const ALL: HomeSectionId[] = [
   'gamification',
   'focus',
   'stats',
+  'plannedSessions',
   'calendar',
   'quickAccess',
 ]

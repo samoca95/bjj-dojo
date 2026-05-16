@@ -10,6 +10,7 @@ const FR_TRANSLATIONS = {
   'Mat Time': 'Temps sur tatami',
   'Taps Given': 'Soumissions réussies',
   'Taps Received': 'Soumissions subies',
+  'PLANNED SESSIONS': 'SÉANCES PLANIFIÉES',
   'PRACTICE SESSIONS': 'SÉANCES PRATIQUÉES',
   'QUICK ACCESS': 'ACCÈS RAPIDE',
   TRENDING: 'TENDANCES',
