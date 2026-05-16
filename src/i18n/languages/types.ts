@@ -315,6 +315,8 @@ export type TranslationKey =
   | 'Connected. Looking for backups…'
   | 'sessions'
   | 'techniques'
+  | 'How backups work'
+  | 'Need help?'
 
 export interface LanguagePack {
   /**

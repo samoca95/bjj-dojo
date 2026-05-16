@@ -346,6 +346,8 @@ const ES_TRANSLATIONS = {
   'Connected. Looking for backups…': 'Conectado. Buscando copias…',
   sessions: 'sesiones',
   techniques: 'técnicas',
+  'How backups work': 'Cómo funcionan las copias',
+  'Need help?': '¿Necesitas ayuda?',
 } satisfies Record<TranslationKey, string>
 
 export const ES_CATEGORY_CONTENT: Record<

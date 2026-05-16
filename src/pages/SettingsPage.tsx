@@ -13,7 +13,9 @@ import {
   DatabaseZap,
   Moon,
   Sun,
+  HelpCircle,
 } from 'lucide-react'
+import BackupHelpModal from '../components/BackupHelpModal'
 import { PlainLogo } from '../components/PlainLogo'
 import { themeFill } from '../constants/themeColors'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -134,6 +136,9 @@ export default function SettingsPage() {
   const ghLastRun = getGithubLastRun()
   const ghLastError = getGithubLastError()
 
+  const [helpTab, setHelpTab] = useState<
+    'overview' | 'folder' | 'github' | null
+  >(null)
   const [ghTokenInput, setGhTokenInput] = useState(ghToken ?? '')
   const [ghMode, setGhMode] = useState<'repo' | 'gist'>(
     ghTarget?.kind === 'gist' ? 'gist' : 'repo',
@@ -613,22 +618,39 @@ export default function SettingsPage() {
           </p>
 
           <div className="pt-3 mt-3 border-t border-zinc-800 space-y-3">
-            <div className="text-xs text-zinc-400">
-              {fsEnabled || ghEnabled
-                ? `${t('Auto-backup')} · ${t('Last backup')}: ${formatLastRun(
-                    Math.max(fsLastRun ?? 0, ghLastRun ?? 0) || null,
-                  )}`
-                : t(
-                    'Auto-backup is off — your data only lives in this browser.',
-                  )}
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs text-zinc-400 flex-1">
+                {fsEnabled || ghEnabled
+                  ? `${t('Auto-backup')} · ${t('Last backup')}: ${formatLastRun(
+                      Math.max(fsLastRun ?? 0, ghLastRun ?? 0) || null,
+                    )}`
+                  : t(
+                      'Auto-backup is off — your data only lives in this browser.',
+                    )}
+              </div>
+              <button
+                onClick={() => setHelpTab('overview')}
+                aria-label={t('How backups work')}
+                className="w-7 h-7 rounded-full bg-zinc-800 text-zinc-300 active:bg-zinc-700 flex items-center justify-center"
+              >
+                <HelpCircle size={14} strokeWidth={2.5} />
+              </button>
             </div>
 
             {/* Folder destination */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-zinc-100">
+                <button
+                  onClick={() => setHelpTab('folder')}
+                  className="text-sm font-semibold text-zinc-100 flex items-center gap-1.5 active:text-gold"
+                >
                   {t('Back up to a folder')}
-                </span>
+                  <HelpCircle
+                    size={12}
+                    className="text-zinc-500"
+                    strokeWidth={2.5}
+                  />
+                </button>
               </div>
               {!fsSupported ? (
                 <p className="text-xs text-zinc-500">
@@ -670,9 +692,17 @@ export default function SettingsPage() {
             {/* GitHub destination */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-zinc-100">
+                <button
+                  onClick={() => setHelpTab('github')}
+                  className="text-sm font-semibold text-zinc-100 flex items-center gap-1.5 active:text-gold"
+                >
                   {t('Back up to GitHub')}
-                </span>
+                  <HelpCircle
+                    size={12}
+                    className="text-zinc-500"
+                    strokeWidth={2.5}
+                  />
+                </button>
               </div>
               <div className="flex bg-zinc-800 rounded-lg p-0.5 gap-0.5">
                 <button
@@ -793,6 +823,13 @@ export default function SettingsPage() {
           </a>
         </div>
       </div>
+
+      {helpTab && (
+        <BackupHelpModal
+          initialTab={helpTab}
+          onClose={() => setHelpTab(null)}
+        />
+      )}
     </div>
   )
 }

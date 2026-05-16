@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { HelpCircle } from 'lucide-react'
 import { useI18n, setAppLanguage, type AppLanguage } from '../i18n'
+import BackupHelpModal from './BackupHelpModal'
 
 const START_LABEL: Record<AppLanguage, string> = {
   en: 'Start',
@@ -45,6 +47,9 @@ interface Props {
 export default function SetupRestorePrompt({ onComplete }: Props) {
   const { t, language } = useI18n()
   const [step, setStep] = useState<Step>('choose')
+  const [helpTab, setHelpTab] = useState<
+    'overview' | 'folder' | 'github' | null
+  >(null)
   const [backups, setBackups] = useState<DiscoveredBackup[]>([])
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [pickedDestination, setPickedDestination] =
@@ -143,25 +148,43 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
   return (
     <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm p-4 flex items-center justify-center">
       <div className="w-full max-w-md bg-zinc-900 rounded-2xl p-4 space-y-4 border border-zinc-800">
-        <div className="space-y-1">
-          <h2 className="text-lg font-bold text-zinc-100">
-            {t('Set up backup')}
-          </h2>
-          <p className="text-sm text-zinc-400">
-            {t('Where should we keep your backups?')}
-          </p>
+        <div className="flex items-start gap-3">
+          <div className="flex-1 space-y-1">
+            <h2 className="text-lg font-bold text-zinc-100">
+              {t('Set up backup')}
+            </h2>
+            <p className="text-sm text-zinc-400">
+              {t('Where should we keep your backups?')}
+            </p>
+          </div>
+          <button
+            onClick={() => setHelpTab('overview')}
+            aria-label={t('Need help?')}
+            className="w-8 h-8 rounded-full bg-zinc-800 text-zinc-300 active:bg-zinc-700 flex items-center justify-center shrink-0"
+          >
+            <HelpCircle size={16} strokeWidth={2.5} />
+          </button>
         </div>
 
         {step === 'choose' && (
           <div className="space-y-2">
             {isFileSystemDestinationSupported() ? (
-              <button
-                onClick={() => void connectFolder()}
-                disabled={busy}
-                className="w-full rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700 disabled:opacity-60"
-              >
-                {t('A folder on your device')}
-              </button>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => void connectFolder()}
+                  disabled={busy}
+                  className="flex-1 rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700 disabled:opacity-60"
+                >
+                  {t('A folder on your device')}
+                </button>
+                <button
+                  onClick={() => setHelpTab('folder')}
+                  aria-label={t('Need help?')}
+                  className="w-10 rounded-xl bg-zinc-800 text-zinc-400 active:bg-zinc-700 flex items-center justify-center"
+                >
+                  <HelpCircle size={16} strokeWidth={2.5} />
+                </button>
+              </div>
             ) : (
               <p className="text-xs text-zinc-500 px-1">
                 {t(
@@ -169,13 +192,22 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
                 )}
               </p>
             )}
-            <button
-              onClick={() => setStep('github-form')}
-              disabled={busy}
-              className="w-full rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700 disabled:opacity-60"
-            >
-              {t('A GitHub repo or gist')}
-            </button>
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => setStep('github-form')}
+                disabled={busy}
+                className="flex-1 rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold py-2.5 active:bg-zinc-700 disabled:opacity-60"
+              >
+                {t('A GitHub repo or gist')}
+              </button>
+              <button
+                onClick={() => setHelpTab('github')}
+                aria-label={t('Need help?')}
+                className="w-10 rounded-xl bg-zinc-800 text-zinc-400 active:bg-zinc-700 flex items-center justify-center"
+              >
+                <HelpCircle size={16} strokeWidth={2.5} />
+              </button>
+            </div>
             <button
               onClick={finishAndSkip}
               className="w-full rounded-xl bg-zinc-800/50 text-zinc-300 text-sm py-2.5 active:bg-zinc-800"
@@ -331,6 +363,13 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
           </div>
         )}
       </div>
+
+      {helpTab && (
+        <BackupHelpModal
+          initialTab={helpTab}
+          onClose={() => setHelpTab(null)}
+        />
+      )}
     </div>
   )
 }

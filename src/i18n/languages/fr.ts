@@ -350,6 +350,8 @@ const FR_TRANSLATIONS = {
   'Connected. Looking for backups…': 'Connecté. Recherche des sauvegardes…',
   sessions: 'sessions',
   techniques: 'techniques',
+  'How backups work': 'Comment fonctionnent les sauvegardes',
+  'Need help?': 'Besoin d’aide ?',
 } satisfies Record<TranslationKey, string>
 
 const FR_CATEGORY_CONTENT: LanguagePack['categoryContent'] = {
