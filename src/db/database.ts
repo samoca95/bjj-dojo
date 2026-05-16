@@ -14,12 +14,12 @@ import {
   prefilledTechniques,
   prefilledConnections,
 } from './prefilled'
-import {
-  type AppLanguage,
-  translateCategoryForExport,
-  translateTechniqueForExport,
-} from '../i18n'
+import { type AppLanguage } from '../i18n'
 import { VALIDATION_LIMITS, isValidYoutubeUrl } from '../utils/validation'
+import {
+  collectBackupPreferences,
+  restoreBackupPreferences,
+} from '../utils/backupPreferences'
 
 export class BJJDatabase extends Dexie {
   categories!: Table<Category, number>
@@ -244,9 +244,17 @@ export async function resetPrefilledTechniques(database: BJJDatabase = db) {
   )
 }
 
+export const BACKUP_FILE_FORMAT_VERSION = 2
+
 export interface DatabaseBackup {
+  /** Backup file format version (the on-disk wire format, not the Dexie schema). */
   version: number
+  /** Dexie schema version the snapshot was taken at. */
+  schemaVersion?: number
+  /** Signature of the schema's table/index layout — refuse import on mismatch. */
+  schemaSignature?: string
   exportedAt: number
+  /** UI language at export time (informational only — content stays canonical). */
   language?: AppLanguage
   categories: Category[]
   techniques: Technique[]
@@ -256,31 +264,68 @@ export interface DatabaseBackup {
   sessionTaps: SessionTap[]
   clubs: Club[]
   drillPlans: DrillPlan[]
+  /** Backed-up `bjj-dojo:`-prefixed localStorage settings (belt, goals, layout, …). */
+  preferences?: Record<string, string>
+}
+
+/** Stable fingerprint of the live schema — table names + index strings. */
+function computeSchemaSignature(database: BJJDatabase): string {
+  return database.tables
+    .map((t) => `${t.name}:${t.schema.primKey.src}|${t.schema.indexes.map((i) => i.src).join(',')}`)
+    .sort()
+    .join(';')
 }
 
 export async function exportDatabaseBackup(
   database: BJJDatabase = db,
   language: AppLanguage = 'en',
 ): Promise<DatabaseBackup> {
-  const categories = await database.categories.toArray()
-  const techniques = await database.techniques.toArray()
+  // Point-in-time consistent snapshot — wrap all reads in one read transaction
+  // so a concurrent write can't produce a half-saved session in the backup.
+  const snapshot = await database.transaction(
+    'r',
+    [
+      database.categories,
+      database.techniques,
+      database.techniqueConnections,
+      database.sessions,
+      database.sessionTechniques,
+      database.sessionTaps,
+      database.clubs,
+      database.drillPlans,
+    ],
+    async () => ({
+      categories: await database.categories.toArray(),
+      techniques: await database.techniques.toArray(),
+      techniqueConnections: await database.techniqueConnections.toArray(),
+      sessions: await database.sessions.toArray(),
+      sessionTechniques: await database.sessionTechniques.toArray(),
+      sessionTaps: await database.sessionTaps.toArray(),
+      clubs: await database.clubs.toArray(),
+      drillPlans: await database.drillPlans.toArray(),
+    }),
+  )
+
+  const preferences =
+    typeof window === 'undefined' ? {} : collectBackupPreferences()
+
   return {
-    version: 1,
+    version: BACKUP_FILE_FORMAT_VERSION,
+    schemaVersion: database.verno,
+    schemaSignature: computeSchemaSignature(database),
     exportedAt: Date.now(),
     language,
-    categories: categories.map((c) => translateCategoryForExport(c, language)),
-    techniques: techniques.map((t) => translateTechniqueForExport(t, language)),
-    techniqueConnections: await database.techniqueConnections.toArray(),
-    sessions: await database.sessions.toArray(),
-    sessionTechniques: await database.sessionTechniques.toArray(),
-    sessionTaps: await database.sessionTaps.toArray(),
-    clubs: await database.clubs.toArray(),
-    drillPlans: await database.drillPlans.toArray(),
+    ...snapshot,
+    preferences,
   }
 }
 
-function asArray<T>(value: unknown): T[] {
-  return Array.isArray(value) ? (value as T[]) : []
+/** Returns [] for missing keys (backward-compatible) but throws on wrong types. */
+function asArrayStrict<T>(value: unknown, fieldName: string): T[] {
+  if (value === undefined || value === null) return []
+  if (!Array.isArray(value))
+    throw new Error(`${fieldName}: expected an array`)
+  return value as T[]
 }
 
 // ─── Backup validation ────────────────────────────────────────────────────────
@@ -582,6 +627,75 @@ function validateDrillPlans(records: unknown[]): DrillPlan[] {
   })
 }
 
+function validateReferentialIntegrity(payload: {
+  techniques: Technique[]
+  techniqueConnections: TechniqueConnection[]
+  sessions: Session[]
+  sessionTechniques: SessionTechnique[]
+  sessionTaps: SessionTap[]
+  clubs: Club[]
+  drillPlans: DrillPlan[]
+}) {
+  const techniqueIds = new Set(payload.techniques.map((t) => t.id))
+  const sessionIds = new Set(
+    payload.sessions.map((s) => s.id).filter((id): id is number => id != null),
+  )
+  const clubIds = new Set(
+    payload.clubs.map((c) => c.id).filter((id): id is number => id != null),
+  )
+
+  for (let i = 0; i < payload.techniqueConnections.length; i++) {
+    const c = payload.techniqueConnections[i]
+    if (!techniqueIds.has(c.fromTechniqueId))
+      throw new Error(
+        `techniqueConnections[${i}]: 'fromTechniqueId' ${c.fromTechniqueId} does not match any technique`,
+      )
+    if (!techniqueIds.has(c.toTechniqueId))
+      throw new Error(
+        `techniqueConnections[${i}]: 'toTechniqueId' ${c.toTechniqueId} does not match any technique`,
+      )
+  }
+  for (let i = 0; i < payload.sessionTechniques.length; i++) {
+    const st = payload.sessionTechniques[i]
+    if (!sessionIds.has(st.sessionId))
+      throw new Error(
+        `sessionTechniques[${i}]: 'sessionId' ${st.sessionId} does not match any session`,
+      )
+    if (!techniqueIds.has(st.techniqueId))
+      throw new Error(
+        `sessionTechniques[${i}]: 'techniqueId' ${st.techniqueId} does not match any technique`,
+      )
+  }
+  for (let i = 0; i < payload.sessionTaps.length; i++) {
+    const tap = payload.sessionTaps[i]
+    if (!sessionIds.has(tap.sessionId))
+      throw new Error(
+        `sessionTaps[${i}]: 'sessionId' ${tap.sessionId} does not match any session`,
+      )
+    if (!techniqueIds.has(tap.techniqueId))
+      throw new Error(
+        `sessionTaps[${i}]: 'techniqueId' ${tap.techniqueId} does not match any technique`,
+      )
+  }
+  for (let i = 0; i < payload.sessions.length; i++) {
+    const s = payload.sessions[i]
+    if (s.clubId != null && !clubIds.has(s.clubId))
+      throw new Error(
+        `sessions[${i}]: 'clubId' ${s.clubId} does not match any club`,
+      )
+  }
+  for (let i = 0; i < payload.drillPlans.length; i++) {
+    const plan = payload.drillPlans[i]
+    for (let j = 0; j < plan.techniqueIds.length; j++) {
+      const id = plan.techniqueIds[j]
+      if (!techniqueIds.has(id))
+        throw new Error(
+          `drillPlans[${i}]: 'techniqueIds[${j}]' ${id} does not match any technique`,
+        )
+    }
+  }
+}
+
 export async function importDatabaseBackup(
   backup: unknown,
   database: BJJDatabase = db,
@@ -589,6 +703,17 @@ export async function importDatabaseBackup(
   const payload = backup as Partial<DatabaseBackup> | null
   if (!payload || typeof payload !== 'object') {
     throw new Error('Malformed backup payload')
+  }
+  // Refuse files whose schema layout differs from the live build. The
+  // exported signature is optional (legacy v1 files omit it) — only check
+  // when present, so older backups still import.
+  if (payload.schemaSignature) {
+    const liveSignature = computeSchemaSignature(database)
+    if (payload.schemaSignature !== liveSignature) {
+      throw new Error(
+        'Backup schema does not match this version of the app. Update the app to the version that produced this backup before importing.',
+      )
+    }
   }
   const backupLanguage =
     payload.language === 'es' || payload.language === 'fr'
@@ -598,18 +723,41 @@ export async function importDatabaseBackup(
         : undefined
 
   // Validate all records before any write — throws with a user-facing message on first failure
-  const categories = validateCategories(asArray<unknown>(payload.categories))
-  const techniques = validateTechniques(asArray<unknown>(payload.techniques))
+  const categories = validateCategories(
+    asArrayStrict<unknown>(payload.categories, 'categories'),
+  )
+  const techniques = validateTechniques(
+    asArrayStrict<unknown>(payload.techniques, 'techniques'),
+  )
   const techniqueConnections = validateTechniqueConnections(
-    asArray<unknown>(payload.techniqueConnections),
+    asArrayStrict<unknown>(
+      payload.techniqueConnections,
+      'techniqueConnections',
+    ),
   )
-  const sessions = validateSessions(asArray<unknown>(payload.sessions))
+  const sessions = validateSessions(
+    asArrayStrict<unknown>(payload.sessions, 'sessions'),
+  )
   const sessionTechniques = validateSessionTechniques(
-    asArray<unknown>(payload.sessionTechniques),
+    asArrayStrict<unknown>(payload.sessionTechniques, 'sessionTechniques'),
   )
-  const sessionTaps = validateSessionTaps(asArray<unknown>(payload.sessionTaps))
-  const clubs = validateClubs(asArray<unknown>(payload.clubs))
-  const drillPlans = validateDrillPlans(asArray<unknown>(payload.drillPlans))
+  const sessionTaps = validateSessionTaps(
+    asArrayStrict<unknown>(payload.sessionTaps, 'sessionTaps'),
+  )
+  const clubs = validateClubs(asArrayStrict<unknown>(payload.clubs, 'clubs'))
+  const drillPlans = validateDrillPlans(
+    asArrayStrict<unknown>(payload.drillPlans, 'drillPlans'),
+  )
+
+  validateReferentialIntegrity({
+    techniques,
+    techniqueConnections,
+    sessions,
+    sessionTechniques,
+    sessionTaps,
+    clubs,
+    drillPlans,
+  })
 
   await database.transaction(
     'rw',
@@ -645,5 +793,10 @@ export async function importDatabaseBackup(
       if (drillPlans.length) await database.drillPlans.bulkAdd(drillPlans)
     },
   )
+
+  if (payload.preferences && typeof window !== 'undefined') {
+    restoreBackupPreferences(payload.preferences)
+  }
+
   return backupLanguage
 }

@@ -6,15 +6,7 @@ import { db, resetPrefilledTechniques } from '../db/database'
 import { invalidateCategoryCache } from '../db/categoryCache'
 import { telemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
-
-function clearPrefixedStorage(storage: Storage, prefix: string) {
-  const keys: string[] = []
-  for (let index = 0; index < storage.length; index += 1) {
-    const key = storage.key(index)
-    if (key?.startsWith(prefix)) keys.push(key)
-  }
-  keys.forEach((key) => storage.removeItem(key))
-}
+import { clearAllPrefixedStorage } from '../utils/backupPreferences'
 
 export default function SettingsDataResetPage() {
   const navigate = useNavigate()
@@ -29,8 +21,8 @@ export default function SettingsDataResetPage() {
       db.close()
       await db.delete()
       invalidateCategoryCache()
-      clearPrefixedStorage(window.localStorage, 'bjj-dojo')
-      clearPrefixedStorage(window.sessionStorage, 'bjj-dojo')
+      clearAllPrefixedStorage(window.localStorage)
+      clearAllPrefixedStorage(window.sessionStorage)
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations()
         await Promise.all(
