@@ -1,8 +1,8 @@
-name: Deploy to GitHub Pages (production)
+name: Deploy to GitHub Pages (dev)
 
 on:
   push:
-    branches: ['main']
+    branches: ['dev']
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -28,11 +28,13 @@ jobs:
         run: npm run build
         env:
           GITHUB_ACTIONS: 'true'
+          DEPLOY_DEV: 'true'
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages (dev subpath)
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          # keep_files preserves the dev/ subdirectory deployed by deploy-dev.yml
+          destination_dir: dev
+          # keep_files preserves the production root deployed by deploy.yml
           keep_files: true

@@ -1,0 +1,51 @@
+name: Version bump on dev merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: ['main']
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    # Only run when a PR from dev is actually merged (not just closed)
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'dev'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          npm version patch --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push version bump to main
+        run: |
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.new_version }}"
+          git push origin main
+
+      - name: Sync version bump back to dev
+        run: |
+          git fetch origin dev
+          git checkout dev
+          git merge main --no-ff -m "chore: sync version bump ${{ steps.bump.outputs.new_version }} from main"
+          git push origin dev
