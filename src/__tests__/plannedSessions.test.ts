@@ -15,7 +15,7 @@ beforeEach(() => {
 })
 
 describe('cyclePlannedSession', () => {
-  it('cycles blank → gi → nogi → gym → blank', () => {
+  it('cycles blank → gi → nogi → gym → stretch → blank', () => {
     const day = startOfDay(Date.now())
     cyclePlannedSession(day)
     expect(getPlannedSessions()[String(day)]).toBe('gi')
@@ -23,6 +23,8 @@ describe('cyclePlannedSession', () => {
     expect(getPlannedSessions()[String(day)]).toBe('nogi')
     cyclePlannedSession(day)
     expect(getPlannedSessions()[String(day)]).toBe('gym')
+    cyclePlannedSession(day)
+    expect(getPlannedSessions()[String(day)]).toBe('stretch')
     cyclePlannedSession(day)
     expect(getPlannedSessions()[String(day)]).toBeUndefined()
   })

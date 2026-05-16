@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Swords, Shirt, Dumbbell } from 'lucide-react'
+import { Dumbbell, Accessibility } from 'lucide-react'
 import { useI18n } from '../i18n'
+import { CategoryIcon } from './CategoryIcon'
 import {
   addDays,
   cyclePlannedSession,
@@ -12,14 +13,41 @@ import {
   type PlannedSessionKind,
   type PlannedSessionsMap,
 } from '../utils/plannedSessions'
+import {
+  getSessionTypeIcons,
+  SESSION_TYPE_ICONS_UPDATED_EVENT,
+  type SessionTypeIconsMap,
+} from '../utils/sessionTypeIcons'
 
 const WEEKDAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
-function PlannedIcon({ kind }: { kind: PlannedSessionKind }) {
+function PlannedIcon({
+  kind,
+  sessionTypeIcons,
+}: {
+  kind: PlannedSessionKind
+  sessionTypeIcons: SessionTypeIconsMap
+}) {
   if (kind === 'gi')
-    return <Swords size={16} className="text-blue-400" strokeWidth={2} />
+    return (
+      <CategoryIcon
+        value={sessionTypeIcons.GI}
+        size={16}
+        className="text-blue-400"
+      />
+    )
   if (kind === 'nogi')
-    return <Shirt size={16} className="text-green-400" strokeWidth={2} />
+    return (
+      <CategoryIcon
+        value={sessionTypeIcons.NOGI}
+        size={16}
+        className="text-green-400"
+      />
+    )
+  if (kind === 'stretch')
+    return (
+      <Accessibility size={16} className="text-orange-400" strokeWidth={2} />
+    )
   return <Dumbbell size={16} className="text-purple-400" strokeWidth={2} />
 }
 
@@ -29,6 +57,8 @@ export default function PlannedSessions() {
     rolloverPlannedSessions()
     return getPlannedSessions()
   })
+  const [sessionTypeIcons, setSessionTypeIcons] =
+    useState<SessionTypeIconsMap>(getSessionTypeIcons)
 
   useEffect(() => {
     const sync = () => setMap(getPlannedSessions())
@@ -36,6 +66,16 @@ export default function PlannedSessions() {
     window.addEventListener('storage', sync)
     return () => {
       window.removeEventListener(PLANNED_SESSIONS_UPDATED_EVENT, sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
+
+  useEffect(() => {
+    const sync = () => setSessionTypeIcons(getSessionTypeIcons())
+    window.addEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
       window.removeEventListener('storage', sync)
     }
   }, [])
@@ -68,7 +108,7 @@ export default function PlannedSessions() {
           } ${kind ? 'bg-zinc-800' : ''}`}
         >
           {kind ? (
-            <PlannedIcon kind={kind} />
+            <PlannedIcon kind={kind} sessionTypeIcons={sessionTypeIcons} />
           ) : (
             <span className="text-sm font-semibold leading-none text-zinc-300">
               {dayNumber}

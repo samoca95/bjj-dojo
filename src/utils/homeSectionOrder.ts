@@ -16,8 +16,8 @@ export const HOME_SECTION_ORDER_UPDATED_EVENT =
 export const DEFAULT_HOME_SECTION_ORDER: HomeSectionId[] = [
   'gamification',
   'focus',
-  'stats',
   'plannedSessions',
+  'stats',
   'calendar',
   'quickAccess',
 ]
