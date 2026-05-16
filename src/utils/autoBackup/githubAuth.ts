@@ -1,9 +1,9 @@
 /**
  * GitHub OAuth Device Flow client.
  *
- * Browser-callable: GitHub's /login/device/* endpoints have CORS enabled for
- * the public OAuth App client_id. Tokens land in localStorage via the same
- * GH_TOKEN_KEY used for PATs, so the rest of the backup pipeline is untouched.
+ * Browser limitation: GitHub's /login/device/* endpoints are not CORS-enabled
+ * for static frontend origins, so direct browser fetches can fail with a
+ * network error ("Failed to fetch"). Surface a clear message in that case.
  *
  * Bake the OAuth App client_id into the build via
  * VITE_GITHUB_OAUTH_CLIENT_ID. If unset, the UI must surface the
