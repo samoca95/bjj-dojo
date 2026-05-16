@@ -318,6 +318,16 @@ export type TranslationKey =
   | 'techniques'
   | 'How backups work'
   | 'Need help?'
+  // Backup sync indicator
+  | 'Backup failed'
+  | 'Your data is still safely stored in this browser.'
+  | 'No network — backup will be retried next time you save a session with a connection.'
+  | 'Existing backup found'
+  | 'Restore backup'
+  | 'Keep current data'
+  | 'Backup up to date'
+  | 'Backup out of date'
+  | 'No backup configured'
 
 export interface LanguagePack {
   /**

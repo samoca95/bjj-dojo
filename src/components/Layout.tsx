@@ -13,19 +13,20 @@ import OnboardingFlow from './OnboardingFlow'
 import { isOnboardingRequired } from './onboarding'
 import QuotaErrorModal from './QuotaErrorModal'
 import { UndoProvider, UndoSnackbar } from './UndoContext'
+import BackupSyncIndicator from './BackupSyncIndicator'
 
 function LayoutInner() {
   const navigate = useNavigate()
-  const [showRestorePrompt, setShowRestorePrompt] = useState(() =>
-    isRestorePromptRequired(),
-  )
   const [showInitialSetup, setShowInitialSetup] = useState(
-    () => !isRestorePromptRequired() && isInitialSetupRequired(),
+    () => isInitialSetupRequired(),
+  )
+  const [showRestorePrompt, setShowRestorePrompt] = useState(
+    () => !isInitialSetupRequired() && isRestorePromptRequired(),
   )
   const [showOnboarding, setShowOnboarding] = useState(
     () =>
-      !isRestorePromptRequired() &&
       !isInitialSetupRequired() &&
+      !isRestorePromptRequired() &&
       isOnboardingRequired(),
   )
 
@@ -39,27 +40,27 @@ function LayoutInner() {
       <PwaUpdatePrompt />
       <QuotaErrorModal />
       <UndoSnackbar />
-      {showRestorePrompt && (
-        <SetupRestorePrompt
-          onComplete={() => {
-            setShowRestorePrompt(false)
-            // After restore the initial-setup flag is set, so isInitialSetupRequired() is false.
-            if (isInitialSetupRequired()) setShowInitialSetup(true)
-            else if (isOnboardingRequired()) setShowOnboarding(true)
-            navigate('/', { replace: true })
-          }}
-        />
-      )}
-      {!showRestorePrompt && showInitialSetup && (
+      <BackupSyncIndicator />
+      {showInitialSetup && (
         <FirstLaunchSetupPrompt
           onComplete={() => {
             setShowInitialSetup(false)
             navigate('/', { replace: true })
-            if (isOnboardingRequired()) setShowOnboarding(true)
+            if (isRestorePromptRequired()) setShowRestorePrompt(true)
+            else if (isOnboardingRequired()) setShowOnboarding(true)
           }}
         />
       )}
-      {!showRestorePrompt && !showInitialSetup && showOnboarding && (
+      {!showInitialSetup && showRestorePrompt && (
+        <SetupRestorePrompt
+          onComplete={(restored) => {
+            setShowRestorePrompt(false)
+            navigate('/', { replace: true })
+            if (!restored && isOnboardingRequired()) setShowOnboarding(true)
+          }}
+        />
+      )}
+      {!showInitialSetup && !showRestorePrompt && showOnboarding && (
         <OnboardingFlow onComplete={() => setShowOnboarding(false)} />
       )}
     </div>

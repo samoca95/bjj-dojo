@@ -353,6 +353,18 @@ const FR_TRANSLATIONS = {
   techniques: 'techniques',
   'How backups work': 'Comment fonctionnent les sauvegardes',
   'Need help?': 'Besoin d’aide ?',
+  // Backup sync indicator
+  'Backup failed': 'Échec de la sauvegarde',
+  'Your data is still safely stored in this browser.':
+    'Vos données sont toujours en sécurité dans ce navigateur.',
+  'No network — backup will be retried next time you save a session with a connection.':
+    'Pas de réseau — la sauvegarde sera retentée la prochaine fois que vous enregistrerez une session avec une connexion.',
+  'Existing backup found': 'Sauvegarde existante trouvée',
+  'Restore backup': 'Restaurer la sauvegarde',
+  'Keep current data': 'Conserver les données actuelles',
+  'Backup up to date': 'Sauvegarde à jour',
+  'Backup out of date': 'Sauvegarde obsolète',
+  'No backup configured': 'Aucune sauvegarde configurée',
 } satisfies Record<TranslationKey, string>
 
 const FR_CATEGORY_CONTENT: LanguagePack['categoryContent'] = {

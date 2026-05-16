@@ -14,6 +14,8 @@ import {
   Moon,
   Sun,
   HelpCircle,
+  Cloud,
+  CloudOff,
 } from 'lucide-react'
 import BackupHelpModal from '../components/BackupHelpModal'
 import { PlainLogo } from '../components/PlainLogo'
@@ -51,6 +53,8 @@ import {
   getGithubLastRun,
   getGithubTarget,
   getGithubToken,
+  getLastMutationTime,
+  getOverallLastRun,
   isFsBackupEnabled,
   isGithubBackupEnabled,
   setFsBackupEnabled,
@@ -61,10 +65,18 @@ import {
 } from '../utils/autoBackup/settings'
 import {
   disconnectBackupFolder,
+  fileSystemDestination,
   isFileSystemDestinationSupported,
   pickBackupFolder,
 } from '../utils/autoBackup/destinations/fileSystem'
-import { verifyGithubToken } from '../utils/autoBackup/destinations/github'
+import {
+  githubDestination,
+  verifyGithubToken,
+} from '../utils/autoBackup/destinations/github'
+import type {
+  BackupDestination,
+  DiscoveredBackup,
+} from '../utils/autoBackup/types'
 
 const BELT_ABBREV: Record<AppLanguage, Record<BeltColor, string>> = {
   en: { white: 'Wht', blue: 'Blu', purple: 'Pur', brown: 'Brn', black: 'Blk' },
@@ -135,10 +147,23 @@ export default function SettingsPage() {
   const ghTarget = getGithubTarget()
   const ghLastRun = getGithubLastRun()
   const ghLastError = getGithubLastError()
+  const anyEnabled = fsEnabled || ghEnabled
+  const overallLastRun = getOverallLastRun()
+  const lastMutation = getLastMutationTime()
+  const hasError = (fsEnabled && !!fsLastError) || (ghEnabled && !!ghLastError)
+  const backupUpToDate =
+    anyEnabled &&
+    !!overallLastRun &&
+    !hasError &&
+    (lastMutation === null || overallLastRun >= lastMutation)
 
   const [helpTab, setHelpTab] = useState<
     'overview' | 'folder' | 'github' | null
   >(null)
+  const [pendingRestoreDestination, setPendingRestoreDestination] =
+    useState<BackupDestination | null>(null)
+  const [pendingRestoreBackup, setPendingRestoreBackup] =
+    useState<DiscoveredBackup | null>(null)
   const [ghTokenInput, setGhTokenInput] = useState(ghToken ?? '')
   const [ghMode, setGhMode] = useState<'repo' | 'gist'>(
     ghTarget?.kind === 'gist' ? 'gist' : 'repo',
@@ -154,6 +179,11 @@ export default function SettingsPage() {
     try {
       await pickBackupFolder()
       setFsBackupEnabled(true)
+      const backups = await fileSystemDestination.discoverExistingBackups()
+      if (backups.length > 0) {
+        setPendingRestoreDestination(fileSystemDestination)
+        setPendingRestoreBackup(backups[0])
+      }
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return
       window.alert(err instanceof Error ? err.message : String(err))
@@ -181,6 +211,11 @@ export default function SettingsPage() {
       setGithubTarget(target)
       setGithubBackupEnabled(true)
       window.alert(`${t('Connected as')} ${user.login}`)
+      const backups = await githubDestination.discoverExistingBackups()
+      if (backups.length > 0) {
+        setPendingRestoreDestination(githubDestination)
+        setPendingRestoreBackup(backups[0])
+      }
     } catch (err) {
       window.alert(err instanceof Error ? err.message : String(err))
     }
@@ -190,6 +225,25 @@ export default function SettingsPage() {
     setGithubBackupEnabled(false)
     setGithubToken(null)
     setGithubTarget(null)
+  }
+
+  const handleRestoreFromPending = async () => {
+    if (!pendingRestoreDestination || !pendingRestoreBackup) return
+    try {
+      const payload = await pendingRestoreDestination.readBackup(
+        pendingRestoreBackup.id,
+      )
+      const importedLanguage = await importDatabaseBackup(payload)
+      invalidateCategoryCache()
+      if (importedLanguage) setAppLanguage(importedLanguage)
+      setPendingRestoreDestination(null)
+      setPendingRestoreBackup(null)
+      navigate('/')
+      window.alert(t('Backup imported successfully.'))
+    } catch (err) {
+      telemetry.error('backup.restore_failed', err)
+      window.alert(err instanceof Error ? err.message : String(err))
+    }
   }
 
   const handleBackupNow = async () => {
@@ -583,9 +637,32 @@ export default function SettingsPage() {
         </div>
 
         <div className="bg-zinc-900 rounded-2xl p-4 space-y-2">
-          <h2 className="text-xs text-gold font-semibold tracking-widest">
-            {t('BACKUP & RECOVERY')}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs text-gold font-semibold tracking-widest">
+              {t('BACKUP & RECOVERY')}
+            </h2>
+            {anyEnabled && (
+              <div
+                aria-label={
+                  backupUpToDate
+                    ? t('Backup up to date')
+                    : hasError || !overallLastRun
+                      ? t('Backup out of date')
+                      : t('Backup up to date')
+                }
+              >
+                {backupUpToDate ? (
+                  <Cloud size={15} className="text-green-400" strokeWidth={2} />
+                ) : (
+                  <CloudOff
+                    size={15}
+                    className="text-red-400"
+                    strokeWidth={2}
+                  />
+                )}
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={handleExportBackup}
@@ -829,6 +906,36 @@ export default function SettingsPage() {
           initialTab={helpTab}
           onClose={() => setHelpTab(null)}
         />
+      )}
+
+      {pendingRestoreBackup && (
+        <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-zinc-900 rounded-2xl p-5 space-y-3 border border-zinc-800">
+            <h2 className="text-base font-bold text-zinc-100">
+              {t('Existing backup found')}
+            </h2>
+            <p className="text-sm text-zinc-300">
+              {pendingRestoreBackup.label}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setPendingRestoreDestination(null)
+                  setPendingRestoreBackup(null)
+                }}
+                className="rounded-xl bg-zinc-800 text-zinc-200 text-sm font-semibold py-2.5 active:bg-zinc-700"
+              >
+                {t('Keep current data')}
+              </button>
+              <button
+                onClick={() => void handleRestoreFromPending()}
+                className="rounded-xl bg-gold text-black text-sm font-semibold py-2.5"
+              >
+                {t('Restore backup')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

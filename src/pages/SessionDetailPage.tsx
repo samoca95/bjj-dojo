@@ -30,6 +30,7 @@ import {
 import { useUndo } from '../components/undo'
 import ShareSheet from '../components/ShareSheet'
 import { scheduleAfterMutation } from '../utils/autoBackup'
+import { setLastMutationTime } from '../utils/autoBackup/settings'
 
 const SHARE_PROMPT_LABELS: Record<AppLanguage, { title: string; cta: string }> =
   {
@@ -148,6 +149,7 @@ export default function SessionDetailPage() {
       await db.sessions.delete(session.id)
       await db.sessionTechniques.where('sessionId').equals(session.id).delete()
       await db.sessionTaps.where('sessionId').equals(session.id).delete()
+      setLastMutationTime(Date.now())
       scheduleAfterMutation()
       const savedSession = session as Session & { id: number }
       pushUndo({

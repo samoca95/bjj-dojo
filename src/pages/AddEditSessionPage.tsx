@@ -37,6 +37,7 @@ import {
 import { runWithTelemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
 import { scheduleAfterMutation } from '../utils/autoBackup'
+import { setLastMutationTime } from '../utils/autoBackup/settings'
 
 function toDateInput(epoch: number) {
   const d = new Date(epoch)
@@ -245,6 +246,7 @@ export default function AddEditSessionPage() {
           )
         }
       })
+      setLastMutationTime(Date.now())
       scheduleAfterMutation()
       navigate(
         `/sessions/${sid}`,

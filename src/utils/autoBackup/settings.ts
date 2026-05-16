@@ -18,6 +18,7 @@ const GH_LAST_RUN_KEY = 'bjj-dojo:auto-backup-github-last-run'
 const GH_LAST_ERROR_KEY = 'bjj-dojo:auto-backup-github-last-error'
 
 const APP_LAST_RUN_KEY = 'bjj-dojo:auto-backup-last-run'
+const LAST_MUTATION_KEY = 'bjj-dojo:last-mutation-time'
 
 export type GithubTarget =
   | { kind: 'gist'; gistId: string }
@@ -155,4 +156,14 @@ export function setOverallLastRun(when: number) {
 
 export function backupFilenameForDate(date = new Date()): string {
   return `bjj-dojo-backup-${date.toISOString().slice(0, 10)}.json`
+}
+
+export function getLastMutationTime(): number | null {
+  const raw = read(LAST_MUTATION_KEY)
+  return raw ? Number(raw) : null
+}
+
+export function setLastMutationTime(when: number) {
+  write(LAST_MUTATION_KEY, String(when))
+  notify()
 }
