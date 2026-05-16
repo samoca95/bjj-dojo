@@ -8,7 +8,7 @@ const START_LABEL: Record<AppLanguage, string> = {
   es: 'Comenzar',
   fr: 'Commencer',
 }
-import { importDatabaseBackup } from '../db/database'
+import { db, importDatabaseBackup } from '../db/database'
 import { invalidateCategoryCache } from '../db/categoryCache'
 import {
   pickBackupFolder,
@@ -29,6 +29,7 @@ import type {
   DiscoveredBackup,
   BackupDestination,
 } from '../utils/autoBackup/types'
+import { createWindowMissingFieldResolver } from '../utils/backupImportResolver'
 import { completeRestorePrompt } from './firstLaunchSetup'
 
 type Step =
@@ -129,7 +130,9 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
       setBusy(true)
       setStep('restoring')
       const payload = await pickedDestination.readBackup(id)
-      const importedLanguage = await importDatabaseBackup(payload)
+      const importedLanguage = await importDatabaseBackup(payload, db, {
+        resolveMissingField: createWindowMissingFieldResolver(language),
+      })
       invalidateCategoryCache()
       if (importedLanguage) setAppLanguage(importedLanguage)
       completeRestorePrompt()

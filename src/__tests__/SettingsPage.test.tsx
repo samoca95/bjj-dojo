@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -6,11 +6,31 @@ import SettingsPage from '../pages/SettingsPage'
 import { APP_THEME_STORAGE_KEY } from '../utils/theme'
 import { APP_LANGUAGE_STORAGE_KEY } from '../i18n'
 
+const mockPickBackupFolder = vi.fn()
+const mockDiscoverExistingBackups = vi.fn()
+const mockReadBackup = vi.fn()
+
+vi.mock('../utils/autoBackup/destinations/fileSystem', () => ({
+  isFileSystemDestinationSupported: () => true,
+  pickBackupFolder: mockPickBackupFolder,
+  disconnectBackupFolder: vi.fn(),
+  fileSystemDestination: {
+    id: 'fileSystem',
+    isEnabled: () => true,
+    write: vi.fn(),
+    discoverExistingBackups: mockDiscoverExistingBackups,
+    readBackup: mockReadBackup,
+  },
+}))
+
 describe('SettingsPage — theme mode', () => {
   beforeEach(() => {
     localStorage.removeItem(APP_THEME_STORAGE_KEY)
     localStorage.removeItem(APP_LANGUAGE_STORAGE_KEY)
     document.documentElement.classList.remove('theme-light')
+    mockPickBackupFolder.mockReset()
+    mockDiscoverExistingBackups.mockReset()
+    mockReadBackup.mockReset()
   })
 
   it('renders Light and Black theme options', () => {
@@ -98,11 +118,34 @@ describe('SettingsPage — theme mode', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('App version: v1.0.0')).toBeInTheDocument()
+    expect(
+      screen.getByText((text) => /^App version: v\d+\.\d+\.\d+/.test(text)),
+    ).toBeInTheDocument()
     expect(screen.getByText('Developed by: samoca95')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Github repo/i })).toHaveAttribute(
       'href',
       'https://github.com/samoca95/bjj-dojo',
     )
+  })
+
+  it('offers restoring existing data when first backup destination is added', async () => {
+    const user = userEvent.setup()
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    mockPickBackupFolder.mockResolvedValue({})
+    mockDiscoverExistingBackups.mockResolvedValue([
+      { id: 'b1', filename: 'b1.json', label: 'b1' },
+    ])
+
+    render(
+      <MemoryRouter>
+        <SettingsPage />
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Choose folder' }))
+
+    expect(mockDiscoverExistingBackups).toHaveBeenCalledTimes(1)
+    expect(confirmSpy).toHaveBeenCalledTimes(1)
+    confirmSpy.mockRestore()
   })
 })

@@ -88,6 +88,28 @@ describe('exportDatabaseBackup', () => {
     )
     expect(backup.preferences!['bjj-dojo:onboarding-completed']).toBeUndefined()
   })
+
+  it('includes per-technique notes stored in sessionTechniques', async () => {
+    const sid = (await db.sessions.add({
+      date: Date.now(),
+      durationMinutes: 60,
+      sessionType: 'GI',
+      notes: '',
+      energyLevel: 3,
+    })) as number
+    await db.sessionTechniques.add({
+      sessionId: sid,
+      techniqueId: 401,
+      notes: 'Need tighter elbow line',
+    })
+
+    const backup = await exportDatabaseBackup(db)
+    expect(backup.sessionTechniques).toContainEqual({
+      sessionId: sid,
+      techniqueId: 401,
+      notes: 'Need tighter elbow line',
+    })
+  })
 })
 
 describe('Backup round-trip parity', () => {
@@ -437,6 +459,72 @@ describe('Strict array handling', () => {
     await expect(importDatabaseBackup(minimal, db)).resolves.not.toThrow()
     expect(await db.sessions.count()).toBe(0)
     expect(await db.techniques.count()).toBe(0)
+  })
+})
+
+describe('Missing field resolution', () => {
+  it('applies one grouped resolver decision per missing field', async () => {
+    const backup = {
+      version: BACKUP_FILE_FORMAT_VERSION,
+      exportedAt: Date.now(),
+      categories: [{ id: 1, name: 'Guards', description: '' }],
+      techniques: [
+        {
+          id: 101,
+          name: 'Closed Guard',
+          description: '',
+          categoryId: 1,
+          youtubeUrl: '',
+          difficulty: 'BEGINNER' as const,
+          isCustom: false,
+        },
+      ],
+      techniqueConnections: [],
+      sessions: [
+        {
+          id: 1,
+          date: Date.now(),
+          durationMinutes: 60,
+          sessionType: 'GI' as const,
+        },
+        {
+          id: 2,
+          date: Date.now() + 1,
+          durationMinutes: 45,
+          sessionType: 'NOGI' as const,
+        },
+      ],
+      sessionTechniques: [
+        { sessionId: 1, techniqueId: 101 },
+        { sessionId: 2, techniqueId: 101 },
+      ],
+      sessionTaps: [],
+      clubs: [],
+      drillPlans: [],
+    }
+
+    const resolverCalls: string[] = []
+    await importDatabaseBackup(backup, db, {
+      resolveMissingField: ({ tableName, fieldName }) => {
+        resolverCalls.push(`${tableName}.${fieldName}`)
+        return 'default'
+      },
+    })
+
+    expect(resolverCalls).toEqual(
+      expect.arrayContaining([
+        'sessions.notes',
+        'sessions.energyLevel',
+        'sessionTechniques.notes',
+      ]),
+    )
+    expect(resolverCalls.filter((c) => c === 'sessions.notes')).toHaveLength(1)
+    expect(
+      resolverCalls.filter((c) => c === 'sessions.energyLevel'),
+    ).toHaveLength(1)
+    expect(
+      resolverCalls.filter((c) => c === 'sessionTechniques.notes'),
+    ).toHaveLength(1)
   })
 })
 

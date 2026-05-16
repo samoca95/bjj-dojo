@@ -311,6 +311,26 @@ export interface DatabaseBackup {
   preferences?: Record<string, string>
 }
 
+export type MissingFieldResolutionChoice = 'default' | 'empty'
+
+export interface MissingFieldResolutionContext {
+  tableName: string
+  fieldName: string
+  missingCount: number
+  hasDefault: boolean
+  defaultValue?: unknown
+}
+
+export type MissingFieldResolver = (
+  context: MissingFieldResolutionContext,
+) =>
+  | MissingFieldResolutionChoice
+  | Promise<MissingFieldResolutionChoice>
+
+export interface ImportDatabaseBackupOptions {
+  resolveMissingField?: MissingFieldResolver
+}
+
 /** Stable fingerprint of the live schema — table names + index strings. */
 function computeSchemaSignature(database: BJJDatabase): string {
   return database.tables
@@ -410,6 +430,82 @@ function isPosInt(v: unknown): v is number {
 
 function isFiniteNum(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v)
+}
+
+type ImportTableName =
+  | 'categories'
+  | 'techniques'
+  | 'techniqueConnections'
+  | 'sessions'
+  | 'sessionTechniques'
+  | 'sessionTaps'
+  | 'clubs'
+  | 'drillPlans'
+
+type MissingFieldRule = {
+  tableName: ImportTableName
+  fieldName: string
+  defaultValue?: unknown
+  emptyValue: unknown
+}
+
+const MISSING_FIELD_RULES: MissingFieldRule[] = [
+  {
+    tableName: 'sessions',
+    fieldName: 'notes',
+    defaultValue: '',
+    emptyValue: '',
+  },
+  {
+    tableName: 'sessions',
+    fieldName: 'energyLevel',
+    defaultValue: 3,
+    emptyValue: 3,
+  },
+  {
+    tableName: 'sessionTechniques',
+    fieldName: 'notes',
+    emptyValue: '',
+  },
+]
+
+function cloneMissingFieldValue(value: unknown): unknown {
+  if (Array.isArray(value)) return [...value]
+  if (value && typeof value === 'object') return { ...value }
+  return value
+}
+
+async function applyMissingFieldRules(
+  tables: Record<ImportTableName, unknown[]>,
+  resolver?: MissingFieldResolver,
+): Promise<void> {
+  for (const rule of MISSING_FIELD_RULES) {
+    const records = tables[rule.tableName]
+    const missingRecords = records.filter((record) => {
+      if (!record || typeof record !== 'object') return false
+      return !Object.prototype.hasOwnProperty.call(record, rule.fieldName)
+    }) as Record<string, unknown>[]
+    if (missingRecords.length === 0) continue
+
+    const hasDefault = rule.defaultValue !== undefined
+    const decision = resolver
+      ? await resolver({
+          tableName: rule.tableName,
+          fieldName: rule.fieldName,
+          missingCount: missingRecords.length,
+          hasDefault,
+          defaultValue: rule.defaultValue,
+        })
+      : hasDefault
+        ? 'default'
+        : 'empty'
+
+    const shouldUseDefault = decision === 'default' && hasDefault
+    const chosenValue = shouldUseDefault ? rule.defaultValue : rule.emptyValue
+    for (const record of missingRecords) {
+      record[rule.fieldName] = cloneMissingFieldValue(chosenValue)
+    }
+  }
 }
 
 function validateCategories(records: unknown[]): Category[] {
@@ -744,6 +840,7 @@ function validateReferentialIntegrity(payload: {
 export async function importDatabaseBackup(
   backup: unknown,
   database: BJJDatabase = db,
+  options: ImportDatabaseBackupOptions = {},
 ): Promise<AppLanguage | undefined> {
   const payload = backup as Partial<DatabaseBackup> | null
   if (!payload || typeof payload !== 'object') {
@@ -767,32 +864,36 @@ export async function importDatabaseBackup(
         ? 'en'
         : undefined
 
-  // Validate all records before any write — throws with a user-facing message on first failure
-  const categories = validateCategories(
-    asArrayStrict<unknown>(payload.categories, 'categories'),
-  )
-  const techniques = validateTechniques(
-    asArrayStrict<unknown>(payload.techniques, 'techniques'),
-  )
-  const techniqueConnections = validateTechniqueConnections(
-    asArrayStrict<unknown>(
+  const rawTables: Record<ImportTableName, unknown[]> = {
+    categories: asArrayStrict<unknown>(payload.categories, 'categories'),
+    techniques: asArrayStrict<unknown>(payload.techniques, 'techniques'),
+    techniqueConnections: asArrayStrict<unknown>(
       payload.techniqueConnections,
       'techniqueConnections',
     ),
+    sessions: asArrayStrict<unknown>(payload.sessions, 'sessions'),
+    sessionTechniques: asArrayStrict<unknown>(
+      payload.sessionTechniques,
+      'sessionTechniques',
+    ),
+    sessionTaps: asArrayStrict<unknown>(payload.sessionTaps, 'sessionTaps'),
+    clubs: asArrayStrict<unknown>(payload.clubs, 'clubs'),
+    drillPlans: asArrayStrict<unknown>(payload.drillPlans, 'drillPlans'),
+  }
+
+  await applyMissingFieldRules(rawTables, options.resolveMissingField)
+
+  // Validate all records before any write — throws with a user-facing message on first failure
+  const categories = validateCategories(rawTables.categories)
+  const techniques = validateTechniques(rawTables.techniques)
+  const techniqueConnections = validateTechniqueConnections(
+    rawTables.techniqueConnections,
   )
-  const sessions = validateSessions(
-    asArrayStrict<unknown>(payload.sessions, 'sessions'),
-  )
-  const sessionTechniques = validateSessionTechniques(
-    asArrayStrict<unknown>(payload.sessionTechniques, 'sessionTechniques'),
-  )
-  const sessionTaps = validateSessionTaps(
-    asArrayStrict<unknown>(payload.sessionTaps, 'sessionTaps'),
-  )
-  const clubs = validateClubs(asArrayStrict<unknown>(payload.clubs, 'clubs'))
-  const drillPlans = validateDrillPlans(
-    asArrayStrict<unknown>(payload.drillPlans, 'drillPlans'),
-  )
+  const sessions = validateSessions(rawTables.sessions)
+  const sessionTechniques = validateSessionTechniques(rawTables.sessionTechniques)
+  const sessionTaps = validateSessionTaps(rawTables.sessionTaps)
+  const clubs = validateClubs(rawTables.clubs)
+  const drillPlans = validateDrillPlans(rawTables.drillPlans)
 
   validateReferentialIntegrity({
     techniques,

@@ -42,6 +42,7 @@ import {
 } from '../utils/userName'
 import type { AppLanguage } from '../i18n'
 import { runBackupNow } from '../utils/autoBackup'
+import type { BackupDestination } from '../utils/autoBackup/types'
 import {
   AUTO_BACKUP_UPDATED_EVENT,
   getFsFolderName,
@@ -60,11 +61,16 @@ import {
   type GithubTarget,
 } from '../utils/autoBackup/settings'
 import {
+  fileSystemDestination,
   disconnectBackupFolder,
   isFileSystemDestinationSupported,
   pickBackupFolder,
 } from '../utils/autoBackup/destinations/fileSystem'
-import { verifyGithubToken } from '../utils/autoBackup/destinations/github'
+import {
+  githubDestination,
+  verifyGithubToken,
+} from '../utils/autoBackup/destinations/github'
+import { createWindowMissingFieldResolver } from '../utils/backupImportResolver'
 
 const BELT_ABBREV: Record<AppLanguage, Record<BeltColor, string>> = {
   en: { white: 'Wht', blue: 'Blu', purple: 'Pur', brown: 'Brn', black: 'Blk' },
@@ -150,10 +156,40 @@ export default function SettingsPage() {
     ghTarget?.kind === 'gist' ? ghTarget.gistId : '',
   )
 
+  const importWithMissingFieldResolver = async (payload: unknown) => {
+    const importedLanguage = await importDatabaseBackup(payload, db, {
+      resolveMissingField: createWindowMissingFieldResolver(language),
+    })
+    invalidateCategoryCache()
+    if (importedLanguage) setAppLanguage(importedLanguage)
+    const lang = importedLanguage ?? language
+    window.alert(translate('Backup imported successfully.', lang))
+  }
+
+  const maybeRestoreExistingBackup = async (destination: BackupDestination) => {
+    const existing = await destination.discoverExistingBackups()
+    if (existing.length === 0) return
+    const newest = existing[0]
+    const shouldRestore = window.confirm(
+      language === 'es'
+        ? 'Encontramos una copia existente en este destino. ¿Quieres restaurarla ahora? (Cancelar = mantener los datos actuales)'
+        : language === 'fr'
+          ? 'Une sauvegarde existante a été trouvée dans cette destination. Voulez-vous la restaurer maintenant ? (Annuler = conserver les données actuelles)'
+          : 'We found an existing backup in this destination. Restore it now? (Cancel keeps your current data)',
+    )
+    if (!shouldRestore) return
+    const payload = await destination.readBackup(newest.id)
+    await importWithMissingFieldResolver(payload)
+  }
+
   const handlePickFolder = async () => {
+    const hadAnyDestination = fsEnabled || ghEnabled
     try {
       await pickBackupFolder()
       setFsBackupEnabled(true)
+      if (!hadAnyDestination) {
+        await maybeRestoreExistingBackup(fileSystemDestination)
+      }
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return
       window.alert(err instanceof Error ? err.message : String(err))
@@ -166,6 +202,7 @@ export default function SettingsPage() {
   }
 
   const handleSaveGithub = async () => {
+    const hadAnyDestination = fsEnabled || ghEnabled
     try {
       const user = await verifyGithubToken(ghTokenInput)
       let target: GithubTarget
@@ -180,6 +217,9 @@ export default function SettingsPage() {
       setGithubToken(ghTokenInput)
       setGithubTarget(target)
       setGithubBackupEnabled(true)
+      if (!hadAnyDestination) {
+        await maybeRestoreExistingBackup(githubDestination)
+      }
       window.alert(`${t('Connected as')} ${user.login}`)
     } catch (err) {
       window.alert(err instanceof Error ? err.message : String(err))
@@ -214,11 +254,7 @@ export default function SettingsPage() {
     try {
       const text = await file.text()
       const parsed = JSON.parse(text)
-      const importedLanguage = await importDatabaseBackup(parsed)
-      invalidateCategoryCache()
-      if (importedLanguage) setAppLanguage(importedLanguage)
-      const lang = importedLanguage ?? language
-      window.alert(translate('Backup imported successfully.', lang))
+      await importWithMissingFieldResolver(parsed)
     } catch (error) {
       telemetry.error('backup.import_failed', error)
       if (isQuotaError(error)) {

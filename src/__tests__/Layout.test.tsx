@@ -46,4 +46,29 @@ describe('Layout', () => {
       await screen.findByRole('heading', { name: 'Home Page' }),
     ).toBeInTheDocument()
   })
+
+  it('shows backup setup after completing first-launch setup when restore is undecided', async () => {
+    localStorage.removeItem(INITIAL_SETUP_COMPLETED_STORAGE_KEY)
+    localStorage.removeItem(RESTORE_PROMPT_DECIDED_STORAGE_KEY)
+    localStorage.removeItem(APP_LANGUAGE_STORAGE_KEY)
+    localStorage.removeItem(BELT_STORAGE_KEY)
+    localStorage.removeItem(STRIPES_STORAGE_KEY)
+
+    const user = userEvent.setup()
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/',
+          element: <Layout />,
+          children: [{ index: true, element: <h1>Home Page</h1> }],
+        },
+      ],
+      { initialEntries: ['/'] },
+    )
+
+    render(<RouterProvider router={router} />)
+    await user.click(screen.getByRole('button', { name: 'Start' }))
+
+    expect(await screen.findByText('Set up backup')).toBeInTheDocument()
+  })
 })

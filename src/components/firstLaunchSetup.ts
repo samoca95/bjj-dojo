@@ -19,6 +19,11 @@ export function completeRestorePrompt() {
   window.localStorage.setItem(RESTORE_PROMPT_DECIDED_STORAGE_KEY, '1')
 }
 
+export function isRestorePromptDecided(): boolean {
+  if (typeof window === 'undefined') return true
+  return window.localStorage.getItem(RESTORE_PROMPT_DECIDED_STORAGE_KEY) === '1'
+}
+
 export function isInitialSetupRequired(): boolean {
   if (typeof window === 'undefined') return false
   if (window.localStorage.getItem(INITIAL_SETUP_COMPLETED_STORAGE_KEY) === '1')

@@ -7,6 +7,7 @@ import FirstLaunchSetupPrompt from './FirstLaunchSetupPrompt'
 import SetupRestorePrompt from './SetupRestorePrompt'
 import {
   isInitialSetupRequired,
+  isRestorePromptDecided,
   isRestorePromptRequired,
 } from './firstLaunchSetup'
 import OnboardingFlow from './OnboardingFlow'
@@ -16,16 +17,17 @@ import { UndoProvider, UndoSnackbar } from './UndoContext'
 
 function LayoutInner() {
   const navigate = useNavigate()
+  const startsWithInitialSetup = isInitialSetupRequired()
   const [showRestorePrompt, setShowRestorePrompt] = useState(() =>
-    isRestorePromptRequired(),
+    !startsWithInitialSetup && isRestorePromptRequired(),
   )
   const [showInitialSetup, setShowInitialSetup] = useState(
-    () => !isRestorePromptRequired() && isInitialSetupRequired(),
+    () => startsWithInitialSetup,
   )
   const [showOnboarding, setShowOnboarding] = useState(
     () =>
+      !startsWithInitialSetup &&
       !isRestorePromptRequired() &&
-      !isInitialSetupRequired() &&
       isOnboardingRequired(),
   )
 
@@ -39,23 +41,22 @@ function LayoutInner() {
       <PwaUpdatePrompt />
       <QuotaErrorModal />
       <UndoSnackbar />
-      {showRestorePrompt && (
+      {!showInitialSetup && showRestorePrompt && (
         <SetupRestorePrompt
           onComplete={() => {
             setShowRestorePrompt(false)
-            // After restore the initial-setup flag is set, so isInitialSetupRequired() is false.
-            if (isInitialSetupRequired()) setShowInitialSetup(true)
-            else if (isOnboardingRequired()) setShowOnboarding(true)
+            if (isOnboardingRequired()) setShowOnboarding(true)
             navigate('/', { replace: true })
           }}
         />
       )}
-      {!showRestorePrompt && showInitialSetup && (
+      {showInitialSetup && (
         <FirstLaunchSetupPrompt
           onComplete={() => {
             setShowInitialSetup(false)
             navigate('/', { replace: true })
-            if (isOnboardingRequired()) setShowOnboarding(true)
+            if (!isRestorePromptDecided()) setShowRestorePrompt(true)
+            else if (isOnboardingRequired()) setShowOnboarding(true)
           }}
         />
       )}
