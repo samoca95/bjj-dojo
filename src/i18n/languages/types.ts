@@ -356,6 +356,7 @@ export type TranslationKey =
   | 'FLOWS'
   | 'Open Flows'
   | 'Reset flow icon'
+  | 'Strategic combination of techniques'
 
 export interface LanguagePack {
   /**
