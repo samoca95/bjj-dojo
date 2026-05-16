@@ -29,8 +29,7 @@ import {
 } from '../i18n'
 import { useUndo } from '../components/undo'
 import ShareSheet from '../components/ShareSheet'
-import { scheduleAfterMutation } from '../utils/autoBackup'
-import { setLastMutationTime } from '../utils/autoBackup/settings'
+import { notifyDbMutation } from '../utils/autoBackup/notify'
 
 const SHARE_PROMPT_LABELS: Record<AppLanguage, { title: string; cta: string }> =
   {
@@ -149,8 +148,7 @@ export default function SessionDetailPage() {
       await db.sessions.delete(session.id)
       await db.sessionTechniques.where('sessionId').equals(session.id).delete()
       await db.sessionTaps.where('sessionId').equals(session.id).delete()
-      setLastMutationTime(Date.now())
-      scheduleAfterMutation()
+      notifyDbMutation()
       const savedSession = session as Session & { id: number }
       pushUndo({
         label: language === 'es' ? 'Sesión eliminada.' : 'Session deleted.',
@@ -159,6 +157,7 @@ export default function SessionDetailPage() {
           if (sessionTechniques.length > 0)
             await db.sessionTechniques.bulkPut(sessionTechniques)
           if (sessionTaps.length > 0) await db.sessionTaps.bulkPut(sessionTaps)
+          notifyDbMutation()
         },
       })
       setShowDeleteModal(false)

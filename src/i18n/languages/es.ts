@@ -330,6 +330,30 @@ const ES_TRANSLATIONS = {
   'Auto-backup failed': 'Falló la copia automática',
   'Could not write backup to the chosen destination.':
     'No se pudo guardar la copia en el destino elegido.',
+  'Connect GitHub': 'Conectar con GitHub',
+  'Signed in as': 'Conectado como',
+  'Sign out': 'Cerrar sesión',
+  'Select a repository': 'Selecciona un repositorio',
+  'Create new repository': 'Crear repositorio nuevo',
+  'Repository name': 'Nombre del repositorio',
+  'Private repository': 'Repositorio privado',
+  Create: 'Crear',
+  'Loading repositories…': 'Cargando repositorios…',
+  'No repositories with write access.':
+    'No hay repositorios con permiso de escritura.',
+  'Backups to keep': 'Copias a conservar',
+  'Older backups are deleted automatically.':
+    'Las copias antiguas se eliminan automáticamente.',
+  'GitHub login is not configured in this build.':
+    'El inicio de sesión con GitHub no está configurado en esta versión.',
+  'Enter this code at GitHub': 'Introduce este código en GitHub',
+  'Open GitHub': 'Abrir GitHub',
+  'Copy code': 'Copiar código',
+  Copied: 'Copiado',
+  'Waiting for authorization…': 'Esperando autorización…',
+  'Authorization timed out. Try again.':
+    'Se agotó el tiempo de autorización. Inténtalo de nuevo.',
+  'Authorization was denied.': 'Se denegó la autorización.',
   // Setup restore prompt
   'Restore from backup': 'Restaurar desde una copia',
   'Set up backup': 'Configurar copia de seguridad',

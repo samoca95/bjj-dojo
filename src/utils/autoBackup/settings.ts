@@ -19,6 +19,11 @@ const GH_LAST_ERROR_KEY = 'bjj-dojo:auto-backup-github-last-error'
 
 const APP_LAST_RUN_KEY = 'bjj-dojo:auto-backup-last-run'
 const LAST_MUTATION_KEY = 'bjj-dojo:last-mutation-time'
+const RETENTION_KEY = 'bjj-dojo:auto-backup-retention'
+
+export const DEFAULT_BACKUP_RETENTION = 7
+const MIN_BACKUP_RETENTION = 1
+const MAX_BACKUP_RETENTION = 365
 
 export type GithubTarget =
   | { kind: 'gist'; gistId: string }
@@ -166,4 +171,23 @@ export function getLastMutationTime(): number | null {
 export function setLastMutationTime(when: number) {
   write(LAST_MUTATION_KEY, String(when))
   notify()
+}
+
+export function getBackupRetentionCount(): number {
+  const raw = read(RETENTION_KEY)
+  if (!raw) return DEFAULT_BACKUP_RETENTION
+  const parsed = Number(raw)
+  if (!Number.isFinite(parsed)) return DEFAULT_BACKUP_RETENTION
+  return clampRetention(Math.floor(parsed))
+}
+
+export function setBackupRetentionCount(count: number) {
+  const clamped = clampRetention(Math.floor(count))
+  write(RETENTION_KEY, String(clamped))
+  notify()
+}
+
+function clampRetention(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_BACKUP_RETENTION
+  return Math.min(MAX_BACKUP_RETENTION, Math.max(MIN_BACKUP_RETENTION, value))
 }

@@ -46,6 +46,8 @@ import type { AppLanguage } from '../i18n'
 import { runBackupNow } from '../utils/autoBackup'
 import {
   AUTO_BACKUP_UPDATED_EVENT,
+  DEFAULT_BACKUP_RETENTION,
+  getBackupRetentionCount,
   getFsFolderName,
   getFsLastError,
   getFsLastRun,
@@ -57,11 +59,11 @@ import {
   getOverallLastRun,
   isFsBackupEnabled,
   isGithubBackupEnabled,
+  setBackupRetentionCount,
   setFsBackupEnabled,
   setGithubBackupEnabled,
   setGithubTarget,
   setGithubToken,
-  type GithubTarget,
 } from '../utils/autoBackup/settings'
 import {
   disconnectBackupFolder,
@@ -70,9 +72,14 @@ import {
   pickBackupFolder,
 } from '../utils/autoBackup/destinations/fileSystem'
 import {
+  createBackupRepo,
   githubDestination,
+  listWritableRepos,
   verifyGithubToken,
+  type GithubRepoSummary,
 } from '../utils/autoBackup/destinations/github'
+import { isDeviceFlowConfigured } from '../utils/autoBackup/githubAuth'
+import DeviceFlowDialog from '../components/DeviceFlowDialog'
 import type {
   BackupDestination,
   DiscoveredBackup,
@@ -164,16 +171,17 @@ export default function SettingsPage() {
     useState<BackupDestination | null>(null)
   const [pendingRestoreBackup, setPendingRestoreBackup] =
     useState<DiscoveredBackup | null>(null)
-  const [ghTokenInput, setGhTokenInput] = useState(ghToken ?? '')
-  const [ghMode, setGhMode] = useState<'repo' | 'gist'>(
-    ghTarget?.kind === 'gist' ? 'gist' : 'repo',
-  )
-  const [ghRepoInput, setGhRepoInput] = useState(
-    ghTarget?.kind === 'repo' ? `${ghTarget.owner}/${ghTarget.repo}` : '',
-  )
-  const [ghGistInput, setGhGistInput] = useState(
-    ghTarget?.kind === 'gist' ? ghTarget.gistId : '',
-  )
+  const [showDeviceFlow, setShowDeviceFlow] = useState(false)
+  const [ghLogin, setGhLogin] = useState<string | null>(null)
+  const [ghRepos, setGhRepos] = useState<GithubRepoSummary[] | null>(null)
+  const [ghReposLoading, setGhReposLoading] = useState(false)
+  const [ghReposError, setGhReposError] = useState<string | null>(null)
+  const [showCreateRepo, setShowCreateRepo] = useState(false)
+  const [newRepoName, setNewRepoName] = useState('bjj-dojo-backups')
+  const [newRepoPrivate, setNewRepoPrivate] = useState(true)
+  const [creatingRepo, setCreatingRepo] = useState(false)
+  const ghConfigured = isDeviceFlowConfigured()
+  const retentionCount = getBackupRetentionCount()
 
   const handlePickFolder = async () => {
     try {
@@ -195,37 +203,102 @@ export default function SettingsPage() {
     setFsBackupEnabled(false)
   }
 
-  const handleSaveGithub = async () => {
+  const handleDisconnectGithub = () => {
+    setGithubBackupEnabled(false)
+    setGithubToken(null)
+    setGithubTarget(null)
+    setGhLogin(null)
+    setGhRepos(null)
+    setGhReposError(null)
+  }
+
+  const loadGhRepos = async (token: string) => {
+    setGhReposLoading(true)
+    setGhReposError(null)
     try {
-      const user = await verifyGithubToken(ghTokenInput)
-      let target: GithubTarget
-      if (ghMode === 'gist') {
-        if (!ghGistInput.trim()) throw new Error('Gist ID is required.')
-        target = { kind: 'gist', gistId: ghGistInput.trim() }
-      } else {
-        const [owner, repo] = ghRepoInput.split('/').map((s) => s.trim())
-        if (!owner || !repo) throw new Error('Use owner/repo format.')
-        target = { kind: 'repo', owner, repo }
-      }
-      setGithubToken(ghTokenInput)
-      setGithubTarget(target)
-      setGithubBackupEnabled(true)
-      window.alert(`${t('Connected as')} ${user.login}`)
-      const backups = await githubDestination.discoverExistingBackups()
-      if (backups.length > 0) {
-        setPendingRestoreDestination(githubDestination)
-        setPendingRestoreBackup(backups[0])
-      }
+      const repos = await listWritableRepos(token)
+      setGhRepos(repos)
+    } catch (err) {
+      setGhReposError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setGhReposLoading(false)
+    }
+  }
+
+  const handleDeviceFlowAuthorized = async (token: string) => {
+    setShowDeviceFlow(false)
+    try {
+      const user = await verifyGithubToken(token)
+      setGithubToken(token)
+      setGhLogin(user.login)
+      await loadGhRepos(token)
     } catch (err) {
       window.alert(err instanceof Error ? err.message : String(err))
     }
   }
 
-  const handleDisconnectGithub = () => {
-    setGithubBackupEnabled(false)
-    setGithubToken(null)
-    setGithubTarget(null)
+  const handleSelectRepo = async (repo: GithubRepoSummary) => {
+    setGithubTarget({
+      kind: 'repo',
+      owner: repo.owner,
+      repo: repo.name,
+      branch: repo.defaultBranch,
+    })
+    setGithubBackupEnabled(true)
+    try {
+      const backups = await githubDestination.discoverExistingBackups()
+      if (backups.length > 0) {
+        setPendingRestoreDestination(githubDestination)
+        setPendingRestoreBackup(backups[0])
+      }
+    } catch {
+      // discovery is best-effort
+    }
   }
+
+  const handleCreateRepo = async () => {
+    const token = getGithubToken()
+    if (!token || !newRepoName.trim()) return
+    setCreatingRepo(true)
+    try {
+      const repo = await createBackupRepo(token, {
+        name: newRepoName.trim(),
+        private: newRepoPrivate,
+        description: 'Auto-backups from BJJ Dojo',
+      })
+      setShowCreateRepo(false)
+      setGhRepos((prev) => (prev ? [repo, ...prev] : [repo]))
+      await handleSelectRepo(repo)
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : String(err))
+    } finally {
+      setCreatingRepo(false)
+    }
+  }
+
+  // When the user already has a token (PAT or previous OAuth), resolve their
+  // login on mount so the UI shows "Signed in as @x" without re-authorising.
+  useEffect(() => {
+    if (!ghToken || ghLogin) return
+    let cancelled = false
+    void verifyGithubToken(ghToken)
+      .then((u) => {
+        if (!cancelled) setGhLogin(u.login)
+      })
+      .catch(() => {
+        // stale token — surface in the UI via ghLogin staying null
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [ghToken, ghLogin])
+
+  // Load repos when token exists but no repo is selected yet.
+  useEffect(() => {
+    if (!ghToken || ghTarget || ghRepos || ghReposLoading) return
+    void loadGhRepos(ghToken)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ghToken, ghTarget])
 
   const handleRestoreFromPending = async () => {
     if (!pendingRestoreDestination || !pendingRestoreBackup) return
@@ -781,78 +854,120 @@ export default function SettingsPage() {
                   />
                 </button>
               </div>
-              <div className="flex bg-zinc-800 rounded-lg p-0.5 gap-0.5">
-                <button
-                  onClick={() => setGhMode('repo')}
-                  className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition-colors ${
-                    ghMode === 'repo'
-                      ? 'bg-gold text-black'
-                      : 'text-zinc-400 active:text-zinc-200'
-                  }`}
-                >
-                  Repo
-                </button>
-                <button
-                  onClick={() => setGhMode('gist')}
-                  className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition-colors ${
-                    ghMode === 'gist'
-                      ? 'bg-gold text-black'
-                      : 'text-zinc-400 active:text-zinc-200'
-                  }`}
-                >
-                  Gist
-                </button>
-              </div>
-              <input
-                type="password"
-                placeholder={t('GitHub token')}
-                value={ghTokenInput}
-                onChange={(e) => setGhTokenInput(e.target.value)}
-                className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
-              />
-              {ghMode === 'repo' ? (
-                <input
-                  type="text"
-                  placeholder="owner/repo"
-                  value={ghRepoInput}
-                  onChange={(e) => setGhRepoInput(e.target.value)}
-                  className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
-                />
-              ) : (
-                <input
-                  type="text"
-                  placeholder={t('Gist ID')}
-                  value={ghGistInput}
-                  onChange={(e) => setGhGistInput(e.target.value)}
-                  className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600"
-                />
-              )}
-              {ghLastError && (
-                <p className="text-xs text-red-300">{ghLastError}</p>
-              )}
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => void handleSaveGithub()}
-                  disabled={!ghTokenInput}
-                  className="rounded-xl bg-zinc-800 text-zinc-200 text-xs font-semibold py-2 active:bg-zinc-700 disabled:opacity-60"
-                >
-                  {t('Test connection')}
-                </button>
-                {ghEnabled ? (
+
+              {!ghToken ? (
+                ghConfigured ? (
                   <button
-                    onClick={handleDisconnectGithub}
-                    className="rounded-xl bg-zinc-800 text-zinc-300 text-xs font-semibold py-2 active:bg-zinc-700"
+                    onClick={() => setShowDeviceFlow(true)}
+                    className="w-full rounded-xl bg-zinc-800 text-zinc-200 text-xs font-semibold py-2 active:bg-zinc-700"
                   >
-                    {t('Disconnect folder')}
+                    {t('Connect GitHub')}
                   </button>
                 ) : (
-                  <span className="text-xs text-zinc-500 self-center">
-                    {t(
-                      'Use a fine-grained token scoped to one repo. Revoke it if your device is lost.',
-                    )}
-                  </span>
-                )}
+                  <p className="text-xs text-zinc-500">
+                    {t('GitHub login is not configured in this build.')}
+                  </p>
+                )
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-zinc-400">
+                      {t('Signed in as')}{' '}
+                      <span className="text-zinc-200">@{ghLogin ?? '…'}</span>
+                    </p>
+                    <button
+                      onClick={handleDisconnectGithub}
+                      className="rounded-lg bg-zinc-800 text-zinc-300 text-[11px] font-semibold px-2 py-1 active:bg-zinc-700"
+                    >
+                      {t('Sign out')}
+                    </button>
+                  </div>
+
+                  {ghTarget?.kind === 'repo' ? (
+                    <div className="flex items-center justify-between gap-2 rounded-xl bg-zinc-800 px-3 py-2">
+                      <span className="text-xs text-zinc-200">
+                        📦 {ghTarget.owner}/{ghTarget.repo}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setGithubTarget(null)
+                          setGithubBackupEnabled(false)
+                          if (ghToken) void loadGhRepos(ghToken)
+                        }}
+                        className="text-[11px] font-semibold text-zinc-400 active:text-zinc-200"
+                      >
+                        {t('Select a repository')}
+                      </button>
+                    </div>
+                  ) : ghReposLoading ? (
+                    <p className="text-xs text-zinc-500">
+                      {t('Loading repositories…')}
+                    </p>
+                  ) : ghReposError ? (
+                    <p className="text-xs text-red-300">{ghReposError}</p>
+                  ) : ghRepos && ghRepos.length === 0 ? (
+                    <p className="text-xs text-zinc-500">
+                      {t('No repositories with write access.')}
+                    </p>
+                  ) : (
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const repo = ghRepos?.find(
+                          (r) => r.fullName === e.target.value,
+                        )
+                        if (repo) void handleSelectRepo(repo)
+                      }}
+                      className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
+                    >
+                      <option value="" disabled>
+                        {t('Select a repository')}
+                      </option>
+                      {ghRepos?.map((r) => (
+                        <option key={r.fullName} value={r.fullName}>
+                          {r.fullName}
+                          {r.private ? ' · 🔒' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  <button
+                    onClick={() => setShowCreateRepo(true)}
+                    className="w-full rounded-xl bg-zinc-800 text-zinc-300 text-xs font-semibold py-2 active:bg-zinc-700"
+                  >
+                    + {t('Create new repository')}
+                  </button>
+
+                  {ghLastError && (
+                    <p className="text-xs text-red-300">{ghLastError}</p>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Retention */}
+            <div className="flex items-center justify-between gap-2 pt-2">
+              <div className="text-xs text-zinc-400 flex-1">
+                <div className="font-semibold text-zinc-200">
+                  {t('Backups to keep')}
+                </div>
+                <div className="text-[11px] text-zinc-500">
+                  {t('Older backups are deleted automatically.')}
+                </div>
               </div>
+              <input
+                type="number"
+                min={1}
+                max={365}
+                value={retentionCount}
+                onChange={(e) => {
+                  const n = Number(e.target.value)
+                  if (Number.isFinite(n))
+                    setBackupRetentionCount(n || DEFAULT_BACKUP_RETENTION)
+                }}
+                className="w-20 bg-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 text-right outline-none focus:ring-2 focus:ring-gold"
+              />
             </div>
 
             {(fsEnabled || ghEnabled) && (
@@ -906,6 +1021,60 @@ export default function SettingsPage() {
           initialTab={helpTab}
           onClose={() => setHelpTab(null)}
         />
+      )}
+
+      {showDeviceFlow && (
+        <DeviceFlowDialog
+          onClose={() => setShowDeviceFlow(false)}
+          onAuthorized={(token) => void handleDeviceFlowAuthorized(token)}
+        />
+      )}
+
+      {showCreateRepo && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-zinc-900 p-5 text-zinc-100 space-y-3">
+            <h2 className="text-sm font-semibold">
+              {t('Create new repository')}
+            </h2>
+            <label className="block space-y-1">
+              <span className="text-xs text-zinc-400">
+                {t('Repository name')}
+              </span>
+              <input
+                type="text"
+                value={newRepoName}
+                onChange={(e) => setNewRepoName(e.target.value)}
+                className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
+              />
+            </label>
+            <label className="flex items-center justify-between gap-2">
+              <span className="text-xs text-zinc-400">
+                {t('Private repository')}
+              </span>
+              <input
+                type="checkbox"
+                checked={newRepoPrivate}
+                onChange={(e) => setNewRepoPrivate(e.target.checked)}
+                className="h-4 w-4"
+              />
+            </label>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                onClick={() => setShowCreateRepo(false)}
+                className="rounded-xl bg-zinc-800 text-zinc-200 text-xs font-semibold py-2 active:bg-zinc-700"
+              >
+                {t('Cancel')}
+              </button>
+              <button
+                onClick={() => void handleCreateRepo()}
+                disabled={creatingRepo || !newRepoName.trim()}
+                className="rounded-xl bg-gold text-black text-xs font-semibold py-2 active:bg-gold-light disabled:opacity-60"
+              >
+                {t('Create')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {pendingRestoreBackup && (

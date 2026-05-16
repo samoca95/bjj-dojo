@@ -36,8 +36,7 @@ import {
 } from '../utils/validation'
 import { runWithTelemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
-import { scheduleAfterMutation } from '../utils/autoBackup'
-import { setLastMutationTime } from '../utils/autoBackup/settings'
+import { notifyDbMutation } from '../utils/autoBackup/notify'
 
 function toDateInput(epoch: number) {
   const d = new Date(epoch)
@@ -246,8 +245,7 @@ export default function AddEditSessionPage() {
           )
         }
       })
-      setLastMutationTime(Date.now())
-      scheduleAfterMutation()
+      notifyDbMutation()
       navigate(
         `/sessions/${sid}`,
         isEdit ? undefined : { replace: true, state: { justCreated: true } },
@@ -365,6 +363,7 @@ export default function AddEditSessionPage() {
     await runWithTelemetry('technique.quick_create_failed', () =>
       db.techniques.add(newTech),
     )
+    notifyDbMutation()
     handlePickerSelect(newTech)
     setNewTechName('')
     setShowCreateTechnique(false)

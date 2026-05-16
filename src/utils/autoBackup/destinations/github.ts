@@ -16,6 +16,7 @@ import type {
   DiscoveredBackup,
 } from '../types'
 import {
+  getBackupRetentionCount,
   getGithubTarget,
   getGithubToken,
   isGithubBackupEnabled,
@@ -56,6 +57,89 @@ export async function verifyGithubToken(
   })
   if (!res.ok) await ghError(res, 'GitHub /user request failed')
   return (await res.json()) as { login: string }
+}
+
+export interface GithubRepoSummary {
+  owner: string
+  name: string
+  fullName: string
+  private: boolean
+  defaultBranch: string
+}
+
+/**
+ * Lists repos the user has push access to. Paginates the user's affiliated
+ * repos until exhausted (capped at 5 pages = 500 repos to keep memory bounded).
+ */
+export async function listWritableRepos(
+  token: string,
+): Promise<GithubRepoSummary[]> {
+  const results: GithubRepoSummary[] = []
+  const MAX_PAGES = 5
+  const PER_PAGE = 100
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const url = `${API_BASE}/user/repos?per_page=${PER_PAGE}&page=${page}&sort=updated&affiliation=owner,collaborator,organization_member`
+    const res = await fetch(url, { headers: authHeaders(token) })
+    if (!res.ok) await ghError(res, 'GitHub repo list failed')
+    const body = (await res.json()) as Array<{
+      name: string
+      full_name: string
+      private: boolean
+      default_branch: string
+      owner: { login: string }
+      permissions?: { push?: boolean }
+    }>
+    for (const r of body) {
+      if (r.permissions?.push !== false) {
+        results.push({
+          owner: r.owner.login,
+          name: r.name,
+          fullName: r.full_name,
+          private: r.private,
+          defaultBranch: r.default_branch,
+        })
+      }
+    }
+    if (body.length < PER_PAGE) break
+  }
+  return results
+}
+
+export interface CreateRepoOptions {
+  name: string
+  private: boolean
+  description?: string
+}
+
+export async function createBackupRepo(
+  token: string,
+  options: CreateRepoOptions,
+): Promise<GithubRepoSummary> {
+  const res = await fetch(`${API_BASE}/user/repos`, {
+    method: 'POST',
+    headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: options.name,
+      description: options.description,
+      private: options.private,
+      auto_init: true,
+    }),
+  })
+  if (!res.ok) await ghError(res, 'GitHub repo creation failed')
+  const body = (await res.json()) as {
+    name: string
+    full_name: string
+    private: boolean
+    default_branch: string
+    owner: { login: string }
+  }
+  return {
+    owner: body.owner.login,
+    name: body.name,
+    fullName: body.full_name,
+    private: body.private,
+    defaultBranch: body.default_branch,
+  }
 }
 
 async function gistWrite(
@@ -118,7 +202,63 @@ async function repoWrite(
     },
   )
   if (!res.ok) await ghError(res, 'GitHub repo write failed')
+  await repoRotateOldBackups(token, owner, repo, path, branch)
   return { filename: path, bytesWritten: content.length }
+}
+
+const DATED_BACKUP_PATTERN = /^bjj-dojo-backup-\d{4}-\d{2}-\d{2}\.json$/
+
+/**
+ * Keep the N most recent dated backups in the repo's backups/ dir. The date
+ * lives in the filename, so a descending name sort is equivalent to mtime sort
+ * and avoids an extra commit lookup per file. Per-file deletes are best-effort.
+ */
+async function repoRotateOldBackups(
+  token: string,
+  owner: string,
+  repo: string,
+  justWrittenPath: string,
+  branch?: string,
+): Promise<void> {
+  const keep = getBackupRetentionCount()
+  const dirUrl = `${API_BASE}/repos/${owner}/${repo}/contents/${REPO_BACKUPS_DIR}${
+    branch ? `?ref=${encodeURIComponent(branch)}` : ''
+  }`
+  const res = await fetch(dirUrl, { headers: authHeaders(token) })
+  if (!res.ok) return
+  const entries = (await res.json()) as Array<{
+    name: string
+    type: string
+    path: string
+    sha: string
+  }>
+  const dated = entries
+    .filter((e) => e.type === 'file' && DATED_BACKUP_PATTERN.test(e.name))
+    .filter((e) => e.path !== justWrittenPath)
+    .sort((a, b) => (a.name < b.name ? 1 : -1))
+  const toDelete = dated.slice(Math.max(0, keep - 1))
+  for (const entry of toDelete) {
+    try {
+      const body = JSON.stringify({
+        message: `auto-backup: prune ${entry.name}`,
+        sha: entry.sha,
+        ...(branch ? { branch } : {}),
+      })
+      await fetch(
+        `${API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(entry.path)}`,
+        {
+          method: 'DELETE',
+          headers: {
+            ...authHeaders(token),
+            'Content-Type': 'application/json',
+          },
+          body,
+        },
+      )
+    } catch {
+      // best effort — one failure must not abort the run
+    }
+  }
 }
 
 async function repoListBackups(
