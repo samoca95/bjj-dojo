@@ -52,7 +52,9 @@ function distributeAnglesWithOverlapAvoidance(
   const n = labels.length
   if (n === 0) return { angles: [], radius: initialRadius }
 
-  const footprints = labels.map((label) => estimateCompositeRadius(label, nodeR))
+  const footprints = labels.map((label) =>
+    estimateCompositeRadius(label, nodeR),
+  )
   const maxFootprint = Math.max(...footprints)
   const radius = Math.max(initialRadius, (n * maxFootprint) / Math.PI + 8)
   const initialAngles = Array.from(

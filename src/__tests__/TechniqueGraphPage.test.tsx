@@ -292,10 +292,18 @@ describe('TechniqueGraphPage', () => {
         },
         techniques[1],
       ],
-      connections: [{ fromTechniqueId: 101, toTechniqueId: 401, connectionType: 'FOLLOW_UP' }],
+      connections: [
+        {
+          fromTechniqueId: 101,
+          toTechniqueId: 401,
+          connectionType: 'FOLLOW_UP',
+        },
+      ],
     })
     const { container } = renderPage()
-    const label = container.querySelector('[data-testid="global-node-label-101"]')
+    const label = container.querySelector(
+      '[data-testid="global-node-label-101"]',
+    )
     expect(label).not.toBeNull()
     expect(label?.getAttribute('text-anchor')).toBe('middle')
     expect(label?.getAttribute('dominant-baseline')).toBe('hanging')

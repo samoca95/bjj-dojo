@@ -600,68 +600,68 @@ export default function TechniqueGraphPage() {
               </button>
             </div>
 
-             {/* Bottom legends */}
-             <div className="absolute bottom-3 left-3 right-3 flex flex-col gap-2">
-               {usedCategories.length > 0 && (
-                 <div
-                   className="flex flex-wrap gap-x-3 gap-y-1.5 bg-zinc-900/85 backdrop-blur-sm rounded-xl px-3 py-2"
-                   data-testid="category-legend"
-                 >
-                   {usedCategories.map((c) => (
-                     <span
-                       key={c.id}
-                       className="flex items-center gap-1.5 text-xs text-zinc-300"
-                     >
-                       <span
-                         className="w-2.5 h-2.5 rounded-full shrink-0"
-                         style={{ backgroundColor: categoryColor(c.id) }}
-                       />
-                       {getCategoryName(c, language)}
-                     </span>
-                   ))}
-                 </div>
-               )}
-               {highlightedIndicatorTypes.length > 0 && (
-                 <div
-                   className="self-end flex flex-wrap items-center gap-x-2.5 gap-y-1 bg-zinc-900/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5"
-                   data-testid="indicator-legend"
-                 >
-                   {highlightedIndicatorTypes.map((type) => (
-                     <span
-                       key={type}
-                       className="inline-flex items-center gap-1.5 text-[10px] text-zinc-300"
-                     >
-                       <svg
-                         viewBox="0 0 18 8"
-                         className="w-4.5 h-2 shrink-0"
-                         aria-hidden="true"
-                       >
-                         <line
-                           x1="1"
-                           y1="4"
-                           x2="13"
-                           y2="4"
-                           stroke={EDGE_COLORS[type]}
-                           strokeWidth="1.6"
-                         />
-                         <path
-                           d="M12 1 L17 4 L12 7 z"
-                           fill={EDGE_COLORS[type]}
-                         />
-                       </svg>
-                       {connectionTypeLabel(
-                         type,
-                         CONNECTION_LABELS[type],
-                         language,
-                       )}
-                     </span>
-                   ))}
-                 </div>
-               )}
-             </div>
-           </>
-         )}
-       </div>
+            {/* Bottom legends */}
+            <div className="absolute bottom-3 left-3 right-3 flex flex-col gap-2">
+              {usedCategories.length > 0 && (
+                <div
+                  className="flex flex-wrap gap-x-3 gap-y-1.5 bg-zinc-900/85 backdrop-blur-sm rounded-xl px-3 py-2"
+                  data-testid="category-legend"
+                >
+                  {usedCategories.map((c) => (
+                    <span
+                      key={c.id}
+                      className="flex items-center gap-1.5 text-xs text-zinc-300"
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: categoryColor(c.id) }}
+                      />
+                      {getCategoryName(c, language)}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {highlightedIndicatorTypes.length > 0 && (
+                <div
+                  className="self-end flex flex-wrap items-center gap-x-2.5 gap-y-1 bg-zinc-900/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5"
+                  data-testid="indicator-legend"
+                >
+                  {highlightedIndicatorTypes.map((type) => (
+                    <span
+                      key={type}
+                      className="inline-flex items-center gap-1.5 text-[10px] text-zinc-300"
+                    >
+                      <svg
+                        viewBox="0 0 18 8"
+                        className="w-4.5 h-2 shrink-0"
+                        aria-hidden="true"
+                      >
+                        <line
+                          x1="1"
+                          y1="4"
+                          x2="13"
+                          y2="4"
+                          stroke={EDGE_COLORS[type]}
+                          strokeWidth="1.6"
+                        />
+                        <path
+                          d="M12 1 L17 4 L12 7 z"
+                          fill={EDGE_COLORS[type]}
+                        />
+                      </svg>
+                      {connectionTypeLabel(
+                        type,
+                        CONNECTION_LABELS[type],
+                        language,
+                      )}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }
