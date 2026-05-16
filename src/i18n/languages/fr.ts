@@ -397,7 +397,8 @@ const FR_TRANSLATIONS = {
   FLOWS: 'FLOWS',
   'Open Flows': 'Open Flows',
   'Reset flow icon': 'Reset flow icon',
-  'Strategic combination of techniques': 'Combinaison stratégique de techniques',
+  'Strategic combination of techniques':
+    'Combinaison stratégique de techniques',
 } satisfies Record<TranslationKey, string>
 
 const FR_CATEGORY_CONTENT: LanguagePack['categoryContent'] = {
