@@ -23,6 +23,7 @@ interface ConnectionGraphProps {
   connections: GraphConnection[]
   onSelect: (id: number) => void
   connectionTypeName: (type: ConnectionType) => string
+  techniqueName: (technique: Technique) => string
 }
 
 function truncate(text: string, max: number): string {
@@ -35,6 +36,7 @@ export default function ConnectionGraph({
   connections,
   onSelect,
   connectionTypeName,
+  techniqueName,
 }: ConnectionGraphProps) {
   // Merge duplicate neighbours (a technique may be linked by several connections/directions).
   const neighbourMap = new Map<
@@ -70,6 +72,7 @@ export default function ConnectionGraph({
   const R = 96
   const centerR = 32
   const nodeR = n > 8 ? 13 : 16
+  const useRadialLabels = n > 6
   const usedTypes = [...new Set(connections.map((c) => c.connectionType))]
 
   return (
@@ -163,11 +166,32 @@ export default function ConnectionGraph({
           const y = cy + R * Math.sin(angle)
           const ux = Math.cos(angle)
           const uy = Math.sin(angle)
+          const name = techniqueName(nb.technique)
           const nodeColor = categoryColor(nb.technique.categoryId)
-          const labelX = x + ux * (nodeR + 6)
-          const labelY = y + uy * (nodeR + 6)
-          const anchor = ux > 0.3 ? 'start' : ux < -0.3 ? 'end' : 'middle'
-          const baseline = uy > 0.3 ? 'hanging' : uy < -0.3 ? 'auto' : 'central'
+          const labelX = x + ux * (nodeR + 8)
+          const labelY = y + uy * (nodeR + 8)
+          const anchor = useRadialLabels
+            ? angle > Math.PI / 2 || angle < -Math.PI / 2
+              ? 'end'
+              : 'start'
+            : ux > 0.3
+              ? 'start'
+              : ux < -0.3
+                ? 'end'
+                : 'middle'
+          const baseline = useRadialLabels
+            ? 'central'
+            : uy > 0.3
+              ? 'hanging'
+              : uy < -0.3
+                ? 'auto'
+                : 'central'
+          const degrees = (angle * 180) / Math.PI
+          const radialRotation = useRadialLabels
+            ? degrees > 90 || degrees < -90
+              ? degrees + 180
+              : degrees
+            : undefined
           return (
             <g
               key={`node-${nb.technique.id}`}
@@ -204,9 +228,14 @@ export default function ConnectionGraph({
                 dominantBaseline={baseline}
                 fontSize={9}
                 fill="#d4d4d8"
+                transform={
+                  radialRotation === undefined
+                    ? undefined
+                    : `rotate(${radialRotation} ${labelX} ${labelY})`
+                }
               >
-                {truncate(nb.technique.name, 20)}
-                <title>{nb.technique.name}</title>
+                {truncate(name, 20)}
+                <title>{name}</title>
               </text>
             </g>
           )

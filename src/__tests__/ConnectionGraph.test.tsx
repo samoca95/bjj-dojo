@@ -34,6 +34,7 @@ function conn(
 }
 
 const typeName = (t: ConnectionType) => t
+const techniqueName = (technique: Technique) => technique.name
 
 describe('ConnectionGraph', () => {
   it('renders nothing when there are no connections', () => {
@@ -44,6 +45,7 @@ describe('ConnectionGraph', () => {
         connections={[]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
+        techniqueName={techniqueName}
       />,
     )
     expect(container.querySelector('svg')).toBeNull()
@@ -57,6 +59,7 @@ describe('ConnectionGraph', () => {
         connections={[conn(2, 'Armbar', 'FOLLOW_UP', 'from')]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
+        techniqueName={techniqueName}
       />,
     )
     expect(container.querySelector('svg > text')?.textContent).toContain(
@@ -75,6 +78,7 @@ describe('ConnectionGraph', () => {
         ]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
+        techniqueName={techniqueName}
       />,
     )
     expect(container.querySelectorAll('g[role="button"]')).toHaveLength(2)
@@ -91,6 +95,7 @@ describe('ConnectionGraph', () => {
         ]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
+        techniqueName={techniqueName}
       />,
     )
     expect(container.querySelectorAll('g[role="button"]')).toHaveLength(1)
@@ -105,6 +110,7 @@ describe('ConnectionGraph', () => {
         connections={[conn(42, 'Armbar', 'FOLLOW_UP', 'from')]}
         onSelect={onSelect}
         connectionTypeName={typeName}
+        techniqueName={techniqueName}
       />,
     )
     fireEvent.click(container.querySelector('g[role="button"]')!)
@@ -120,6 +126,7 @@ describe('ConnectionGraph', () => {
         connections={[conn(7, 'Armbar', 'FOLLOW_UP', 'from')]}
         onSelect={onSelect}
         connectionTypeName={typeName}
+        techniqueName={techniqueName}
       />,
     )
     fireEvent.keyDown(container.querySelector('g[role="button"]')!, {
@@ -140,6 +147,7 @@ describe('ConnectionGraph', () => {
         ]}
         onSelect={vi.fn()}
         connectionTypeName={(t) => (t === 'FOLLOW_UP' ? 'Follow-up' : 'Setup')}
+        techniqueName={techniqueName}
       />,
     )
     expect(getByText('Follow-up')).toBeInTheDocument()
@@ -156,6 +164,7 @@ describe('ConnectionGraph', () => {
         connections={[conn(2, longName, 'FOLLOW_UP', 'from')]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
+        techniqueName={techniqueName}
       />,
     )
     const node = container.querySelector('g[role="button"]')!
@@ -173,6 +182,7 @@ describe('ConnectionGraph', () => {
         connections={[conn(2, 'Armbar', 'FOLLOW_UP', 'from')]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
+        techniqueName={techniqueName}
       />,
     )
     const line = container.querySelector('line')!
@@ -188,6 +198,7 @@ describe('ConnectionGraph', () => {
         connections={[conn(2, 'Armbar', 'COUNTER', 'to')]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
+        techniqueName={techniqueName}
       />,
     )
     const line = container.querySelector('line')!
@@ -207,6 +218,7 @@ describe('ConnectionGraph', () => {
         ]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
+        techniqueName={techniqueName}
       />,
     )
     expect(container.querySelectorAll('line')).toHaveLength(3)
@@ -220,6 +232,7 @@ describe('ConnectionGraph', () => {
         connections={[conn(2, 'Armbar', 'FOLLOW_UP', 'from', 4)]}
         onSelect={vi.fn()}
         connectionTypeName={typeName}
+        techniqueName={techniqueName}
       />,
     )
     // First <circle> is the centre node, stroked with its category colour.
@@ -228,5 +241,41 @@ describe('ConnectionGraph', () => {
     // The neighbour node circle is stroked with its own category colour.
     const neighbourCircle = container.querySelector('g[role="button"] circle')!
     expect(neighbourCircle.getAttribute('stroke')).toBe(categoryColor(4))
+  })
+
+  it('uses the provided techniqueName formatter for node labels', () => {
+    const { container, queryByText } = render(
+      <ConnectionGraph
+        centerName="Closed Guard"
+        centerCategoryId={1}
+        connections={[conn(2, 'Armbar', 'FOLLOW_UP', 'from')]}
+        onSelect={vi.fn()}
+        connectionTypeName={typeName}
+        techniqueName={() => 'Arm lock'}
+      />,
+    )
+    const nodeText = container.querySelector('g[role="button"] text')
+    expect(nodeText?.firstChild?.textContent).toContain('Arm lock')
+    expect(queryByText('Armbar')).toBeNull()
+  })
+
+  it('rotates neighbour labels radially when there are more than six neighbours', () => {
+    const crowdedConnections = Array.from({ length: 7 }, (_, i) =>
+      conn(i + 2, `Technique ${i + 1}`, 'FOLLOW_UP', 'from'),
+    )
+    const { container } = render(
+      <ConnectionGraph
+        centerName="Closed Guard"
+        centerCategoryId={1}
+        connections={crowdedConnections}
+        onSelect={vi.fn()}
+        connectionTypeName={typeName}
+        techniqueName={techniqueName}
+      />,
+    )
+    const rotatedLabels = [
+      ...container.querySelectorAll('g[role="button"] text'),
+    ].filter((label) => label.hasAttribute('transform'))
+    expect(rotatedLabels.length).toBeGreaterThan(0)
   })
 })

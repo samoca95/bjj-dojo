@@ -543,6 +543,7 @@ export default function TechniqueDetailPage() {
                     connectionTypeName={(ct) =>
                       connectionTypeLabel(ct, CONNECTION_LABELS[ct], language)
                     }
+                    techniqueName={(t) => getTechniqueName(t, language)}
                   />
                 )}
                 {connectionsView === 'list' && (
