@@ -4,3 +4,20 @@ dist-ssr/
 coverage/
 *.local
 .DS_Store
+
+# Capacitor build outputs (the platform projects themselves are committed)
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/capacitor-cordova-android-plugins/build/
+ios/App/Pods/
+ios/App/build/
+ios/DerivedData/
+# Web bundle is copied into the native projects by `cap copy` at build time
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/App/capacitor.plugins.json

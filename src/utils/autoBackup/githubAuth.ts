@@ -1,20 +1,26 @@
 /**
  * GitHub OAuth Device Flow client.
  *
- * Browser limitation: GitHub's /login/device/* endpoints are not CORS-enabled
- * for static frontend origins, so direct browser fetches can fail with a
- * network error ("Failed to fetch"). Surface a clear message in that case.
+ * Transport selection lives in `src/platform/githubOAuth.ts`:
+ *  - Native (Capacitor) uses CapacitorHttp (no CORS).
+ *  - Web uses a proxy worker when `VITE_GITHUB_OAUTH_PROXY_URL` is set,
+ *    otherwise falls back to a direct browser fetch (which will fail with
+ *    a CORS error against github.com — surfaced as `OAUTH_BROWSER_ERROR`).
  *
  * Bake the OAuth App client_id into the build via
  * VITE_GITHUB_OAUTH_CLIENT_ID. If unset, the UI must surface the
  * "not configured" path; never start polling without a client_id.
  */
 
-const DEVICE_CODE_URL = 'https://github.com/login/device/code'
-const ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token'
+import {
+  oauthRequestDeviceCode,
+  oauthPollAccessToken,
+  isOAuthTransportAvailable,
+} from '../../platform/githubOAuth'
+
 const REQUIRED_SCOPE = 'repo'
 const OAUTH_BROWSER_ERROR =
-  'GitHub OAuth cannot be completed from this browser build because GitHub blocks cross-origin device-flow requests (CORS).'
+  'GitHub OAuth cannot be completed from this browser build because GitHub blocks cross-origin device-flow requests (CORS). Configure VITE_GITHUB_OAUTH_PROXY_URL or use the native app.'
 
 export interface DeviceCodeResponse {
   device_code: string
@@ -50,7 +56,7 @@ export function getOAuthClientId(): string | null {
 }
 
 export function isDeviceFlowConfigured(): boolean {
-  return getOAuthClientId() !== null
+  return getOAuthClientId() !== null && isOAuthTransportAvailable()
 }
 
 export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
@@ -61,26 +67,36 @@ export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
       'not_configured',
     )
   }
-  let res: Response
+  let res
   try {
-    res = await fetch(DEVICE_CODE_URL, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ client_id: clientId, scope: REQUIRED_SCOPE }),
+    res = await oauthRequestDeviceCode({
+      client_id: clientId,
+      scope: REQUIRED_SCOPE,
     })
   } catch {
     throw new DeviceFlowError(OAUTH_BROWSER_ERROR, 'network')
   }
-  if (!res.ok) {
+  if (res.status < 200 || res.status >= 300) {
     throw new DeviceFlowError(
       `Device code request failed (${res.status}).`,
       'network',
     )
   }
-  return (await res.json()) as DeviceCodeResponse
+  const body = res.body as Partial<DeviceCodeResponse>
+  if (
+    typeof body.device_code !== 'string' ||
+    typeof body.user_code !== 'string' ||
+    typeof body.verification_uri !== 'string'
+  ) {
+    throw new DeviceFlowError(OAUTH_BROWSER_ERROR, 'network')
+  }
+  return {
+    device_code: body.device_code,
+    user_code: body.user_code,
+    verification_uri: body.verification_uri,
+    interval: typeof body.interval === 'number' ? body.interval : 5,
+    expires_in: typeof body.expires_in === 'number' ? body.expires_in : 900,
+  }
 }
 
 interface PollOptions {
@@ -121,36 +137,29 @@ export async function pollForToken(
       throw new DeviceFlowError('Cancelled.', 'unknown')
     }
 
-    let res: Response
+    let res
     try {
-      res = await fetch(ACCESS_TOKEN_URL, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          client_id: clientId,
-          device_code: deviceCode,
-          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-        }),
+      res = await oauthPollAccessToken({
+        client_id: clientId,
+        device_code: deviceCode,
+        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
       })
     } catch {
       throw new DeviceFlowError(OAUTH_BROWSER_ERROR, 'network')
     }
-    if (!res.ok) {
+    if (res.status < 200 || res.status >= 300) {
       throw new DeviceFlowError(
         `Token request failed (${res.status}).`,
         'network',
       )
     }
-    const body = (await res.json()) as {
+    const body = res.body as {
       access_token?: string
       error?: string
       error_description?: string
       interval?: number
     }
-    if (body.access_token) return body.access_token
+    if (typeof body.access_token === 'string') return body.access_token
     switch (body.error) {
       case 'authorization_pending':
         continue

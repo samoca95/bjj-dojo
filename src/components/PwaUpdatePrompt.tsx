@@ -1,4 +1,5 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { isNative } from '../platform'
 
 export default function PwaUpdatePrompt() {
   const {
@@ -6,6 +7,8 @@ export default function PwaUpdatePrompt() {
     updateServiceWorker,
   } = useRegisterSW()
 
+  // Native apps update via the Play Store; nothing to prompt here.
+  if (isNative) return null
   if (!needRefresh) return null
 
   return (

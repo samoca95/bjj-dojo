@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">BJJ Dojo</string>
+    <string name="title_activity_main">BJJ Dojo</string>
+    <string name="package_name">com.bjjdojo.app</string>
+    <string name="custom_url_scheme">com.bjjdojo.app</string>
+</resources>

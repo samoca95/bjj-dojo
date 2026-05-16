@@ -7,6 +7,7 @@ import { invalidateCategoryCache } from '../db/categoryCache'
 import { telemetry } from '../utils/telemetry'
 import { isQuotaError, notifyQuotaError } from '../utils/quotaError'
 import { clearAllPrefixedStorage } from '../utils/backupPreferences'
+import { isNative } from '../platform'
 
 export default function SettingsDataResetPage() {
   const navigate = useNavigate()
@@ -23,7 +24,7 @@ export default function SettingsDataResetPage() {
       invalidateCategoryCache()
       clearAllPrefixedStorage(window.localStorage)
       clearAllPrefixedStorage(window.sessionStorage)
-      if ('serviceWorker' in navigator) {
+      if (!isNative && 'serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations()
         await Promise.all(
           registrations.map((registration) => registration.unregister()),

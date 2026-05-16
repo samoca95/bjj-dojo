@@ -5,3 +5,7 @@ package-lock.json
 *.tsbuildinfo
 public/offline.html
 icons
+
+# Capacitor-generated native projects
+android
+ios

@@ -13,6 +13,9 @@ export default tseslint.config(
       'node_modules',
       '**/*.tsbuildinfo',
       'public/offline.html',
+      'android/**',
+      'ios/**',
+      'oauth-proxy/**',
     ],
   },
   {

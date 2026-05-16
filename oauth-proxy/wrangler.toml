@@ -1,0 +1,7 @@
+name = "bjj-dojo-oauth-proxy"
+main = "worker.ts"
+compatibility_date = "2025-01-01"
+
+# Deploy with: cd oauth-proxy && wrangler deploy
+# The resulting URL (e.g. https://bjj-dojo-oauth-proxy.<account>.workers.dev)
+# is baked into the PWA build via VITE_GITHUB_OAUTH_PROXY_URL.

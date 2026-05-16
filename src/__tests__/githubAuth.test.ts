@@ -10,6 +10,9 @@ const ORIGINAL_CLIENT_ID = import.meta.env.VITE_GITHUB_OAUTH_CLIENT_ID
 
 beforeEach(() => {
   vi.stubEnv('VITE_GITHUB_OAUTH_CLIENT_ID', 'test-client-id')
+  // Tests run in jsdom (web platform); set a proxy URL so the transport is
+  // considered available and the web `fetch` path is exercised.
+  vi.stubEnv('VITE_GITHUB_OAUTH_PROXY_URL', 'https://oauth.test/proxy')
 })
 
 afterEach(() => {
@@ -26,23 +29,28 @@ const okJson = (body: unknown): Response =>
   ({
     ok: true,
     status: 200,
-    json: async () => body,
+    text: async () => JSON.stringify(body),
   }) as Response
 
 const errResp = (status: number): Response =>
   ({
     ok: false,
     status,
-    json: async () => ({ message: 'fail' }),
+    text: async () => JSON.stringify({ message: 'fail' }),
   }) as Response
 
 describe('isDeviceFlowConfigured', () => {
-  it('is true when VITE_GITHUB_OAUTH_CLIENT_ID is set', () => {
+  it('is true when client_id and proxy are configured', () => {
     expect(isDeviceFlowConfigured()).toBe(true)
   })
 
-  it('is false when unset/empty', () => {
+  it('is false when client_id is unset/empty', () => {
     vi.stubEnv('VITE_GITHUB_OAUTH_CLIENT_ID', '')
+    expect(isDeviceFlowConfigured()).toBe(false)
+  })
+
+  it('is false on web when no proxy URL is configured', () => {
+    vi.stubEnv('VITE_GITHUB_OAUTH_PROXY_URL', '')
     expect(isDeviceFlowConfigured()).toBe(false)
   })
 })
@@ -68,6 +76,23 @@ describe('requestDeviceCode', () => {
     const res = await requestDeviceCode()
     expect(res.user_code).toBe('USER-CODE')
     expect(res.interval).toBe(5)
+  })
+
+  it('routes web requests to the configured proxy URL', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      okJson({
+        device_code: 'dev',
+        user_code: 'USER-CODE',
+        verification_uri: 'https://github.com/login/device',
+        interval: 5,
+        expires_in: 900,
+      }),
+    )
+    await requestDeviceCode()
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://oauth.test/proxy/device/code',
+      expect.objectContaining({ method: 'POST' }),
+    )
   })
 
   it('throws DeviceFlowError on HTTP failure', async () => {

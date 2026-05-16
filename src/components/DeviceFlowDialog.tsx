@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Copy, Check, ExternalLink } from 'lucide-react'
 import { useI18n } from '../i18n'
+import { copyText } from '../platform'
 import {
   DeviceFlowError,
   requestDeviceCode,
@@ -60,7 +61,7 @@ export default function DeviceFlowDialog({ onClose, onAuthorized }: Props) {
   const handleCopy = async () => {
     if (!deviceCode) return
     try {
-      await navigator.clipboard.writeText(deviceCode.user_code)
+      await copyText(deviceCode.user_code)
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     } catch {
