@@ -30,7 +30,8 @@ const WHEEL_PINCH_ZOOM_SENSITIVITY = 0.0025
 const DEFAULT_EDGE_COLOR = '#52525b'
 const DIMMED_NODE_OPACITY = 0.26
 const DIMMED_EDGE_OPACITY = 0.14
-const HIGHLIGHTED_EDGE_LABEL_FONT_SIZE = 8
+const GLOBAL_LABEL_MAX_CHARS_PER_LINE = 14
+const GLOBAL_LABEL_MAX_LINES = 2
 const EDGE_COLORS: Record<ConnectionType, string> = {
   FOLLOW_UP: '#fcd34d',
   COUNTER: '#fca5a5',
@@ -41,8 +42,49 @@ const EDGE_COLORS: Record<ConnectionType, string> = {
 // returns the graph to the exact same coordinates.
 const GRAPH_VIEW_KEY = 'bjj-dojo.techniques.graph-view'
 
-function truncate(text: string, max: number): string {
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text
+function wrapText(
+  text: string,
+  maxCharsPerLine: number,
+  maxLines: number,
+): string[] {
+  if (!text.trim()) return []
+  const words = text.trim().split(/\s+/)
+  const lines: string[] = []
+  let current = ''
+
+  const pushCurrent = () => {
+    if (current) lines.push(current)
+    current = ''
+  }
+
+  for (const word of words) {
+    if (word.length > maxCharsPerLine) {
+      if (current) pushCurrent()
+      let start = 0
+      while (start < word.length) {
+        lines.push(word.slice(start, start + maxCharsPerLine))
+        start += maxCharsPerLine
+      }
+      continue
+    }
+    const next = current ? `${current} ${word}` : word
+    if (next.length <= maxCharsPerLine) {
+      current = next
+    } else {
+      pushCurrent()
+      current = word
+    }
+  }
+  pushCurrent()
+
+  if (lines.length <= maxLines) return lines
+  const clipped = lines.slice(0, maxLines)
+  const last = clipped[maxLines - 1].replace(/\s+$/, '').replace(/…$/, '')
+  clipped[maxLines - 1] =
+    last.length > maxCharsPerLine - 1
+      ? `${last.slice(0, maxCharsPerLine - 1)}…`
+      : `${last}…`
+  return clipped
 }
 
 interface PanState {
@@ -178,6 +220,21 @@ export default function TechniqueGraphPage() {
     }
     return ids
   }, [activeNodeId, connections])
+  const highlightedIndicatorTypes = useMemo(() => {
+    if (!activeNodeId) return [] as ConnectionType[]
+    const types = new Set<ConnectionType>()
+    for (const c of connections ?? []) {
+      if (
+        c.fromTechniqueId === activeNodeId ||
+        c.toTechniqueId === activeNodeId
+      ) {
+        types.add(c.connectionType)
+      }
+    }
+    return (Object.keys(EDGE_COLORS) as ConnectionType[]).filter((type) =>
+      types.has(type),
+    )
+  }, [activeNodeId, connections])
 
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     didPanRef.current = false
@@ -303,22 +360,6 @@ export default function TechniqueGraphPage() {
       .sort((a, b) => a.id - b.id)
   }, [techniques, catMap])
 
-  const nodeLabelCenter = useMemo(() => {
-    const nodePositions = [...positions.values()]
-    if (nodePositions.length === 0) return { x: 0, y: 0 }
-    const sum = nodePositions.reduce(
-      (acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }),
-      {
-        x: 0,
-        y: 0,
-      },
-    )
-    return {
-      x: sum.x / nodePositions.length,
-      y: sum.y / nodePositions.length,
-    }
-  }, [positions])
-
   return (
     <div className="h-full flex flex-col bg-zinc-950">
       {/* Header */}
@@ -368,11 +409,6 @@ export default function TechniqueGraphPage() {
                   (c.fromTechniqueId === activeNodeId ||
                     c.toTechniqueId === activeNodeId)
                 const dimmed = activeNodeId !== null && !highlighted
-                const typeLabel = connectionTypeLabel(
-                  c.connectionType,
-                  CONNECTION_LABELS[c.connectionType],
-                  language,
-                )
                 const edgeColor = highlighted
                   ? EDGE_COLORS[c.connectionType]
                   : DEFAULT_EDGE_COLOR
@@ -403,24 +439,15 @@ export default function TechniqueGraphPage() {
                           : undefined
                       }
                     />
-                    {highlighted && (
-                      <text
-                        x={(x1 + x2) / 2 + (-dy / dist) * 7}
-                        y={(y1 + y2) / 2 + (dx / dist) * 7}
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        fontSize={HIGHLIGHTED_EDGE_LABEL_FONT_SIZE}
-                        fontWeight={600}
-                        fill={edgeColor}
-                        fillOpacity={0.92}
-                        stroke="#09090b"
-                        strokeWidth={0.65}
-                        paintOrder="stroke"
-                      >
-                        {typeLabel}
-                      </text>
+                    {!isTouchGraph && (
+                      <title>
+                        {connectionTypeLabel(
+                          c.connectionType,
+                          CONNECTION_LABELS[c.connectionType],
+                          language,
+                        )}
+                      </title>
                     )}
-                    {!isTouchGraph && <title>{typeLabel}</title>}
                   </g>
                 )
               })}
@@ -493,29 +520,34 @@ export default function TechniqueGraphPage() {
                   const highlighted = highlightedNodeIds.has(tech.id)
                   const dimmed = activeNodeId !== null && !highlighted
                   const localizedName = getTechniqueName(tech, language)
-                  const dx = p.x - nodeLabelCenter.x
-                  const dy = p.y - nodeLabelCenter.y
-                  const distance = Math.hypot(dx, dy)
-                  const ux = distance > 0 ? dx / distance : 0
-                  const uy = distance > 0 ? dy / distance : 0
-                  const labelX = p.x + ux * (NODE_RADIUS + 8)
-                  const labelY = p.y + uy * (NODE_RADIUS + 8)
-                  const anchor =
-                    ux > 0.3 ? 'start' : ux < -0.3 ? 'end' : 'middle'
-                  const baseline =
-                    uy > 0.3 ? 'hanging' : uy < -0.3 ? 'auto' : 'central'
+                  const labelX = p.x
+                  const labelY = p.y + NODE_RADIUS + 7
+                  const lines = wrapText(
+                    localizedName,
+                    GLOBAL_LABEL_MAX_CHARS_PER_LINE,
+                    GLOBAL_LABEL_MAX_LINES,
+                  )
                   return (
                     <text
                       key={`label-${tech.id}`}
                       x={labelX}
                       y={labelY}
-                      textAnchor={anchor}
-                      dominantBaseline={baseline}
+                      textAnchor="middle"
+                      dominantBaseline="hanging"
                       fontSize={LABEL_FONT_SIZE}
                       fill="#d4d4d8"
                       fillOpacity={dimmed ? 0 : 1}
+                      data-testid={`global-node-label-${tech.id}`}
                     >
-                      {truncate(localizedName, 22)}
+                      {lines.map((line, idx) => (
+                        <tspan
+                          key={`${tech.id}-${idx}`}
+                          x={labelX}
+                          dy={idx === 0 ? 0 : LABEL_FONT_SIZE}
+                        >
+                          {line}
+                        </tspan>
+                      ))}
                     </text>
                   )
                 })}
@@ -562,23 +594,65 @@ export default function TechniqueGraphPage() {
               </button>
             </div>
 
-            {/* Category legend */}
-            {usedCategories.length > 0 && (
-              <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-x-3 gap-y-1.5 bg-zinc-900/85 backdrop-blur-sm rounded-xl px-3 py-2">
-                {usedCategories.map((c) => (
-                  <span
-                    key={c.id}
-                    className="flex items-center gap-1.5 text-xs text-zinc-300"
-                  >
+            {/* Bottom legends */}
+            <div className="absolute bottom-3 left-3 right-3 flex flex-col gap-2">
+              {usedCategories.length > 0 && (
+                <div
+                  className="flex flex-wrap gap-x-3 gap-y-1.5 bg-zinc-900/85 backdrop-blur-sm rounded-xl px-3 py-2"
+                  data-testid="category-legend"
+                >
+                  {usedCategories.map((c) => (
                     <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: categoryColor(c.id) }}
-                    />
-                    {getCategoryName(c, language)}
-                  </span>
-                ))}
-              </div>
-            )}
+                      key={c.id}
+                      className="flex items-center gap-1.5 text-xs text-zinc-300"
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: categoryColor(c.id) }}
+                      />
+                      {getCategoryName(c, language)}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {highlightedIndicatorTypes.length > 0 && (
+                <div
+                  className="self-end flex flex-wrap items-center gap-x-2.5 gap-y-1 bg-zinc-900/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5"
+                  data-testid="indicator-legend"
+                >
+                  {highlightedIndicatorTypes.map((type) => (
+                    <span
+                      key={type}
+                      className="inline-flex items-center gap-1.5 text-[10px] text-zinc-300"
+                    >
+                      <svg
+                        viewBox="0 0 18 8"
+                        className="w-4.5 h-2 shrink-0"
+                        aria-hidden="true"
+                      >
+                        <line
+                          x1="1"
+                          y1="4"
+                          x2="13"
+                          y2="4"
+                          stroke={EDGE_COLORS[type]}
+                          strokeWidth="1.6"
+                        />
+                        <path
+                          d="M12 1 L17 4 L12 7 z"
+                          fill={EDGE_COLORS[type]}
+                        />
+                      </svg>
+                      {connectionTypeLabel(
+                        type,
+                        CONNECTION_LABELS[type],
+                        language,
+                      )}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>
