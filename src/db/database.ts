@@ -323,9 +323,7 @@ export interface MissingFieldResolutionContext {
 
 export type MissingFieldResolver = (
   context: MissingFieldResolutionContext,
-) =>
-  | MissingFieldResolutionChoice
-  | Promise<MissingFieldResolutionChoice>
+) => MissingFieldResolutionChoice | Promise<MissingFieldResolutionChoice>
 
 export interface ImportDatabaseBackupOptions {
   resolveMissingField?: MissingFieldResolver
@@ -890,7 +888,9 @@ export async function importDatabaseBackup(
     rawTables.techniqueConnections,
   )
   const sessions = validateSessions(rawTables.sessions)
-  const sessionTechniques = validateSessionTechniques(rawTables.sessionTechniques)
+  const sessionTechniques = validateSessionTechniques(
+    rawTables.sessionTechniques,
+  )
   const sessionTaps = validateSessionTaps(rawTables.sessionTaps)
   const clubs = validateClubs(rawTables.clubs)
   const drillPlans = validateDrillPlans(rawTables.drillPlans)

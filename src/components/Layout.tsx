@@ -18,8 +18,8 @@ import { UndoProvider, UndoSnackbar } from './UndoContext'
 function LayoutInner() {
   const navigate = useNavigate()
   const startsWithInitialSetup = isInitialSetupRequired()
-  const [showRestorePrompt, setShowRestorePrompt] = useState(() =>
-    !startsWithInitialSetup && isRestorePromptRequired(),
+  const [showRestorePrompt, setShowRestorePrompt] = useState(
+    () => !startsWithInitialSetup && isRestorePromptRequired(),
   )
   const [showInitialSetup, setShowInitialSetup] = useState(
     () => startsWithInitialSetup,
