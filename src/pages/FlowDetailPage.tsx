@@ -1,12 +1,28 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, ExternalLink, Pencil, X } from 'lucide-react'
+import {
+  ChevronLeft,
+  Copy,
+  ExternalLink,
+  Focus,
+  MoreVertical,
+  Pencil,
+  Star,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
-import type { Category, Flow, FlowNode, Technique } from '../types'
+import type { Category, Flow, FlowNode, Session, Technique } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getTechniqueName, useI18n } from '../i18n'
+import { notifyDbMutation } from '../utils/autoBackup/notify'
+import {
+  getFocusFlowIds,
+  setFocusFlowIds,
+  FOCUS_FLOW_IDS_UPDATED_EVENT,
+} from '../utils/focusFlows'
 
 function NoteText({ note }: { note: string }) {
   const [expanded, setExpanded] = useState(false)
@@ -109,11 +125,156 @@ function FlowTreeNode({
   )
 }
 
+function ActionMenu({
+  flow,
+  onClose,
+}: {
+  flow: Flow
+  onClose: () => void
+}) {
+  const navigate = useNavigate()
+  const { language } = useI18n()
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [isFocused, setIsFocused] = useState(() =>
+    getFocusFlowIds().includes(flow.id!),
+  )
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose()
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [onClose])
+
+  useEffect(() => {
+    const handler = () => setIsFocused(getFocusFlowIds().includes(flow.id!))
+    window.addEventListener(FOCUS_FLOW_IDS_UPDATED_EVENT, handler)
+    return () => window.removeEventListener(FOCUS_FLOW_IDS_UPDATED_EVENT, handler)
+  }, [flow.id])
+
+  const handleEdit = () => {
+    onClose()
+    navigate(`/flows/${flow.id}/edit`)
+  }
+
+  const handleDuplicate = async () => {
+    onClose()
+    const { id: _id, ...rest } = flow
+    const now = Date.now()
+    const newId = await db.flows.add({
+      ...rest,
+      name: `${flow.name} - copy`,
+      createdAt: now,
+      updatedAt: now,
+    })
+    notifyDbMutation(undefined, { components: ['flows'] })
+    navigate(`/flows/${newId}`)
+  }
+
+  const handleToggleFavorite = async () => {
+    onClose()
+    await db.flows.update(flow.id!, { isFavorite: !flow.isFavorite })
+    notifyDbMutation(undefined, { components: ['flows'] })
+  }
+
+  const handleToggleFocus = () => {
+    onClose()
+    const ids = getFocusFlowIds()
+    if (ids.includes(flow.id!)) {
+      setFocusFlowIds(ids.filter((i) => i !== flow.id!))
+    } else {
+      setFocusFlowIds([...ids, flow.id!])
+    }
+  }
+
+  const handleDelete = async () => {
+    onClose()
+    if (
+      !window.confirm(
+        language === 'es' ? 'Eliminar este flujo?' : 'Delete this flow?',
+      )
+    )
+      return
+    await db.flows.delete(flow.id!)
+    notifyDbMutation(undefined, { components: ['flows'] })
+    navigate('/flows', { replace: true })
+  }
+
+  const isFav = flow.isFavorite ?? false
+
+  return (
+    <div
+      ref={menuRef}
+      className="absolute right-0 top-full mt-1 w-52 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-xl overflow-hidden z-50"
+    >
+      <button
+        onClick={handleEdit}
+        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-100 active:bg-zinc-800"
+      >
+        <Pencil size={16} className="text-gold shrink-0" />
+        {language === 'es' ? 'Editar flujo' : 'Edit flow'}
+      </button>
+      <button
+        onClick={() => void handleDuplicate()}
+        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-100 active:bg-zinc-800"
+      >
+        <Copy size={16} className="text-zinc-400 shrink-0" />
+        {language === 'es' ? 'Duplicar' : 'Duplicate'}
+      </button>
+      <button
+        onClick={() => void handleToggleFavorite()}
+        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-100 active:bg-zinc-800"
+      >
+        <Star
+          size={16}
+          className={isFav ? 'text-amber-400 shrink-0' : 'text-zinc-400 shrink-0'}
+          fill={isFav ? 'currentColor' : 'none'}
+        />
+        {isFav
+          ? language === 'es'
+            ? 'Quitar de favoritos'
+            : 'Remove from favorites'
+          : language === 'es'
+            ? 'Marcar como favorito'
+            : 'Mark as favorite'}
+      </button>
+      <button
+        onClick={handleToggleFocus}
+        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-100 active:bg-zinc-800"
+      >
+        <Focus
+          size={16}
+          className={isFocused ? 'text-blue-400 shrink-0' : 'text-zinc-400 shrink-0'}
+        />
+        {isFocused
+          ? language === 'es'
+            ? 'Quitar del foco'
+            : 'Remove from focus'
+          : language === 'es'
+            ? 'Añadir al foco'
+            : 'Add to focus'}
+      </button>
+      <div className="border-t border-zinc-800" />
+      <button
+        onClick={() => void handleDelete()}
+        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 active:bg-zinc-800"
+      >
+        <Trash2 size={16} className="shrink-0" />
+        {language === 'es' ? 'Eliminar flujo' : 'Delete flow'}
+      </button>
+    </div>
+  )
+}
+
 export default function FlowDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const { language } = useI18n()
   const numId = Number(id)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const flow = useLiveQuery<Flow | undefined>(
     () =>
@@ -129,6 +290,27 @@ export default function FlowDetailPage() {
     () => getCategoryMap().then((m) => [...m.values()]),
     [],
     [] as Category[],
+  )
+
+  const practiceSessionNotes = useLiveQuery(
+    async () => {
+      const sfs = await db.sessionFlows
+        .where('flowId')
+        .equals(numId)
+        .toArray()
+      if (sfs.length === 0) return []
+      const sessionIds = [...new Set(sfs.map((sf) => sf.sessionId))]
+      const sessions = await db.sessions
+        .where('id')
+        .anyOf(sessionIds)
+        .toArray()
+      return (sessions as Session[])
+        .filter((s) => s.notes?.trim())
+        .map((s) => ({ sessionId: s.id!, date: s.date, note: s.notes.trim() }))
+        .sort((a, b) => b.date - a.date)
+    },
+    [numId],
+    [],
   )
 
   const techniqueById = useMemo(() => {
@@ -187,6 +369,18 @@ export default function FlowDetailPage() {
         >
           <Pencil size={20} strokeWidth={2} />
         </button>
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            className="p-2 text-zinc-400 active:text-zinc-100"
+            aria-label="More options"
+          >
+            <MoreVertical size={20} strokeWidth={2} />
+          </button>
+          {menuOpen && (
+            <ActionMenu flow={flow} onClose={() => setMenuOpen(false)} />
+          )}
+        </div>
       </div>
 
       <div className="px-4 space-y-4 pb-12">
@@ -207,6 +401,36 @@ export default function FlowDetailPage() {
             <p className="text-sm text-zinc-300 whitespace-pre-wrap">
               {flow.description}
             </p>
+          )}
+          {(practiceSessionNotes?.length ?? 0) > 0 && (
+            <div className="mt-4 space-y-2">
+              <div className="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase">
+                {language === 'es'
+                  ? 'Desde sesiones'
+                  : language === 'fr'
+                    ? 'Depuis les sessions'
+                    : 'From sessions'}
+              </div>
+              <div className="space-y-2">
+                {practiceSessionNotes!.map(({ sessionId, date, note }) => (
+                  <button
+                    key={`${sessionId}-${date}`}
+                    onClick={() => navigate(`/sessions/${sessionId}`)}
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-left active:bg-zinc-800/80 transition-colors"
+                  >
+                    <div className="text-[11px] text-zinc-500 mb-1">
+                      {new Date(date).toLocaleDateString(
+                        language === 'en' ? 'en-GB' : language,
+                        { day: 'numeric', month: 'short', year: 'numeric' },
+                      )}
+                    </div>
+                    <div className="text-sm text-zinc-300 leading-snug whitespace-pre-wrap">
+                      {note}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 
