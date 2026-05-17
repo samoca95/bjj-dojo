@@ -395,6 +395,13 @@ const ES_TRANSLATIONS = {
   'Open Flows': 'Open Flows',
   'Reset flow icon': 'Reset flow icon',
   'Strategic combination of techniques': 'Combinación estratégica de técnicas',
+  // Focus flows
+  'FOCUS GOALS': 'OBJETIVOS DE ENFOQUE',
+  'No focus goals selected': 'Ningún objetivo de enfoque seleccionado',
+  Flow: 'Flow',
+  'Pick technique from flow': 'Elegir técnica del flujo',
+  'Select Flow — Tap Given': 'Seleccionar Flow — Sumisión Dada',
+  'Select Flow — Tap Received': 'Seleccionar Flow — Sumisión Recibida',
 } satisfies Record<TranslationKey, string>
 
 export const ES_CATEGORY_CONTENT: Record<

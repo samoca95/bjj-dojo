@@ -90,6 +90,8 @@ describe('validateFlows', () => {
       sessions: [],
       sessionTechniques: [],
       sessionTaps: [],
+      sessionFlows: [],
+      sessionFlowTaps: [],
       clubs: [],
       drillPlans: [],
       flows: flows as Flow[],

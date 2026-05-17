@@ -324,6 +324,8 @@ export async function readLatestBackupPayload(
     sessions: [],
     sessionTechniques: [],
     sessionTaps: [],
+    sessionFlows: [],
+    sessionFlowTaps: [],
     clubs: [],
     drillPlans: [],
     flows: [],

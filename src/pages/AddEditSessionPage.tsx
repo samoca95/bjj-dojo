@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus, Check, X, Zap, Hand } from 'lucide-react'
@@ -8,6 +8,7 @@ import { getCategoryMap } from '../db/categoryCache'
 import type {
   Category,
   Club,
+  Flow,
   Session,
   SessionType,
   Technique,
@@ -25,7 +26,10 @@ import {
   techniqueMatchesQuery,
   techniqueScore,
   getMatchingAlias,
+  flowMatchesQuery,
+  flowScore,
 } from '../utils/fuzzySearch'
+import { getFlowIcon, FLOW_ICON_UPDATED_EVENT } from '../utils/flowIcon'
 import {
   normalizeDateInput,
   normalizeDuration,
@@ -61,6 +65,13 @@ type LocalTap = {
   type: TapType
 }
 
+type LocalFlowTap = {
+  uid: string
+  flowId: number
+  flowName: string
+  type: TapType
+}
+
 type PickerMode = 'techniques' | 'tap-given' | 'tap-received'
 
 export default function AddEditSessionPage() {
@@ -83,6 +94,9 @@ export default function AddEditSessionPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [techNotes, setTechNotes] = useState<Map<number, string>>(new Map())
   const [taps, setTaps] = useState<LocalTap[]>([])
+  const [selectedFlowIds, setSelectedFlowIds] = useState<Set<number>>(new Set())
+  const [flowTaps, setFlowTaps] = useState<LocalFlowTap[]>([])
+  const [flowIcon, setFlowIconState] = useState(getFlowIcon)
 
   const [showPicker, setShowPicker] = useState(false)
   const [pickerMode, setPickerMode] = useState<PickerMode>('techniques')
@@ -125,6 +139,21 @@ export default function AddEditSessionPage() {
     [],
     [] as Category[],
   )
+  const allFlows = useLiveQuery(
+    () => db.flows.orderBy('name').toArray(),
+    [],
+    [] as Flow[],
+  )
+
+  useEffect(() => {
+    const handler = () => setFlowIconState(getFlowIcon())
+    window.addEventListener(FLOW_ICON_UPDATED_EVENT, handler)
+    window.addEventListener('storage', handler)
+    return () => {
+      window.removeEventListener(FLOW_ICON_UPDATED_EVENT, handler)
+      window.removeEventListener('storage', handler)
+    }
+  }, [])
 
   useEffect(() => {
     if (!isEdit || !id) return
@@ -166,6 +195,28 @@ export default function AddEditSessionPage() {
           uid: `existing-${i}`,
           techniqueId: t.techniqueId,
           techniqueName: techMap.get(t.techniqueId) ?? 'Unknown',
+          type: t.type,
+        })),
+      )
+
+      const storedFlows = await db.sessionFlows
+        .where('sessionId')
+        .equals(Number(id))
+        .toArray()
+      setSelectedFlowIds(new Set(storedFlows.map((sf) => sf.flowId)))
+
+      const storedFlowTaps = await db.sessionFlowTaps
+        .where('sessionId')
+        .equals(Number(id))
+        .toArray()
+      const flowIds = [...new Set(storedFlowTaps.map((t) => t.flowId))]
+      const flows = await db.flows.where('id').anyOf(flowIds).toArray()
+      const flowMap = new Map(flows.map((f) => [f.id!, f.name]))
+      setFlowTaps(
+        storedFlowTaps.map((t, i) => ({
+          uid: `existing-flow-${i}`,
+          flowId: t.flowId,
+          flowName: flowMap.get(t.flowId) ?? 'Unknown',
           type: t.type,
         })),
       )
@@ -213,6 +264,11 @@ export default function AddEditSessionPage() {
             .equals(Number(id))
             .delete()
           await db.sessionTaps.where('sessionId').equals(Number(id)).delete()
+          await db.sessionFlows.where('sessionId').equals(Number(id)).delete()
+          await db.sessionFlowTaps
+            .where('sessionId')
+            .equals(Number(id))
+            .delete()
           return Number(id)
         }
         return (await db.sessions.add(session)) as number
@@ -244,6 +300,20 @@ export default function AddEditSessionPage() {
             })),
           )
         }
+        if (selectedFlowIds.size > 0) {
+          await db.sessionFlows.bulkAdd(
+            [...selectedFlowIds].map((flowId) => ({ sessionId: sid, flowId })),
+          )
+        }
+        if (flowTaps.length > 0) {
+          await db.sessionFlowTaps.bulkAdd(
+            flowTaps.map((ft) => ({
+              sessionId: sid,
+              flowId: ft.flowId,
+              type: ft.type,
+            })),
+          )
+        }
       })
       notifyDbMutation(undefined, { components: ['sessions'] })
       navigate(
@@ -267,6 +337,25 @@ export default function AddEditSessionPage() {
   const handleCancel = () => {
     navigate(-1)
   }
+
+  const techniqueNameById = useMemo(() => {
+    const m = new Map<number, string>()
+    for (const t of allTechniques ?? [])
+      m.set(t.id, getTechniqueName(t, language))
+    return m
+  }, [allTechniques, language])
+
+  const filteredPickerFlows = useMemo((): Flow[] => {
+    const nameById = (id: number) => techniqueNameById.get(id) ?? ''
+    if (!pickerSearch.trim()) return (allFlows ?? []).slice(0, 20)
+    return (allFlows ?? [])
+      .filter((f) => flowMatchesQuery(f, nameById, pickerSearch))
+      .sort(
+        (a, b) =>
+          flowScore(b, nameById, pickerSearch) -
+          flowScore(a, nameById, pickerSearch),
+      )
+  }, [allFlows, techniqueNameById, pickerSearch])
 
   const filteredTechniques = (() => {
     const noteMap = sessionTechniqueNotes ?? new Map<number, string[]>()
@@ -369,8 +458,34 @@ export default function AddEditSessionPage() {
     setShowCreateTechnique(false)
   }
 
+  const handleFlowPickerSelect = (flow: Flow) => {
+    if (pickerMode === 'techniques') {
+      setSelectedFlowIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(flow.id!)) next.delete(flow.id!)
+        else next.add(flow.id!)
+        return next
+      })
+    } else {
+      const tapType: TapType = pickerMode === 'tap-given' ? 'given' : 'received'
+      setFlowTaps((prev) => [
+        ...prev,
+        {
+          uid: `${Date.now()}-${Math.random()}`,
+          flowId: flow.id!,
+          flowName: flow.name,
+          type: tapType,
+        },
+      ])
+    }
+  }
+
   const removeTap = (uid: string) => {
     setTaps((prev) => prev.filter((t) => t.uid !== uid))
+  }
+
+  const removeFlowTap = (uid: string) => {
+    setFlowTaps((prev) => prev.filter((t) => t.uid !== uid))
   }
 
   const setTechNote = (tid: number, value: string) => {
@@ -591,14 +706,14 @@ export default function AddEditSessionPage() {
               onClick={() => openPicker('techniques')}
               className="mt-2 w-full bg-zinc-800 rounded-xl px-4 py-3 text-sm text-left active:bg-zinc-700 transition-colors"
             >
-              {selectedIds.size === 0 ? (
+              {selectedIds.size === 0 && selectedFlowIds.size === 0 ? (
                 <span className="text-zinc-500">{t('Add techniques…')}</span>
               ) : (
                 <span className="text-zinc-100">
-                  {selectedIds.size}{' '}
+                  {selectedIds.size + selectedFlowIds.size}{' '}
                   {language === 'es'
-                    ? `técnica${selectedIds.size !== 1 ? 's' : ''} seleccionada${selectedIds.size !== 1 ? 's' : ''}`
-                    : `technique${selectedIds.size !== 1 ? 's' : ''} selected`}
+                    ? `técnica${selectedIds.size + selectedFlowIds.size !== 1 ? 's' : ''} seleccionada${selectedIds.size + selectedFlowIds.size !== 1 ? 's' : ''}`
+                    : `technique${selectedIds.size + selectedFlowIds.size !== 1 ? 's' : ''} selected`}
                 </span>
               )}
             </button>
@@ -627,6 +742,39 @@ export default function AddEditSessionPage() {
                     />
                   </div>
                 ))}
+              </div>
+            )}
+            {selectedFlowIds.size > 0 && (
+              <div className="mt-2 space-y-1.5">
+                {(allFlows ?? [])
+                  .filter((f) => selectedFlowIds.has(f.id!))
+                  .map((f) => (
+                    <div
+                      key={f.id}
+                      className="flex items-center gap-2 bg-zinc-900 rounded-xl px-4 py-3"
+                    >
+                      <CategoryIcon
+                        value={flowIcon}
+                        size={14}
+                        className="text-gold shrink-0"
+                      />
+                      <span className="flex-1 text-sm text-zinc-100">
+                        {f.name}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setSelectedFlowIds((prev) => {
+                            const next = new Set(prev)
+                            next.delete(f.id!)
+                            return next
+                          })
+                        }
+                        className="text-zinc-600 active:text-zinc-300"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
               </div>
             )}
           </div>
@@ -703,6 +851,72 @@ export default function AddEditSessionPage() {
                       </button>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+            {flowTaps.filter((ft) => ft.type === 'given').length > 0 && (
+              <div className="mt-3">
+                <div className="text-xs text-zinc-500 mb-1.5">
+                  {t('Given')} — {t('Flow')} (
+                  {flowTaps.filter((ft) => ft.type === 'given').length})
+                </div>
+                <div className="space-y-1.5">
+                  {flowTaps
+                    .filter((ft) => ft.type === 'given')
+                    .map((ft) => (
+                      <div
+                        key={ft.uid}
+                        className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2"
+                      >
+                        <CategoryIcon
+                          value={flowIcon}
+                          size={13}
+                          className="text-green-500 shrink-0"
+                        />
+                        <span className="flex-1 text-sm text-zinc-100">
+                          {ft.flowName}
+                        </span>
+                        <button
+                          onClick={() => removeFlowTap(ft.uid)}
+                          className="text-zinc-600 active:text-zinc-300"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+            {flowTaps.filter((ft) => ft.type === 'received').length > 0 && (
+              <div className="mt-3">
+                <div className="text-xs text-zinc-500 mb-1.5">
+                  {t('Received')} — {t('Flow')} (
+                  {flowTaps.filter((ft) => ft.type === 'received').length})
+                </div>
+                <div className="space-y-1.5">
+                  {flowTaps
+                    .filter((ft) => ft.type === 'received')
+                    .map((ft) => (
+                      <div
+                        key={ft.uid}
+                        className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2"
+                      >
+                        <CategoryIcon
+                          value={flowIcon}
+                          size={13}
+                          className="text-red-400 shrink-0"
+                        />
+                        <span className="flex-1 text-sm text-zinc-100">
+                          {ft.flowName}
+                        </span>
+                        <button
+                          onClick={() => removeFlowTap(ft.uid)}
+                          className="text-zinc-600 active:text-zinc-300"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
@@ -893,6 +1107,71 @@ export default function AddEditSessionPage() {
                   </button>
                 )
               })}
+
+              {/* Flow items in picker */}
+              {filteredPickerFlows.length > 0 && (
+                <>
+                  <div className="px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 bg-zinc-950/60">
+                    {t('FLOWS')}
+                  </div>
+                  {filteredPickerFlows.map((f) => {
+                    const isSelected =
+                      pickerMode === 'techniques' && selectedFlowIds.has(f.id!)
+                    const tapType =
+                      pickerMode === 'tap-given'
+                        ? 'given'
+                        : pickerMode === 'tap-received'
+                          ? 'received'
+                          : null
+                    const flowTapCount = tapType
+                      ? flowTaps.filter(
+                          (ft) => ft.flowId === f.id! && ft.type === tapType,
+                        ).length
+                      : 0
+                    return (
+                      <button
+                        key={`flow-${f.id}`}
+                        onClick={() => handleFlowPickerSelect(f)}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
+                      >
+                        <div
+                          className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
+                            isSelected
+                              ? 'bg-gold border-gold'
+                              : flowTapCount > 0
+                                ? 'bg-zinc-700 border-zinc-500'
+                                : 'border-zinc-600'
+                          }`}
+                        >
+                          {isSelected && (
+                            <Check
+                              size={11}
+                              className="text-black"
+                              strokeWidth={3}
+                            />
+                          )}
+                          {flowTapCount > 0 && (
+                            <span className="text-[10px] text-zinc-100 font-bold leading-none">
+                              {flowTapCount}
+                            </span>
+                          )}
+                        </div>
+                        <CategoryIcon
+                          value={flowIcon}
+                          size={14}
+                          className="text-gold shrink-0"
+                        />
+                        <span className="text-sm text-zinc-100 flex-1 min-w-0 truncate">
+                          {f.name}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 shrink-0">
+                          {t('Flow')}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </>
+              )}
             </div>
           </div>
         </div>

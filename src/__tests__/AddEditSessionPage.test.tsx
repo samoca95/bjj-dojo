@@ -29,10 +29,34 @@ vi.mock('../db/database', () => ({
       })),
       bulkAdd: vi.fn(),
     },
+    sessionFlows: {
+      where: vi.fn(() => ({
+        equals: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue([]),
+          delete: vi.fn(),
+        })),
+      })),
+      bulkAdd: vi.fn(),
+    },
+    sessionFlowTaps: {
+      where: vi.fn(() => ({
+        equals: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue([]),
+          delete: vi.fn(),
+        })),
+      })),
+      bulkAdd: vi.fn(),
+    },
     techniques: {
       orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
       last: vi.fn().mockResolvedValue({ id: 1000 }),
       add: vi.fn(),
+    },
+    flows: {
+      orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
+      where: vi.fn(() => ({
+        anyOf: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
+      })),
     },
     clubs: {
       orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
@@ -72,13 +96,13 @@ const sampleCategories = [
   { id: 4, name: 'Submissions', description: 'test', icon: 'target' },
 ]
 
-// AddEditSessionPage calls useLiveQuery 4 times per render, always in the same
-// order: [0] allTechniques, [1] sessionTechniqueNotes, [2] clubs, [3] categories.
-// Use a cycling implementation so all renders get consistent data.
+// AddEditSessionPage calls useLiveQuery 5 times per render, always in the same
+// order: [0] allTechniques, [1] sessionTechniqueNotes, [2] clubs, [3] categories,
+// [4] allFlows. Use a cycling implementation so all renders get consistent data.
 function setupMocks() {
-  const responses = [sampleTechniques, new Map(), [], sampleCategories]
+  const responses = [sampleTechniques, new Map(), [], sampleCategories, []]
   let call = 0
-  mockUseLiveQuery.mockImplementation(() => responses[call++ % 4])
+  mockUseLiveQuery.mockImplementation(() => responses[call++ % 5])
 }
 
 function ClubsStateProbe() {

@@ -394,7 +394,7 @@ export default function FlowEditPage() {
         await db.flows.put({ ...payload, id: numId ?? undefined })
         savedId = numId as number
       }
-      notifyDbMutation(undefined, { components: ['techniques'] })
+      notifyDbMutation(undefined, { components: ['flows'] })
       navigate(`/flows/${savedId}`, { replace: true })
     } catch (err) {
       window.alert(
@@ -413,7 +413,7 @@ export default function FlowEditPage() {
     )
       return
     await db.flows.delete(numId)
-    notifyDbMutation(undefined, { components: ['techniques'] })
+    notifyDbMutation(undefined, { components: ['flows'] })
     navigate('/flows', { replace: true })
   }
 
