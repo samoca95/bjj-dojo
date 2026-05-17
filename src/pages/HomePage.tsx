@@ -845,8 +845,7 @@ export default function HomePage() {
   const givenFlowTapCountsByFlowId = useMemo(() => {
     const m = new Map<number, number>()
     for (const ft of allSessionFlowTaps ?? []) {
-      if (ft.type === 'given')
-        m.set(ft.flowId, (m.get(ft.flowId) ?? 0) + 1)
+      if (ft.type === 'given') m.set(ft.flowId, (m.get(ft.flowId) ?? 0) + 1)
     }
     return m
   }, [allSessionFlowTaps])
@@ -854,8 +853,7 @@ export default function HomePage() {
   const receivedFlowTapCountsByFlowId = useMemo(() => {
     const m = new Map<number, number>()
     for (const ft of allSessionFlowTaps ?? []) {
-      if (ft.type === 'received')
-        m.set(ft.flowId, (m.get(ft.flowId) ?? 0) + 1)
+      if (ft.type === 'received') m.set(ft.flowId, (m.get(ft.flowId) ?? 0) + 1)
     }
     return m
   }, [allSessionFlowTaps])

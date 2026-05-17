@@ -54,7 +54,9 @@ vi.mock('../db/database', () => ({
     },
     flows: {
       orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
-      where: vi.fn(() => ({ anyOf: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })) })),
+      where: vi.fn(() => ({
+        anyOf: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
+      })),
     },
     clubs: {
       orderBy: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),

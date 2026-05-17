@@ -135,7 +135,10 @@ export const FOCUS_FLOW_MANUAL_COUNTS_STORAGE_KEY =
   'bjj-dojo:focus-flow-manual-counts'
 
 export function getFocusFlowGoals(): Record<number, FocusGoal> {
-  const raw = readJSON<Record<string, unknown>>(FOCUS_FLOW_GOALS_STORAGE_KEY, {})
+  const raw = readJSON<Record<string, unknown>>(
+    FOCUS_FLOW_GOALS_STORAGE_KEY,
+    {},
+  )
   const result: Record<number, FocusGoal> = {}
   for (const [key, value] of Object.entries(raw)) {
     const id = Number(key)
@@ -313,7 +316,8 @@ export function computeFocusProgressForFlow(
         if (sf.flowId === flowId) ids.add(sf.sessionId)
       }
       for (const tap of sessionFlowTaps) {
-        if (tap.type === 'given' && tap.flowId === flowId) ids.add(tap.sessionId)
+        if (tap.type === 'given' && tap.flowId === flowId)
+          ids.add(tap.sessionId)
       }
       current = ids.size
       break

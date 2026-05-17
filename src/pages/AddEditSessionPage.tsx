@@ -74,7 +74,6 @@ type LocalFlowTap = {
 
 type PickerMode = 'techniques' | 'tap-given' | 'tap-received'
 
-
 export default function AddEditSessionPage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -341,7 +340,8 @@ export default function AddEditSessionPage() {
 
   const techniqueNameById = useMemo(() => {
     const m = new Map<number, string>()
-    for (const t of allTechniques ?? []) m.set(t.id, getTechniqueName(t, language))
+    for (const t of allTechniques ?? [])
+      m.set(t.id, getTechniqueName(t, language))
     return m
   }, [allTechniques, language])
 
