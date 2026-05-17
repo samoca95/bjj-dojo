@@ -300,14 +300,14 @@ export interface DatabaseBackup {
   exportedAt: number
   /** UI language at export time (informational only — content stays canonical). */
   language?: AppLanguage
-  categories?: Category[]
-  techniques?: Technique[]
-  techniqueConnections?: TechniqueConnection[]
-  sessions?: Session[]
-  sessionTechniques?: SessionTechnique[]
-  sessionTaps?: SessionTap[]
-  clubs?: Club[]
-  drillPlans?: DrillPlan[]
+  categories: Category[]
+  techniques: Technique[]
+  techniqueConnections: TechniqueConnection[]
+  sessions: Session[]
+  sessionTechniques: SessionTechnique[]
+  sessionTaps: SessionTap[]
+  clubs: Club[]
+  drillPlans: DrillPlan[]
   /** Backed-up `bjj-dojo:`-prefixed localStorage settings (belt, goals, layout, …). */
   preferences?: Record<string, string>
   /** Optional component marker for split auto-backup files. */
@@ -381,12 +381,22 @@ export async function exportDatabaseBackupComponent(
     exportedAt: Date.now(),
     language,
     component,
+    categories: [],
+    techniques: [],
+    techniqueConnections: [],
+    sessions: [],
+    sessionTechniques: [],
+    sessionTaps: [],
+    clubs: [],
+    drillPlans: [],
+    preferences: {},
   }
 
   if (component === 'preferences') {
     return {
       ...base,
-      preferences: typeof window === 'undefined' ? {} : collectBackupPreferences(),
+      preferences:
+        typeof window === 'undefined' ? {} : collectBackupPreferences(),
     }
   }
 

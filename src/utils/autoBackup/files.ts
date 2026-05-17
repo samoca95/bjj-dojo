@@ -26,7 +26,9 @@ export function parseBackupComponentFromFilename(
   return match[1] as BackupComponent
 }
 
-export function parseBackupTimestampFromFilename(filename: string): number | null {
+export function parseBackupTimestampFromFilename(
+  filename: string,
+): number | null {
   const match = COMPONENT_PATTERN.exec(filename)
   if (!match) return null
   const timestamp = Number(match[2])

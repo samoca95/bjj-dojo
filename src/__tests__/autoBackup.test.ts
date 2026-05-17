@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { makeTestDb, openDb, closeDb } from '../test/testDb'
 import { BJJDatabase } from '../db/database'
+import type { DatabaseBackup } from '../db/database'
 import {
   readLatestBackupPayload,
   runBackupNow,
@@ -289,17 +290,26 @@ describe('readLatestBackupPayload', () => {
           label: 'tech',
         },
       ]),
-      readBackup: vi.fn(async (id: string) => {
+      readBackup: vi.fn(async (id: string): Promise<DatabaseBackup> => {
         if (id === 'legacy')
           return {
             version: 2,
             exportedAt: 1,
-            sessions: [{ id: 1, date: 1, durationMinutes: 60, sessionType: 'GI', notes: '', energyLevel: 3 }],
-            sessionTechniques: [],
-            sessionTaps: [],
             categories: [{ id: 1, name: 'Guards', description: '' }],
             techniques: [],
             techniqueConnections: [],
+            sessions: [
+              {
+                id: 1,
+                date: 1,
+                durationMinutes: 60,
+                sessionType: 'GI',
+                notes: '',
+                energyLevel: 3,
+              },
+            ],
+            sessionTechniques: [],
+            sessionTaps: [],
             clubs: [],
             drillPlans: [],
             preferences: { 'bjj-dojo:user-name': 'Ana' },
@@ -307,8 +317,16 @@ describe('readLatestBackupPayload', () => {
         return {
           version: 2,
           exportedAt: 2,
+          component: 'techniques',
           categories: [{ id: 1, name: 'Updated', description: '' }],
           techniques: [],
+          techniqueConnections: [],
+          sessions: [],
+          sessionTechniques: [],
+          sessionTaps: [],
+          clubs: [],
+          drillPlans: [],
+          preferences: {},
         }
       }),
     }

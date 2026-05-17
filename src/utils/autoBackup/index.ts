@@ -108,7 +108,10 @@ export async function runBackupNow(
         try {
           let lastFilename: string | undefined
           for (const component of components) {
-            const payload = await exportDatabaseBackupComponent(component, database)
+            const payload = await exportDatabaseBackupComponent(
+              component,
+              database,
+            )
             const filename = backupFilenameForComponent(component)
             const result = await destination.write(payload, filename)
             lastFilename = result.filename
@@ -198,7 +201,10 @@ export function scheduleAfterMutation(
   void runScheduledBackups(database)
 }
 
-function backupSortValue(backup: { filename: string; modifiedAt?: number }): number {
+function backupSortValue(backup: {
+  filename: string
+  modifiedAt?: number
+}): number {
   const parsed = parseBackupTimestampFromFilename(backup.filename)
   if (backup.modifiedAt != null) return backup.modifiedAt
   if (parsed != null) return parsed
@@ -209,6 +215,55 @@ function mergeBackupPayload(
   base: DatabaseBackup,
   incoming: DatabaseBackup,
 ): DatabaseBackup {
+  if (incoming.component === 'preferences') {
+    return {
+      ...base,
+      version: incoming.version ?? base.version,
+      schemaVersion: incoming.schemaVersion ?? base.schemaVersion,
+      schemaSignature: incoming.schemaSignature ?? base.schemaSignature,
+      exportedAt: Math.max(base.exportedAt ?? 0, incoming.exportedAt ?? 0),
+      language: incoming.language ?? base.language,
+      preferences: incoming.preferences ?? base.preferences,
+    }
+  }
+  if (incoming.component === 'sessions') {
+    return {
+      ...base,
+      version: incoming.version ?? base.version,
+      schemaVersion: incoming.schemaVersion ?? base.schemaVersion,
+      schemaSignature: incoming.schemaSignature ?? base.schemaSignature,
+      exportedAt: Math.max(base.exportedAt ?? 0, incoming.exportedAt ?? 0),
+      language: incoming.language ?? base.language,
+      sessions: incoming.sessions,
+      sessionTechniques: incoming.sessionTechniques,
+      sessionTaps: incoming.sessionTaps,
+    }
+  }
+  if (incoming.component === 'techniques') {
+    return {
+      ...base,
+      version: incoming.version ?? base.version,
+      schemaVersion: incoming.schemaVersion ?? base.schemaVersion,
+      schemaSignature: incoming.schemaSignature ?? base.schemaSignature,
+      exportedAt: Math.max(base.exportedAt ?? 0, incoming.exportedAt ?? 0),
+      language: incoming.language ?? base.language,
+      categories: incoming.categories,
+      techniques: incoming.techniques,
+    }
+  }
+  if (incoming.component === 'flows') {
+    return {
+      ...base,
+      version: incoming.version ?? base.version,
+      schemaVersion: incoming.schemaVersion ?? base.schemaVersion,
+      schemaSignature: incoming.schemaSignature ?? base.schemaSignature,
+      exportedAt: Math.max(base.exportedAt ?? 0, incoming.exportedAt ?? 0),
+      language: incoming.language ?? base.language,
+      techniqueConnections: incoming.techniqueConnections,
+      clubs: incoming.clubs,
+      drillPlans: incoming.drillPlans,
+    }
+  }
   return {
     ...base,
     version: incoming.version ?? base.version,
@@ -218,7 +273,8 @@ function mergeBackupPayload(
     language: incoming.language ?? base.language,
     categories: incoming.categories ?? base.categories,
     techniques: incoming.techniques ?? base.techniques,
-    techniqueConnections: incoming.techniqueConnections ?? base.techniqueConnections,
+    techniqueConnections:
+      incoming.techniqueConnections ?? base.techniqueConnections,
     sessions: incoming.sessions ?? base.sessions,
     sessionTechniques: incoming.sessionTechniques ?? base.sessionTechniques,
     sessionTaps: incoming.sessionTaps ?? base.sessionTaps,
@@ -245,7 +301,8 @@ export async function readLatestBackupPayload(
   for (const item of sorted) {
     const component = parseBackupComponentFromFilename(item.filename)
     if (component) {
-      if (!latestByComponent.has(component)) latestByComponent.set(component, item.id)
+      if (!latestByComponent.has(component))
+        latestByComponent.set(component, item.id)
       continue
     }
     if (isLegacyBackupFilename(item.filename)) legacyIds.push(item.id)

@@ -296,9 +296,7 @@ async function repoListBackups(
       path: string
     }>
     return entries
-      .filter(
-        (e) => e.type === 'file' && isRecognizedBackupFilename(e.name),
-      )
+      .filter((e) => e.type === 'file' && isRecognizedBackupFilename(e.name))
       .map((e) => ({
         id: e.path,
         filename: e.name,

@@ -41,7 +41,10 @@ function jsonResponse(status: number, body: unknown): Response {
 describe('GitHub repo backup rotation', () => {
   it('deletes older dated backups beyond the retention count', async () => {
     setBackupRetentionCount(3)
-    const existing = [1, 2, 3, 4, 5, 6].map((n) => ({
+    const existing = [
+      1715920000001, 1715920000002, 1715920000003, 1715920000004, 1715920000005,
+      1715920000006,
+    ].map((n) => ({
       name: `bjj-dojo-backup-sessions-${n}.json`,
       path: `backups/bjj-dojo-backup-sessions-${n}.json`,
       type: 'file',
@@ -76,21 +79,24 @@ describe('GitHub repo backup rotation', () => {
         return jsonResponse(404, { message: 'unhandled' })
       })
 
-    await githubDestination.write(PAYLOAD, 'bjj-dojo-backup-sessions-7.json')
+    await githubDestination.write(
+      PAYLOAD,
+      'bjj-dojo-backup-sessions-1715920000007.json',
+    )
 
     // KEEP=3 → keep 2 of the existing 6 (since the new file is the 3rd).
     expect(deletedPaths.sort()).toEqual([
-      'backups/bjj-dojo-backup-sessions-1.json',
-      'backups/bjj-dojo-backup-sessions-2.json',
-      'backups/bjj-dojo-backup-sessions-3.json',
-      'backups/bjj-dojo-backup-sessions-4.json',
+      'backups/bjj-dojo-backup-sessions-1715920000001.json',
+      'backups/bjj-dojo-backup-sessions-1715920000002.json',
+      'backups/bjj-dojo-backup-sessions-1715920000003.json',
+      'backups/bjj-dojo-backup-sessions-1715920000004.json',
     ])
     expect(fetchMock).toHaveBeenCalled()
   })
 
   it('tolerates per-file delete failures without aborting the run', async () => {
     setBackupRetentionCount(1)
-    const existing = [1, 2].map((n) => ({
+    const existing = [1715920000011, 1715920000012].map((n) => ({
       name: `bjj-dojo-backup-sessions-${n}.json`,
       path: `backups/bjj-dojo-backup-sessions-${n}.json`,
       type: 'file',
@@ -116,7 +122,10 @@ describe('GitHub repo backup rotation', () => {
     })
 
     await expect(
-      githubDestination.write(PAYLOAD, 'bjj-dojo-backup-sessions-3.json'),
+      githubDestination.write(
+        PAYLOAD,
+        'bjj-dojo-backup-sessions-1715920000013.json',
+      ),
     ).resolves.toBeDefined()
   })
 })
