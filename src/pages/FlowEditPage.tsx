@@ -201,7 +201,7 @@ function NodeEditor({
         </button>
       </div>
       {node.childIds.length > 0 && (
-        <div className="ml-4 mt-2 pl-4 border-l-2 border-zinc-700 space-y-2">
+        <div className="ml-3 mt-2 pl-3 border-l-2 border-zinc-700 space-y-2">
           {node.childIds.map((childId) => {
             const child = byId.get(childId)
             if (!child) return null

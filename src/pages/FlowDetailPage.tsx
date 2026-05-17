@@ -107,7 +107,7 @@ function FlowTreeNode({
         </div>
       </div>
       {node.childIds.length > 0 && (
-        <div className="ml-[25px] mt-1 pl-4 border-l-2 border-gold space-y-1">
+        <div className="ml-3 mt-1 pl-3 border-l-2 border-gold space-y-1">
           {node.childIds.map((childId) => {
             const child = byId.get(childId)
             if (!child) return null
