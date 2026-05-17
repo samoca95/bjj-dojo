@@ -45,17 +45,17 @@ const OVERVIEW: Record<AppLanguage, string[]> = {
   en: [
     'Your training data — sessions, taps, custom techniques, settings — lives inside this browser. If you clear browser data, switch phones, or the app gets removed, that data is gone.',
     'A backup makes a small file that holds everything. You can save it to a folder on your device and/or to a private GitHub repository. You can use one method or both together.',
-    'Backups run automatically each time you log or delete a session, no more than once per minute. You can also press "Backup now" in Settings at any time.',
+    'Backups run automatically when sessions, techniques, flows, or saved preferences change. The app writes small component files and queues uploads to keep syncing stable. You can also press "Backup now" in Settings at any time.',
   ],
   es: [
     'Tus datos de entrenamiento — sesiones, sumisiones, técnicas personalizadas, ajustes — viven dentro de este navegador. Si borras los datos del navegador, cambias de teléfono o desinstalas la app, esos datos se pierden.',
     'Una copia de seguridad crea un archivo pequeño que contiene todo. Puedes guardarlo en una carpeta de tu dispositivo y/o en un repositorio privado de GitHub. Puedes usar un método o ambos a la vez.',
-    'Las copias se hacen automáticamente cada vez que registras o eliminas una sesión, como máximo una vez por minuto. También puedes pulsar "Hacer copia ahora" en Ajustes en cualquier momento.',
+    'Las copias se hacen automáticamente cuando cambian sesiones, técnicas, flujos o preferencias guardadas. La app guarda archivos pequeños por componente y usa una cola para sincronizar de forma estable. También puedes pulsar "Hacer copia ahora" en Ajustes en cualquier momento.',
   ],
   fr: [
     'Vos données d’entraînement — sessions, soumissions, techniques personnalisées, réglages — vivent dans ce navigateur. Si vous effacez les données du navigateur, changez de téléphone ou supprimez l’app, ces données disparaissent.',
     'Une sauvegarde crée un petit fichier qui contient tout. Vous pouvez l’enregistrer dans un dossier de votre appareil et/ou dans un dépôt GitHub privé. Vous pouvez utiliser une méthode ou les deux ensemble.',
-    'Les sauvegardes s’exécutent automatiquement à chaque session enregistrée ou supprimée, au maximum une fois par minute. Vous pouvez aussi appuyer sur « Sauvegarder maintenant » dans Réglages à tout moment.',
+    'Les sauvegardes se lancent automatiquement quand des sessions, techniques, enchaînements ou préférences changent. L’app écrit de petits fichiers par composant et utilise une file d’attente pour une synchronisation stable. Vous pouvez aussi appuyer sur « Sauvegarder maintenant » dans Réglages à tout moment.',
   ],
 }
 
@@ -63,19 +63,19 @@ const FOLDER_STEPS: Record<AppLanguage, string[]> = {
   en: [
     'Tap "A folder on your device" in the first setup prompt, or "Choose folder" in Settings.',
     'TIP: Pick a folder that already syncs to the cloud (e.g. Dropbox, iCloud Drive, Google Drive, OneDrive, Nextcloud). That way every backup is mirrored to your other devices automatically.',
-    'After a session is saved, the app writes a small file like bjj-dojo-backup-2026-05-16.json into that folder. It keeps the 7 most recent files and removes the rest.',
+    'After each relevant change, the app writes small files like bjj-dojo-backup-sessions-1715920000000.json in that folder. It keeps the most recent files per component and removes older ones.',
     'To restore on a new device or after a reset: when the welcome prompt appears, choose "A folder on your device", point to the same folder, and choose your backup.',
   ],
   es: [
     'Pulsa "Una carpeta en tu dispositivo" en la configuración inicial, o "Elegir carpeta" en Ajustes.',
     'CONSEJO: Elige una carpeta que ya se sincronice con la nube (p. ej. Dropbox, iCloud Drive, Google Drive, OneDrive, Nextcloud). Así cada copia se refleja automáticamente en tus otros dispositivos.',
-    'Después de guardar una sesión, la app escribe un archivo pequeño como bjj-dojo-backup-2026-05-16.json en esa carpeta. Conserva los 7 más recientes y borra los demás.',
+    'Después de cada cambio relevante, la app escribe archivos pequeños como bjj-dojo-backup-sessions-1715920000000.json en esa carpeta. Conserva los más recientes por componente y borra los antiguos.',
     'Para restaurar en un nuevo dispositivo o después de un reinicio: cuando aparezca la pantalla de bienvenida, elige "Una carpeta en tu dispositivo", apunta a la misma carpeta y elige la copia.',
   ],
   fr: [
     'Touchez « Un dossier sur votre appareil » dans le premier écran, ou « Choisir un dossier » dans Réglages.',
     'CONSEIL : choisissez un dossier déjà synchronisé avec le cloud (par ex. Dropbox, iCloud Drive, Google Drive, OneDrive, Nextcloud). Chaque sauvegarde sera ainsi miroitée sur vos autres appareils.',
-    'Après l’enregistrement d’une session, l’app écrit un petit fichier comme bjj-dojo-backup-2026-05-16.json dans ce dossier. Elle conserve les 7 plus récents et supprime les autres.',
+    'Après chaque changement pertinent, l’app écrit de petits fichiers comme bjj-dojo-backup-sessions-1715920000000.json dans ce dossier. Elle conserve les plus récents par composant et supprime les anciens.',
     'Pour restaurer sur un nouvel appareil ou après une réinitialisation : à l’écran d’accueil, choisissez « Un dossier sur votre appareil », pointez vers le même dossier et choisissez la sauvegarde.',
   ],
 }

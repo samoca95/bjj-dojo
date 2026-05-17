@@ -3,6 +3,7 @@
  * Stored alongside the belt rank as lightweight profile data — a plain
  * localStorage getter/setter pair is enough, no cross-component event sync.
  */
+import { notifyPreferenceMutation } from './autoBackup/notify'
 
 export const MAX_USER_NAME_LENGTH = 40
 
@@ -23,6 +24,7 @@ export function setUserName(name: string) {
     NAME_KEY,
     name.trim().slice(0, MAX_USER_NAME_LENGTH),
   )
+  notifyPreferenceMutation()
 }
 
 /** Whether the user has already been asked for their name on first share. */

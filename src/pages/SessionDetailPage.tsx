@@ -148,7 +148,7 @@ export default function SessionDetailPage() {
       await db.sessions.delete(session.id)
       await db.sessionTechniques.where('sessionId').equals(session.id).delete()
       await db.sessionTaps.where('sessionId').equals(session.id).delete()
-      notifyDbMutation()
+      notifyDbMutation(undefined, { components: ['sessions'] })
       const savedSession = session as Session & { id: number }
       pushUndo({
         label: language === 'es' ? 'Sesión eliminada.' : 'Session deleted.',
@@ -157,7 +157,7 @@ export default function SessionDetailPage() {
           if (sessionTechniques.length > 0)
             await db.sessionTechniques.bulkPut(sessionTechniques)
           if (sessionTaps.length > 0) await db.sessionTaps.bulkPut(sessionTaps)
-          notifyDbMutation()
+          notifyDbMutation(undefined, { components: ['sessions'] })
         },
       })
       setShowDeleteModal(false)

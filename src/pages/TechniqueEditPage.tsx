@@ -192,7 +192,7 @@ export default function TechniqueEditPage() {
             ),
           )
         }
-        notifyDbMutation()
+        notifyDbMutation(undefined, { components: ['techniques', 'flows'] })
         navigate(`/techniques/${newId}`)
       } else {
         await runWithTelemetry('technique.update_failed', () =>
@@ -229,7 +229,7 @@ export default function TechniqueEditPage() {
             ),
           )
         }
-        notifyDbMutation()
+        notifyDbMutation(undefined, { components: ['techniques', 'flows'] })
         navigate(-1)
       }
     } catch (err) {
@@ -288,10 +288,10 @@ export default function TechniqueEditPage() {
           await db.techniques.put(technique)
           if (savedConnections.length > 0)
             await db.techniqueConnections.bulkPut(savedConnections)
-          notifyDbMutation()
+          notifyDbMutation(undefined, { components: ['techniques', 'flows'] })
         },
       })
-      notifyDbMutation()
+      notifyDbMutation(undefined, { components: ['techniques', 'flows'] })
       setShowDeleteModal(false)
       navigate(-1)
     } catch (err) {

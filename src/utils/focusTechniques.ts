@@ -1,3 +1,5 @@
+import { notifyPreferenceMutation } from './autoBackup/notify'
+
 export const FOCUS_TECHNIQUE_IDS_STORAGE_KEY = 'bjj-dojo:focus-technique-ids'
 
 export function getFocusTechniqueIds(): number[] {
@@ -22,4 +24,5 @@ export function setFocusTechniqueIds(ids: number[]) {
     FOCUS_TECHNIQUE_IDS_STORAGE_KEY,
     JSON.stringify(unique),
   )
+  notifyPreferenceMutation()
 }

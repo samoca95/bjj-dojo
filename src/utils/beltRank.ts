@@ -1,4 +1,5 @@
 import { recordBeltChange } from './beltPromotion'
+import { notifyPreferenceMutation } from './autoBackup/notify'
 
 export type BeltColor = 'white' | 'blue' | 'purple' | 'brown' | 'black'
 
@@ -35,6 +36,7 @@ export function setBeltColor(belt: BeltColor) {
     window.localStorage.setItem(STRIPES_STORAGE_KEY, '0')
   }
   window.dispatchEvent(new CustomEvent(BELT_RANK_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }
 
 export function getBeltStripes(): number {
@@ -52,4 +54,5 @@ export function setBeltStripes(stripes: number) {
   recordBeltChange({ color: currentColor, stripes })
   window.localStorage.setItem(STRIPES_STORAGE_KEY, String(stripes))
   window.dispatchEvent(new CustomEvent(BELT_RANK_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }

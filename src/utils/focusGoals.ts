@@ -1,4 +1,5 @@
 import type { Session, SessionTap, SessionTechnique } from '../types'
+import { notifyPreferenceMutation } from './autoBackup/notify'
 
 export type FocusGoalType =
   | 'sessions'
@@ -41,6 +42,7 @@ function writeJSON(key: string, value: unknown) {
   if (typeof window === 'undefined') return
   window.localStorage.setItem(key, JSON.stringify(value))
   window.dispatchEvent(new Event(FOCUS_GOALS_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }
 
 export function getFocusGoals(): Record<number, FocusGoal> {
@@ -105,6 +107,7 @@ export function incrementManualCount(techniqueId: number, delta = 1) {
     JSON.stringify(all),
   )
   window.dispatchEvent(new Event(FOCUS_GOALS_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }
 
 export function resetManualCount(techniqueId: number) {
@@ -116,6 +119,7 @@ export function resetManualCount(techniqueId: number) {
     JSON.stringify(all),
   )
   window.dispatchEvent(new Event(FOCUS_GOALS_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }
 
 export interface FocusProgress {

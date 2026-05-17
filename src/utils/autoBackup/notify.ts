@@ -6,8 +6,24 @@
 import { scheduleAfterMutation } from './index'
 import { setLastMutationTime } from './settings'
 import type { BJJDatabase } from '../../db/database'
+import type { BackupComponent } from './types'
 
-export function notifyDbMutation(database?: BJJDatabase): void {
+interface MutationOptions {
+  components?: BackupComponent[]
+  showSyncIndicator?: boolean
+}
+
+export function notifyDbMutation(
+  database?: BJJDatabase,
+  options: MutationOptions = {},
+): void {
   setLastMutationTime(Date.now())
-  scheduleAfterMutation(database)
+  scheduleAfterMutation(database, options)
+}
+
+export function notifyPreferenceMutation(): void {
+  notifyDbMutation(undefined, {
+    components: ['preferences'],
+    showSyncIndicator: false,
+  })
 }

@@ -43,7 +43,7 @@ import {
   MAX_USER_NAME_LENGTH,
 } from '../utils/userName'
 import type { AppLanguage } from '../i18n'
-import { runBackupNow } from '../utils/autoBackup'
+import { readLatestBackupPayload, runBackupNow } from '../utils/autoBackup'
 import {
   AUTO_BACKUP_UPDATED_EVENT,
   DEFAULT_BACKUP_RETENTION,
@@ -303,7 +303,8 @@ export default function SettingsPage() {
   const handleRestoreFromPending = async () => {
     if (!pendingRestoreDestination || !pendingRestoreBackup) return
     try {
-      const payload = await pendingRestoreDestination.readBackup(
+      const payload = await readLatestBackupPayload(
+        pendingRestoreDestination,
         pendingRestoreBackup.id,
       )
       const importedLanguage = await importDatabaseBackup(payload)

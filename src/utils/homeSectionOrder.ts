@@ -1,3 +1,5 @@
+import { notifyPreferenceMutation } from './autoBackup/notify'
+
 export type HomeSectionId =
   | 'gamification'
   | 'focus'
@@ -87,6 +89,7 @@ export function setHomeSectionOrder(order: HomeSectionId[]) {
     JSON.stringify(sanitize(order)),
   )
   window.dispatchEvent(new Event(HOME_SECTION_ORDER_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }
 
 export function getHomeSectionVisibility(): HomeSectionVisibility {
@@ -107,4 +110,5 @@ export function setHomeSectionVisibility(visibility: HomeSectionVisibility) {
     JSON.stringify(sanitizeVisibility(visibility)),
   )
   window.dispatchEvent(new Event(HOME_SECTION_ORDER_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }

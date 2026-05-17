@@ -28,6 +28,7 @@ import {
   setGithubToken,
   setGithubTarget,
 } from '../utils/autoBackup/settings'
+import { readLatestBackupPayload } from '../utils/autoBackup'
 import { isDeviceFlowConfigured } from '../utils/autoBackup/githubAuth'
 import DeviceFlowDialog from './DeviceFlowDialog'
 import { telemetry } from '../utils/telemetry'
@@ -177,7 +178,7 @@ export default function SetupRestorePrompt({ onComplete }: Props) {
     try {
       setBusy(true)
       setStep('restoring')
-      const payload = await pickedDestination.readBackup(id)
+      const payload = await readLatestBackupPayload(pickedDestination, id)
       const importedLanguage = await importDatabaseBackup(payload)
       invalidateCategoryCache()
       if (importedLanguage) setAppLanguage(importedLanguage)

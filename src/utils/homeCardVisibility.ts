@@ -1,3 +1,5 @@
+import { notifyPreferenceMutation } from './autoBackup/notify'
+
 export const HOME_CARD_VISIBILITY_STORAGE_KEY = 'bjj-dojo:home-card-visibility'
 export const HOME_CARD_VISIBILITY_UPDATED_EVENT =
   'bjj-dojo:home-card-visibility-updated'
@@ -59,4 +61,5 @@ export function setCardVisible(
     JSON.stringify(map),
   )
   window.dispatchEvent(new Event(HOME_CARD_VISIBILITY_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }
