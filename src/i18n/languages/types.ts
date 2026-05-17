@@ -357,6 +357,13 @@ export type TranslationKey =
   | 'Open Flows'
   | 'Reset flow icon'
   | 'Strategic combination of techniques'
+  // Focus flows
+  | 'FOCUS GOALS'
+  | 'No focus goals selected'
+  | 'Flow'
+  | 'Pick technique from flow'
+  | 'Select Flow — Tap Given'
+  | 'Select Flow — Tap Received'
 
 export interface LanguagePack {
   /**

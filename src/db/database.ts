@@ -6,6 +6,8 @@ import type {
   Session,
   SessionTechnique,
   SessionTap,
+  SessionFlow,
+  SessionFlowTap,
   Club,
   DrillPlan,
   Flow,
@@ -38,6 +40,8 @@ export class BJJDatabase extends Dexie {
   sessions!: Table<Session, number>
   sessionTechniques!: Table<SessionTechnique, [number, number]>
   sessionTaps!: Table<SessionTap, number>
+  sessionFlows!: Table<SessionFlow, number>
+  sessionFlowTaps!: Table<SessionFlowTap, number>
   clubs!: Table<Club, number>
   drillPlans!: Table<DrillPlan, number>
   appState!: Table<AppStateRecord, string>
@@ -246,6 +250,22 @@ export class BJJDatabase extends Dexie {
         await tx.table<Flow, number>('flows').bulkAdd(prefilledFlows)
       })
 
+    this.version(11).stores({
+      categories: 'id, name',
+      techniques: 'id, categoryId, name',
+      techniqueConnections:
+        '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+      sessions: '++id, date, clubId',
+      sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
+      sessionTaps: '++id, sessionId, techniqueId',
+      clubs: '++id, sortOrder, name',
+      drillPlans: '++id, name, createdAt',
+      appState: 'key',
+      flows: '++id, name, createdAt, updatedAt',
+      sessionFlows: '++id, sessionId, flowId',
+      sessionFlowTaps: '++id, sessionId, flowId',
+    })
+
     // Populate on first creation — registered here so every instance gets it
     // (including isolated test instances).
     this.on('populate', async () => {
@@ -329,6 +349,8 @@ export interface DatabaseBackup {
   sessions: Session[]
   sessionTechniques: SessionTechnique[]
   sessionTaps: SessionTap[]
+  sessionFlows: SessionFlow[]
+  sessionFlowTaps: SessionFlowTap[]
   clubs: Club[]
   drillPlans: DrillPlan[]
   flows: Flow[]
@@ -364,6 +386,8 @@ export async function exportDatabaseBackup(
       database.sessions,
       database.sessionTechniques,
       database.sessionTaps,
+      database.sessionFlows,
+      database.sessionFlowTaps,
       database.clubs,
       database.drillPlans,
       database.flows,
@@ -375,6 +399,8 @@ export async function exportDatabaseBackup(
       sessions: await database.sessions.toArray(),
       sessionTechniques: await database.sessionTechniques.toArray(),
       sessionTaps: await database.sessionTaps.toArray(),
+      sessionFlows: await database.sessionFlows.toArray(),
+      sessionFlowTaps: await database.sessionFlowTaps.toArray(),
       clubs: await database.clubs.toArray(),
       drillPlans: await database.drillPlans.toArray(),
       flows: await database.flows.toArray(),
@@ -413,6 +439,8 @@ export async function exportDatabaseBackupComponent(
     sessions: [],
     sessionTechniques: [],
     sessionTaps: [],
+    sessionFlows: [],
+    sessionFlowTaps: [],
     clubs: [],
     drillPlans: [],
     flows: [],
@@ -430,11 +458,19 @@ export async function exportDatabaseBackupComponent(
   if (component === 'sessions') {
     const snapshot = await database.transaction(
       'r',
-      [database.sessions, database.sessionTechniques, database.sessionTaps],
+      [
+        database.sessions,
+        database.sessionTechniques,
+        database.sessionTaps,
+        database.sessionFlows,
+        database.sessionFlowTaps,
+      ],
       async () => ({
         sessions: await database.sessions.toArray(),
         sessionTechniques: await database.sessionTechniques.toArray(),
         sessionTaps: await database.sessionTaps.toArray(),
+        sessionFlows: await database.sessionFlows.toArray(),
+        sessionFlowTaps: await database.sessionFlowTaps.toArray(),
       }),
     )
     return { ...base, ...snapshot }
@@ -748,6 +784,40 @@ function validateSessionTaps(records: unknown[]): SessionTap[] {
   })
 }
 
+function validateSessionFlows(records: unknown[]): SessionFlow[] {
+  return records.map((r, i) => {
+    const ctx = `sessionFlows[${i}]`
+    if (!r || typeof r !== 'object') throw new Error(`${ctx}: not an object`)
+    const rec = r as Record<string, unknown>
+    if (rec.id !== undefined && !isPosInt(rec.id))
+      throw new Error(`${ctx}: 'id' must be a positive integer`)
+    if (!isPosInt(rec.sessionId))
+      throw new Error(`${ctx}: 'sessionId' must be a positive integer`)
+    if (!isPosInt(rec.flowId))
+      throw new Error(`${ctx}: 'flowId' must be a positive integer`)
+    return rec as unknown as SessionFlow
+  })
+}
+
+function validateSessionFlowTaps(records: unknown[]): SessionFlowTap[] {
+  return records.map((r, i) => {
+    const ctx = `sessionFlowTaps[${i}]`
+    if (!r || typeof r !== 'object') throw new Error(`${ctx}: not an object`)
+    const rec = r as Record<string, unknown>
+    if (rec.id !== undefined && !isPosInt(rec.id))
+      throw new Error(`${ctx}: 'id' must be a positive integer`)
+    if (!isPosInt(rec.sessionId))
+      throw new Error(`${ctx}: 'sessionId' must be a positive integer`)
+    if (!isPosInt(rec.flowId))
+      throw new Error(`${ctx}: 'flowId' must be a positive integer`)
+    if (!VALID_TAP_TYPES.has(rec.type as string))
+      throw new Error(
+        `${ctx}: 'type' must be one of ${[...VALID_TAP_TYPES].join(', ')}`,
+      )
+    return rec as unknown as SessionFlowTap
+  })
+}
+
 function validateDrillPlans(records: unknown[]): DrillPlan[] {
   return records.map((r, i) => {
     const ctx = `drillPlans[${i}]`
@@ -934,6 +1004,8 @@ function validateReferentialIntegrity(payload: {
   sessions: Session[]
   sessionTechniques: SessionTechnique[]
   sessionTaps: SessionTap[]
+  sessionFlows: SessionFlow[]
+  sessionFlowTaps: SessionFlowTap[]
   clubs: Club[]
   drillPlans: DrillPlan[]
   flows: Flow[]
@@ -1006,6 +1078,31 @@ function validateReferentialIntegrity(payload: {
         )
     }
   }
+  const flowIds = new Set(
+    payload.flows.map((f) => f.id).filter((id): id is number => id != null),
+  )
+  for (let i = 0; i < payload.sessionFlows.length; i++) {
+    const sf = payload.sessionFlows[i]
+    if (!sessionIds.has(sf.sessionId))
+      throw new Error(
+        `sessionFlows[${i}]: 'sessionId' ${sf.sessionId} does not match any session`,
+      )
+    if (!flowIds.has(sf.flowId))
+      throw new Error(
+        `sessionFlows[${i}]: 'flowId' ${sf.flowId} does not match any flow`,
+      )
+  }
+  for (let i = 0; i < payload.sessionFlowTaps.length; i++) {
+    const sft = payload.sessionFlowTaps[i]
+    if (!sessionIds.has(sft.sessionId))
+      throw new Error(
+        `sessionFlowTaps[${i}]: 'sessionId' ${sft.sessionId} does not match any session`,
+      )
+    if (!flowIds.has(sft.flowId))
+      throw new Error(
+        `sessionFlowTaps[${i}]: 'flowId' ${sft.flowId} does not match any flow`,
+      )
+  }
 }
 
 export async function importDatabaseBackup(
@@ -1061,6 +1158,12 @@ export async function importDatabaseBackup(
     asArrayStrict<unknown>(payload.drillPlans, 'drillPlans'),
   )
   const flows = validateFlows(asArrayStrict<unknown>(payload.flows, 'flows'))
+  const sessionFlows = validateSessionFlows(
+    Array.isArray(payload.sessionFlows) ? payload.sessionFlows : [],
+  )
+  const sessionFlowTaps = validateSessionFlowTaps(
+    Array.isArray(payload.sessionFlowTaps) ? payload.sessionFlowTaps : [],
+  )
 
   validateReferentialIntegrity({
     techniques,
@@ -1068,6 +1171,8 @@ export async function importDatabaseBackup(
     sessions,
     sessionTechniques,
     sessionTaps,
+    sessionFlows,
+    sessionFlowTaps,
     clubs,
     drillPlans,
     flows,
@@ -1082,11 +1187,15 @@ export async function importDatabaseBackup(
       database.sessions,
       database.sessionTechniques,
       database.sessionTaps,
+      database.sessionFlows,
+      database.sessionFlowTaps,
       database.clubs,
       database.drillPlans,
       database.flows,
     ],
     async () => {
+      await database.sessionFlowTaps.clear()
+      await database.sessionFlows.clear()
       await database.sessionTaps.clear()
       await database.sessionTechniques.clear()
       await database.techniqueConnections.clear()
@@ -1105,6 +1214,10 @@ export async function importDatabaseBackup(
       if (sessionTechniques.length)
         await database.sessionTechniques.bulkAdd(sessionTechniques)
       if (sessionTaps.length) await database.sessionTaps.bulkAdd(sessionTaps)
+      if (sessionFlows.length)
+        await database.sessionFlows.bulkAdd(sessionFlows)
+      if (sessionFlowTaps.length)
+        await database.sessionFlowTaps.bulkAdd(sessionFlowTaps)
       if (clubs.length) await database.clubs.bulkAdd(clubs)
       if (drillPlans.length) await database.drillPlans.bulkAdd(drillPlans)
       if (flows.length) await database.flows.bulkAdd(flows)

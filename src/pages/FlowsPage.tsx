@@ -364,7 +364,7 @@ export default function FlowsPage() {
               void db.flows
                 .update(flow.id, { isFavorite: !flow.isFavorite })
                 .then(() =>
-                  notifyDbMutation(undefined, { components: ['techniques'] }),
+                  notifyDbMutation(undefined, { components: ['flows'] }),
                 )
             }}
           />

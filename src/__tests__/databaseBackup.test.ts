@@ -243,6 +243,8 @@ describe('Backup round-trip parity', () => {
       sessions: [],
       sessionTechniques: [],
       sessionTaps: [],
+      sessionFlows: [],
+      sessionFlowTaps: [],
       clubs: [],
       drillPlans: [],
     }
@@ -348,6 +350,8 @@ describe('Referential integrity', () => {
         },
       ],
       flows: [],
+      sessionFlows: [],
+      sessionFlowTaps: [],
     }
   }
 

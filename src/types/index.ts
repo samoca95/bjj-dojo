@@ -73,6 +73,19 @@ export interface SessionTap {
   type: TapType
 }
 
+export interface SessionFlow {
+  id?: number
+  sessionId: number
+  flowId: number
+}
+
+export interface SessionFlowTap {
+  id?: number
+  sessionId: number
+  flowId: number
+  type: TapType
+}
+
 export interface DrillPlan {
   id?: number
   name: string

@@ -6,7 +6,7 @@ import {
   BookOpen,
   ChevronRight,
   Flame,
-  Crosshair,
+  MoreVertical,
   Zap,
   Hand,
   Pencil,
@@ -25,7 +25,19 @@ import {
   getFocusTechniqueIds,
   setFocusTechniqueIds,
 } from '../utils/focusTechniques'
-import { techniqueMatchesQuery, techniqueScore } from '../utils/fuzzySearch'
+import {
+  getFocusFlowIds,
+  setFocusFlowIds,
+  FOCUS_FLOW_IDS_UPDATED_EVENT,
+} from '../utils/focusFlows'
+import {
+  techniqueMatchesQuery,
+  techniqueScore,
+  flowMatchesQuery,
+  flowScore,
+} from '../utils/fuzzySearch'
+import { getFlowIcon, FLOW_ICON_UPDATED_EVENT } from '../utils/flowIcon'
+import type { Flow, SessionFlow, SessionFlowTap } from '../types'
 import TrainingCalendar from '../components/TrainingCalendar'
 import { CategoryIcon } from '../components/CategoryIcon'
 import {
@@ -47,6 +59,12 @@ import {
   getManualCount,
   incrementManualCount,
   computeFocusProgress,
+  getFocusFlowGoals,
+  setFocusFlowGoal,
+  clearFocusFlowGoal,
+  getFlowManualCount,
+  incrementFlowManualCount,
+  computeFocusProgressForFlow,
   FOCUS_GOAL_TYPES,
   FOCUS_GOALS_UPDATED_EVENT,
   type FocusGoal,
@@ -367,6 +385,115 @@ function FocusGoalEditor({
   )
 }
 
+function FocusGoalEditorForFlow({
+  flowId,
+  goal,
+  manualCount,
+  onClose,
+}: {
+  flowId: number
+  goal: FocusGoal | undefined
+  manualCount: number
+  onClose: () => void
+}) {
+  const { t } = useI18n()
+  const [type, setType] = useState<FocusGoalType>(goal?.type ?? 'tapsGiven')
+  const [target, setTarget] = useState<number>(goal?.target ?? 5)
+
+  const save = (nextType: FocusGoalType, nextTarget: number) => {
+    setFocusFlowGoal(flowId, {
+      type: nextType,
+      target: Math.max(1, Math.floor(nextTarget)),
+    })
+  }
+
+  return (
+    <div className="border-t border-zinc-800 pt-3 space-y-3">
+      <div>
+        <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5">
+          {t('Goal type')}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {FOCUS_GOAL_TYPES.map((g) => (
+            <button
+              key={g}
+              onClick={() => {
+                setType(g)
+                save(g, target)
+              }}
+              className={`text-[11px] px-2 py-1 rounded-lg ${
+                type === g
+                  ? 'bg-gold text-black font-semibold'
+                  : 'bg-zinc-800 text-zinc-300'
+              }`}
+            >
+              {t(focusGoalLabel(g))}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] uppercase tracking-wider text-zinc-500">
+          {t('Target')}
+        </span>
+        <button
+          onClick={() => {
+            const next = Math.max(1, target - 1)
+            setTarget(next)
+            save(type, next)
+          }}
+          className="w-7 h-7 rounded-lg bg-zinc-800 text-zinc-200 flex items-center justify-center"
+        >
+          <Minus size={14} />
+        </button>
+        <span className="text-sm font-bold text-zinc-100 w-8 text-center tabular-nums">
+          {target}
+        </span>
+        <button
+          onClick={() => {
+            const next = target + 1
+            setTarget(next)
+            save(type, next)
+          }}
+          className="w-7 h-7 rounded-lg bg-zinc-800 text-zinc-200 flex items-center justify-center"
+        >
+          <Plus size={14} />
+        </button>
+
+        {type === 'manual' && (
+          <button
+            onClick={() => incrementFlowManualCount(flowId)}
+            className="ml-auto text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-gold text-black"
+          >
+            {t('+1')} ({manualCount})
+          </button>
+        )}
+      </div>
+
+      <div className="flex items-center justify-end gap-2">
+        {goal && (
+          <button
+            onClick={() => {
+              clearFocusFlowGoal(flowId)
+              onClose()
+            }}
+            className="text-[11px] font-semibold text-zinc-400 px-2 py-1"
+          >
+            {t('Clear goal')}
+          </button>
+        )}
+        <button
+          onClick={onClose}
+          className="text-[11px] font-semibold text-gold px-2 py-1"
+        >
+          {t('Done')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function StatCard({
   label,
   value,
@@ -447,6 +574,8 @@ export default function HomePage() {
   const [focusPickerSearch, setFocusPickerSearch] = useState('')
   const [focusTechniqueIds, setFocusTechniqueIdsState] =
     useState<number[]>(getFocusTechniqueIds)
+  const [focusFlowIds, setFocusFlowIdsState] =
+    useState<number[]>(getFocusFlowIds)
   const [sectionOrder, setSectionOrder] =
     useState<HomeSectionId[]>(getHomeSectionOrder)
   const [sectionVisibility, setSectionVisibility] = useState(
@@ -455,14 +584,21 @@ export default function HomePage() {
   const [beltColor, setBeltColorState] = useState<BeltColor>(getBeltColor)
   const [beltStripes, setBeltStripesState] = useState<number>(getBeltStripes)
   const [focusGoals, setFocusGoalsState] = useState(getFocusGoals)
+  const [focusFlowGoals, setFocusFlowGoalsState] = useState(getFocusFlowGoals)
   const [manualCounts, setManualCountsState] = useState<Record<number, number>>(
     () => ({}),
   )
+  const [flowManualCounts, setFlowManualCountsState] = useState<
+    Record<number, number>
+  >(() => ({}))
+  const [flowIcon, setFlowIconState] = useState(getFlowIcon)
   const [cardVisTick, setCardVisTick] = useState(0)
   const [achievementsTick, setAchievementsTick] = useState(0)
   const [editingCardsForSection, setEditingCardsForSection] =
     useState<HomeSectionId | null>(null)
-  const [openGoalEditorId, setOpenGoalEditorId] = useState<number | null>(null)
+  const [openGoalEditorId, setOpenGoalEditorId] = useState<
+    { kind: 'technique'; id: number } | { kind: 'flow'; id: number } | null
+  >(null)
 
   useEffect(() => {
     const sync = () => {
@@ -494,10 +630,15 @@ export default function HomePage() {
   useEffect(() => {
     const refreshGoals = () => {
       setFocusGoalsState(getFocusGoals())
+      setFocusFlowGoalsState(getFocusFlowGoals())
       const fids = getFocusTechniqueIds()
       const counts: Record<number, number> = {}
       for (const id of fids) counts[id] = getManualCount(id)
       setManualCountsState(counts)
+      const ffids = getFocusFlowIds()
+      const flowCounts: Record<number, number> = {}
+      for (const id of ffids) flowCounts[id] = getFlowManualCount(id)
+      setFlowManualCountsState(flowCounts)
     }
     refreshGoals()
     window.addEventListener(FOCUS_GOALS_UPDATED_EVENT, refreshGoals)
@@ -506,7 +647,27 @@ export default function HomePage() {
       window.removeEventListener(FOCUS_GOALS_UPDATED_EVENT, refreshGoals)
       window.removeEventListener('storage', refreshGoals)
     }
-  }, [focusTechniqueIds])
+  }, [focusTechniqueIds, focusFlowIds])
+
+  useEffect(() => {
+    const sync = () => setFocusFlowIdsState(getFocusFlowIds())
+    window.addEventListener(FOCUS_FLOW_IDS_UPDATED_EVENT, sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener(FOCUS_FLOW_IDS_UPDATED_EVENT, sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
+
+  useEffect(() => {
+    const sync = () => setFlowIconState(getFlowIcon())
+    window.addEventListener(FLOW_ICON_UPDATED_EVENT, sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener(FLOW_ICON_UPDATED_EVENT, sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
 
   useEffect(() => {
     const sync = () => setCardVisTick((n) => n + 1)
@@ -561,6 +722,21 @@ export default function HomePage() {
     },
     [],
     new Map<number, number>(),
+  )
+  const allFlows = useLiveQuery(
+    () => db.flows.orderBy('name').toArray(),
+    [],
+    [] as Flow[],
+  )
+  const allSessionFlows = useLiveQuery(
+    () => db.sessionFlows.toArray(),
+    [],
+    [] as SessionFlow[],
+  )
+  const allSessionFlowTaps = useLiveQuery(
+    () => db.sessionFlowTaps.toArray(),
+    [],
+    [] as SessionFlowTap[],
   )
   const techniques = useLiveQuery(
     () => db.techniques.orderBy('name').toArray(),
@@ -623,6 +799,20 @@ export default function HomePage() {
     [techniques, focusTechniqueIds],
   )
 
+  const focusFlows = useMemo(
+    () =>
+      (allFlows ?? []).filter(
+        (f) => f.id != null && focusFlowIds.includes(f.id!),
+      ),
+    [allFlows, focusFlowIds],
+  )
+
+  const techniqueNameById = useMemo(() => {
+    const m = new Map<number, string>()
+    for (const t of techniques ?? []) m.set(t.id, t.name)
+    return m
+  }, [techniques])
+
   const filteredPickerTechniques = useMemo(() => {
     const results = (techniques ?? []).filter((t) =>
       techniqueMatchesQuery(withLocalizedName(t, language), focusPickerSearch),
@@ -636,6 +826,62 @@ export default function HomePage() {
     }
     return results
   }, [techniques, focusPickerSearch, language])
+
+  const filteredPickerFlows = useMemo(() => {
+    const nameById = (id: number) => techniqueNameById.get(id) ?? ''
+    const results = (allFlows ?? []).filter((f) =>
+      flowMatchesQuery(f, nameById, focusPickerSearch),
+    )
+    if (focusPickerSearch.trim()) {
+      return [...results].sort(
+        (a, b) =>
+          flowScore(b, nameById, focusPickerSearch) -
+          flowScore(a, nameById, focusPickerSearch),
+      )
+    }
+    return results
+  }, [allFlows, techniqueNameById, focusPickerSearch])
+
+  const givenFlowTapCountsByFlowId = useMemo(() => {
+    const m = new Map<number, number>()
+    for (const ft of allSessionFlowTaps ?? []) {
+      if (ft.type === 'given')
+        m.set(ft.flowId, (m.get(ft.flowId) ?? 0) + 1)
+    }
+    return m
+  }, [allSessionFlowTaps])
+
+  const receivedFlowTapCountsByFlowId = useMemo(() => {
+    const m = new Map<number, number>()
+    for (const ft of allSessionFlowTaps ?? []) {
+      if (ft.type === 'received')
+        m.set(ft.flowId, (m.get(ft.flowId) ?? 0) + 1)
+    }
+    return m
+  }, [allSessionFlowTaps])
+
+  const focusFlowProgresses = useMemo(() => {
+    const result: Record<number, FocusProgress> = {}
+    for (const flow of focusFlows) {
+      const fid = flow.id!
+      const goal = focusFlowGoals[fid]
+      if (!goal) continue
+      result[fid] = computeFocusProgressForFlow(goal, fid, {
+        sessions: sessions ?? [],
+        sessionFlows: allSessionFlows ?? [],
+        sessionFlowTaps: allSessionFlowTaps ?? [],
+        manualCount: flowManualCounts[fid] ?? 0,
+      })
+    }
+    return result
+  }, [
+    focusFlows,
+    focusFlowGoals,
+    sessions,
+    allSessionFlows,
+    allSessionFlowTaps,
+    flowManualCounts,
+  ])
 
   const trainingWeekStreak = useMemo(() => {
     const weekStarts = Array.from(
@@ -703,8 +949,11 @@ export default function HomePage() {
     for (const [idStr, p] of Object.entries(focusProgresses)) {
       if (p.current >= p.target) completedKeys.push(`${idStr}:${p.type}`)
     }
+    for (const [idStr, p] of Object.entries(focusFlowProgresses)) {
+      if (p.current >= p.target) completedKeys.push(`flow:${idStr}:${p.type}`)
+    }
     if (completedKeys.length > 0) trackGoalCompletions(completedKeys)
-  }, [focusProgresses])
+  }, [focusProgresses, focusFlowProgresses])
 
   const achievementCtx: AchievementCtx = useMemo(
     () => ({
@@ -714,7 +963,10 @@ export default function HomePage() {
       weeklyStreak: trainingWeekStreak,
       dailyStreak: dailyStreak.current,
       level: levelInfo.level,
-      focusProgresses: Object.values(focusProgresses),
+      focusProgresses: [
+        ...Object.values(focusProgresses),
+        ...Object.values(focusFlowProgresses),
+      ],
       goalSlayerCount: getAchievementsMeta().goalSlayerCount,
       now: Date.now(),
     }),
@@ -726,6 +978,7 @@ export default function HomePage() {
       dailyStreak,
       levelInfo,
       focusProgresses,
+      focusFlowProgresses,
     ],
   )
 
@@ -882,7 +1135,7 @@ export default function HomePage() {
     <section key="focus" className="space-y-3">
       <div className="flex items-center justify-between px-1">
         <h2 className="text-xs font-semibold tracking-widest text-gold">
-          {t('FOCUS TECHNIQUES')}
+          {t('FOCUS GOALS')}
         </h2>
         <button
           onClick={() => {
@@ -918,52 +1171,83 @@ export default function HomePage() {
                     setFocusTechniqueIds(next)
                     setFocusTechniqueIdsState(next)
                   }}
-                  className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                  className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
                     selected
                       ? 'bg-gold text-black font-semibold'
                       : 'bg-zinc-800 text-zinc-200'
                   }`}
                 >
+                  <CategoryIcon
+                    fallbackId={technique.categoryId}
+                    size={14}
+                    className={selected ? 'text-black' : 'text-gold'}
+                  />
                   {technique.name}
+                </button>
+              )
+            })}
+            {filteredPickerFlows.map((flow) => {
+              const selected = focusFlowIds.includes(flow.id!)
+              return (
+                <button
+                  key={`flow-${flow.id}`}
+                  onClick={() => {
+                    const next = selected
+                      ? focusFlowIds.filter((id) => id !== flow.id!)
+                      : [...focusFlowIds, flow.id!]
+                    setFocusFlowIds(next)
+                    setFocusFlowIdsState(next)
+                  }}
+                  className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
+                    selected
+                      ? 'bg-gold text-black font-semibold'
+                      : 'bg-zinc-800 text-zinc-200'
+                  }`}
+                >
+                  <CategoryIcon
+                    value={flowIcon}
+                    size={14}
+                    className={selected ? 'text-black' : 'text-gold'}
+                  />
+                  {flow.name}
                 </button>
               )
             })}
           </div>
         </div>
       )}
-      {focusTechniques.length === 0 ? (
+      {focusTechniques.length === 0 && focusFlows.length === 0 ? (
         <div className="bg-zinc-900 rounded-2xl px-4 py-3 text-sm text-zinc-400">
-          {t('No focus techniques selected')}
+          {t('No focus goals selected')}
         </div>
       ) : (
         <div className="space-y-2">
           {focusTechniques.map((technique) => {
             const goal = focusGoals[technique.id]
             const progress = focusProgresses[technique.id]
-            const isOpen = openGoalEditorId === technique.id
+            const isOpen =
+              openGoalEditorId?.kind === 'technique' &&
+              openGoalEditorId.id === technique.id
             return (
               <div
                 key={technique.id}
                 className="bg-zinc-900 rounded-2xl px-4 py-3 space-y-2"
               >
-                <button
-                  onClick={() =>
-                    setOpenGoalEditorId(isOpen ? null : technique.id)
-                  }
-                  className="w-full flex items-center justify-between text-left"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Crosshair size={14} className="text-gold shrink-0" />
-                    <span className="text-sm font-semibold text-zinc-100 truncate">
-                      {technique.name}
-                    </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => navigate(`/techniques/${technique.id}`)}
+                    className="flex-1 flex items-center gap-2 min-w-0 text-left"
+                  >
                     <CategoryIcon
                       fallbackId={technique.categoryId}
                       size={14}
                       className="text-gold shrink-0"
                     />
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-sm font-semibold text-zinc-100 truncate">
+                      {technique.name}
+                    </span>
+                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
                     <span className="flex items-center gap-1 text-xs text-red-400">
                       <Hand size={12} strokeWidth={2} />
                       {receivedTapCountsByTechniqueId.get(technique.id) ?? 0}
@@ -972,8 +1256,20 @@ export default function HomePage() {
                       <Zap size={12} strokeWidth={2} />
                       {givenTapCountsByTechniqueId?.get(technique.id) ?? 0}
                     </span>
+                    <button
+                      onClick={() =>
+                        setOpenGoalEditorId(
+                          isOpen
+                            ? null
+                            : { kind: 'technique', id: technique.id },
+                        )
+                      }
+                      className="p-1 -mr-1 text-zinc-500 active:text-zinc-300"
+                    >
+                      <MoreVertical size={14} />
+                    </button>
                   </div>
-                </button>
+                </div>
 
                 {progress && (
                   <div>
@@ -1002,6 +1298,86 @@ export default function HomePage() {
                     techniqueId={technique.id}
                     goal={goal}
                     manualCount={manualCounts[technique.id] ?? 0}
+                    onClose={() => setOpenGoalEditorId(null)}
+                  />
+                )}
+              </div>
+            )
+          })}
+          {focusFlows.map((flow) => {
+            const fid = flow.id!
+            const goal = focusFlowGoals[fid]
+            const progress = focusFlowProgresses[fid]
+            const isOpen =
+              openGoalEditorId?.kind === 'flow' && openGoalEditorId.id === fid
+            return (
+              <div
+                key={`flow-${fid}`}
+                className="bg-zinc-900 rounded-2xl px-4 py-3 space-y-2"
+              >
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => navigate(`/flows/${fid}`)}
+                    className="flex-1 flex items-center gap-2 min-w-0 text-left"
+                  >
+                    <CategoryIcon
+                      value={flowIcon}
+                      size={14}
+                      className="text-gold shrink-0"
+                    />
+                    <span className="text-sm font-semibold text-zinc-100 truncate">
+                      {flow.name}
+                    </span>
+                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="flex items-center gap-1 text-xs text-red-400">
+                      <Hand size={12} strokeWidth={2} />
+                      {receivedFlowTapCountsByFlowId.get(fid) ?? 0}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs text-green-500">
+                      <Zap size={12} strokeWidth={2} />
+                      {givenFlowTapCountsByFlowId.get(fid) ?? 0}
+                    </span>
+                    <button
+                      onClick={() =>
+                        setOpenGoalEditorId(
+                          isOpen ? null : { kind: 'flow', id: fid },
+                        )
+                      }
+                      className="p-1 -mr-1 text-zinc-500 active:text-zinc-300"
+                    >
+                      <MoreVertical size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {progress && (
+                  <div>
+                    <div className="flex items-center justify-between text-[10px] text-zinc-500 mb-1">
+                      <span>{t(focusGoalLabel(progress.type))}</span>
+                      <span className="tabular-nums">
+                        {progress.current}/{progress.target}
+                      </span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                      <div
+                        className={`h-full ${
+                          progress.type === 'sessionsSinceTap' &&
+                          progress.current >= progress.target
+                            ? 'bg-green-500'
+                            : 'bg-gold'
+                        }`}
+                        style={{ width: `${progress.pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {isOpen && (
+                  <FocusGoalEditorForFlow
+                    flowId={fid}
+                    goal={goal}
+                    manualCount={flowManualCounts[fid] ?? 0}
                     onClose={() => setOpenGoalEditorId(null)}
                   />
                 )}

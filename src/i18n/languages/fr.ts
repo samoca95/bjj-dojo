@@ -399,6 +399,13 @@ const FR_TRANSLATIONS = {
   'Reset flow icon': 'Reset flow icon',
   'Strategic combination of techniques':
     'Combinaison stratégique de techniques',
+  // Focus flows
+  'FOCUS GOALS': "OBJECTIFS D'ENTRAÎNEMENT",
+  'No focus goals selected': 'Aucun objectif de focus sélectionné',
+  Flow: 'Flow',
+  'Pick technique from flow': 'Choisir la technique du flux',
+  'Select Flow — Tap Given': 'Sélectionner un Flow — Soumission Donnée',
+  'Select Flow — Tap Received': 'Sélectionner un Flow — Soumission Reçue',
 } satisfies Record<TranslationKey, string>
 
 const FR_CATEGORY_CONTENT: LanguagePack['categoryContent'] = {
