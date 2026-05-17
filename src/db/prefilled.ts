@@ -23,7 +23,7 @@ export const prefilledCategories: Category[] = [
     id: 4,
     name: 'Submissions',
     description: 'Finishing techniques — chokes and joint locks',
-    icon: 'target',
+    icon: 'skull',
   },
   {
     id: 5,
@@ -2429,6 +2429,8 @@ export const prefilledFlows: Flow[] = [
     name: 'Arm Drag to Back Take RNC',
     description:
       'Classic open-guard back attack: arm-drag to clear the near arm, climb to the back, secure seatbelt + hooks, finish with the rear naked choke.',
+    gi: true,
+    noGi: true,
     tags: ['back-attack', 'open-guard', 'fundamentals'],
     nodes: [
       {
@@ -2466,6 +2468,8 @@ export const prefilledFlows: Flow[] = [
     name: 'Closed Guard to Cross Collar Choke',
     description:
       'Gi-focused closed guard attack chain. Scissor sweep is the primary path; if they post and prevent the sweep, attack the cross collar choke from guard.',
+    gi: true,
+    noGi: false,
     tags: ['closed-guard', 'gi', 'sweep-to-submit'],
     nodes: [
       {
@@ -2509,6 +2513,8 @@ export const prefilledFlows: Flow[] = [
     name: 'Half Guard Kimura Sweep to Back Take',
     description:
       'Half guard underhook attack with a kimura grip that branches into a sweep to mount or a transition to the back when they roll forward.',
+    gi: true,
+    noGi: true,
     tags: ['half-guard', 'kimura', 'sweep-to-back'],
     nodes: [
       {

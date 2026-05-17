@@ -266,6 +266,46 @@ export class BJJDatabase extends Dexie {
       sessionFlowTaps: '++id, sessionId, flowId',
     })
 
+    this.version(12)
+      .stores({
+        categories: 'id, name',
+        techniques: 'id, categoryId, name',
+        techniqueConnections:
+          '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+        sessions: '++id, date, clubId',
+        sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
+        sessionTaps: '++id, sessionId, techniqueId',
+        clubs: '++id, sortOrder, name',
+        drillPlans: '++id, name, createdAt',
+        appState: 'key',
+        flows: '++id, name, createdAt, updatedAt',
+        sessionFlows: '++id, sessionId, flowId',
+        sessionFlowTaps: '++id, sessionId, flowId',
+      })
+      .upgrade(async () => {
+        await this.transaction('rw', [this.categories, this.flows], async () => {
+          const allCategories = await this.categories.toArray()
+          const submissionsCategory = allCategories.find((c) => c.id === 4)
+          if (submissionsCategory?.icon === 'target') {
+            await this.categories.update(4, { icon: 'skull' })
+          }
+
+          const GI_ONLY_PREFILLED_FLOW_IDS = new Set([9002])
+          const allFlows = await this.flows.toArray()
+          const normalized = allFlows.map((flow) => ({
+            ...flow,
+            gi: flow.gi ?? true,
+            noGi:
+              flow.noGi ??
+              (flow.isCustom
+                ? true
+                : !GI_ONLY_PREFILLED_FLOW_IDS.has(flow.id ?? -1)),
+          }))
+          if (normalized.length > 0) await this.flows.bulkPut(normalized)
+          await this.flows.bulkPut(prefilledFlows)
+        })
+      })
+
     // Populate on first creation — registered here so every instance gets it
     // (including isolated test instances).
     this.on('populate', async () => {
@@ -936,6 +976,10 @@ function validateFlows(records: unknown[]): Flow[] {
       throw new Error(
         `${ctx}: 'description' exceeds ${DESCRIPTION_MAX_LENGTH} characters`,
       )
+    if (rec.gi !== undefined && typeof rec.gi !== 'boolean')
+      throw new Error(`${ctx}: 'gi' must be a boolean`)
+    if (rec.noGi !== undefined && typeof rec.noGi !== 'boolean')
+      throw new Error(`${ctx}: 'noGi' must be a boolean`)
     if (typeof rec.isCustom !== 'boolean')
       throw new Error(`${ctx}: 'isCustom' must be a boolean`)
     if (rec.isFavorite !== undefined && typeof rec.isFavorite !== 'boolean')

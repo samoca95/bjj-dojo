@@ -186,7 +186,7 @@ function AddConnectionModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/70 grid place-items-center p-4"
       onClick={onClose}
     >
       <div
@@ -444,7 +444,7 @@ function TechniqueActionMenu({
       )}
 
       {showDeleteModal && (
-        <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] bg-black/70 grid place-items-center p-4">
           <div
             role="dialog"
             aria-modal="true"
@@ -488,7 +488,7 @@ export default function TechniqueDetailPage() {
   const [connectionsOpen, setConnectionsOpen] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
   const [connectionsView, setConnectionsView] = useState<'graph' | 'list'>(
-    'graph',
+    'list',
   )
   const [practiceSessionsOpen, setPracticeSessionsOpen] = useState(true)
 

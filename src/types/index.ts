@@ -105,6 +105,8 @@ export interface Flow {
   id?: number
   name: string
   description: string
+  gi?: boolean
+  noGi?: boolean
   tags?: string[]
   referenceLinks?: ReferenceLink[]
   nodes: FlowNode[]

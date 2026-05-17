@@ -39,6 +39,16 @@ function FlowCard({
           <span className="font-semibold text-zinc-100 text-sm">
             {flow.name}
           </span>
+          {flow.gi !== false && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-900/40 text-indigo-300">
+              Gi
+            </span>
+          )}
+          {flow.noGi !== false && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-900/40 text-teal-300">
+              No-Gi
+            </span>
+          )}
           {(flow.tags ?? []).slice(0, 3).map((tag) => (
             <span
               key={tag}
@@ -82,6 +92,9 @@ export default function FlowsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sortBy, setSortBy] = useState<SortBy>('name_asc')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
+  const [formatFilter, setFormatFilter] = useState<'all' | 'gi' | 'no-gi'>(
+    'all',
+  )
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [filterOpen, setFilterOpen] = useState(false)
 
@@ -94,6 +107,7 @@ export default function FlowsPage() {
         search: string
         sortBy: SortBy
         favoritesOnly: boolean
+        formatFilter: 'all' | 'gi' | 'no-gi'
         activeTag: string | null
       }>
       if (typeof parsed.search === 'string') {
@@ -111,6 +125,13 @@ export default function FlowsPage() {
       if (typeof parsed.favoritesOnly === 'boolean') {
         setFavoritesOnly(parsed.favoritesOnly)
       }
+      if (
+        parsed.formatFilter === 'all' ||
+        parsed.formatFilter === 'gi' ||
+        parsed.formatFilter === 'no-gi'
+      ) {
+        setFormatFilter(parsed.formatFilter)
+      }
       if (typeof parsed.activeTag === 'string' || parsed.activeTag === null) {
         setActiveTag(parsed.activeTag ?? null)
       }
@@ -122,9 +143,9 @@ export default function FlowsPage() {
   useEffect(() => {
     window.sessionStorage.setItem(
       LIST_STATE_KEY,
-      JSON.stringify({ search, sortBy, favoritesOnly, activeTag }),
+      JSON.stringify({ search, sortBy, favoritesOnly, formatFilter, activeTag }),
     )
-  }, [search, sortBy, favoritesOnly, activeTag])
+  }, [search, sortBy, favoritesOnly, formatFilter, activeTag])
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 200)
@@ -157,6 +178,8 @@ export default function FlowsPage() {
   const visibleFlows = useMemo(() => {
     const list = (flows ?? []).filter((flow) => {
       if (favoritesOnly && !flow.isFavorite) return false
+      if (formatFilter === 'gi' && flow.gi === false) return false
+      if (formatFilter === 'no-gi' && flow.noGi === false) return false
       if (activeTag && !(flow.tags ?? []).includes(activeTag)) return false
       if (
         debouncedSearch.trim() &&
@@ -181,6 +204,7 @@ export default function FlowsPage() {
   }, [
     flows,
     favoritesOnly,
+    formatFilter,
     activeTag,
     debouncedSearch,
     sortBy,
@@ -237,7 +261,8 @@ export default function FlowsPage() {
             aria-label={t('Filter')}
           >
             <SlidersHorizontal size={18} strokeWidth={2} />
-            {(favoritesOnly || activeTag !== null) && !filterOpen && (
+            {(favoritesOnly || formatFilter !== 'all' || activeTag !== null) &&
+              !filterOpen && (
               <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
             )}
           </button>
@@ -283,6 +308,7 @@ export default function FlowsPage() {
               <button
                 onClick={() => {
                   setFavoritesOnly(false)
+                  setFormatFilter('all')
                   setActiveTag(null)
                 }}
                 className="text-xs text-zinc-500 active:text-zinc-300"
@@ -305,6 +331,21 @@ export default function FlowsPage() {
                 />
                 {language === 'es' ? 'Favoritos' : 'Favorites'}
               </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {(['all', 'gi', 'no-gi'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFormatFilter(f)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    formatFilter === f
+                      ? 'bg-gold text-black'
+                      : 'bg-zinc-800 text-zinc-300'
+                  }`}
+                >
+                  {f === 'all' ? t('All') : f === 'gi' ? 'Gi' : 'No-Gi'}
+                </button>
+              ))}
             </div>
             {allTags.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
