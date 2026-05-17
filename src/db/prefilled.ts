@@ -2470,7 +2470,7 @@ export const prefilledFlows: Flow[] = [
       'Gi-focused closed guard attack chain. Scissor sweep is the primary path; if they post and prevent the sweep, attack the cross collar choke from guard.',
     gi: true,
     noGi: false,
-    tags: ['closed-guard', 'gi', 'sweep-to-submit'],
+    tags: ['closed-guard', 'sweep-to-submit'],
     nodes: [
       {
         id: 'n1',
