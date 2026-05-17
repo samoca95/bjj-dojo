@@ -293,7 +293,6 @@ export class BJJDatabase extends Dexie {
               await this.categories.update(4, { icon: 'skull' })
             }
 
-            const GI_ONLY_PREFILLED_FLOW_IDS = new Set([9002])
             const allFlows = await this.flows.toArray()
             const normalized = allFlows.map((flow) => ({
               ...flow,
@@ -894,6 +893,7 @@ function validateDrillPlans(records: unknown[]): DrillPlan[] {
 const FLOW_MAX_NODES = 200
 const FLOW_MAX_CHILDREN_PER_NODE = 12
 const FLOW_MAX_TAGS = 20
+const GI_ONLY_PREFILLED_FLOW_IDS = new Set([9002])
 
 function validateReferenceLinks(ctx: string, value: unknown) {
   if (!Array.isArray(value))

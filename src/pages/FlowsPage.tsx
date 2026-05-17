@@ -20,6 +20,16 @@ const LIST_STATE_KEY = 'bjj-dojo.flows.list-state'
 
 type SortBy = 'name_asc' | 'name_desc' | 'recent_updated' | 'recent_created'
 
+function supportsGi(flow: Flow) {
+  // Missing values are treated as "both formats" for legacy records.
+  return flow.gi !== false
+}
+
+function supportsNoGi(flow: Flow) {
+  // Missing values are treated as "both formats" for legacy records.
+  return flow.noGi !== false
+}
+
 function FlowCard({
   flow,
   onClick,
@@ -39,12 +49,12 @@ function FlowCard({
           <span className="font-semibold text-zinc-100 text-sm">
             {flow.name}
           </span>
-          {flow.gi !== false && (
+          {supportsGi(flow) && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-900/40 text-indigo-300">
               Gi
             </span>
           )}
-          {flow.noGi !== false && (
+          {supportsNoGi(flow) && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-900/40 text-teal-300">
               No-Gi
             </span>
@@ -184,8 +194,8 @@ export default function FlowsPage() {
   const visibleFlows = useMemo(() => {
     const list = (flows ?? []).filter((flow) => {
       if (favoritesOnly && !flow.isFavorite) return false
-      if (formatFilter === 'gi' && flow.gi === false) return false
-      if (formatFilter === 'no-gi' && flow.noGi === false) return false
+      if (formatFilter === 'gi' && !supportsGi(flow)) return false
+      if (formatFilter === 'no-gi' && !supportsNoGi(flow)) return false
       if (activeTag && !(flow.tags ?? []).includes(activeTag)) return false
       if (
         debouncedSearch.trim() &&
