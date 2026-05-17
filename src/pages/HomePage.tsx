@@ -842,6 +842,37 @@ export default function HomePage() {
     return results
   }, [allFlows, techniqueNameById, focusPickerSearch])
 
+  type FocusPickerEntry =
+    | { kind: 'technique'; item: (typeof filteredPickerTechniques)[number] }
+    | { kind: 'flow'; item: (typeof filteredPickerFlows)[number] }
+
+  const combinedFocusPickerResults = useMemo((): FocusPickerEntry[] | null => {
+    if (!focusPickerSearch.trim()) return null
+    const nameById = (id: number) => techniqueNameById.get(id) ?? ''
+    const techniqueEntries = filteredPickerTechniques.map((technique) => ({
+      kind: 'technique' as const,
+      item: technique,
+      score: techniqueScore(
+        withLocalizedName(technique, language),
+        focusPickerSearch,
+      ),
+    }))
+    const flowEntries = filteredPickerFlows.map((flow) => ({
+      kind: 'flow' as const,
+      item: flow,
+      score: flowScore(flow, nameById, focusPickerSearch),
+    }))
+    return [...techniqueEntries, ...flowEntries].sort(
+      (a, b) => b.score - a.score,
+    ) as FocusPickerEntry[]
+  }, [
+    focusPickerSearch,
+    techniqueNameById,
+    filteredPickerTechniques,
+    filteredPickerFlows,
+    language,
+  ])
+
   const givenFlowTapCountsByFlowId = useMemo(() => {
     const m = new Map<number, number>()
     for (const ft of allSessionFlowTaps ?? []) {
@@ -1157,60 +1188,123 @@ export default function HomePage() {
             className="w-full bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold placeholder-zinc-600 mb-2"
           />
           <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1">
-            {filteredPickerTechniques.map((technique) => {
-              const selected = focusTechniqueIds.includes(technique.id)
-              return (
-                <button
-                  key={technique.id}
-                  onClick={() => {
-                    const next = selected
-                      ? focusTechniqueIds.filter((id) => id !== technique.id)
-                      : [...focusTechniqueIds, technique.id]
-                    setFocusTechniqueIds(next)
-                    setFocusTechniqueIdsState(next)
-                  }}
-                  className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
-                    selected
-                      ? 'bg-gold text-black font-semibold'
-                      : 'bg-zinc-800 text-zinc-200'
-                  }`}
-                >
-                  <CategoryIcon
-                    fallbackId={technique.categoryId}
-                    size={14}
-                    className={selected ? 'text-black' : 'text-gold'}
-                  />
-                  {technique.name}
-                </button>
-              )
-            })}
-            {filteredPickerFlows.map((flow) => {
-              const selected = focusFlowIds.includes(flow.id!)
-              return (
-                <button
-                  key={`flow-${flow.id}`}
-                  onClick={() => {
-                    const next = selected
-                      ? focusFlowIds.filter((id) => id !== flow.id!)
-                      : [...focusFlowIds, flow.id!]
-                    setFocusFlowIds(next)
-                    setFocusFlowIdsState(next)
-                  }}
-                  className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
-                    selected
-                      ? 'bg-gold text-black font-semibold'
-                      : 'bg-zinc-800 text-zinc-200'
-                  }`}
-                >
-                  <CategoryIcon
-                    value={flowIcon}
-                    size={14}
-                    className={selected ? 'text-black' : 'text-gold'}
-                  />
-                  {flow.name}
-                </button>
-              )
-            })}
+            {combinedFocusPickerResults
+              ? combinedFocusPickerResults.map((entry) => {
+                  if (entry.kind === 'technique') {
+                    const technique = entry.item
+                    const selected = focusTechniqueIds.includes(technique.id)
+                    return (
+                      <button
+                        key={technique.id}
+                        onClick={() => {
+                          const next = selected
+                            ? focusTechniqueIds.filter(
+                                (id) => id !== technique.id,
+                              )
+                            : [...focusTechniqueIds, technique.id]
+                          setFocusTechniqueIds(next)
+                          setFocusTechniqueIdsState(next)
+                        }}
+                        className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
+                          selected
+                            ? 'bg-gold text-black font-semibold'
+                            : 'bg-zinc-800 text-zinc-200'
+                        }`}
+                      >
+                        <CategoryIcon
+                          fallbackId={technique.categoryId}
+                          size={14}
+                          className={selected ? 'text-black' : 'text-gold'}
+                        />
+                        {technique.name}
+                      </button>
+                    )
+                  }
+                  const flow = entry.item
+                  const selected = focusFlowIds.includes(flow.id!)
+                  return (
+                    <button
+                      key={`flow-${flow.id}`}
+                      onClick={() => {
+                        const next = selected
+                          ? focusFlowIds.filter((id) => id !== flow.id!)
+                          : [...focusFlowIds, flow.id!]
+                        setFocusFlowIds(next)
+                        setFocusFlowIdsState(next)
+                      }}
+                      className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
+                        selected
+                          ? 'bg-gold text-black font-semibold'
+                          : 'bg-zinc-800 text-zinc-200'
+                      }`}
+                    >
+                      <CategoryIcon
+                        value={flowIcon}
+                        size={14}
+                        className={selected ? 'text-black' : 'text-gold'}
+                      />
+                      {flow.name}
+                    </button>
+                  )
+                })
+              : [
+                  ...filteredPickerTechniques.map((technique) => {
+                    const selected = focusTechniqueIds.includes(technique.id)
+                    return (
+                      <button
+                        key={technique.id}
+                        onClick={() => {
+                          const next = selected
+                            ? focusTechniqueIds.filter(
+                                (id) => id !== technique.id,
+                              )
+                            : [...focusTechniqueIds, technique.id]
+                          setFocusTechniqueIds(next)
+                          setFocusTechniqueIdsState(next)
+                        }}
+                        className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
+                          selected
+                            ? 'bg-gold text-black font-semibold'
+                            : 'bg-zinc-800 text-zinc-200'
+                        }`}
+                      >
+                        <CategoryIcon
+                          fallbackId={technique.categoryId}
+                          size={14}
+                          className={selected ? 'text-black' : 'text-gold'}
+                        />
+                        {technique.name}
+                      </button>
+                    )
+                  }),
+                  ...filteredPickerFlows.map((flow) => {
+                    const selected = focusFlowIds.includes(flow.id!)
+                    return (
+                      <button
+                        key={`flow-${flow.id}`}
+                        onClick={() => {
+                          const next = selected
+                            ? focusFlowIds.filter((id) => id !== flow.id!)
+                            : [...focusFlowIds, flow.id!]
+                          setFocusFlowIds(next)
+                          setFocusFlowIdsState(next)
+                        }}
+                        className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
+                          selected
+                            ? 'bg-gold text-black font-semibold'
+                            : 'bg-zinc-800 text-zinc-200'
+                        }`}
+                      >
+                        <CategoryIcon
+                          value={flowIcon}
+                          size={14}
+                          className={selected ? 'text-black' : 'text-gold'}
+                        />
+                        {flow.name}
+                      </button>
+                    )
+                  }),
+                ]}
           </div>
         </div>
       )}
