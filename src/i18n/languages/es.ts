@@ -378,6 +378,13 @@ const ES_TRANSLATIONS = {
   'Need help?': '¿Necesitas ayuda?',
   // Backup sync indicator
   'Backup failed': 'Copia fallida',
+  'Backup queue': 'Cola de copias',
+  'Files currently being saved': 'Archivos que se están guardando',
+  'No files in queue': 'No hay archivos en cola',
+  Queued: 'En cola',
+  Saving: 'Guardando',
+  Failed: 'Falló',
+  Saved: 'Guardado',
   'Your data is still safely stored in this browser.':
     'Tus datos siguen guardados de forma segura en este navegador.',
   'No network — backup will be retried next time you save a session with a connection.':

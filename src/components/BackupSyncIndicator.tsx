@@ -243,7 +243,10 @@ export default function BackupSyncIndicator() {
         'bjj-dojo:backup-file-succeeded',
         handleFileSucceeded,
       )
-      window.removeEventListener('bjj-dojo:backup-file-failed', handleFileFailed)
+      window.removeEventListener(
+        'bjj-dojo:backup-file-failed',
+        handleFileFailed,
+      )
       Object.values(timers).forEach((t) => t && clearTimeout(t))
     }
   }, [])
@@ -327,7 +330,9 @@ export default function BackupSyncIndicator() {
             </div>
             <div className="overflow-y-auto p-4 space-y-2">
               {visibleQueueFiles.length === 0 ? (
-                <p className="text-sm text-zinc-400">{t('No files in queue')}</p>
+                <p className="text-sm text-zinc-400">
+                  {t('No files in queue')}
+                </p>
               ) : (
                 visibleQueueFiles.map((item) => (
                   <div
