@@ -862,9 +862,9 @@ export default function HomePage() {
       item: flow,
       score: flowScore(flow, nameById, focusPickerSearch),
     }))
-    return [...techniqueEntries, ...flowEntries]
-      .sort((a, b) => b.score - a.score)
-      .map(({ kind, item }) => ({ kind, item }))
+    return [...techniqueEntries, ...flowEntries].sort(
+      (a, b) => b.score - a.score,
+    ) as FocusPickerEntry[]
   }, [
     focusPickerSearch,
     techniqueNameById,
@@ -1198,7 +1198,9 @@ export default function HomePage() {
                         key={technique.id}
                         onClick={() => {
                           const next = selected
-                            ? focusTechniqueIds.filter((id) => id !== technique.id)
+                            ? focusTechniqueIds.filter(
+                                (id) => id !== technique.id,
+                              )
                             : [...focusTechniqueIds, technique.id]
                           setFocusTechniqueIds(next)
                           setFocusTechniqueIdsState(next)
@@ -1253,7 +1255,9 @@ export default function HomePage() {
                         key={technique.id}
                         onClick={() => {
                           const next = selected
-                            ? focusTechniqueIds.filter((id) => id !== technique.id)
+                            ? focusTechniqueIds.filter(
+                                (id) => id !== technique.id,
+                              )
                             : [...focusTechniqueIds, technique.id]
                           setFocusTechniqueIds(next)
                           setFocusTechniqueIdsState(next)
