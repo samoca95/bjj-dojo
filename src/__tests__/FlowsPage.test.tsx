@@ -48,6 +48,8 @@ const sampleFlows = [
     id: 9001,
     name: 'Back attack flow',
     description: 'Get to the back, finish with RNC',
+    gi: true,
+    noGi: true,
     tags: ['back-attack'],
     nodes: [
       { id: 'a', techniqueId: 512, childIds: ['b'] },
@@ -62,6 +64,8 @@ const sampleFlows = [
     id: 9002,
     name: 'Spider lasso sweep',
     description: 'Open guard sweep chain',
+    gi: true,
+    noGi: false,
     tags: ['open-guard'],
     nodes: [{ id: 'x', techniqueId: 405, childIds: [] }],
     rootNodeId: 'x',
@@ -106,6 +110,19 @@ describe('FlowsPage', () => {
     expect(screen.getByText('#back-attack')).toBeInTheDocument()
     expect(screen.getByText('2 steps')).toBeInTheDocument()
     expect(screen.getByText('1 step')).toBeInTheDocument()
+    expect(screen.getAllByText('Gi').length).toBeGreaterThan(0)
+    expect(screen.getByText('No-Gi')).toBeInTheDocument()
+  })
+
+  it('filters flows by gi/no-gi format', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByLabelText('Filter'))
+    await user.click(screen.getByRole('button', { name: 'No-Gi' }))
+    await waitFor(() => {
+      expect(screen.getByText('Back attack flow')).toBeInTheDocument()
+      expect(screen.queryByText('Spider lasso sweep')).not.toBeInTheDocument()
+    })
   })
 
   it('filters by referenced technique name', async () => {

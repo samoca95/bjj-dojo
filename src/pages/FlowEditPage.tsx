@@ -264,6 +264,8 @@ export default function FlowEditPage() {
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [gi, setGi] = useState(true)
+  const [noGi, setNoGi] = useState(true)
   const [tagsInput, setTagsInput] = useState('')
   const [nodes, setNodes] = useState<FlowNode[]>([])
   const [rootNodeId, setRootNodeId] = useState<string>('')
@@ -280,6 +282,8 @@ export default function FlowEditPage() {
     if (loaded) return
     setName(existingFlow.name)
     setDescription(existingFlow.description)
+    setGi(existingFlow.gi !== false)
+    setNoGi(existingFlow.noGi !== false)
     setTagsInput((existingFlow.tags ?? []).join(', '))
     setNodes(
       existingFlow.nodes.map((n) => ({ ...n, childIds: [...n.childIds] })),
@@ -365,6 +369,14 @@ export default function FlowEditPage() {
       )
       return
     }
+    if (!gi && !noGi) {
+      window.alert(
+        language === 'es'
+          ? 'Selecciona al menos un formato (Gi o No-Gi).'
+          : 'Select at least one format (Gi or No-Gi).',
+      )
+      return
+    }
     const now = Date.now()
     const cleanLinks: ReferenceLink[] = referenceLinks
       .map((link) => ({
@@ -376,6 +388,8 @@ export default function FlowEditPage() {
     const payload: Flow = {
       name: trimmedName,
       description: trimAndClamp(description, DESCRIPTION_MAX_LENGTH),
+      gi,
+      noGi,
       tags: sanitizeTags(tagsInput.split(',')),
       referenceLinks: cleanLinks.length > 0 ? cleanLinks : undefined,
       nodes,
@@ -478,6 +492,36 @@ export default function FlowEditPage() {
             }
             className={`${inputCls} mt-2 resize-none`}
           />
+        </div>
+
+        <div>
+          <label className="text-xs text-gold font-semibold tracking-wide">
+            {language === 'es'
+              ? 'FORMATO'
+              : language === 'fr'
+                ? 'FORMAT'
+                : 'FORMAT'}
+          </label>
+          <div className="flex gap-3 mt-2">
+            <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={gi}
+                onChange={(e) => setGi(e.target.checked)}
+                className="accent-gold"
+              />
+              Gi
+            </label>
+            <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={noGi}
+                onChange={(e) => setNoGi(e.target.checked)}
+                className="accent-gold"
+              />
+              No-Gi
+            </label>
+          </div>
         </div>
 
         <div>
