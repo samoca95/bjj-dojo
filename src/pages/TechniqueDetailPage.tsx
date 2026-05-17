@@ -144,9 +144,17 @@ function AddConnectionModal({
   onClose: () => void
 }) {
   const { language, t } = useI18n()
-  const allTechniques = useLiveQuery(() => db.techniques.orderBy('name').toArray(), [], [] as Technique[])
+  const allTechniques = useLiveQuery(
+    () => db.techniques.orderBy('name').toArray(),
+    [],
+    [] as Technique[],
+  )
   const existingConnections = useLiveQuery(
-    () => db.techniqueConnections.where('fromTechniqueId').equals(technique.id).toArray(),
+    () =>
+      db.techniqueConnections
+        .where('fromTechniqueId')
+        .equals(technique.id)
+        .toArray(),
     [technique.id],
     [],
   )
@@ -189,13 +197,18 @@ function AddConnectionModal({
           <span className="text-sm font-bold text-zinc-100">
             {language === 'es' ? 'Añadir conexión' : 'Add connection'}
           </span>
-          <button onClick={onClose} className="text-zinc-500 active:text-zinc-200">
+          <button
+            onClick={onClose}
+            className="text-zinc-500 active:text-zinc-200"
+          >
             <X size={18} />
           </button>
         </div>
         <select
           value={targetId ?? ''}
-          onChange={(e) => setTargetId(e.target.value ? Number(e.target.value) : null)}
+          onChange={(e) =>
+            setTargetId(e.target.value ? Number(e.target.value) : null)
+          }
           className="w-full bg-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
         >
           <option value="">{t('Select connected technique…')}</option>
@@ -286,7 +299,9 @@ function TechniqueActionMenu({
 
   const handleToggleFavorite = async () => {
     onClose()
-    await db.techniques.update(technique.id, { isFavorite: !technique.isFavorite })
+    await db.techniques.update(technique.id, {
+      isFavorite: !technique.isFavorite,
+    })
     notifyDbMutation(undefined, { components: ['techniques'] })
   }
 
@@ -304,12 +319,24 @@ function TechniqueActionMenu({
     setIsDeleting(true)
     try {
       const [outgoing, incoming] = await Promise.all([
-        db.techniqueConnections.where('fromTechniqueId').equals(technique.id).toArray(),
-        db.techniqueConnections.where('toTechniqueId').equals(technique.id).toArray(),
+        db.techniqueConnections
+          .where('fromTechniqueId')
+          .equals(technique.id)
+          .toArray(),
+        db.techniqueConnections
+          .where('toTechniqueId')
+          .equals(technique.id)
+          .toArray(),
       ])
       await db.techniques.delete(technique.id)
-      await db.techniqueConnections.where('fromTechniqueId').equals(technique.id).delete()
-      await db.techniqueConnections.where('toTechniqueId').equals(technique.id).delete()
+      await db.techniqueConnections
+        .where('fromTechniqueId')
+        .equals(technique.id)
+        .delete()
+      await db.techniqueConnections
+        .where('toTechniqueId')
+        .equals(technique.id)
+        .delete()
       const saved = [...outgoing, ...incoming]
       pushUndo({
         label: language === 'es' ? 'Técnica eliminada.' : 'Technique deleted.',
@@ -346,7 +373,9 @@ function TechniqueActionMenu({
           {language === 'es' ? 'Editar técnica' : 'Edit technique'}
         </button>
         <button
-          onClick={() => { setShowAddConnection(true) }}
+          onClick={() => {
+            setShowAddConnection(true)
+          }}
           className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-100 active:bg-zinc-800"
         >
           <GitBranch size={16} className="text-zinc-400 shrink-0" />
@@ -365,7 +394,9 @@ function TechniqueActionMenu({
         >
           <Star
             size={16}
-            className={isFav ? 'text-amber-400 shrink-0' : 'text-zinc-400 shrink-0'}
+            className={
+              isFav ? 'text-amber-400 shrink-0' : 'text-zinc-400 shrink-0'
+            }
             fill={isFav ? 'currentColor' : 'none'}
           />
           {isFav
@@ -382,7 +413,9 @@ function TechniqueActionMenu({
         >
           <Focus
             size={16}
-            className={isFocused ? 'text-blue-400 shrink-0' : 'text-zinc-400 shrink-0'}
+            className={
+              isFocused ? 'text-blue-400 shrink-0' : 'text-zinc-400 shrink-0'
+            }
           />
           {isFocused
             ? language === 'es'

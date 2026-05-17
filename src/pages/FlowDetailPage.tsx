@@ -125,13 +125,7 @@ function FlowTreeNode({
   )
 }
 
-function ActionMenu({
-  flow,
-  onClose,
-}: {
-  flow: Flow
-  onClose: () => void
-}) {
+function ActionMenu({ flow, onClose }: { flow: Flow; onClose: () => void }) {
   const navigate = useNavigate()
   const { language } = useI18n()
   const menuRef = useRef<HTMLDivElement>(null)
@@ -152,7 +146,8 @@ function ActionMenu({
   useEffect(() => {
     const handler = () => setIsFocused(getFocusFlowIds().includes(flow.id!))
     window.addEventListener(FOCUS_FLOW_IDS_UPDATED_EVENT, handler)
-    return () => window.removeEventListener(FOCUS_FLOW_IDS_UPDATED_EVENT, handler)
+    return () =>
+      window.removeEventListener(FOCUS_FLOW_IDS_UPDATED_EVENT, handler)
   }, [flow.id])
 
   const handleEdit = () => {
@@ -230,7 +225,9 @@ function ActionMenu({
       >
         <Star
           size={16}
-          className={isFav ? 'text-amber-400 shrink-0' : 'text-zinc-400 shrink-0'}
+          className={
+            isFav ? 'text-amber-400 shrink-0' : 'text-zinc-400 shrink-0'
+          }
           fill={isFav ? 'currentColor' : 'none'}
         />
         {isFav
@@ -247,7 +244,9 @@ function ActionMenu({
       >
         <Focus
           size={16}
-          className={isFocused ? 'text-blue-400 shrink-0' : 'text-zinc-400 shrink-0'}
+          className={
+            isFocused ? 'text-blue-400 shrink-0' : 'text-zinc-400 shrink-0'
+          }
         />
         {isFocused
           ? language === 'es'
@@ -294,16 +293,10 @@ export default function FlowDetailPage() {
 
   const practiceSessionNotes = useLiveQuery(
     async () => {
-      const sfs = await db.sessionFlows
-        .where('flowId')
-        .equals(numId)
-        .toArray()
+      const sfs = await db.sessionFlows.where('flowId').equals(numId).toArray()
       if (sfs.length === 0) return []
       const sessionIds = [...new Set(sfs.map((sf) => sf.sessionId))]
-      const sessions = await db.sessions
-        .where('id')
-        .anyOf(sessionIds)
-        .toArray()
+      const sessions = await db.sessions.where('id').anyOf(sessionIds).toArray()
       return (sessions as Session[])
         .filter((s) => s.notes?.trim())
         .map((s) => ({ sessionId: s.id!, date: s.date, note: s.notes.trim() }))
