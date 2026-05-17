@@ -5,6 +5,8 @@ import {
   CalendarDays,
   BookOpen,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Flame,
   MoreVertical,
   Zap,
@@ -37,7 +39,7 @@ import {
   flowScore,
 } from '../utils/fuzzySearch'
 import { getFlowIcon, FLOW_ICON_UPDATED_EVENT } from '../utils/flowIcon'
-import type { Flow, SessionFlow, SessionFlowTap } from '../types'
+import type { Flow, SessionFlow, SessionFlowTap, Technique } from '../types'
 import TrainingCalendar from '../components/TrainingCalendar'
 import { CategoryIcon } from '../components/CategoryIcon'
 import {
@@ -280,11 +282,19 @@ function FocusGoalEditor({
   techniqueId,
   goal,
   manualCount,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
   onClose,
 }: {
   techniqueId: number
   goal: FocusGoal | undefined
   manualCount: number
+  canMoveUp: boolean
+  canMoveDown: boolean
+  onMoveUp: () => void
+  onMoveDown: () => void
   onClose: () => void
 }) {
   const { t } = useI18n()
@@ -300,6 +310,24 @@ function FocusGoalEditor({
 
   return (
     <div className="border-t border-zinc-800 pt-3 space-y-3">
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={onMoveUp}
+          disabled={!canMoveUp}
+          className="text-[11px] font-semibold text-zinc-300 px-2 py-1 rounded-lg bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+        >
+          <ChevronUp size={12} />
+          {t('Move up')}
+        </button>
+        <button
+          onClick={onMoveDown}
+          disabled={!canMoveDown}
+          className="text-[11px] font-semibold text-zinc-300 px-2 py-1 rounded-lg bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+        >
+          <ChevronDown size={12} />
+          {t('Move down')}
+        </button>
+      </div>
       <div>
         <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5">
           {t('Goal type')}
@@ -389,11 +417,19 @@ function FocusGoalEditorForFlow({
   flowId,
   goal,
   manualCount,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
   onClose,
 }: {
   flowId: number
   goal: FocusGoal | undefined
   manualCount: number
+  canMoveUp: boolean
+  canMoveDown: boolean
+  onMoveUp: () => void
+  onMoveDown: () => void
   onClose: () => void
 }) {
   const { t } = useI18n()
@@ -409,6 +445,24 @@ function FocusGoalEditorForFlow({
 
   return (
     <div className="border-t border-zinc-800 pt-3 space-y-3">
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={onMoveUp}
+          disabled={!canMoveUp}
+          className="text-[11px] font-semibold text-zinc-300 px-2 py-1 rounded-lg bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+        >
+          <ChevronUp size={12} />
+          {t('Move up')}
+        </button>
+        <button
+          onClick={onMoveDown}
+          disabled={!canMoveDown}
+          className="text-[11px] font-semibold text-zinc-300 px-2 py-1 rounded-lg bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+        >
+          <ChevronDown size={12} />
+          {t('Move down')}
+        </button>
+      </div>
       <div>
         <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5">
           {t('Goal type')}
@@ -795,17 +849,59 @@ export default function HomePage() {
     return { avgGiven, paddedCounts, maxGiven }
   }, [recentSessions, tapCountsBySessionId])
   const focusTechniques = useMemo(
-    () => (techniques ?? []).filter((t) => focusTechniqueIds.includes(t.id)),
+    () => {
+      const techniqueById = new Map((techniques ?? []).map((t) => [t.id, t]))
+      const orderedTechniques: Technique[] = []
+      for (const id of focusTechniqueIds) {
+        const technique = techniqueById.get(id)
+        if (technique) orderedTechniques.push(technique)
+      }
+      return orderedTechniques
+    },
     [techniques, focusTechniqueIds],
   )
 
   const focusFlows = useMemo(
-    () =>
-      (allFlows ?? []).filter(
-        (f) => f.id != null && focusFlowIds.includes(f.id!),
-      ),
+    () => {
+      const flowById = new Map<number, Flow>()
+      for (const flow of allFlows ?? []) {
+        if (flow.id != null) flowById.set(flow.id, flow)
+      }
+      const orderedFlows: Flow[] = []
+      for (const id of focusFlowIds) {
+        const flow = flowById.get(id)
+        if (flow) orderedFlows.push(flow)
+      }
+      return orderedFlows
+    },
     [allFlows, focusFlowIds],
   )
+
+  const moveFocusTechnique = (techniqueId: number, direction: -1 | 1) => {
+    setFocusTechniqueIdsState((prev) => {
+      const fromIndex = prev.indexOf(techniqueId)
+      if (fromIndex === -1) return prev
+      const toIndex = fromIndex + direction
+      if (toIndex < 0 || toIndex >= prev.length) return prev
+      const next = [...prev]
+      ;[next[fromIndex], next[toIndex]] = [next[toIndex], next[fromIndex]]
+      setFocusTechniqueIds(next)
+      return next
+    })
+  }
+
+  const moveFocusFlow = (flowId: number, direction: -1 | 1) => {
+    setFocusFlowIdsState((prev) => {
+      const fromIndex = prev.indexOf(flowId)
+      if (fromIndex === -1) return prev
+      const toIndex = fromIndex + direction
+      if (toIndex < 0 || toIndex >= prev.length) return prev
+      const next = [...prev]
+      ;[next[fromIndex], next[toIndex]] = [next[toIndex], next[fromIndex]]
+      setFocusFlowIds(next)
+      return next
+    })
+  }
 
   const techniqueNameById = useMemo(() => {
     const m = new Map<number, string>()
@@ -1317,6 +1413,7 @@ export default function HomePage() {
           {focusTechniques.map((technique) => {
             const goal = focusGoals[technique.id]
             const progress = focusProgresses[technique.id]
+            const indexInFocusList = focusTechniqueIds.indexOf(technique.id)
             const isOpen =
               openGoalEditorId?.kind === 'technique' &&
               openGoalEditorId.id === technique.id
@@ -1390,6 +1487,13 @@ export default function HomePage() {
                     techniqueId={technique.id}
                     goal={goal}
                     manualCount={manualCounts[technique.id] ?? 0}
+                    canMoveUp={indexInFocusList > 0}
+                    canMoveDown={
+                      indexInFocusList !== -1 &&
+                      indexInFocusList < focusTechniqueIds.length - 1
+                    }
+                    onMoveUp={() => moveFocusTechnique(technique.id, -1)}
+                    onMoveDown={() => moveFocusTechnique(technique.id, 1)}
                     onClose={() => setOpenGoalEditorId(null)}
                   />
                 )}
@@ -1400,6 +1504,7 @@ export default function HomePage() {
             const fid = flow.id!
             const goal = focusFlowGoals[fid]
             const progress = focusFlowProgresses[fid]
+            const indexInFocusList = focusFlowIds.indexOf(fid)
             const isOpen =
               openGoalEditorId?.kind === 'flow' && openGoalEditorId.id === fid
             return (
@@ -1470,6 +1575,13 @@ export default function HomePage() {
                     flowId={fid}
                     goal={goal}
                     manualCount={flowManualCounts[fid] ?? 0}
+                    canMoveUp={indexInFocusList > 0}
+                    canMoveDown={
+                      indexInFocusList !== -1 &&
+                      indexInFocusList < focusFlowIds.length - 1
+                    }
+                    onMoveUp={() => moveFocusFlow(fid, -1)}
+                    onMoveDown={() => moveFocusFlow(fid, 1)}
                     onClose={() => setOpenGoalEditorId(null)}
                   />
                 )}
