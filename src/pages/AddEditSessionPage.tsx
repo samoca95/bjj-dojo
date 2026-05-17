@@ -95,6 +95,7 @@ export default function AddEditSessionPage() {
   const [techNotes, setTechNotes] = useState<Map<number, string>>(new Map())
   const [taps, setTaps] = useState<LocalTap[]>([])
   const [selectedFlowIds, setSelectedFlowIds] = useState<Set<number>>(new Set())
+  const [flowNotes, setFlowNotes] = useState<Map<number, string>>(new Map())
   const [flowTaps, setFlowTaps] = useState<LocalFlowTap[]>([])
   const [flowIcon, setFlowIconState] = useState(getFlowIcon)
 
@@ -204,6 +205,11 @@ export default function AddEditSessionPage() {
         .equals(Number(id))
         .toArray()
       setSelectedFlowIds(new Set(storedFlows.map((sf) => sf.flowId)))
+      const flowNotesMap = new Map<number, string>()
+      for (const sf of storedFlows) {
+        if (sf.notes) flowNotesMap.set(sf.flowId, sf.notes)
+      }
+      setFlowNotes(flowNotesMap)
 
       const storedFlowTaps = await db.sessionFlowTaps
         .where('sessionId')
@@ -302,7 +308,16 @@ export default function AddEditSessionPage() {
         }
         if (selectedFlowIds.size > 0) {
           await db.sessionFlows.bulkAdd(
-            [...selectedFlowIds].map((flowId) => ({ sessionId: sid, flowId })),
+            [...selectedFlowIds].map((flowId) => {
+              const note = flowNotes.get(flowId)
+              return note
+                ? {
+                    sessionId: sid,
+                    flowId,
+                    notes: note.trim().slice(0, VALIDATION_LIMITS.NOTE_MAX_LENGTH),
+                  }
+                : { sessionId: sid, flowId }
+            }),
           )
         }
         if (flowTaps.length > 0) {
@@ -493,6 +508,15 @@ export default function AddEditSessionPage() {
       const next = new Map(prev)
       if (value) next.set(tid, value)
       else next.delete(tid)
+      return next
+    })
+  }
+
+  const setFlowNote = (fid: number, value: string) => {
+    setFlowNotes((prev) => {
+      const next = new Map(prev)
+      if (value) next.set(fid, value)
+      else next.delete(fid)
       return next
     })
   }
@@ -745,34 +769,45 @@ export default function AddEditSessionPage() {
               </div>
             )}
             {selectedFlowIds.size > 0 && (
-              <div className="mt-2 space-y-1.5">
+              <div className="mt-2 space-y-2">
                 {(allFlows ?? [])
                   .filter((f) => selectedFlowIds.has(f.id!))
                   .map((f) => (
                     <div
                       key={f.id}
-                      className="flex items-center gap-2 bg-zinc-900 rounded-xl px-4 py-3"
+                      className="bg-zinc-900 rounded-xl px-4 py-3 space-y-2"
                     >
-                      <CategoryIcon
-                        value={flowIcon}
-                        size={14}
-                        className="text-gold shrink-0"
+                      <div className="flex items-center gap-2">
+                        <CategoryIcon
+                          value={flowIcon}
+                          size={14}
+                          className="text-gold shrink-0"
+                        />
+                        <span className="flex-1 text-sm text-zinc-100">
+                          {f.name}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedFlowIds((prev) => {
+                              const next = new Set(prev)
+                              next.delete(f.id!)
+                              return next
+                            })
+                            setFlowNote(f.id!, '')
+                          }}
+                          className="text-zinc-600 active:text-zinc-300"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                      <textarea
+                        value={flowNotes.get(f.id!) ?? ''}
+                        onChange={(e) => setFlowNote(f.id!, e.target.value)}
+                        placeholder={t('What clicked? What to fix?')}
+                        maxLength={VALIDATION_LIMITS.NOTE_MAX_LENGTH}
+                        rows={2}
+                        className="w-full bg-zinc-800 rounded-lg px-3 py-2 text-zinc-100 text-xs outline-none focus:ring-1 focus:ring-gold placeholder-zinc-600 resize-none"
                       />
-                      <span className="flex-1 text-sm text-zinc-100">
-                        {f.name}
-                      </span>
-                      <button
-                        onClick={() =>
-                          setSelectedFlowIds((prev) => {
-                            const next = new Set(prev)
-                            next.delete(f.id!)
-                            return next
-                          })
-                        }
-                        className="text-zinc-600 active:text-zinc-300"
-                      >
-                        <X size={14} />
-                      </button>
                     </div>
                   ))}
               </div>

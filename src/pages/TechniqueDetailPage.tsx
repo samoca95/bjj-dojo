@@ -261,13 +261,14 @@ function TechniqueActionMenu({
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
+      if (showAddConnection || showDeleteModal) return
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         onClose()
       }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [onClose])
+  }, [onClose, showAddConnection, showDeleteModal])
 
   useEffect(() => {
     const handler = () =>
@@ -370,7 +371,7 @@ function TechniqueActionMenu({
           className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-100 active:bg-zinc-800"
         >
           <Pencil size={16} className="text-gold shrink-0" />
-          {language === 'es' ? 'Editar técnica' : 'Edit technique'}
+          {language === 'es' ? 'Editar' : 'Edit'}
         </button>
         <button
           onClick={() => {
@@ -401,11 +402,11 @@ function TechniqueActionMenu({
           />
           {isFav
             ? language === 'es'
-              ? 'Quitar de favoritos'
-              : 'Remove from favorites'
+              ? 'Sin favorito'
+              : 'Unfavorite'
             : language === 'es'
-              ? 'Marcar como favorita'
-              : 'Mark as favorite'}
+              ? 'Favorita'
+              : 'Favorite'}
         </button>
         <button
           onClick={handleToggleFocus}
@@ -419,11 +420,11 @@ function TechniqueActionMenu({
           />
           {isFocused
             ? language === 'es'
-              ? 'Quitar del foco'
-              : 'Remove from focus'
+              ? 'Sin foco'
+              : 'Unfocus'
             : language === 'es'
-              ? 'Añadir al foco'
-              : 'Add to focus'}
+              ? 'Foco'
+              : 'Focus'}
         </button>
         <div className="border-t border-zinc-800" />
         <button
@@ -431,7 +432,7 @@ function TechniqueActionMenu({
           className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 active:bg-zinc-800"
         >
           <Trash2 size={16} className="shrink-0" />
-          {language === 'es' ? 'Eliminar técnica' : 'Delete technique'}
+          {language === 'es' ? 'Eliminar' : 'Delete'}
         </button>
       </div>
 

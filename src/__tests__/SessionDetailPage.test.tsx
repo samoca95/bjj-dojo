@@ -103,10 +103,12 @@ function setupMocks(overrides?: {
 
   mocks.get.mockResolvedValue(mockSession)
 
-  // SessionDetailPage calls useLiveQuery 3 times per render:
-  // 0 (mod 3): club query
-  // 1 (mod 3): techniqueEntries query (returns { technique, notes }[])
-  // 2 (mod 3): tapData query
+  // SessionDetailPage calls useLiveQuery 5 times per render:
+  // 0 (mod 5): club query
+  // 1 (mod 5): techniqueEntries query (returns { technique, notes }[])
+  // 2 (mod 5): tapData query
+  // 3 (mod 5): flowEntries query
+  // 4 (mod 5): flowTapData query
   const techniqueEntries = techniques.map((tech) => ({
     technique: tech,
     notes: undefined,
@@ -114,9 +116,11 @@ function setupMocks(overrides?: {
   let call = 0
   mockUseLiveQuery.mockImplementation(() => {
     const c = call++
-    if (c % 3 === 0) return club
-    if (c % 3 === 1) return techniqueEntries
-    return { taps, techMap: new Map([[401, 'Armbar']]) }
+    if (c % 5 === 0) return club
+    if (c % 5 === 1) return techniqueEntries
+    if (c % 5 === 2) return { taps, techMap: new Map([[401, 'Armbar']]) }
+    if (c % 5 === 3) return []
+    return { given: [], received: [] }
   })
 }
 

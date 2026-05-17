@@ -77,6 +77,7 @@ export interface SessionFlow {
   id?: number
   sessionId: number
   flowId: number
+  notes?: string
 }
 
 export interface SessionFlowTap {

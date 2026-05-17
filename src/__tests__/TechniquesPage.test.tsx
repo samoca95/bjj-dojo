@@ -85,12 +85,18 @@ function setupMocks(
   categories = sampleCategories,
   techniques = sampleTechniques,
 ) {
-  // TechniquesPage calls useLiveQuery twice per render:
-  // 1st: categories with [] deps
-  // 2nd: techniques+freqMap with non-empty deps — returns { items, freqMap }
-  mockUseLiveQuery.mockImplementation((_fn, deps) => {
-    if (Array.isArray(deps) && deps.length === 0) return categories
-    return { items: techniques, freqMap: new Map<number, number>() }
+  // TechniquesPage calls useLiveQuery 4 times per render:
+  // 1st (c%4===0): categories ([] deps)
+  // 2nd (c%4===1): queryResult (many deps) — returns { items, freqMap }
+  // 3rd (c%4===2): allFlows ([] deps)
+  // 4th (c%4===3): techNameMapForFlows ([language] deps)
+  let call = 0
+  mockUseLiveQuery.mockImplementation(() => {
+    const c = call++
+    if (c % 4 === 0) return categories
+    if (c % 4 === 1) return { items: techniques, freqMap: new Map<number, number>() }
+    if (c % 4 === 2) return []
+    return new Map<number, string>()
   })
 }
 
