@@ -28,12 +28,14 @@ function NoteText({ note }: { note: string }) {
   const [expanded, setExpanded] = useState(false)
   return (
     <>
-      <p className="text-xs text-zinc-400 line-clamp-2">{note}</p>
       <button
-        onClick={() => setExpanded(true)}
-        className="mt-1 text-[11px] font-semibold text-gold/80 active:text-gold"
+        onClick={(e) => {
+          e.stopPropagation()
+          setExpanded(true)
+        }}
+        className="text-left w-full text-xs text-zinc-400 line-clamp-2 active:text-zinc-200"
       >
-        Expand
+        {note}
       </button>
       {expanded && (
         <div
@@ -105,7 +107,7 @@ function FlowTreeNode({
         </div>
       </div>
       {node.childIds.length > 0 && (
-        <div className="ml-4 mt-2 pl-4 border-l-2 border-zinc-700 space-y-2">
+        <div className="ml-[25px] mt-1 pl-4 border-l-2 border-gold space-y-1">
           {node.childIds.map((childId) => {
             const child = byId.get(childId)
             if (!child) return null
