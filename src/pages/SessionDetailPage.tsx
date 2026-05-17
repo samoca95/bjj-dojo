@@ -30,6 +30,7 @@ import {
 import { useUndo } from '../components/undo'
 import ShareSheet from '../components/ShareSheet'
 import { notifyDbMutation } from '../utils/autoBackup/notify'
+import { getFlowIcon, FLOW_ICON_UPDATED_EVENT } from '../utils/flowIcon'
 
 const SHARE_PROMPT_LABELS: Record<AppLanguage, { title: string; cta: string }> =
   {
@@ -66,6 +67,7 @@ export default function SessionDetailPage() {
   const [sessionTypeIcons, setSessionTypeIcons] = useState(
     getSessionTypeIcons(),
   )
+  const [flowIcon, setFlowIcon] = useState(getFlowIcon)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showShareSheet, setShowShareSheet] = useState(false)
@@ -86,6 +88,12 @@ export default function SessionDetailPage() {
     window.addEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
     return () =>
       window.removeEventListener(SESSION_TYPE_ICONS_UPDATED_EVENT, sync)
+  }, [])
+
+  useEffect(() => {
+    const sync = () => setFlowIcon(getFlowIcon())
+    window.addEventListener(FLOW_ICON_UPDATED_EVENT, sync)
+    return () => window.removeEventListener(FLOW_ICON_UPDATED_EVENT, sync)
   }, [])
 
   const techniqueEntries = useLiveQuery(
@@ -130,6 +138,47 @@ export default function SessionDetailPage() {
     { taps: [] as SessionTap[], techMap: new Map<number, string>() },
   )
 
+  const flowEntries = useLiveQuery(
+    async () => {
+      if (!id) return [] as { name: string; notes: string | undefined }[]
+      const sfs = await db.sessionFlows
+        .where('sessionId')
+        .equals(Number(id))
+        .toArray()
+      if (sfs.length === 0) return []
+      const flowIds = sfs.map((sf) => sf.flowId)
+      const flows = await db.flows.where('id').anyOf(flowIds).sortBy('name')
+      const notesMap = new Map(sfs.map((sf) => [sf.flowId, sf.notes]))
+      return flows.map((f) => ({ name: f.name, notes: notesMap.get(f.id!) }))
+    },
+    [id],
+    [] as { name: string; notes: string | undefined }[],
+  )
+
+  const flowTapData = useLiveQuery(
+    async () => {
+      if (!id) return { given: [] as string[], received: [] as string[] }
+      const fts = await db.sessionFlowTaps
+        .where('sessionId')
+        .equals(Number(id))
+        .toArray()
+      if (fts.length === 0) return { given: [], received: [] }
+      const flowIds = [...new Set(fts.map((ft) => ft.flowId))]
+      const flows = await db.flows.where('id').anyOf(flowIds).toArray()
+      const nameMap = new Map(flows.map((f) => [f.id!, f.name]))
+      return {
+        given: fts
+          .filter((ft) => ft.type === 'given')
+          .map((ft) => nameMap.get(ft.flowId) ?? t('Unknown')),
+        received: fts
+          .filter((ft) => ft.type === 'received')
+          .map((ft) => nameMap.get(ft.flowId) ?? t('Unknown')),
+      }
+    },
+    [id, t],
+    { given: [] as string[], received: [] as string[] },
+  )
+
   if (!session)
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -169,8 +218,12 @@ export default function SessionDetailPage() {
 
   const sessionTaps = tapData?.taps ?? []
   const tapTechniqueMap = tapData?.techMap ?? new Map<number, string>()
-  const givenTaps = sessionTaps.filter((t) => t.type === 'given')
-  const receivedTaps = sessionTaps.filter((t) => t.type === 'received')
+  const givenTechTaps = sessionTaps.filter((t) => t.type === 'given')
+  const receivedTechTaps = sessionTaps.filter((t) => t.type === 'received')
+  const givenFlowTaps = flowTapData?.given ?? []
+  const receivedFlowTaps = flowTapData?.received ?? []
+  const totalGiven = givenTechTaps.length + givenFlowTaps.length
+  const totalReceived = receivedTechTaps.length + receivedFlowTaps.length
 
   const shareData = {
     session,
@@ -179,10 +232,10 @@ export default function SessionDetailPage() {
       technique,
       notes,
     })),
-    givenTaps: givenTaps.map((tap) => ({
+    givenTaps: givenTechTaps.map((tap) => ({
       techniqueName: tapTechniqueMap.get(tap.techniqueId) ?? t('Unknown'),
     })),
-    receivedTaps: receivedTaps.map((tap) => ({
+    receivedTaps: receivedTechTaps.map((tap) => ({
       techniqueName: tapTechniqueMap.get(tap.techniqueId) ?? t('Unknown'),
     })),
   }
@@ -291,12 +344,13 @@ export default function SessionDetailPage() {
           </div>
         )}
 
-        {/* Techniques Practiced — before taps */}
+        {/* Techniques & Flows Practiced — before taps */}
         <div>
           <h2 className="text-xs font-semibold tracking-widest text-gold mb-3">
             {t('TECHNIQUES PRACTICED')}
           </h2>
-          {techniqueEntries?.length === 0 ? (
+          {(techniqueEntries?.length ?? 0) === 0 &&
+          (flowEntries?.length ?? 0) === 0 ? (
             <p className="text-sm text-zinc-500">
               {t('No techniques logged for this session.')}
             </p>
@@ -304,7 +358,7 @@ export default function SessionDetailPage() {
             <div className="space-y-2">
               {techniqueEntries?.map(({ technique: tech, notes: techNote }) => (
                 <button
-                  key={tech.id}
+                  key={`t-${tech.id}`}
                   onClick={() => navigate(`/techniques/${tech.id}`)}
                   className="w-full bg-zinc-900 rounded-xl px-4 py-3 flex items-start gap-3 text-left active:bg-zinc-800"
                 >
@@ -330,32 +384,52 @@ export default function SessionDetailPage() {
                   />
                 </button>
               ))}
+              {flowEntries?.map(({ name, notes: flowNote }, i) => (
+                <div
+                  key={`f-${i}`}
+                  className="w-full bg-zinc-900 rounded-xl px-4 py-3 flex items-start gap-3 text-left"
+                >
+                  <CategoryIcon
+                    value={flowIcon}
+                    size={16}
+                    className="text-gold shrink-0 mt-0.5"
+                  />
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm text-zinc-100">{name}</span>
+                    {flowNote && (
+                      <span className="block text-xs text-zinc-400 mt-1 whitespace-pre-wrap">
+                        {flowNote}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
         {/* Taps / Submissions — after techniques */}
-        {(givenTaps.length > 0 || receivedTaps.length > 0) && (
+        {(totalGiven > 0 || totalReceived > 0) && (
           <div className="bg-zinc-900 rounded-xl p-4 space-y-3">
             <div className="flex items-center gap-2">
               <div className="text-xs text-gold">{t('Taps / Submissions')}</div>
               <span className="text-xs text-zinc-500">
-                {givenTaps.length > 0 &&
-                  `${givenTaps.length} ${language === 'es' ? 'aplicada' : 'given'}`}
-                {givenTaps.length > 0 && receivedTaps.length > 0 && ' · '}
-                {receivedTaps.length > 0 &&
-                  `${receivedTaps.length} ${language === 'es' ? 'recibida' : 'received'}`}
+                {totalGiven > 0 &&
+                  `${totalGiven} ${language === 'es' ? 'aplicada' : 'given'}`}
+                {totalGiven > 0 && totalReceived > 0 && ' · '}
+                {totalReceived > 0 &&
+                  `${totalReceived} ${language === 'es' ? 'recibida' : 'received'}`}
               </span>
             </div>
-            {givenTaps.length > 0 && (
+            {totalGiven > 0 && (
               <div>
                 <div className="text-xs text-zinc-500 mb-1.5">
-                  {t('Given')} ({givenTaps.length})
+                  {t('Given')} ({totalGiven})
                 </div>
                 <div className="space-y-1.5">
-                  {givenTaps.map((tap, i) => (
+                  {givenTechTaps.map((tap, i) => (
                     <div
-                      key={i}
+                      key={`gt-${i}`}
                       className="flex items-center gap-2 bg-zinc-800 rounded-lg px-3 py-2"
                     >
                       <Zap
@@ -368,18 +442,31 @@ export default function SessionDetailPage() {
                       </span>
                     </div>
                   ))}
+                  {givenFlowTaps.map((name, i) => (
+                    <div
+                      key={`gf-${i}`}
+                      className="flex items-center gap-2 bg-zinc-800 rounded-lg px-3 py-2"
+                    >
+                      <CategoryIcon
+                        value={flowIcon}
+                        size={13}
+                        className="text-green-500 shrink-0"
+                      />
+                      <span className="text-sm text-zinc-100">{name}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
-            {receivedTaps.length > 0 && (
+            {totalReceived > 0 && (
               <div>
                 <div className="text-xs text-zinc-500 mb-1.5">
-                  {t('Received')} ({receivedTaps.length})
+                  {t('Received')} ({totalReceived})
                 </div>
                 <div className="space-y-1.5">
-                  {receivedTaps.map((tap, i) => (
+                  {receivedTechTaps.map((tap, i) => (
                     <div
-                      key={i}
+                      key={`rt-${i}`}
                       className="flex items-center gap-2 bg-zinc-800 rounded-lg px-3 py-2"
                     >
                       <Hand
@@ -390,6 +477,19 @@ export default function SessionDetailPage() {
                       <span className="text-sm text-zinc-100">
                         {tapTechniqueMap?.get(tap.techniqueId) ?? t('Unknown')}
                       </span>
+                    </div>
+                  ))}
+                  {receivedFlowTaps.map((name, i) => (
+                    <div
+                      key={`rf-${i}`}
+                      className="flex items-center gap-2 bg-zinc-800 rounded-lg px-3 py-2"
+                    >
+                      <CategoryIcon
+                        value={flowIcon}
+                        size={13}
+                        className="text-red-400 shrink-0"
+                      />
+                      <span className="text-sm text-zinc-100">{name}</span>
                     </div>
                   ))}
                 </div>

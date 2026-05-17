@@ -10,10 +10,17 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { VariableSizeList, type ListChildComponentProps } from 'react-window'
-import { Search, X, Plus, Star, SlidersHorizontal } from 'lucide-react'
+import {
+  Search,
+  X,
+  Plus,
+  Star,
+  SlidersHorizontal,
+  ChevronRight,
+} from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
-import type { Category, Difficulty, Technique } from '../types'
+import type { Category, Difficulty, Flow, Technique } from '../types'
 import DifficultyBadge from '../components/DifficultyBadge'
 import { CategoryIcon } from '../components/CategoryIcon'
 import {
@@ -28,6 +35,8 @@ import {
   techniqueMatchesQuery,
   techniqueScore,
   getMatchingAlias,
+  flowMatchesQuery,
+  flowScore,
 } from '../utils/fuzzySearch'
 import { getFlowIcon, FLOW_ICON_UPDATED_EVENT } from '../utils/flowIcon'
 import { notifyDbMutation } from '../utils/autoBackup/notify'
@@ -446,6 +455,48 @@ export default function TechniquesPage() {
   const techniques = useMemo(() => queryResult?.items ?? [], [queryResult])
   const freqMap = queryResult?.freqMap ?? new Map<number, number>()
 
+  const allFlows = useLiveQuery(
+    () => db.flows.orderBy('name').toArray(),
+    [],
+    [] as Flow[],
+  )
+
+  const techNameMapForFlows = useLiveQuery(
+    async () => {
+      const techs = await db.techniques.toArray()
+      const m = new Map<number, string>()
+      for (const t of techs) m.set(t.id, getTechniqueName(t, language))
+      return m
+    },
+    [language],
+    new Map<number, string>(),
+  )
+
+  type SearchResult =
+    | { kind: 'technique'; item: Technique; score: number }
+    | { kind: 'flow'; item: Flow; score: number }
+
+  const mixedSearchResults = useMemo((): SearchResult[] | null => {
+    if (!debouncedSearch.trim()) return null
+    const nameById = (id: number) => techNameMapForFlows?.get(id) ?? ''
+    const techResults: SearchResult[] = techniques.map((t) => ({
+      kind: 'technique' as const,
+      item: t,
+      score: techniqueScore(
+        { ...withLocalizedName(t, language), cues: t.cues ?? [] },
+        debouncedSearch,
+      ),
+    }))
+    const flowResults: SearchResult[] = (allFlows ?? [])
+      .filter((f) => flowMatchesQuery(f, nameById, debouncedSearch))
+      .map((f) => ({
+        kind: 'flow' as const,
+        item: f,
+        score: flowScore(f, nameById, debouncedSearch),
+      }))
+    return [...techResults, ...flowResults].sort((a, b) => b.score - a.score)
+  }, [debouncedSearch, techniques, allFlows, techNameMapForFlows, language])
+
   const catMap = new Map(
     categories?.map((c) => [c.id, getCategoryName(c, language)]),
   )
@@ -743,12 +794,19 @@ export default function TechniquesPage() {
 
         <div className="px-6 pb-2 flex items-center justify-between gap-3">
           <span className="text-xs text-zinc-500">
-            {techniques.length}{' '}
-            {(() => {
-              const count = techniques.length
-              if (language === 'es') return count === 1 ? 'técnica' : 'técnicas'
-              return count === 1 ? 'technique' : 'techniques'
-            })()}
+            {mixedSearchResults
+              ? (() => {
+                  const count = mixedSearchResults.length
+                  if (language === 'es')
+                    return `${count} resultado${count !== 1 ? 's' : ''}`
+                  return `${count} result${count !== 1 ? 's' : ''}`
+                })()
+              : (() => {
+                  const count = techniques.length
+                  if (language === 'es')
+                    return `${count} ${count === 1 ? 'técnica' : 'técnicas'}`
+                  return `${count} ${count === 1 ? 'technique' : 'techniques'}`
+                })()}
           </span>
           <button
             onClick={() => navigate('/techniques/new/edit')}
@@ -766,26 +824,108 @@ export default function TechniquesPage() {
         </div>
       </div>
 
-      {/* P4: windowed list — only visible cards are in the DOM */}
-      <VariableSizeList
-        ref={listRef}
-        height={listHeight}
-        itemCount={techniques.length}
-        itemSize={(index) =>
-          rowHeightsRef.current[techniques[index]?.id] ?? DEFAULT_ITEM_SIZE
-        }
-        estimatedItemSize={DEFAULT_ITEM_SIZE}
-        width="100%"
-        innerElementType={ListInner}
-        overscanCount={3}
-        initialScrollOffset={initialScrollOffset}
-        onScroll={({ scrollOffset }) => {
-          scrollOffsetRef.current = scrollOffset
-          window.sessionStorage.setItem(LIST_SCROLL_KEY, String(scrollOffset))
-        }}
-      >
-        {renderRow}
-      </VariableSizeList>
+      {mixedSearchResults ? (
+        /* Flat list for mixed technique + flow search results */
+        <div className="px-4 pb-24 space-y-3">
+          {mixedSearchResults.length === 0 && (
+            <p className="text-sm text-zinc-500 pt-4">
+              {language === 'es' ? 'Sin resultados.' : 'No results.'}
+            </p>
+          )}
+          {mixedSearchResults.map((result) => {
+            if (result.kind === 'technique') {
+              const technique = result.item
+              return (
+                <TechniqueRow
+                  key={`t-${technique.id}`}
+                  technique={technique}
+                  name={getTechniqueName(technique, language)}
+                  categoryName={catMap.get(technique.categoryId) ?? ''}
+                  categoryIcon={catIconMap.get(technique.categoryId)}
+                  description={getTechniqueDescription(technique, language)}
+                  practiceCount={freqMap.get(technique.id) ?? 0}
+                  matchingAlias={
+                    getMatchingAlias(
+                      technique,
+                      debouncedSearch,
+                      getTechniqueName(technique, language),
+                    ) ?? undefined
+                  }
+                  onClick={() => navigate(`/techniques/${technique.id}`)}
+                  onToggleFavorite={() => {
+                    void db.techniques
+                      .update(technique.id, {
+                        isFavorite: !technique.isFavorite,
+                      })
+                      .then(() =>
+                        notifyDbMutation(undefined, {
+                          components: ['techniques'],
+                        }),
+                      )
+                  }}
+                />
+              )
+            }
+            const flow = result.item
+            return (
+              <button
+                key={`f-${flow.id}`}
+                onClick={() => navigate(`/flows/${flow.id}`)}
+                className="w-full bg-zinc-900 rounded-2xl p-4 flex gap-3 text-left active:opacity-70 transition-opacity"
+              >
+                <div className="shrink-0 mt-0.5">
+                  <CategoryIcon
+                    value={flowIcon}
+                    size={16}
+                    className="text-gold"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-zinc-100 text-sm">
+                      {flow.name}
+                    </span>
+                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-gold/15 text-gold">
+                      Flow
+                    </span>
+                  </div>
+                  {flow.description ? (
+                    <p className="text-xs text-zinc-400 mt-0.5 line-clamp-2">
+                      {flow.description}
+                    </p>
+                  ) : null}
+                </div>
+                <ChevronRight
+                  size={16}
+                  className="text-zinc-600 shrink-0 mt-0.5"
+                  strokeWidth={2}
+                />
+              </button>
+            )
+          })}
+        </div>
+      ) : (
+        /* P4: windowed list — only visible cards are in the DOM */
+        <VariableSizeList
+          ref={listRef}
+          height={listHeight}
+          itemCount={techniques.length}
+          itemSize={(index) =>
+            rowHeightsRef.current[techniques[index]?.id] ?? DEFAULT_ITEM_SIZE
+          }
+          estimatedItemSize={DEFAULT_ITEM_SIZE}
+          width="100%"
+          innerElementType={ListInner}
+          overscanCount={3}
+          initialScrollOffset={initialScrollOffset}
+          onScroll={({ scrollOffset }) => {
+            scrollOffsetRef.current = scrollOffset
+            window.sessionStorage.setItem(LIST_SCROLL_KEY, String(scrollOffset))
+          }}
+        >
+          {renderRow}
+        </VariableSizeList>
+      )}
       <button
         onClick={() => navigate('/flows')}
         aria-label={t('Open Flows')}

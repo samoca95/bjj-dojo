@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
-import type { Category, Flow, FlowNode, Session, Technique } from '../types'
+import type { Category, Flow, FlowNode, Technique } from '../types'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { getTechniqueName, useI18n } from '../i18n'
 import { notifyDbMutation } from '../utils/autoBackup/notify'
@@ -210,7 +210,7 @@ function ActionMenu({ flow, onClose }: { flow: Flow; onClose: () => void }) {
         className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-100 active:bg-zinc-800"
       >
         <Pencil size={16} className="text-gold shrink-0" />
-        {language === 'es' ? 'Editar flujo' : 'Edit flow'}
+        {language === 'es' ? 'Editar' : 'Edit'}
       </button>
       <button
         onClick={() => void handleDuplicate()}
@@ -232,11 +232,11 @@ function ActionMenu({ flow, onClose }: { flow: Flow; onClose: () => void }) {
         />
         {isFav
           ? language === 'es'
-            ? 'Quitar de favoritos'
-            : 'Remove from favorites'
+            ? 'Sin favorito'
+            : 'Unfavorite'
           : language === 'es'
-            ? 'Marcar como favorito'
-            : 'Mark as favorite'}
+            ? 'Favorito'
+            : 'Favorite'}
       </button>
       <button
         onClick={handleToggleFocus}
@@ -250,11 +250,11 @@ function ActionMenu({ flow, onClose }: { flow: Flow; onClose: () => void }) {
         />
         {isFocused
           ? language === 'es'
-            ? 'Quitar del foco'
-            : 'Remove from focus'
+            ? 'Sin foco'
+            : 'Unfocus'
           : language === 'es'
-            ? 'Añadir al foco'
-            : 'Add to focus'}
+            ? 'Foco'
+            : 'Focus'}
       </button>
       <div className="border-t border-zinc-800" />
       <button
@@ -262,7 +262,7 @@ function ActionMenu({ flow, onClose }: { flow: Flow; onClose: () => void }) {
         className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 active:bg-zinc-800"
       >
         <Trash2 size={16} className="shrink-0" />
-        {language === 'es' ? 'Eliminar flujo' : 'Delete flow'}
+        {language === 'es' ? 'Eliminar' : 'Delete'}
       </button>
     </div>
   )
@@ -295,11 +295,27 @@ export default function FlowDetailPage() {
     async () => {
       const sfs = await db.sessionFlows.where('flowId').equals(numId).toArray()
       if (sfs.length === 0) return []
-      const sessionIds = [...new Set(sfs.map((sf) => sf.sessionId))]
-      const sessions = await db.sessions.where('id').anyOf(sessionIds).toArray()
-      return (sessions as Session[])
-        .filter((s) => s.notes?.trim())
-        .map((s) => ({ sessionId: s.id!, date: s.date, note: s.notes.trim() }))
+      const noted = sfs.filter((sf) => sf.notes?.trim())
+      if (noted.length === 0) return []
+      const sessions = await db.sessions
+        .where('id')
+        .anyOf(noted.map((sf) => sf.sessionId))
+        .toArray()
+      const sessionById = new Map(sessions.map((s) => [s.id, s]))
+      return noted
+        .map((sf) => {
+          const session = sessionById.get(sf.sessionId)
+          if (!session) return null
+          return {
+            sessionId: sf.sessionId,
+            date: session.date,
+            note: sf.notes!.trim(),
+          }
+        })
+        .filter(
+          (entry): entry is { sessionId: number; date: number; note: string } =>
+            Boolean(entry),
+        )
         .sort((a, b) => b.date - a.date)
     },
     [numId],
