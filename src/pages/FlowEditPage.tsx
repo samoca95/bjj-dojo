@@ -369,6 +369,14 @@ export default function FlowEditPage() {
       )
       return
     }
+    if (!gi && !noGi) {
+      window.alert(
+        language === 'es'
+          ? 'Selecciona al menos un formato (Gi o No-Gi).'
+          : 'Select at least one format (Gi or No-Gi).',
+      )
+      return
+    }
     const now = Date.now()
     const cleanLinks: ReferenceLink[] = referenceLinks
       .map((link) => ({
