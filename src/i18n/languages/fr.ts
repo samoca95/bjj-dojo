@@ -381,6 +381,13 @@ const FR_TRANSLATIONS = {
   'Need help?': 'Besoin d’aide ?',
   // Backup sync indicator
   'Backup failed': 'Échec de la sauvegarde',
+  'Backup queue': 'File de sauvegarde',
+  'Files currently being saved': 'Fichiers en cours de sauvegarde',
+  'No files in queue': 'Aucun fichier dans la file',
+  Queued: 'En file',
+  Saving: 'Enregistrement',
+  Failed: 'Échec',
+  Saved: 'Enregistré',
   'Your data is still safely stored in this browser.':
     'Vos données sont toujours en sécurité dans ce navigateur.',
   'No network — backup will be retried next time you save a session with a connection.':

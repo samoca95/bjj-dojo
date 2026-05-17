@@ -342,6 +342,13 @@ export type TranslationKey =
   | 'Need help?'
   // Backup sync indicator
   | 'Backup failed'
+  | 'Backup queue'
+  | 'Files currently being saved'
+  | 'No files in queue'
+  | 'Queued'
+  | 'Saving'
+  | 'Failed'
+  | 'Saved'
   | 'Your data is still safely stored in this browser.'
   | 'No network — backup will be retried next time you save a session with a connection.'
   | 'Existing backup found'
