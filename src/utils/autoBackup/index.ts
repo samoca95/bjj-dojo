@@ -113,7 +113,33 @@ export async function runBackupNow(
               database,
             )
             const filename = backupFilenameForComponent(component)
-            const result = await destination.write(payload, filename)
+            window.dispatchEvent(
+              new CustomEvent('bjj-dojo:backup-file-started', {
+                detail: { destinationId: destination.id, component, filename },
+              }),
+            )
+            let result
+            try {
+              result = await destination.write(payload, filename)
+            } catch (err) {
+              const message = err instanceof Error ? err.message : String(err)
+              window.dispatchEvent(
+                new CustomEvent('bjj-dojo:backup-file-failed', {
+                  detail: {
+                    destinationId: destination.id,
+                    component,
+                    filename,
+                    error: message,
+                  },
+                }),
+              )
+              throw err
+            }
+            window.dispatchEvent(
+              new CustomEvent('bjj-dojo:backup-file-succeeded', {
+                detail: { destinationId: destination.id, component, filename },
+              }),
+            )
             lastFilename = result.filename
           }
           window.dispatchEvent(
@@ -192,7 +218,7 @@ export function scheduleAfterMutation(
   if (options.showSyncIndicator ?? true) {
     window.dispatchEvent(
       new CustomEvent('bjj-dojo:backup-triggered', {
-        detail: { destinationIds },
+        detail: { destinationIds, components },
       }),
     )
   }
