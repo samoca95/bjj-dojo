@@ -314,7 +314,9 @@ export default function AddEditSessionPage() {
                 ? {
                     sessionId: sid,
                     flowId,
-                    notes: note.trim().slice(0, VALIDATION_LIMITS.NOTE_MAX_LENGTH),
+                    notes: note
+                      .trim()
+                      .slice(0, VALIDATION_LIMITS.NOTE_MAX_LENGTH),
                   }
                 : { sessionId: sid, flowId }
             }),

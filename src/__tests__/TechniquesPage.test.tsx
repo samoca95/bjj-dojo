@@ -94,7 +94,8 @@ function setupMocks(
   mockUseLiveQuery.mockImplementation(() => {
     const c = call++
     if (c % 4 === 0) return categories
-    if (c % 4 === 1) return { items: techniques, freqMap: new Map<number, number>() }
+    if (c % 4 === 1)
+      return { items: techniques, freqMap: new Map<number, number>() }
     if (c % 4 === 2) return []
     return new Map<number, string>()
   })

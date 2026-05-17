@@ -10,7 +10,14 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { VariableSizeList, type ListChildComponentProps } from 'react-window'
-import { Search, X, Plus, Star, SlidersHorizontal, ChevronRight } from 'lucide-react'
+import {
+  Search,
+  X,
+  Plus,
+  Star,
+  SlidersHorizontal,
+  ChevronRight,
+} from 'lucide-react'
 import { db } from '../db/database'
 import { getCategoryMap } from '../db/categoryCache'
 import type { Category, Difficulty, Flow, Technique } from '../types'
@@ -471,8 +478,7 @@ export default function TechniquesPage() {
 
   const mixedSearchResults = useMemo((): SearchResult[] | null => {
     if (!debouncedSearch.trim()) return null
-    const nameById = (id: number) =>
-      techNameMapForFlows?.get(id) ?? ''
+    const nameById = (id: number) => techNameMapForFlows?.get(id) ?? ''
     const techResults: SearchResult[] = techniques.map((t) => ({
       kind: 'technique' as const,
       item: t,
@@ -489,13 +495,7 @@ export default function TechniquesPage() {
         score: flowScore(f, nameById, debouncedSearch),
       }))
     return [...techResults, ...flowResults].sort((a, b) => b.score - a.score)
-  }, [
-    debouncedSearch,
-    techniques,
-    allFlows,
-    techNameMapForFlows,
-    language,
-  ])
+  }, [debouncedSearch, techniques, allFlows, techNameMapForFlows, language])
 
   const catMap = new Map(
     categories?.map((c) => [c.id, getCategoryName(c, language)]),
@@ -854,9 +854,13 @@ export default function TechniquesPage() {
                   onClick={() => navigate(`/techniques/${technique.id}`)}
                   onToggleFavorite={() => {
                     void db.techniques
-                      .update(technique.id, { isFavorite: !technique.isFavorite })
+                      .update(technique.id, {
+                        isFavorite: !technique.isFavorite,
+                      })
                       .then(() =>
-                        notifyDbMutation(undefined, { components: ['techniques'] }),
+                        notifyDbMutation(undefined, {
+                          components: ['techniques'],
+                        }),
                       )
                   }}
                 />
