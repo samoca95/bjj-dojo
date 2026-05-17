@@ -848,28 +848,35 @@ export default function HomePage() {
     const maxGiven = Math.max(1, ...paddedCounts)
     return { avgGiven, paddedCounts, maxGiven }
   }, [recentSessions, tapCountsBySessionId])
+  const techniqueById = useMemo(
+    () => new Map((techniques ?? []).map((t) => [t.id, t])),
+    [techniques],
+  )
+  const flowById = useMemo(() => {
+    const m = new Map<number, Flow>()
+    for (const flow of allFlows ?? []) {
+      if (flow.id != null) m.set(flow.id, flow)
+    }
+    return m
+  }, [allFlows])
+
   const focusTechniques = useMemo(() => {
-    const techniqueById = new Map((techniques ?? []).map((t) => [t.id, t]))
     const orderedTechniques: Technique[] = []
     for (const id of focusTechniqueIds) {
       const technique = techniqueById.get(id)
       if (technique) orderedTechniques.push(technique)
     }
     return orderedTechniques
-  }, [techniques, focusTechniqueIds])
+  }, [focusTechniqueIds, techniqueById])
 
   const focusFlows = useMemo(() => {
-    const flowById = new Map<number, Flow>()
-    for (const flow of allFlows ?? []) {
-      if (flow.id != null) flowById.set(flow.id, flow)
-    }
     const orderedFlows: Flow[] = []
     for (const id of focusFlowIds) {
       const flow = flowById.get(id)
       if (flow) orderedFlows.push(flow)
     }
     return orderedFlows
-  }, [allFlows, focusFlowIds])
+  }, [focusFlowIds, flowById])
 
   const moveFocusTechnique = (techniqueId: number, direction: -1 | 1) => {
     setFocusTechniqueIdsState((prev) => {
