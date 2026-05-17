@@ -1,6 +1,11 @@
 import type { DatabaseBackup } from '../../db/database'
 
 export type DestinationId = 'fileSystem' | 'github'
+export type BackupComponent =
+  | 'preferences'
+  | 'sessions'
+  | 'techniques'
+  | 'flows'
 
 export interface DiscoveredBackup {
   /** Stable identifier the destination understands when restoring. */

@@ -1,5 +1,6 @@
 import type { SessionType } from '../types'
 import { SESSION_TYPE_ICONS } from '../types'
+import { notifyPreferenceMutation } from './autoBackup/notify'
 
 export const SESSION_TYPE_ICONS_STORAGE_KEY = 'bjj-dojo.session-type-icons'
 export const SESSION_TYPE_ICONS_UPDATED_EVENT =
@@ -39,4 +40,5 @@ export function saveSessionTypeIcons(icons: SessionTypeIconsMap) {
     JSON.stringify(icons),
   )
   window.dispatchEvent(new Event(SESSION_TYPE_ICONS_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }

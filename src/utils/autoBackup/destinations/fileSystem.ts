@@ -22,9 +22,14 @@ import {
   isFsBackupEnabled,
   setFsFolderName,
 } from '../settings'
+import {
+  isRecognizedBackupFilename,
+  parseBackupComponentFromFilename,
+} from '../files'
 
 const HANDLE_KEY = 'autoBackup.fsHandle'
 const BACKUP_JSON_INDENT = 2
+let writeQueue: Promise<void> = Promise.resolve()
 
 function serializeBackup(payload: DatabaseBackup): string {
   return `${JSON.stringify(payload, null, BACKUP_JSON_INDENT)}\n`
@@ -104,12 +109,10 @@ export async function ensureFolderPermission(
   return await handle.requestPermission({ mode: 'readwrite' })
 }
 
-const BACKUP_FILENAME_PATTERN = /^bjj-dojo-backup(?:-\d{4}-\d{2}-\d{2})?\.json$/
-
 async function listBackupFiles(handle: DirectoryHandle): Promise<FileHandle[]> {
   const matches: FileHandle[] = []
   for await (const entry of handle.values()) {
-    if (entry.kind === 'file' && BACKUP_FILENAME_PATTERN.test(entry.name)) {
+    if (entry.kind === 'file' && isRecognizedBackupFilename(entry.name)) {
       matches.push(entry)
     }
   }
@@ -131,21 +134,29 @@ export const fileSystemDestination: BackupDestination = {
     payload: DatabaseBackup,
     filename: string,
   ): Promise<BackupResult> {
-    const handle = await getStoredFolderHandle()
-    if (!handle) throw new Error('No backup folder connected.')
-    const perm = await ensureFolderPermission(handle, false)
-    if (perm !== 'granted') {
-      throw new Error(
-        'Folder permission was revoked. Reconnect the folder in Settings.',
-      )
+    const run = async () => {
+      const handle = await getStoredFolderHandle()
+      if (!handle) throw new Error('No backup folder connected.')
+      const perm = await ensureFolderPermission(handle, false)
+      if (perm !== 'granted') {
+        throw new Error(
+          'Folder permission was revoked. Reconnect the folder in Settings.',
+        )
+      }
+      const fileHandle = await handle.getFileHandle(filename, { create: true })
+      const serialized = serializeBackup(payload)
+      const writable = await fileHandle.createWritable()
+      await writable.write(serialized)
+      await writable.close()
+      await rotateOldBackups(handle, filename)
+      return { filename, bytesWritten: serialized.length }
     }
-    const fileHandle = await handle.getFileHandle(filename, { create: true })
-    const serialized = serializeBackup(payload)
-    const writable = await fileHandle.createWritable()
-    await writable.write(serialized)
-    await writable.close()
-    await rotateOldBackups(handle, filename)
-    return { filename, bytesWritten: serialized.length }
+    const queued = writeQueue.then(run, run)
+    writeQueue = queued.then(
+      () => undefined,
+      () => undefined,
+    )
+    return await queued
   },
 
   async discoverExistingBackups(): Promise<DiscoveredBackup[]> {
@@ -183,11 +194,16 @@ export const fileSystemDestination: BackupDestination = {
 /** Keep the N most recent daily backups (N from settings); remove older same-pattern files. */
 async function rotateOldBackups(handle: DirectoryHandle, justWritten: string) {
   const KEEP = getBackupRetentionCount()
+  const writtenComponent = parseBackupComponentFromFilename(justWritten)
   const files = await listBackupFiles(handle)
   // Skip the file we just wrote — its lastModified is current
   const dated = await Promise.all(
     files
       .filter((f) => f.name !== justWritten)
+      .filter((f) => {
+        if (!writtenComponent) return true
+        return parseBackupComponentFromFilename(f.name) === writtenComponent
+      })
       .map(async (f) => ({
         name: f.name,
         mtime: (await f.getFile()).lastModified,

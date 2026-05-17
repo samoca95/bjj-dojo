@@ -41,18 +41,11 @@ function jsonResponse(status: number, body: unknown): Response {
 describe('GitHub repo backup rotation', () => {
   it('deletes older dated backups beyond the retention count', async () => {
     setBackupRetentionCount(3)
-    const existing = [
-      '2026-05-01',
-      '2026-05-02',
-      '2026-05-03',
-      '2026-05-04',
-      '2026-05-05',
-      '2026-05-06',
-    ].map((d) => ({
-      name: `bjj-dojo-backup-${d}.json`,
-      path: `backups/bjj-dojo-backup-${d}.json`,
+    const existing = [1, 2, 3, 4, 5, 6].map((n) => ({
+      name: `bjj-dojo-backup-sessions-${n}.json`,
+      path: `backups/bjj-dojo-backup-sessions-${n}.json`,
       type: 'file',
-      sha: `sha-${d}`,
+      sha: `sha-${n}`,
     }))
 
     const deletedPaths: string[] = []
@@ -83,27 +76,25 @@ describe('GitHub repo backup rotation', () => {
         return jsonResponse(404, { message: 'unhandled' })
       })
 
-    await githubDestination.write(PAYLOAD, 'bjj-dojo-backup-2026-05-07.json')
+    await githubDestination.write(PAYLOAD, 'bjj-dojo-backup-sessions-7.json')
 
     // KEEP=3 → keep 2 of the existing 6 (since the new file is the 3rd).
-    // Sorted desc: 05-06, 05-05, 05-04, 05-03, 05-02, 05-01. Keep first 2;
-    // delete 05-04, 05-03, 05-02, 05-01.
     expect(deletedPaths.sort()).toEqual([
-      'backups/bjj-dojo-backup-2026-05-01.json',
-      'backups/bjj-dojo-backup-2026-05-02.json',
-      'backups/bjj-dojo-backup-2026-05-03.json',
-      'backups/bjj-dojo-backup-2026-05-04.json',
+      'backups/bjj-dojo-backup-sessions-1.json',
+      'backups/bjj-dojo-backup-sessions-2.json',
+      'backups/bjj-dojo-backup-sessions-3.json',
+      'backups/bjj-dojo-backup-sessions-4.json',
     ])
     expect(fetchMock).toHaveBeenCalled()
   })
 
   it('tolerates per-file delete failures without aborting the run', async () => {
     setBackupRetentionCount(1)
-    const existing = ['2026-04-01', '2026-04-02'].map((d) => ({
-      name: `bjj-dojo-backup-${d}.json`,
-      path: `backups/bjj-dojo-backup-${d}.json`,
+    const existing = [1, 2].map((n) => ({
+      name: `bjj-dojo-backup-sessions-${n}.json`,
+      path: `backups/bjj-dojo-backup-sessions-${n}.json`,
       type: 'file',
-      sha: `sha-${d}`,
+      sha: `sha-${n}`,
     }))
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
       const url = input.toString()
@@ -125,7 +116,7 @@ describe('GitHub repo backup rotation', () => {
     })
 
     await expect(
-      githubDestination.write(PAYLOAD, 'bjj-dojo-backup-2026-04-03.json'),
+      githubDestination.write(PAYLOAD, 'bjj-dojo-backup-sessions-3.json'),
     ).resolves.toBeDefined()
   })
 })

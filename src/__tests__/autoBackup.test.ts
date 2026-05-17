@@ -2,12 +2,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { makeTestDb, openDb, closeDb } from '../test/testDb'
 import { BJJDatabase } from '../db/database'
 import {
+  readLatestBackupPayload,
   runBackupNow,
   scheduleAfterMutation,
   _resetSchedulerForTests,
 } from '../utils/autoBackup'
 import {
-  backupFilenameForDate,
   setFsBackupEnabled,
   setGithubBackupEnabled,
   setGithubToken,
@@ -18,6 +18,7 @@ import {
   getGithubLastError,
   getOverallLastRun,
 } from '../utils/autoBackup/settings'
+import { backupFilenameForComponent } from '../utils/autoBackup/files'
 import { clearAllPrefixedStorage } from '../utils/backupPreferences'
 
 let db: BJJDatabase
@@ -36,10 +37,10 @@ afterEach(async () => {
   vi.restoreAllMocks()
 })
 
-describe('backupFilenameForDate', () => {
-  it('produces a stable bjj-dojo-backup-YYYY-MM-DD.json filename', () => {
-    const filename = backupFilenameForDate(new Date('2026-05-16T08:00:00Z'))
-    expect(filename).toBe('bjj-dojo-backup-2026-05-16.json')
+describe('backupFilenameForComponent', () => {
+  it('produces a stable bjj-dojo-backup-<component>-<timestamp>.json filename', () => {
+    const filename = backupFilenameForComponent('sessions', 1_715_920_000_000)
+    expect(filename).toBe('bjj-dojo-backup-sessions-1715920000000.json')
   })
 })
 
@@ -70,6 +71,7 @@ describe('runBackupNow', () => {
       expect.stringContaining('/gists/abc123'),
       expect.objectContaining({ method: 'PATCH' }),
     )
+    expect(fetchMock).toHaveBeenCalledTimes(4)
   })
 
   it('records last-error and does not advance last-run on destination failure', async () => {
@@ -132,7 +134,7 @@ describe('scheduleAfterMutation', () => {
     scheduleAfterMutation(db)
 
     await vi.waitFor(() => {
-      expect(fetchSpy).toHaveBeenCalledTimes(2)
+      expect(fetchSpy).toHaveBeenCalledTimes(8)
     })
   })
 })
@@ -148,14 +150,14 @@ describe('GitHub destination — discovery', () => {
       new Response(
         JSON.stringify([
           {
-            name: 'bjj-dojo-backup-2026-05-16.json',
+            name: 'bjj-dojo-backup-sessions-1715920001000.json',
             type: 'file',
-            path: 'backups/bjj-dojo-backup-2026-05-16.json',
+            path: 'backups/bjj-dojo-backup-sessions-1715920001000.json',
           },
           {
-            name: 'bjj-dojo-backup-2026-05-10.json',
+            name: 'bjj-dojo-backup-flows-1715920000000.json',
             type: 'file',
-            path: 'backups/bjj-dojo-backup-2026-05-10.json',
+            path: 'backups/bjj-dojo-backup-flows-1715920000000.json',
           },
           { name: 'README.md', type: 'file', path: 'backups/README.md' },
           { name: 'subdir', type: 'dir', path: 'backups/subdir' },
@@ -168,8 +170,8 @@ describe('GitHub destination — discovery', () => {
     const results = await githubDestination.discoverExistingBackups()
     expect(results).toHaveLength(2)
     expect(results.map((r) => r.filename)).toEqual([
-      'bjj-dojo-backup-2026-05-16.json',
-      'bjj-dojo-backup-2026-05-10.json',
+      'bjj-dojo-backup-sessions-1715920001000.json',
+      'bjj-dojo-backup-flows-1715920000000.json',
     ])
   })
 
@@ -266,6 +268,54 @@ describe('Restore via destination.readBackup', () => {
     } finally {
       await closeDb(dest)
     }
+  })
+})
+
+describe('readLatestBackupPayload', () => {
+  it('merges the latest file of each component and falls back to legacy for missing parts', async () => {
+    const destination = {
+      id: 'github' as const,
+      isEnabled: () => true,
+      write: vi.fn(),
+      discoverExistingBackups: vi.fn(async () => [
+        {
+          id: 'legacy',
+          filename: 'bjj-dojo-backup-2026-05-16.json',
+          label: 'legacy',
+        },
+        {
+          id: 'tech',
+          filename: 'bjj-dojo-backup-techniques-1715920000000.json',
+          label: 'tech',
+        },
+      ]),
+      readBackup: vi.fn(async (id: string) => {
+        if (id === 'legacy')
+          return {
+            version: 2,
+            exportedAt: 1,
+            sessions: [{ id: 1, date: 1, durationMinutes: 60, sessionType: 'GI', notes: '', energyLevel: 3 }],
+            sessionTechniques: [],
+            sessionTaps: [],
+            categories: [{ id: 1, name: 'Guards', description: '' }],
+            techniques: [],
+            techniqueConnections: [],
+            clubs: [],
+            drillPlans: [],
+            preferences: { 'bjj-dojo:user-name': 'Ana' },
+          }
+        return {
+          version: 2,
+          exportedAt: 2,
+          categories: [{ id: 1, name: 'Updated', description: '' }],
+          techniques: [],
+        }
+      }),
+    }
+    const merged = await readLatestBackupPayload(destination)
+    expect(merged.sessions).toHaveLength(1)
+    expect(merged.categories?.[0].name).toBe('Updated')
+    expect(merged.preferences?.['bjj-dojo:user-name']).toBe('Ana')
   })
 })
 

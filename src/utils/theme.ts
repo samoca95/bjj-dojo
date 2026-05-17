@@ -1,4 +1,5 @@
 export type AppTheme = 'black' | 'light'
+import { notifyPreferenceMutation } from './autoBackup/notify'
 
 export const APP_THEME_STORAGE_KEY = 'bjj-dojo.theme'
 export const APP_THEME_UPDATED_EVENT = 'bjj-dojo:theme-updated'
@@ -19,4 +20,5 @@ export function setAppTheme(theme: AppTheme) {
   window.localStorage.setItem(APP_THEME_STORAGE_KEY, theme)
   applyAppTheme(theme)
   window.dispatchEvent(new Event(APP_THEME_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }

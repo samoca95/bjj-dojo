@@ -20,6 +20,7 @@ import {
   collectBackupPreferences,
   restoreBackupPreferences,
 } from '../utils/backupPreferences'
+import type { BackupComponent } from '../utils/autoBackup/types'
 
 /** Generic key/value blob stored in the appState table (auto-backup config, FS handle, …). */
 export interface AppStateRecord {
@@ -299,16 +300,18 @@ export interface DatabaseBackup {
   exportedAt: number
   /** UI language at export time (informational only — content stays canonical). */
   language?: AppLanguage
-  categories: Category[]
-  techniques: Technique[]
-  techniqueConnections: TechniqueConnection[]
-  sessions: Session[]
-  sessionTechniques: SessionTechnique[]
-  sessionTaps: SessionTap[]
-  clubs: Club[]
-  drillPlans: DrillPlan[]
+  categories?: Category[]
+  techniques?: Technique[]
+  techniqueConnections?: TechniqueConnection[]
+  sessions?: Session[]
+  sessionTechniques?: SessionTechnique[]
+  sessionTaps?: SessionTap[]
+  clubs?: Club[]
+  drillPlans?: DrillPlan[]
   /** Backed-up `bjj-dojo:`-prefixed localStorage settings (belt, goals, layout, …). */
   preferences?: Record<string, string>
+  /** Optional component marker for split auto-backup files. */
+  component?: BackupComponent
 }
 
 /** Stable fingerprint of the live schema — table names + index strings. */
@@ -364,6 +367,64 @@ export async function exportDatabaseBackup(
     ...snapshot,
     preferences,
   }
+}
+
+export async function exportDatabaseBackupComponent(
+  component: BackupComponent,
+  database: BJJDatabase = db,
+  language: AppLanguage = 'en',
+): Promise<DatabaseBackup> {
+  const base: DatabaseBackup = {
+    version: BACKUP_FILE_FORMAT_VERSION,
+    schemaVersion: database.verno,
+    schemaSignature: computeSchemaSignature(database),
+    exportedAt: Date.now(),
+    language,
+    component,
+  }
+
+  if (component === 'preferences') {
+    return {
+      ...base,
+      preferences: typeof window === 'undefined' ? {} : collectBackupPreferences(),
+    }
+  }
+
+  if (component === 'sessions') {
+    const snapshot = await database.transaction(
+      'r',
+      [database.sessions, database.sessionTechniques, database.sessionTaps],
+      async () => ({
+        sessions: await database.sessions.toArray(),
+        sessionTechniques: await database.sessionTechniques.toArray(),
+        sessionTaps: await database.sessionTaps.toArray(),
+      }),
+    )
+    return { ...base, ...snapshot }
+  }
+
+  if (component === 'techniques') {
+    const snapshot = await database.transaction(
+      'r',
+      [database.categories, database.techniques],
+      async () => ({
+        categories: await database.categories.toArray(),
+        techniques: await database.techniques.toArray(),
+      }),
+    )
+    return { ...base, ...snapshot }
+  }
+
+  const flowSnapshot = await database.transaction(
+    'r',
+    [database.techniqueConnections, database.clubs, database.drillPlans],
+    async () => ({
+      techniqueConnections: await database.techniqueConnections.toArray(),
+      clubs: await database.clubs.toArray(),
+      drillPlans: await database.drillPlans.toArray(),
+    }),
+  )
+  return { ...base, ...flowSnapshot }
 }
 
 /** Returns [] for missing keys (backward-compatible) but throws on wrong types. */

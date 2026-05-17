@@ -520,7 +520,7 @@ export default function TechniquesPage() {
             .update(technique.id, {
               isFavorite: !technique.isFavorite,
             })
-            .then(() => notifyDbMutation())
+            .then(() => notifyDbMutation(undefined, { components: ['techniques'] }))
         }}
       />
     )

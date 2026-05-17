@@ -245,7 +245,7 @@ export default function AddEditSessionPage() {
           )
         }
       })
-      notifyDbMutation()
+      notifyDbMutation(undefined, { components: ['sessions'] })
       navigate(
         `/sessions/${sid}`,
         isEdit ? undefined : { replace: true, state: { justCreated: true } },
@@ -363,7 +363,7 @@ export default function AddEditSessionPage() {
     await runWithTelemetry('technique.quick_create_failed', () =>
       db.techniques.add(newTech),
     )
-    notifyDbMutation()
+    notifyDbMutation(undefined, { components: ['techniques'] })
     handlePickerSelect(newTech)
     setNewTechName('')
     setShowCreateTechnique(false)

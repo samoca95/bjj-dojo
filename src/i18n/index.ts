@@ -23,6 +23,7 @@ import { EN_LANGUAGE_PACK } from './languages/en'
 import { ES_LANGUAGE_PACK } from './languages/es'
 import { FR_LANGUAGE_PACK } from './languages/fr'
 import type { LanguagePack, TranslationKey } from './languages/types'
+import { notifyPreferenceMutation } from '../utils/autoBackup/notify'
 
 export type AppLanguage = 'en' | 'es' | 'fr'
 export type { TranslationKey }
@@ -50,6 +51,7 @@ export function setAppLanguage(language: AppLanguage) {
   if (typeof window === 'undefined') return
   window.localStorage.setItem(APP_LANGUAGE_STORAGE_KEY, language)
   window.dispatchEvent(new CustomEvent(APP_LANGUAGE_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }
 
 export function translate(text: TranslationKey, language: AppLanguage): string {

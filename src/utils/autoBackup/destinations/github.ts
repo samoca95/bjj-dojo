@@ -21,11 +21,16 @@ import {
   getGithubToken,
   isGithubBackupEnabled,
 } from '../settings'
+import {
+  isRecognizedBackupFilename,
+  parseBackupComponentFromFilename,
+} from '../files'
 
 const API_BASE = 'https://api.github.com'
 const GIST_FILENAME = 'bjj-dojo-backup.json'
 const REPO_BACKUPS_DIR = 'backups'
 const BACKUP_JSON_INDENT = 2
+let writeQueue: Promise<void> = Promise.resolve()
 
 function serializeBackup(payload: DatabaseBackup): string {
   return `${JSON.stringify(payload, null, BACKUP_JSON_INDENT)}\n`
@@ -150,11 +155,12 @@ export async function createBackupRepo(
 async function gistWrite(
   token: string,
   gistId: string,
+  filename: string,
   payload: DatabaseBackup,
 ): Promise<BackupResult> {
   const content = serializeBackup(payload)
   const body = JSON.stringify({
-    files: { [GIST_FILENAME]: { content } },
+    files: { [filename]: { content } },
   })
   const res = await fetch(`${API_BASE}/gists/${gistId}`, {
     method: 'PATCH',
@@ -162,7 +168,7 @@ async function gistWrite(
     body,
   })
   if (!res.ok) await ghError(res, 'GitHub gist write failed')
-  return { filename: GIST_FILENAME, bytesWritten: content.length }
+  return { filename, bytesWritten: content.length }
 }
 
 async function repoGetFileSha(
@@ -212,8 +218,6 @@ async function repoWrite(
   return { filename: path, bytesWritten: content.length }
 }
 
-const DATED_BACKUP_PATTERN = /^bjj-dojo-backup-\d{4}-\d{2}-\d{2}\.json$/
-
 /**
  * Keep the N most recent dated backups in the repo's backups/ dir. The date
  * lives in the filename, so a descending name sort is equivalent to mtime sort
@@ -227,6 +231,9 @@ async function repoRotateOldBackups(
   branch?: string,
 ): Promise<void> {
   const keep = getBackupRetentionCount()
+  const writtenComponent = parseBackupComponentFromFilename(
+    justWrittenPath.split('/').pop() ?? '',
+  )
   const dirUrl = `${API_BASE}/repos/${owner}/${repo}/contents/${REPO_BACKUPS_DIR}${
     branch ? `?ref=${encodeURIComponent(branch)}` : ''
   }`
@@ -239,8 +246,12 @@ async function repoRotateOldBackups(
     sha: string
   }>
   const dated = entries
-    .filter((e) => e.type === 'file' && DATED_BACKUP_PATTERN.test(e.name))
+    .filter((e) => e.type === 'file' && isRecognizedBackupFilename(e.name))
     .filter((e) => e.path !== justWrittenPath)
+    .filter((e) => {
+      if (!writtenComponent) return true
+      return parseBackupComponentFromFilename(e.name) === writtenComponent
+    })
     .sort((a, b) => (a.name < b.name ? 1 : -1))
   const toDelete = dated.slice(Math.max(0, keep - 1))
   for (const entry of toDelete) {
@@ -286,9 +297,7 @@ async function repoListBackups(
     }>
     return entries
       .filter(
-        (e) =>
-          e.type === 'file' &&
-          /^bjj-dojo-backup(?:-\d{4}-\d{2}-\d{2})?\.json$/.test(e.name),
+        (e) => e.type === 'file' && isRecognizedBackupFilename(e.name),
       )
       .map((e) => ({
         id: e.path,
@@ -331,21 +340,22 @@ async function gistList(
     files?: Record<string, { content?: string; raw_url?: string }>
     updated_at?: string
   }
-  const file = body.files?.[GIST_FILENAME]
-  if (!file) return []
-  return [
-    {
-      id: GIST_FILENAME,
-      filename: GIST_FILENAME,
-      label: GIST_FILENAME,
-      modifiedAt: body.updated_at ? Date.parse(body.updated_at) : undefined,
-    },
-  ]
+  const modifiedAt = body.updated_at ? Date.parse(body.updated_at) : undefined
+  return Object.keys(body.files ?? {})
+    .filter((name) => isRecognizedBackupFilename(name))
+    .map((name) => ({
+      id: name,
+      filename: name,
+      label: name,
+      modifiedAt,
+    }))
+    .sort((a, b) => (a.filename < b.filename ? 1 : -1))
 }
 
 async function gistRead(
   token: string,
   gistId: string,
+  filename: string,
 ): Promise<DatabaseBackup> {
   const res = await fetch(`${API_BASE}/gists/${gistId}`, {
     headers: authHeaders(token),
@@ -354,7 +364,7 @@ async function gistRead(
   const body = (await res.json()) as {
     files?: Record<string, { content?: string }>
   }
-  const content = body.files?.[GIST_FILENAME]?.content
+  const content = body.files?.[filename]?.content
   if (!content) throw new Error('Backup file not found in gist.')
   return JSON.parse(content) as DatabaseBackup
 }
@@ -390,17 +400,25 @@ export const githubDestination: BackupDestination = {
     const target = getGithubTarget()
     if (!token) throw new Error('GitHub token missing.')
     if (!target) throw new Error('GitHub target missing.')
-    if (target.kind === 'gist') {
-      return await gistWrite(token, target.gistId, payload)
+    const run = async () => {
+      if (target.kind === 'gist') {
+        return await gistWrite(token, target.gistId, filename, payload)
+      }
+      return await repoWrite(
+        token,
+        target.owner,
+        target.repo,
+        filename,
+        payload,
+        target.branch,
+      )
     }
-    return await repoWrite(
-      token,
-      target.owner,
-      target.repo,
-      filename,
-      payload,
-      target.branch,
+    const queued = writeQueue.then(run, run)
+    writeQueue = queued.then(
+      () => undefined,
+      () => undefined,
     )
+    return await queued
   },
 
   async discoverExistingBackups() {
@@ -421,7 +439,7 @@ export const githubDestination: BackupDestination = {
     const target = getGithubTarget()
     if (!token) throw new Error('GitHub token missing.')
     if (!target) throw new Error('GitHub target missing.')
-    if (target.kind === 'gist') return await gistRead(token, target.gistId)
+    if (target.kind === 'gist') return await gistRead(token, target.gistId, id)
     return await repoRead(token, target.owner, target.repo, id, target.branch)
   },
 }

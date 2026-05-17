@@ -18,6 +18,7 @@ import type { Session, SessionTap } from '../types'
 import type { TranslationKey } from '../i18n'
 import type { FocusProgress } from './focusGoals'
 import { wasPromotedWithinLastWeek } from './beltPromotion'
+import { notifyPreferenceMutation } from './autoBackup/notify'
 
 export interface AchievementCtx {
   sessions: Session[]
@@ -248,6 +249,7 @@ function writeMeta(meta: AchievementsMeta) {
   if (typeof window === 'undefined') return
   window.localStorage.setItem(ACHIEVEMENTS_META_KEY, JSON.stringify(meta))
   window.dispatchEvent(new Event(ACHIEVEMENTS_UPDATED_EVENT))
+  notifyPreferenceMutation()
 }
 
 export function trackGoalCompletions(
