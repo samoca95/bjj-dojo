@@ -39,14 +39,14 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 describe('GitHub repo backup rotation', () => {
-  it('deletes older dated backups beyond the retention count', async () => {
+  it('deletes older dated backups beyond the retention count in the per-component subdir', async () => {
     setBackupRetentionCount(3)
     const existing = [
       1715920000001, 1715920000002, 1715920000003, 1715920000004, 1715920000005,
       1715920000006,
     ].map((n) => ({
       name: `bjj-dojo-backup-sessions-${n}.json`,
-      path: `backups/bjj-dojo-backup-sessions-${n}.json`,
+      path: `backups/sessions/bjj-dojo-backup-sessions-${n}.json`,
       type: 'file',
       sha: `sha-${n}`,
     }))
@@ -59,14 +59,14 @@ describe('GitHub repo backup rotation', () => {
         const method = init?.method ?? 'GET'
         if (
           method === 'GET' &&
-          url.includes('/contents/backups/bjj-dojo-backup-')
+          url.includes('/contents/backups/sessions/bjj-dojo-backup-')
         ) {
           return jsonResponse(404, { message: 'not found' })
         }
         if (method === 'PUT' && url.includes('/contents/')) {
           return jsonResponse(201, { content: { sha: 'new' } })
         }
-        if (method === 'GET' && url.endsWith('/contents/backups')) {
+        if (method === 'GET' && url.includes('/contents/backups/sessions')) {
           return jsonResponse(200, existing)
         }
         if (method === 'DELETE') {
@@ -86,10 +86,10 @@ describe('GitHub repo backup rotation', () => {
 
     // KEEP=3 → keep 2 of the existing 6 (since the new file is the 3rd).
     expect(deletedPaths.sort()).toEqual([
-      'backups/bjj-dojo-backup-sessions-1715920000001.json',
-      'backups/bjj-dojo-backup-sessions-1715920000002.json',
-      'backups/bjj-dojo-backup-sessions-1715920000003.json',
-      'backups/bjj-dojo-backup-sessions-1715920000004.json',
+      'backups/sessions/bjj-dojo-backup-sessions-1715920000001.json',
+      'backups/sessions/bjj-dojo-backup-sessions-1715920000002.json',
+      'backups/sessions/bjj-dojo-backup-sessions-1715920000003.json',
+      'backups/sessions/bjj-dojo-backup-sessions-1715920000004.json',
     ])
     expect(fetchMock).toHaveBeenCalled()
   })
@@ -98,7 +98,7 @@ describe('GitHub repo backup rotation', () => {
     setBackupRetentionCount(1)
     const existing = [1715920000011, 1715920000012].map((n) => ({
       name: `bjj-dojo-backup-sessions-${n}.json`,
-      path: `backups/bjj-dojo-backup-sessions-${n}.json`,
+      path: `backups/sessions/bjj-dojo-backup-sessions-${n}.json`,
       type: 'file',
       sha: `sha-${n}`,
     }))
@@ -107,12 +107,12 @@ describe('GitHub repo backup rotation', () => {
       const method = init?.method ?? 'GET'
       if (
         method === 'GET' &&
-        url.includes('/contents/backups/bjj-dojo-backup-')
+        url.includes('/contents/backups/sessions/bjj-dojo-backup-')
       ) {
         return jsonResponse(404, {})
       }
       if (method === 'PUT') return jsonResponse(201, {})
-      if (method === 'GET' && url.endsWith('/contents/backups')) {
+      if (method === 'GET' && url.includes('/contents/backups/sessions')) {
         return jsonResponse(200, existing)
       }
       if (method === 'DELETE') {

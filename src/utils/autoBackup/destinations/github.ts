@@ -1,13 +1,18 @@
 /**
  * GitHub gist/repo destination.
  *
- * Repos: commits to `backups/bjj-dojo-backup-YYYY-MM-DD.json` (or a single
- * file at the root if it already exists). Gists: rewrites the single
- * `bjj-dojo-backup.json` file in place.
+ * Repos: commits to `backups/<component>/bjj-dojo-backup-<component>-<ts>.json`.
+ * Legacy flat files at `backups/*.json` are still read for restore but never
+ * written. Gists: rewrites the single `bjj-dojo-backup.json` file in place.
  *
  * The PAT lives in localStorage. Document scopes in the UI helper text:
  *   - Repo: fine-grained PAT with Contents: Read and write on the chosen repo
  *   - Gist: classic PAT with `gist` scope
+ *
+ * SHA conflict handling: `repoWrite()` runs a small retry loop (up to 3
+ * attempts) when the PUT returns 409 / 422-with-sha, re-fetching the SHA each
+ * time. After that, the orchestrator persists the failed write to the retry
+ * queue so it gets replayed on the next mutation.
  */
 import type { DatabaseBackup } from '../../../db/database'
 import type {
@@ -22,6 +27,8 @@ import {
   isGithubBackupEnabled,
 } from '../settings'
 import {
+  BACKUP_SUBDIR_FOR_COMPONENT,
+  backupSubdirForComponent,
   isRecognizedBackupFilename,
   parseBackupComponentFromFilename,
 } from '../files'
@@ -30,6 +37,7 @@ const API_BASE = 'https://api.github.com'
 const GIST_FILENAME = 'bjj-dojo-backup.json'
 const REPO_BACKUPS_DIR = 'backups'
 const BACKUP_JSON_INDENT = 2
+const SHA_RETRY_DELAYS_MS = [150, 450]
 let writeQueue: Promise<void> = Promise.resolve()
 
 function serializeBackup(payload: DatabaseBackup): string {
@@ -57,6 +65,36 @@ async function ghError(res: Response, fallback: string): Promise<never> {
   if (res.status === 403) throw new Error(`GitHub permission denied${detail}`)
   if (res.status === 404) throw new Error(`GitHub target not found${detail}`)
   throw new Error(`${fallback} (${res.status})${detail}`)
+}
+
+interface ParsedGhError {
+  status: number
+  message: string
+}
+
+async function parseGhErrorBody(res: Response): Promise<ParsedGhError> {
+  let message = ''
+  try {
+    const body = (await res.json()) as { message?: string }
+    if (body?.message) message = body.message
+  } catch {
+    // ignore
+  }
+  return { status: res.status, message }
+}
+
+function isShaConflict(err: ParsedGhError): boolean {
+  if (err.status === 409) return true
+  if (err.status === 422) {
+    const m = err.message.toLowerCase()
+    return m.includes('sha') || m.includes('does not match')
+  }
+  return false
+}
+
+function shaErrorMessage(fallback: string, err: ParsedGhError): string {
+  const detail = err.message ? `: ${err.message}` : ''
+  return `${fallback} (${err.status})${detail}`
 }
 
 export async function verifyGithubToken(
@@ -188,6 +226,10 @@ async function repoGetFileSha(
   return body.sha
 }
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 async function repoWrite(
   token: string,
   owner: string,
@@ -196,32 +238,51 @@ async function repoWrite(
   payload: DatabaseBackup,
   branch?: string,
 ): Promise<BackupResult> {
-  const path = `${REPO_BACKUPS_DIR}/${filename}`
-  const sha = await repoGetFileSha(token, owner, repo, path, branch)
+  const component = parseBackupComponentFromFilename(filename)
+  const subdir = component ? backupSubdirForComponent(component) : null
+  const path = subdir
+    ? `${REPO_BACKUPS_DIR}/${subdir}/${filename}`
+    : `${REPO_BACKUPS_DIR}/${filename}`
   const content = serializeBackup(payload)
-  const body = JSON.stringify({
-    message: `auto-backup: ${filename}`,
-    content: btoa(unescape(encodeURIComponent(content))),
-    ...(sha ? { sha } : {}),
-    ...(branch ? { branch } : {}),
-  })
-  const res = await fetch(
-    `${API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`,
-    {
-      method: 'PUT',
-      headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
-      body,
-    },
-  )
-  if (!res.ok) await ghError(res, 'GitHub repo write failed')
-  await repoRotateOldBackups(token, owner, repo, path, branch)
-  return { filename: path, bytesWritten: content.length }
+  const encodedContent = btoa(unescape(encodeURIComponent(content)))
+
+  const maxAttempts = SHA_RETRY_DELAYS_MS.length + 1
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const sha = await repoGetFileSha(token, owner, repo, path, branch)
+    const body = JSON.stringify({
+      message: `auto-backup: ${filename}`,
+      content: encodedContent,
+      ...(sha ? { sha } : {}),
+      ...(branch ? { branch } : {}),
+    })
+    const res = await fetch(
+      `${API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`,
+      {
+        method: 'PUT',
+        headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+        body,
+      },
+    )
+    if (res.ok) {
+      await repoRotateOldBackups(token, owner, repo, path, branch)
+      return { filename: path, bytesWritten: content.length }
+    }
+    const parsed = await parseGhErrorBody(res)
+    if (isShaConflict(parsed) && attempt < maxAttempts - 1) {
+      await delay(SHA_RETRY_DELAYS_MS[attempt])
+      continue
+    }
+    throw new Error(shaErrorMessage('GitHub repo write failed', parsed))
+  }
+  // Unreachable — loop either returns or throws — but keep TS happy.
+  throw new Error('GitHub repo write failed')
 }
 
 /**
- * Keep the N most recent dated backups in the repo's backups/ dir. The date
- * lives in the filename, so a descending name sort is equivalent to mtime sort
- * and avoids an extra commit lookup per file. Per-file deletes are best-effort.
+ * Keep the N most recent dated backups in the just-written file's directory.
+ * The date lives in the filename, so a descending name sort is equivalent to
+ * mtime sort and avoids an extra commit lookup per file. Per-file deletes are
+ * best-effort.
  */
 async function repoRotateOldBackups(
   token: string,
@@ -234,7 +295,10 @@ async function repoRotateOldBackups(
   const writtenComponent = parseBackupComponentFromFilename(
     justWrittenPath.split('/').pop() ?? '',
   )
-  const dirUrl = `${API_BASE}/repos/${owner}/${repo}/contents/${REPO_BACKUPS_DIR}${
+  // Rotate inside the directory the file was just written to (either the
+  // per-component subdir or the legacy flat `backups/` dir).
+  const dirPath = justWrittenPath.slice(0, justWrittenPath.lastIndexOf('/'))
+  const dirUrl = `${API_BASE}/repos/${owner}/${repo}/contents/${encodeURI(dirPath)}${
     branch ? `?ref=${encodeURIComponent(branch)}` : ''
   }`
   const res = await fetch(dirUrl, { headers: authHeaders(token) })
@@ -278,33 +342,58 @@ async function repoRotateOldBackups(
   }
 }
 
+async function repoListSubdir(
+  token: string,
+  owner: string,
+  repo: string,
+  subdirPath: string,
+  branch?: string,
+): Promise<DiscoveredBackup[]> {
+  const url = `${API_BASE}/repos/${owner}/${repo}/contents/${encodeURI(subdirPath)}${
+    branch ? `?ref=${encodeURIComponent(branch)}` : ''
+  }`
+  const res = await fetch(url, { headers: authHeaders(token) })
+  if (!res.ok) return []
+  const entries = (await res.json()) as Array<{
+    name: string
+    type: string
+    path: string
+  }>
+  return entries
+    .filter((e) => e.type === 'file' && isRecognizedBackupFilename(e.name))
+    .map((e) => ({
+      id: e.path,
+      filename: e.name,
+      label: e.path,
+    }))
+}
+
 async function repoListBackups(
   token: string,
   owner: string,
   repo: string,
   branch?: string,
 ): Promise<DiscoveredBackup[]> {
-  // Try the conventional `backups/` directory first.
-  const dirUrl = `${API_BASE}/repos/${owner}/${repo}/contents/${REPO_BACKUPS_DIR}${
-    branch ? `?ref=${encodeURIComponent(branch)}` : ''
-  }`
-  const dirRes = await fetch(dirUrl, { headers: authHeaders(token) })
-  if (dirRes.ok) {
-    const entries = (await dirRes.json()) as Array<{
-      name: string
-      type: string
-      path: string
-    }>
-    return entries
-      .filter((e) => e.type === 'file' && isRecognizedBackupFilename(e.name))
-      .map((e) => ({
-        id: e.path,
-        filename: e.name,
-        label: e.name,
-      }))
-      .sort((a, b) => (a.filename < b.filename ? 1 : -1))
+  // Aggregate per-component subdirs + the legacy flat `backups/` dir.
+  const collected: DiscoveredBackup[] = []
+  for (const subdir of Object.values(BACKUP_SUBDIR_FOR_COMPONENT)) {
+    collected.push(
+      ...(await repoListSubdir(
+        token,
+        owner,
+        repo,
+        `${REPO_BACKUPS_DIR}/${subdir}`,
+        branch,
+      )),
+    )
   }
-  // Fallback: single root-level file
+  collected.push(
+    ...(await repoListSubdir(token, owner, repo, REPO_BACKUPS_DIR, branch)),
+  )
+  if (collected.length > 0) {
+    return collected.sort((a, b) => (a.filename < b.filename ? 1 : -1))
+  }
+  // Fallback: single root-level file (oldest layout, predates `backups/`).
   const rootRes = await fetch(
     `${API_BASE}/repos/${owner}/${repo}/contents/${GIST_FILENAME}${
       branch ? `?ref=${encodeURIComponent(branch)}` : ''
@@ -374,7 +463,7 @@ async function repoRead(
   path: string,
   branch?: string,
 ): Promise<DatabaseBackup> {
-  const url = `${API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}${
+  const url = `${API_BASE}/repos/${owner}/${repo}/contents/${encodeURI(path)}${
     branch ? `?ref=${encodeURIComponent(branch)}` : ''
   }`
   const res = await fetch(url, {

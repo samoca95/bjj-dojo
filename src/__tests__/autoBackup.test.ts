@@ -145,50 +145,93 @@ describe('GitHub destination — discovery', () => {
     setGithubToken('t')
   })
 
-  it('lists matching files in a repo backups/ directory', async () => {
+  it('lists matching files across per-component subdirs and the legacy flat backups/ dir', async () => {
     setGithubTarget({ kind: 'repo', owner: 'o', repo: 'r' })
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(
-        JSON.stringify([
-          {
-            name: 'bjj-dojo-backup-sessions-1715920001000.json',
-            type: 'file',
-            path: 'backups/bjj-dojo-backup-sessions-1715920001000.json',
-          },
-          {
-            name: 'bjj-dojo-backup-flows-1715920000000.json',
-            type: 'file',
-            path: 'backups/bjj-dojo-backup-flows-1715920000000.json',
-          },
-          { name: 'README.md', type: 'file', path: 'backups/README.md' },
-          { name: 'subdir', type: 'dir', path: 'backups/subdir' },
-        ]),
-        { status: 200 },
-      ),
-    )
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = input.toString()
+      if (url.includes('/contents/backups/preferences')) {
+        return new Response(
+          JSON.stringify([
+            {
+              name: 'bjj-dojo-backup-preferences-1715920002000.json',
+              type: 'file',
+              path: 'backups/preferences/bjj-dojo-backup-preferences-1715920002000.json',
+            },
+          ]),
+          { status: 200 },
+        )
+      }
+      if (url.includes('/contents/backups/sessions')) {
+        return new Response(
+          JSON.stringify([
+            {
+              name: 'bjj-dojo-backup-sessions-1715920001000.json',
+              type: 'file',
+              path: 'backups/sessions/bjj-dojo-backup-sessions-1715920001000.json',
+            },
+          ]),
+          { status: 200 },
+        )
+      }
+      if (url.includes('/contents/backups/techniques')) {
+        return new Response('Not found', { status: 404 })
+      }
+      if (url.includes('/contents/backups/flows')) {
+        return new Response(
+          JSON.stringify([
+            {
+              name: 'bjj-dojo-backup-flows-1715920000000.json',
+              type: 'file',
+              path: 'backups/flows/bjj-dojo-backup-flows-1715920000000.json',
+            },
+          ]),
+          { status: 200 },
+        )
+      }
+      // Legacy flat backups/ — surface any remaining flat backups too
+      if (url.endsWith('/contents/backups')) {
+        return new Response(
+          JSON.stringify([
+            {
+              name: 'bjj-dojo-backup-sessions-1700000000000.json',
+              type: 'file',
+              path: 'backups/bjj-dojo-backup-sessions-1700000000000.json',
+            },
+            { name: 'README.md', type: 'file', path: 'backups/README.md' },
+            { name: 'sessions', type: 'dir', path: 'backups/sessions' },
+          ]),
+          { status: 200 },
+        )
+      }
+      return new Response('Not found', { status: 404 })
+    })
     const { githubDestination } =
       await import('../utils/autoBackup/destinations/github')
     const results = await githubDestination.discoverExistingBackups()
-    expect(results).toHaveLength(2)
-    expect(results.map((r) => r.filename)).toEqual([
-      'bjj-dojo-backup-sessions-1715920001000.json',
+    expect(results).toHaveLength(4)
+    const names = results.map((r) => r.filename).sort()
+    expect(names).toEqual([
       'bjj-dojo-backup-flows-1715920000000.json',
+      'bjj-dojo-backup-preferences-1715920002000.json',
+      'bjj-dojo-backup-sessions-1700000000000.json',
+      'bjj-dojo-backup-sessions-1715920001000.json',
     ])
   })
 
-  it('falls back to root file when backups/ does not exist', async () => {
+  it('falls back to root file when no backups directory exists', async () => {
     setGithubTarget({ kind: 'repo', owner: 'o', repo: 'r' })
-    let call = 0
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
-      call++
-      if (call === 1) return new Response('Not found', { status: 404 })
-      return new Response(
-        JSON.stringify({
-          name: 'bjj-dojo-backup.json',
-          path: 'bjj-dojo-backup.json',
-        }),
-        { status: 200 },
-      )
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = input.toString()
+      if (url.includes('/contents/bjj-dojo-backup.json')) {
+        return new Response(
+          JSON.stringify({
+            name: 'bjj-dojo-backup.json',
+            path: 'bjj-dojo-backup.json',
+          }),
+          { status: 200 },
+        )
+      }
+      return new Response('Not found', { status: 404 })
     })
     const { githubDestination } =
       await import('../utils/autoBackup/destinations/github')

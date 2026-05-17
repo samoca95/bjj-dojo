@@ -5,6 +5,10 @@
  * table rather than localStorage. Permissions need a user gesture to upgrade
  * from 'prompt' → 'granted', so the caller is expected to invoke the picker
  * (or the reconnect button) in response to a click.
+ *
+ * Files are written under per-component subdirectories (preferences/, sessions/,
+ * techniques/, flows/). Legacy flat files at the picked-folder root are still
+ * read for backwards-compatible restore, but new writes never land there.
  */
 import {
   getAppStateValue,
@@ -23,6 +27,9 @@ import {
   setFsFolderName,
 } from '../settings'
 import {
+  BACKUP_COMPONENTS,
+  BACKUP_SUBDIR_FOR_COMPONENT,
+  backupSubdirForComponent,
   isRecognizedBackupFilename,
   parseBackupComponentFromFilename,
 } from '../files'
@@ -44,6 +51,10 @@ interface DirectoryHandle {
   queryPermission(opts: { mode: 'readwrite' }): Promise<FsPermissionState>
   requestPermission(opts: { mode: 'readwrite' }): Promise<FsPermissionState>
   getFileHandle(name: string, opts?: { create?: boolean }): Promise<FileHandle>
+  getDirectoryHandle(
+    name: string,
+    opts?: { create?: boolean },
+  ): Promise<DirectoryHandle>
   removeEntry(name: string): Promise<void>
   values(): AsyncIterable<DirectoryEntry>
 }
@@ -109,14 +120,56 @@ export async function ensureFolderPermission(
   return await handle.requestPermission({ mode: 'readwrite' })
 }
 
-async function listBackupFiles(handle: DirectoryHandle): Promise<FileHandle[]> {
+async function getSubdirHandle(
+  root: DirectoryHandle,
+  subdir: string,
+  create: boolean,
+): Promise<DirectoryHandle | null> {
+  try {
+    return await root.getDirectoryHandle(subdir, { create })
+  } catch {
+    return null
+  }
+}
+
+interface ListedBackupFile {
+  handle: FileHandle
+  /** Subdirectory the file lives in, or '' for legacy flat-root files. */
+  subdir: string
+}
+
+async function listSubdirFiles(
+  subdirHandle: DirectoryHandle,
+): Promise<FileHandle[]> {
   const matches: FileHandle[] = []
-  for await (const entry of handle.values()) {
+  for await (const entry of subdirHandle.values()) {
     if (entry.kind === 'file' && isRecognizedBackupFilename(entry.name)) {
       matches.push(entry)
     }
   }
   return matches
+}
+
+/**
+ * Walks the picked folder + each known subdir, returning every backup file
+ * with its subdir context. Subdirs we don't recognize are ignored.
+ */
+async function listAllBackupFiles(
+  handle: DirectoryHandle,
+): Promise<ListedBackupFile[]> {
+  const out: ListedBackupFile[] = []
+  for await (const entry of handle.values()) {
+    if (entry.kind === 'file' && isRecognizedBackupFilename(entry.name)) {
+      out.push({ handle: entry, subdir: '' })
+    }
+  }
+  for (const subdir of Object.values(BACKUP_SUBDIR_FOR_COMPONENT)) {
+    const sub = await getSubdirHandle(handle, subdir, false)
+    if (!sub) continue
+    const files = await listSubdirFiles(sub)
+    for (const fh of files) out.push({ handle: fh, subdir })
+  }
+  return out
 }
 
 export const fileSystemDestination: BackupDestination = {
@@ -143,13 +196,21 @@ export const fileSystemDestination: BackupDestination = {
           'Folder permission was revoked. Reconnect the folder in Settings.',
         )
       }
-      const fileHandle = await handle.getFileHandle(filename, { create: true })
+      const component = parseBackupComponentFromFilename(filename)
+      const subdir = component ? backupSubdirForComponent(component) : null
+      const targetDir = subdir
+        ? await handle.getDirectoryHandle(subdir, { create: true })
+        : handle
+      const fileHandle = await targetDir.getFileHandle(filename, {
+        create: true,
+      })
       const serialized = serializeBackup(payload)
       const writable = await fileHandle.createWritable()
       await writable.write(serialized)
       await writable.close()
-      await rotateOldBackups(handle, filename)
-      return { filename, bytesWritten: serialized.length }
+      await rotateOldBackups(handle, filename, subdir)
+      const relPath = subdir ? `${subdir}/${filename}` : filename
+      return { filename: relPath, bytesWritten: serialized.length }
     }
     const queued = writeQueue.then(run, run)
     writeQueue = queued.then(
@@ -164,15 +225,16 @@ export const fileSystemDestination: BackupDestination = {
     if (!handle) return []
     const perm = await ensureFolderPermission(handle, false)
     if (perm !== 'granted') return []
-    const files = await listBackupFiles(handle)
+    const all = await listAllBackupFiles(handle)
     const results = await Promise.all(
-      files.map(async (fh) => {
+      all.map(async ({ handle: fh, subdir }) => {
         const file = await fh.getFile()
         const modifiedAt = file.lastModified
+        const id = subdir ? `${subdir}/${fh.name}` : fh.name
         return {
-          id: fh.name,
+          id,
           filename: fh.name,
-          label: `${fh.name} (${new Date(modifiedAt).toLocaleString()})`,
+          label: `${id} (${new Date(modifiedAt).toLocaleString()})`,
           modifiedAt,
         }
       }),
@@ -184,39 +246,63 @@ export const fileSystemDestination: BackupDestination = {
   async readBackup(id: string): Promise<DatabaseBackup> {
     const handle = await getStoredFolderHandle()
     if (!handle) throw new Error('No backup folder connected.')
-    const fileHandle = await handle.getFileHandle(id, { create: false })
+    const slashIndex = id.indexOf('/')
+    let dir: DirectoryHandle = handle
+    let name = id
+    if (slashIndex !== -1) {
+      const subdir = id.slice(0, slashIndex)
+      name = id.slice(slashIndex + 1)
+      dir = await handle.getDirectoryHandle(subdir, { create: false })
+    }
+    const fileHandle = await dir.getFileHandle(name, { create: false })
     const file = await fileHandle.getFile()
     const text = await file.text()
     return JSON.parse(text) as DatabaseBackup
   },
 }
 
-/** Keep the N most recent daily backups (N from settings); remove older same-pattern files. */
-async function rotateOldBackups(handle: DirectoryHandle, justWritten: string) {
+/**
+ * Keep the N most recent backups for the just-written component. When `subdir`
+ * is set, rotation happens inside that subdirectory only — legacy flat files
+ * at the picked-folder root are left untouched.
+ */
+async function rotateOldBackups(
+  root: DirectoryHandle,
+  justWritten: string,
+  subdir: string | null,
+) {
   const KEEP = getBackupRetentionCount()
   const writtenComponent = parseBackupComponentFromFilename(justWritten)
-  const files = await listBackupFiles(handle)
-  // Skip the file we just wrote — its lastModified is current
+  let dir: DirectoryHandle = root
+  if (subdir) {
+    const sub = await getSubdirHandle(root, subdir, false)
+    if (!sub) return
+    dir = sub
+  }
+  const files = (await listSubdirFiles(dir)).filter(
+    (f) => f.name !== justWritten,
+  )
+  const sameComponent = files.filter((f) => {
+    if (!writtenComponent) return true
+    return parseBackupComponentFromFilename(f.name) === writtenComponent
+  })
   const dated = await Promise.all(
-    files
-      .filter((f) => f.name !== justWritten)
-      .filter((f) => {
-        if (!writtenComponent) return true
-        return parseBackupComponentFromFilename(f.name) === writtenComponent
-      })
-      .map(async (f) => ({
-        name: f.name,
-        mtime: (await f.getFile()).lastModified,
-      })),
+    sameComponent.map(async (f) => ({
+      name: f.name,
+      mtime: (await f.getFile()).lastModified,
+    })),
   )
   dated.sort((a, b) => b.mtime - a.mtime)
   // We just wrote one — keep KEEP-1 of the existing files
   const toDelete = dated.slice(Math.max(0, KEEP - 1))
   for (const f of toDelete) {
     try {
-      await handle.removeEntry(f.name)
+      await dir.removeEntry(f.name)
     } catch {
       // best effort
     }
   }
 }
+
+// Re-export for tests / orchestrator helpers that want the component list.
+export { BACKUP_COMPONENTS }

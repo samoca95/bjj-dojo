@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Cloud, Folder, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Cloud, Folder } from 'lucide-react'
 import { useI18n } from '../i18n'
-import type { BackupComponent, DestinationId } from '../utils/autoBackup/types'
+import BackupQueuePopup from './BackupQueuePopup'
+import type { DestinationId } from '../utils/autoBackup/types'
 
 type DestState = 'idle' | 'syncing' | 'success'
-type QueueState = 'queued' | 'syncing' | 'success' | 'failed'
 
 interface ErrorInfo {
   destinationId: DestinationId
@@ -15,26 +15,10 @@ interface OfflineToast {
   id: number
 }
 
-interface QueueFile {
-  destinationId: DestinationId
-  component: BackupComponent
-  filename: string
-  queueState: QueueState
-  error?: string
-  updatedAt: number
-}
-
 const DEST_LABELS: Record<DestinationId, string> = {
   fileSystem: 'folder',
   github: 'GitHub',
 }
-
-const DEFAULT_COMPONENTS: BackupComponent[] = [
-  'preferences',
-  'sessions',
-  'techniques',
-  'flows',
-]
 
 const SUCCESS_DURATION_MS = 3000
 
@@ -45,47 +29,23 @@ export default function BackupSyncIndicator() {
   >({})
   const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null)
   const [offlineToasts, setOfflineToasts] = useState<OfflineToast[]>([])
-  const [queueFiles, setQueueFiles] = useState<Record<string, QueueFile>>({})
   const [showQueuePopup, setShowQueuePopup] = useState(false)
   const successTimers = useRef<
     Partial<Record<DestinationId, ReturnType<typeof setTimeout>>>
   >({})
   const toastCounter = useRef(0)
 
-  const queueKey = (destinationId: DestinationId, component: BackupComponent) =>
-    `${destinationId}:${component}`
-
   useEffect(() => {
     const handleTriggered = (e: Event) => {
-      const { destinationIds, components } = (
+      const { destinationIds } = (
         e as CustomEvent<{
           destinationIds: DestinationId[]
-          components?: BackupComponent[]
         }>
       ).detail
-      const nextComponents =
-        components && components.length > 0 ? components : DEFAULT_COMPONENTS
       setDestStates((prev) => {
         const next = { ...prev }
         for (const destinationId of destinationIds) {
           next[destinationId] = 'syncing'
-        }
-        return next
-      })
-      setQueueFiles((prev) => {
-        const next = { ...prev }
-        const now = Date.now()
-        for (const destinationId of destinationIds) {
-          for (const component of nextComponents) {
-            const key = queueKey(destinationId, component)
-            next[key] = {
-              destinationId,
-              component,
-              filename: `bjj-dojo-backup-${component}-*.json`,
-              queueState: 'queued',
-              updatedAt: now,
-            }
-          }
         }
         return next
       })
@@ -116,87 +76,6 @@ export default function BackupSyncIndicator() {
       ).detail
       setDestStates((prev) => ({ ...prev, [destinationId]: 'idle' }))
       setErrorInfo({ destinationId, error })
-      setQueueFiles((prev) => {
-        const next = { ...prev }
-        const now = Date.now()
-        Object.entries(next).forEach(([key, item]) => {
-          if (item.destinationId !== destinationId) return
-          if (item.queueState !== 'queued' && item.queueState !== 'syncing')
-            return
-          next[key] = {
-            ...item,
-            queueState: 'failed',
-            error,
-            updatedAt: now,
-          }
-        })
-        return next
-      })
-    }
-
-    const handleFileStarted = (e: Event) => {
-      const { destinationId, component, filename } = (
-        e as CustomEvent<{
-          destinationId: DestinationId
-          component: BackupComponent
-          filename: string
-        }>
-      ).detail
-      const key = queueKey(destinationId, component)
-      setQueueFiles((prev) => ({
-        ...prev,
-        [key]: {
-          destinationId,
-          component,
-          filename,
-          queueState: 'syncing',
-          updatedAt: Date.now(),
-        },
-      }))
-    }
-
-    const handleFileSucceeded = (e: Event) => {
-      const { destinationId, component, filename } = (
-        e as CustomEvent<{
-          destinationId: DestinationId
-          component: BackupComponent
-          filename: string
-        }>
-      ).detail
-      const key = queueKey(destinationId, component)
-      setQueueFiles((prev) => ({
-        ...prev,
-        [key]: {
-          destinationId,
-          component,
-          filename,
-          queueState: 'success',
-          updatedAt: Date.now(),
-        },
-      }))
-    }
-
-    const handleFileFailed = (e: Event) => {
-      const { destinationId, component, filename, error } = (
-        e as CustomEvent<{
-          destinationId: DestinationId
-          component: BackupComponent
-          filename: string
-          error: string
-        }>
-      ).detail
-      const key = queueKey(destinationId, component)
-      setQueueFiles((prev) => ({
-        ...prev,
-        [key]: {
-          destinationId,
-          component,
-          filename,
-          queueState: 'failed',
-          error,
-          updatedAt: Date.now(),
-        },
-      }))
     }
 
     const handleOfflineSkipped = () => {
@@ -211,12 +90,6 @@ export default function BackupSyncIndicator() {
     window.addEventListener('bjj-dojo:backup-dest-started', handleStarted)
     window.addEventListener('bjj-dojo:backup-dest-succeeded', handleSucceeded)
     window.addEventListener('bjj-dojo:backup-dest-failed', handleFailed)
-    window.addEventListener('bjj-dojo:backup-file-started', handleFileStarted)
-    window.addEventListener(
-      'bjj-dojo:backup-file-succeeded',
-      handleFileSucceeded,
-    )
-    window.addEventListener('bjj-dojo:backup-file-failed', handleFileFailed)
     window.addEventListener(
       'bjj-dojo:backup-offline-skipped',
       handleOfflineSkipped,
@@ -235,18 +108,6 @@ export default function BackupSyncIndicator() {
         'bjj-dojo:backup-offline-skipped',
         handleOfflineSkipped,
       )
-      window.removeEventListener(
-        'bjj-dojo:backup-file-started',
-        handleFileStarted,
-      )
-      window.removeEventListener(
-        'bjj-dojo:backup-file-succeeded',
-        handleFileSucceeded,
-      )
-      window.removeEventListener(
-        'bjj-dojo:backup-file-failed',
-        handleFileFailed,
-      )
       Object.values(timers).forEach((t) => t && clearTimeout(t))
     }
   }, [])
@@ -254,22 +115,6 @@ export default function BackupSyncIndicator() {
   const activeDestinations = (
     Object.entries(destStates) as [DestinationId, DestState][]
   ).filter(([, state]) => state !== 'idle')
-  const isSyncing = activeDestinations.some(([, state]) => state === 'syncing')
-  const visibleQueueFiles = useMemo(
-    () =>
-      Object.values(queueFiles).sort((a, b) => {
-        const stateRank: Record<QueueState, number> = {
-          syncing: 0,
-          queued: 1,
-          failed: 2,
-          success: 3,
-        }
-        const stateDiff = stateRank[a.queueState] - stateRank[b.queueState]
-        if (stateDiff !== 0) return stateDiff
-        return b.updatedAt - a.updatedAt
-      }),
-    [queueFiles],
-  )
 
   return (
     <>
@@ -281,9 +126,7 @@ export default function BackupSyncIndicator() {
               <button
                 key={destId}
                 type="button"
-                onClick={() => {
-                  if (state === 'syncing') setShowQueuePopup(true)
-                }}
+                onClick={() => setShowQueuePopup(true)}
                 aria-label={
                   state === 'syncing'
                     ? `Syncing ${DEST_LABELS[destId]} backup…`
@@ -305,70 +148,8 @@ export default function BackupSyncIndicator() {
         </div>
       )}
 
-      {showQueuePopup && isSyncing && (
-        <div className="fixed inset-0 z-[130] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="w-full max-w-lg bg-zinc-900 rounded-2xl border border-zinc-800 max-h-[85vh] flex flex-col"
-          >
-            <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-zinc-800">
-              <h2 className="flex-1 text-base font-bold text-zinc-100">
-                {t('Backup queue')}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowQueuePopup(false)}
-                aria-label="Close"
-                className="p-1.5 -mr-1.5 text-zinc-400 active:text-zinc-100"
-              >
-                <X size={18} strokeWidth={2} />
-              </button>
-            </div>
-            <div className="px-4 py-3 text-xs text-zinc-400 border-b border-zinc-800">
-              {t('Files currently being saved')}
-            </div>
-            <div className="overflow-y-auto p-4 space-y-2">
-              {visibleQueueFiles.length === 0 ? (
-                <p className="text-sm text-zinc-400">
-                  {t('No files in queue')}
-                </p>
-              ) : (
-                visibleQueueFiles.map((item) => (
-                  <div
-                    key={`${item.destinationId}:${item.component}`}
-                    className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-zinc-100 capitalize">
-                          {DEST_LABELS[item.destinationId]} · {item.component}
-                        </p>
-                        <p className="text-xs text-zinc-400 break-all mt-0.5">
-                          {item.filename}
-                        </p>
-                      </div>
-                      <span className="text-xs font-semibold text-zinc-200 uppercase tracking-wide">
-                        {item.queueState === 'queued'
-                          ? t('Queued')
-                          : item.queueState === 'syncing'
-                            ? t('Saving')
-                            : item.queueState === 'failed'
-                              ? t('Failed')
-                              : t('Saved')}
-                      </span>
-                    </div>
-                    {item.error && (
-                      <p className="mt-2 text-xs text-red-300 break-all">
-                        {item.error}
-                      </p>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+      {showQueuePopup && (
+        <BackupQueuePopup onClose={() => setShowQueuePopup(false)} />
       )}
 
       {offlineToasts.map((toast) => (

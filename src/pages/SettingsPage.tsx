@@ -16,8 +16,11 @@ import {
   HelpCircle,
   Cloud,
   CloudOff,
+  Folder,
+  FolderX,
 } from 'lucide-react'
 import BackupHelpModal from '../components/BackupHelpModal'
+import BackupQueuePopup from '../components/BackupQueuePopup'
 import { PlainLogo } from '../components/PlainLogo'
 import { themeFill } from '../constants/themeColors'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -56,7 +59,6 @@ import {
   getGithubTarget,
   getGithubToken,
   getLastMutationTime,
-  getOverallLastRun,
   isFsBackupEnabled,
   isGithubBackupEnabled,
   setBackupRetentionCount,
@@ -82,8 +84,14 @@ import { isDeviceFlowConfigured } from '../utils/autoBackup/githubAuth'
 import DeviceFlowDialog from '../components/DeviceFlowDialog'
 import type {
   BackupDestination,
+  DestinationId,
   DiscoveredBackup,
 } from '../utils/autoBackup/types'
+import {
+  getPendingGithubWrites,
+  type GithubRetryEntry,
+} from '../utils/autoBackup/destinations/githubRetryQueue'
+import { db as dexieDb } from '../db/database'
 
 const BELT_ABBREV: Record<AppLanguage, Record<BeltColor, string>> = {
   en: { white: 'Wht', blue: 'Blu', purple: 'Pur', brown: 'Brn', black: 'Blk' },
@@ -154,15 +162,44 @@ export default function SettingsPage() {
   const ghTarget = getGithubTarget()
   const ghLastRun = getGithubLastRun()
   const ghLastError = getGithubLastError()
-  const anyEnabled = fsEnabled || ghEnabled
-  const overallLastRun = getOverallLastRun()
   const lastMutation = getLastMutationTime()
-  const hasError = (fsEnabled && !!fsLastError) || (ghEnabled && !!ghLastError)
-  const backupUpToDate =
-    anyEnabled &&
-    !!overallLastRun &&
-    !hasError &&
-    (lastMutation === null || overallLastRun >= lastMutation)
+
+  // Per-destination indicator state ('disabled' | 'ok' | 'error').
+  const [ghRetryQueue, setGhRetryQueue] = useState<GithubRetryEntry[]>([])
+  useEffect(() => {
+    let cancelled = false
+    const refresh = () => {
+      void getPendingGithubWrites(dexieDb).then((entries) => {
+        if (!cancelled) setGhRetryQueue(entries)
+      })
+    }
+    refresh()
+    window.addEventListener(AUTO_BACKUP_UPDATED_EVENT, refresh)
+    return () => {
+      cancelled = true
+      window.removeEventListener(AUTO_BACKUP_UPDATED_EVENT, refresh)
+    }
+  }, [])
+
+  const fsIndicatorState: 'disabled' | 'ok' | 'error' = !fsEnabled
+    ? 'disabled'
+    : !!fsLastError ||
+        !fsLastRun ||
+        (lastMutation !== null && fsLastRun < lastMutation)
+      ? 'error'
+      : 'ok'
+  const ghIndicatorState: 'disabled' | 'ok' | 'error' = !ghEnabled
+    ? 'disabled'
+    : !!ghLastError ||
+        ghRetryQueue.length > 0 ||
+        !ghLastRun ||
+        (lastMutation !== null && ghLastRun < lastMutation)
+      ? 'error'
+      : 'ok'
+
+  const [queuePopupDestination, setQueuePopupDestination] =
+    useState<DestinationId | null>(null)
+  const [queuePopupOpen, setQueuePopupOpen] = useState(false)
 
   const [helpTab, setHelpTab] = useState<
     'overview' | 'folder' | 'github' | null
@@ -715,27 +752,62 @@ export default function SettingsPage() {
             <h2 className="text-xs text-gold font-semibold tracking-widest">
               {t('BACKUP & RECOVERY')}
             </h2>
-            {anyEnabled && (
-              <div
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setQueuePopupDestination('fileSystem')
+                  setQueuePopupOpen(true)
+                }}
                 aria-label={
-                  backupUpToDate
-                    ? t('Backup up to date')
-                    : hasError || !overallLastRun
-                      ? t('Backup out of date')
-                      : t('Backup up to date')
+                  fsIndicatorState === 'ok'
+                    ? `${t('Back up to a folder')} · ${t('Backup up to date')}`
+                    : fsIndicatorState === 'error'
+                      ? `${t('Back up to a folder')} · ${t('Backup out of date')}`
+                      : `${t('Back up to a folder')} · ${t('Auto-backup is off — your data only lives in this browser.')}`
                 }
+                className="p-1 -m-1 flex items-center justify-center active:opacity-70"
               >
-                {backupUpToDate ? (
-                  <Cloud size={15} className="text-green-400" strokeWidth={2} />
+                {fsIndicatorState === 'ok' ? (
+                  <Folder
+                    size={15}
+                    className="text-green-400"
+                    strokeWidth={2}
+                  />
+                ) : fsIndicatorState === 'error' ? (
+                  <FolderX size={15} className="text-red-400" strokeWidth={2} />
                 ) : (
+                  <Folder size={15} className="text-zinc-600" strokeWidth={2} />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setQueuePopupDestination('github')
+                  setQueuePopupOpen(true)
+                }}
+                aria-label={
+                  ghIndicatorState === 'ok'
+                    ? `${t('Back up to GitHub')} · ${t('Backup up to date')}`
+                    : ghIndicatorState === 'error'
+                      ? `${t('Back up to GitHub')} · ${t('Backup out of date')}`
+                      : `${t('Back up to GitHub')} · ${t('Auto-backup is off — your data only lives in this browser.')}`
+                }
+                className="p-1 -m-1 flex items-center justify-center active:opacity-70"
+              >
+                {ghIndicatorState === 'ok' ? (
+                  <Cloud size={15} className="text-green-400" strokeWidth={2} />
+                ) : ghIndicatorState === 'error' ? (
                   <CloudOff
                     size={15}
                     className="text-red-400"
                     strokeWidth={2}
                   />
+                ) : (
+                  <Cloud size={15} className="text-zinc-600" strokeWidth={2} />
                 )}
-              </div>
-            )}
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -1106,6 +1178,13 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {queuePopupOpen && (
+        <BackupQueuePopup
+          onClose={() => setQueuePopupOpen(false)}
+          filterDestination={queuePopupDestination ?? undefined}
+        />
       )}
     </div>
   )

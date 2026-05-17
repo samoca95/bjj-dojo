@@ -7,6 +7,14 @@ export const BACKUP_COMPONENTS: BackupComponent[] = [
   'flows',
 ]
 
+/** Per-component subdirectory inside the chosen folder / `backups/` dir. */
+export const BACKUP_SUBDIR_FOR_COMPONENT: Record<BackupComponent, string> = {
+  preferences: 'preferences',
+  sessions: 'sessions',
+  techniques: 'techniques',
+  flows: 'flows',
+}
+
 const COMPONENT_PATTERN =
   /^bjj-dojo-backup-(preferences|sessions|techniques|flows)-(\d{13})\.json$/
 const LEGACY_PATTERN = /^bjj-dojo-backup(?:-\d{4}-\d{2}-\d{2})?\.json$/
@@ -16,6 +24,10 @@ export function backupFilenameForComponent(
   time = Date.now(),
 ): string {
   return `bjj-dojo-backup-${component}-${time}.json`
+}
+
+export function backupSubdirForComponent(component: BackupComponent): string {
+  return BACKUP_SUBDIR_FOR_COMPONENT[component]
 }
 
 export function parseBackupComponentFromFilename(
