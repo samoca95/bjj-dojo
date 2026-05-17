@@ -1121,97 +1121,41 @@ export default function AddEditSessionPage() {
                 </div>
               )}
 
-              {combinedPickerResults
-                ? combinedPickerResults.map((entry) => {
-                    if (entry.kind === 'technique') {
-                      const tech = entry.item
-                      const isSelected =
-                        pickerMode === 'techniques' && selectedIds.has(tech.id)
-                      const tapType =
-                        pickerMode === 'tap-given'
-                          ? 'given'
-                          : pickerMode === 'tap-received'
-                            ? 'received'
-                            : null
-                      const tapCount = tapType
-                        ? taps.filter(
-                            (tap) =>
-                              tap.techniqueId === tech.id &&
-                              tap.type === tapType,
-                          ).length
-                        : 0
-                      const matchingAlias =
-                        getMatchingAlias(
-                          tech,
-                          pickerSearch,
-                          getTechniqueName(tech, language),
-                        ) ?? undefined
-                      return (
-                        <button
-                          key={`t-${tech.id}`}
-                          onClick={() => handlePickerSelect(tech)}
-                          className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
-                        >
-                          <div
-                            className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
-                              isSelected
-                                ? 'bg-gold border-gold'
-                                : tapCount > 0
-                                  ? 'bg-zinc-700 border-zinc-500'
-                                  : 'border-zinc-600'
-                            }`}
-                          >
-                            {isSelected && (
-                              <Check
-                                size={11}
-                                className="text-black"
-                                strokeWidth={3}
-                              />
-                            )}
-                            {tapCount > 0 && (
-                              <span className="text-[10px] text-zinc-100 font-bold leading-none">
-                                {tapCount}
-                              </span>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <span className="text-sm text-zinc-100">
-                              {tech.name}
-                            </span>
-                            {matchingAlias && (
-                              <p className="text-xs text-zinc-400 mt-0.5">
-                                → {matchingAlias}
-                              </p>
-                            )}
-                          </div>
-                        </button>
-                      )
-                    }
-                    const f = entry.item
+              {combinedPickerResults ? (
+                combinedPickerResults.map((entry) => {
+                  if (entry.kind === 'technique') {
+                    const tech = entry.item
                     const isSelected =
-                      pickerMode === 'techniques' && selectedFlowIds.has(f.id!)
+                      pickerMode === 'techniques' && selectedIds.has(tech.id)
                     const tapType =
                       pickerMode === 'tap-given'
                         ? 'given'
                         : pickerMode === 'tap-received'
                           ? 'received'
                           : null
-                    const flowTapCount = tapType
-                      ? flowTaps.filter(
-                          (ft) => ft.flowId === f.id! && ft.type === tapType,
+                    const tapCount = tapType
+                      ? taps.filter(
+                          (tap) =>
+                            tap.techniqueId === tech.id && tap.type === tapType,
                         ).length
                       : 0
+                    const matchingAlias =
+                      getMatchingAlias(
+                        tech,
+                        pickerSearch,
+                        getTechniqueName(tech, language),
+                      ) ?? undefined
                     return (
                       <button
-                        key={`flow-${f.id}`}
-                        onClick={() => handleFlowPickerSelect(f)}
+                        key={`t-${tech.id}`}
+                        onClick={() => handlePickerSelect(tech)}
                         className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
                       >
                         <div
                           className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
                             isSelected
                               ? 'bg-gold border-gold'
-                              : flowTapCount > 0
+                              : tapCount > 0
                                 ? 'bg-zinc-700 border-zinc-500'
                                 : 'border-zinc-600'
                           }`}
@@ -1223,146 +1167,202 @@ export default function AddEditSessionPage() {
                               strokeWidth={3}
                             />
                           )}
-                          {flowTapCount > 0 && (
+                          {tapCount > 0 && (
                             <span className="text-[10px] text-zinc-100 font-bold leading-none">
-                              {flowTapCount}
+                              {tapCount}
                             </span>
                           )}
                         </div>
-                        <CategoryIcon
-                          value={flowIcon}
-                          size={14}
-                          className="text-gold shrink-0"
-                        />
-                        <span className="text-sm text-zinc-100 flex-1 min-w-0 truncate">
-                          {f.name}
-                        </span>
-                        <span className="text-[10px] text-zinc-500 shrink-0">
-                          {t('Flow')}
-                        </span>
+                        <div className="min-w-0">
+                          <span className="text-sm text-zinc-100">
+                            {tech.name}
+                          </span>
+                          {matchingAlias && (
+                            <p className="text-xs text-zinc-400 mt-0.5">
+                              → {matchingAlias}
+                            </p>
+                          )}
+                        </div>
                       </button>
                     )
-                  })
-                : /* No search — grouped view: techniques then flows section */
-                  <>
-                    {filteredTechniques?.map((tech) => {
-                      const isSelected =
-                        pickerMode === 'techniques' && selectedIds.has(tech.id)
-                      const tapType =
-                        pickerMode === 'tap-given'
-                          ? 'given'
-                          : pickerMode === 'tap-received'
-                            ? 'received'
-                            : null
-                      const tapCount = tapType
-                        ? taps.filter(
-                            (tap) =>
-                              tap.techniqueId === tech.id &&
-                              tap.type === tapType,
-                          ).length
-                        : 0
-                      return (
-                        <button
-                          key={tech.id}
-                          onClick={() => handlePickerSelect(tech)}
-                          className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
+                  }
+                  const f = entry.item
+                  const isSelected =
+                    pickerMode === 'techniques' && selectedFlowIds.has(f.id!)
+                  const tapType =
+                    pickerMode === 'tap-given'
+                      ? 'given'
+                      : pickerMode === 'tap-received'
+                        ? 'received'
+                        : null
+                  const flowTapCount = tapType
+                    ? flowTaps.filter(
+                        (ft) => ft.flowId === f.id! && ft.type === tapType,
+                      ).length
+                    : 0
+                  return (
+                    <button
+                      key={`flow-${f.id}`}
+                      onClick={() => handleFlowPickerSelect(f)}
+                      className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
+                    >
+                      <div
+                        className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? 'bg-gold border-gold'
+                            : flowTapCount > 0
+                              ? 'bg-zinc-700 border-zinc-500'
+                              : 'border-zinc-600'
+                        }`}
+                      >
+                        {isSelected && (
+                          <Check
+                            size={11}
+                            className="text-black"
+                            strokeWidth={3}
+                          />
+                        )}
+                        {flowTapCount > 0 && (
+                          <span className="text-[10px] text-zinc-100 font-bold leading-none">
+                            {flowTapCount}
+                          </span>
+                        )}
+                      </div>
+                      <CategoryIcon
+                        value={flowIcon}
+                        size={14}
+                        className="text-gold shrink-0"
+                      />
+                      <span className="text-sm text-zinc-100 flex-1 min-w-0 truncate">
+                        {f.name}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 shrink-0">
+                        {t('Flow')}
+                      </span>
+                    </button>
+                  )
+                })
+              ) : (
+                /* No search — grouped view: techniques then flows section */
+                <>
+                  {filteredTechniques?.map((tech) => {
+                    const isSelected =
+                      pickerMode === 'techniques' && selectedIds.has(tech.id)
+                    const tapType =
+                      pickerMode === 'tap-given'
+                        ? 'given'
+                        : pickerMode === 'tap-received'
+                          ? 'received'
+                          : null
+                    const tapCount = tapType
+                      ? taps.filter(
+                          (tap) =>
+                            tap.techniqueId === tech.id && tap.type === tapType,
+                        ).length
+                      : 0
+                    return (
+                      <button
+                        key={tech.id}
+                        onClick={() => handlePickerSelect(tech)}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
+                      >
+                        <div
+                          className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
+                            isSelected
+                              ? 'bg-gold border-gold'
+                              : tapCount > 0
+                                ? 'bg-zinc-700 border-zinc-500'
+                                : 'border-zinc-600'
+                          }`}
                         >
-                          <div
-                            className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
-                              isSelected
-                                ? 'bg-gold border-gold'
-                                : tapCount > 0
-                                  ? 'bg-zinc-700 border-zinc-500'
-                                  : 'border-zinc-600'
-                            }`}
-                          >
-                            {isSelected && (
-                              <Check
-                                size={11}
-                                className="text-black"
-                                strokeWidth={3}
-                              />
-                            )}
-                            {tapCount > 0 && (
-                              <span className="text-[10px] text-zinc-100 font-bold leading-none">
-                                {tapCount}
-                              </span>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <span className="text-sm text-zinc-100">
-                              {tech.name}
+                          {isSelected && (
+                            <Check
+                              size={11}
+                              className="text-black"
+                              strokeWidth={3}
+                            />
+                          )}
+                          {tapCount > 0 && (
+                            <span className="text-[10px] text-zinc-100 font-bold leading-none">
+                              {tapCount}
                             </span>
-                          </div>
-                        </button>
-                      )
-                    })}
-                    {filteredPickerFlows.length > 0 && (
-                      <>
-                        <div className="px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 bg-zinc-950/60">
-                          {t('FLOWS')}
+                          )}
                         </div>
-                        {filteredPickerFlows.map((f) => {
-                          const isSelected =
-                            pickerMode === 'techniques' &&
-                            selectedFlowIds.has(f.id!)
-                          const tapType =
-                            pickerMode === 'tap-given'
-                              ? 'given'
-                              : pickerMode === 'tap-received'
-                                ? 'received'
-                                : null
-                          const flowTapCount = tapType
-                            ? flowTaps.filter(
-                                (ft) =>
-                                  ft.flowId === f.id! && ft.type === tapType,
-                              ).length
-                            : 0
-                          return (
-                            <button
-                              key={`flow-${f.id}`}
-                              onClick={() => handleFlowPickerSelect(f)}
-                              className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
+                        <div className="min-w-0">
+                          <span className="text-sm text-zinc-100">
+                            {tech.name}
+                          </span>
+                        </div>
+                      </button>
+                    )
+                  })}
+                  {filteredPickerFlows.length > 0 && (
+                    <>
+                      <div className="px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 bg-zinc-950/60">
+                        {t('FLOWS')}
+                      </div>
+                      {filteredPickerFlows.map((f) => {
+                        const isSelected =
+                          pickerMode === 'techniques' &&
+                          selectedFlowIds.has(f.id!)
+                        const tapType =
+                          pickerMode === 'tap-given'
+                            ? 'given'
+                            : pickerMode === 'tap-received'
+                              ? 'received'
+                              : null
+                        const flowTapCount = tapType
+                          ? flowTaps.filter(
+                              (ft) =>
+                                ft.flowId === f.id! && ft.type === tapType,
+                            ).length
+                          : 0
+                        return (
+                          <button
+                            key={`flow-${f.id}`}
+                            onClick={() => handleFlowPickerSelect(f)}
+                            className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/50 active:bg-zinc-800 text-left"
+                          >
+                            <div
+                              className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
+                                isSelected
+                                  ? 'bg-gold border-gold'
+                                  : flowTapCount > 0
+                                    ? 'bg-zinc-700 border-zinc-500'
+                                    : 'border-zinc-600'
+                              }`}
                             >
-                              <div
-                                className={`w-5 h-5 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
-                                  isSelected
-                                    ? 'bg-gold border-gold'
-                                    : flowTapCount > 0
-                                      ? 'bg-zinc-700 border-zinc-500'
-                                      : 'border-zinc-600'
-                                }`}
-                              >
-                                {isSelected && (
-                                  <Check
-                                    size={11}
-                                    className="text-black"
-                                    strokeWidth={3}
-                                  />
-                                )}
-                                {flowTapCount > 0 && (
-                                  <span className="text-[10px] text-zinc-100 font-bold leading-none">
-                                    {flowTapCount}
-                                  </span>
-                                )}
-                              </div>
-                              <CategoryIcon
-                                value={flowIcon}
-                                size={14}
-                                className="text-gold shrink-0"
-                              />
-                              <span className="text-sm text-zinc-100 flex-1 min-w-0 truncate">
-                                {f.name}
-                              </span>
-                              <span className="text-[10px] text-zinc-500 shrink-0">
-                                {t('Flow')}
-                              </span>
-                            </button>
-                          )
-                        })}
-                      </>
-                    )}
-                  </>}
+                              {isSelected && (
+                                <Check
+                                  size={11}
+                                  className="text-black"
+                                  strokeWidth={3}
+                                />
+                              )}
+                              {flowTapCount > 0 && (
+                                <span className="text-[10px] text-zinc-100 font-bold leading-none">
+                                  {flowTapCount}
+                                </span>
+                              )}
+                            </div>
+                            <CategoryIcon
+                              value={flowIcon}
+                              size={14}
+                              className="text-gold shrink-0"
+                            />
+                            <span className="text-sm text-zinc-100 flex-1 min-w-0 truncate">
+                              {f.name}
+                            </span>
+                            <span className="text-[10px] text-zinc-500 shrink-0">
+                              {t('Flow')}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
