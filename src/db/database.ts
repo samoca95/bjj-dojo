@@ -283,27 +283,31 @@ export class BJJDatabase extends Dexie {
         sessionFlowTaps: '++id, sessionId, flowId',
       })
       .upgrade(async () => {
-        await this.transaction('rw', [this.categories, this.flows], async () => {
-          const allCategories = await this.categories.toArray()
-          const submissionsCategory = allCategories.find((c) => c.id === 4)
-          if (submissionsCategory?.icon === 'target') {
-            await this.categories.update(4, { icon: 'skull' })
-          }
+        await this.transaction(
+          'rw',
+          [this.categories, this.flows],
+          async () => {
+            const allCategories = await this.categories.toArray()
+            const submissionsCategory = allCategories.find((c) => c.id === 4)
+            if (submissionsCategory?.icon === 'target') {
+              await this.categories.update(4, { icon: 'skull' })
+            }
 
-          const GI_ONLY_PREFILLED_FLOW_IDS = new Set([9002])
-          const allFlows = await this.flows.toArray()
-          const normalized = allFlows.map((flow) => ({
-            ...flow,
-            gi: flow.gi ?? true,
-            noGi:
-              flow.noGi ??
-              (flow.isCustom
-                ? true
-                : !GI_ONLY_PREFILLED_FLOW_IDS.has(flow.id ?? -1)),
-          }))
-          if (normalized.length > 0) await this.flows.bulkPut(normalized)
-          await this.flows.bulkPut(prefilledFlows)
-        })
+            const GI_ONLY_PREFILLED_FLOW_IDS = new Set([9002])
+            const allFlows = await this.flows.toArray()
+            const normalized = allFlows.map((flow) => ({
+              ...flow,
+              gi: flow.gi ?? true,
+              noGi:
+                flow.noGi ??
+                (flow.isCustom
+                  ? true
+                  : !GI_ONLY_PREFILLED_FLOW_IDS.has(flow.id ?? -1)),
+            }))
+            if (normalized.length > 0) await this.flows.bulkPut(normalized)
+            await this.flows.bulkPut(prefilledFlows)
+          },
+        )
       })
 
     // Populate on first creation — registered here so every instance gets it

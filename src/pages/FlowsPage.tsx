@@ -143,7 +143,13 @@ export default function FlowsPage() {
   useEffect(() => {
     window.sessionStorage.setItem(
       LIST_STATE_KEY,
-      JSON.stringify({ search, sortBy, favoritesOnly, formatFilter, activeTag }),
+      JSON.stringify({
+        search,
+        sortBy,
+        favoritesOnly,
+        formatFilter,
+        activeTag,
+      }),
     )
   }, [search, sortBy, favoritesOnly, formatFilter, activeTag])
 
@@ -263,8 +269,8 @@ export default function FlowsPage() {
             <SlidersHorizontal size={18} strokeWidth={2} />
             {(favoritesOnly || formatFilter !== 'all' || activeTag !== null) &&
               !filterOpen && (
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
-            )}
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
+              )}
           </button>
         </div>
 
