@@ -48,4 +48,45 @@ describe('BackupSyncIndicator', () => {
     await user.click(screen.getByLabelText('Close'))
     expect(screen.queryByText('Backup queue')).not.toBeInTheDocument()
   })
+
+  it('keeps the queue popup open after sync completes so final states stay visible', async () => {
+    const user = userEvent.setup()
+    render(<BackupSyncIndicator />)
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent('bjj-dojo:backup-triggered', {
+          detail: {
+            destinationIds: ['github'],
+            components: ['sessions'],
+          },
+        }),
+      )
+    })
+
+    await user.click(await screen.findByLabelText('Syncing GitHub backup…'))
+    expect(screen.getByText('Backup queue')).toBeInTheDocument()
+
+    // Simulate the full sync lifecycle completing.
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent('bjj-dojo:backup-file-succeeded', {
+          detail: {
+            destinationId: 'github',
+            component: 'sessions',
+            filename: 'bjj-dojo-backup-sessions-1715920000000.json',
+          },
+        }),
+      )
+      window.dispatchEvent(
+        new CustomEvent('bjj-dojo:backup-dest-succeeded', {
+          detail: { destinationId: 'github' },
+        }),
+      )
+    })
+
+    // Popup must remain open and show the final 'Saved' state.
+    expect(screen.getByText('Backup queue')).toBeInTheDocument()
+    expect(screen.getByText('Saved')).toBeInTheDocument()
+  })
 })

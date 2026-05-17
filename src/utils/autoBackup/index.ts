@@ -14,6 +14,12 @@ import { telemetry } from '../telemetry'
 import { fileSystemDestination } from './destinations/fileSystem'
 import { githubDestination } from './destinations/github'
 import {
+  enqueueFailedGithubWrite,
+  getPendingGithubWrites,
+  removeGithubRetryEntry,
+  MAX_RETRY_ATTEMPTS,
+} from './destinations/githubRetryQueue'
+import {
   BACKUP_COMPONENTS,
   backupFilenameForComponent,
   isLegacyBackupFilename,
@@ -70,6 +76,76 @@ function recordResult(report: RunReport) {
   }
 }
 
+/**
+ * Replay any previously-failed GitHub writes still sitting in the persistent
+ * retry queue. Each entry that succeeds is removed; entries that fail again
+ * get their attempts counter bumped (via re-enqueue) and stay queued. Entries
+ * past MAX_RETRY_ATTEMPTS are dropped so the queue never grows unbounded.
+ */
+async function drainGithubRetryQueue(
+  destination: BackupDestination,
+  database: BJJDatabase,
+): Promise<void> {
+  const pending = await getPendingGithubWrites(database)
+  for (const entry of pending) {
+    if (entry.attempts >= MAX_RETRY_ATTEMPTS) {
+      telemetry.error('backup.github_retry_exhausted', {
+        component: entry.component,
+        attempts: entry.attempts,
+        lastError: entry.lastError,
+      })
+      await removeGithubRetryEntry(entry.id, database)
+      continue
+    }
+    window.dispatchEvent(
+      new CustomEvent('bjj-dojo:backup-file-started', {
+        detail: {
+          destinationId: destination.id,
+          component: entry.component,
+          filename: entry.filename,
+        },
+      }),
+    )
+    try {
+      await destination.write(entry.payload, entry.filename)
+      window.dispatchEvent(
+        new CustomEvent('bjj-dojo:backup-file-succeeded', {
+          detail: {
+            destinationId: destination.id,
+            component: entry.component,
+            filename: entry.filename,
+          },
+        }),
+      )
+      await removeGithubRetryEntry(entry.id, database)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      window.dispatchEvent(
+        new CustomEvent('bjj-dojo:backup-file-failed', {
+          detail: {
+            destinationId: destination.id,
+            component: entry.component,
+            filename: entry.filename,
+            error: message,
+          },
+        }),
+      )
+      await enqueueFailedGithubWrite(
+        {
+          component: entry.component,
+          filename: entry.filename,
+          payload: entry.payload,
+          lastError: message,
+        },
+        database,
+      )
+      // Stop draining on first failure — likely the same underlying problem
+      // will hit the next entry too, and we don't want to spam events.
+      return
+    }
+  }
+}
+
 export async function runBackupNow(
   database: BJJDatabase = db,
   options: { components?: BackupComponent[] } = {},
@@ -107,6 +183,11 @@ export async function runBackupNow(
         )
         try {
           let lastFilename: string | undefined
+          // GitHub: drain any persisted failed writes first so they get
+          // retried before we add new ones to the in-flight set.
+          if (destination.id === 'github') {
+            await drainGithubRetryQueue(destination, database)
+          }
           for (const component of components) {
             const payload = await exportDatabaseBackupComponent(
               component,
@@ -133,6 +214,17 @@ export async function runBackupNow(
                   },
                 }),
               )
+              if (destination.id === 'github') {
+                await enqueueFailedGithubWrite(
+                  {
+                    component,
+                    filename,
+                    payload,
+                    lastError: message,
+                  },
+                  database,
+                )
+              }
               throw err
             }
             window.dispatchEvent(
