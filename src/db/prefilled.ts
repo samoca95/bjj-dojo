@@ -1,4 +1,4 @@
-import type { Category, Technique, TechniqueConnection } from '../types'
+import type { Category, Flow, Technique, TechniqueConnection } from '../types'
 
 export const prefilledCategories: Category[] = [
   {
@@ -2419,4 +2419,126 @@ export const prefilledConnections: TechniqueConnection[] = [
   { fromTechniqueId: 709, toTechniqueId: 405, connectionType: 'FOLLOW_UP' }, // Crucifix → RNC
   { fromTechniqueId: 709, toTechniqueId: 403, connectionType: 'FOLLOW_UP' }, // Crucifix → Kimura
   { fromTechniqueId: 709, toTechniqueId: 703, connectionType: 'TRANSITION' }, // Crucifix → Back Control
+]
+
+// Flows live in the 9000+ id range so the autoIncrement counter for
+// user-created flows resumes safely above them.
+export const prefilledFlows: Flow[] = [
+  {
+    id: 9001,
+    name: 'Arm Drag to Back Take RNC',
+    description:
+      'Classic open-guard back attack: arm-drag to clear the near arm, climb to the back, secure seatbelt + hooks, finish with the rear naked choke.',
+    tags: ['back-attack', 'open-guard', 'fundamentals'],
+    nodes: [
+      {
+        id: 'n1',
+        techniqueId: 512,
+        note: 'Trap the wrist, pinch the tricep, pull across your body to expose the back.',
+        childIds: ['n2'],
+      },
+      {
+        id: 'n2',
+        techniqueId: 703,
+        note: 'Lock the seatbelt before chasing hooks. Drop to the choking-side hip.',
+        childIds: ['n3'],
+      },
+      {
+        id: 'n3',
+        techniqueId: 405,
+        note: 'Strangle, not crank — bicep to neck, palm to bicep, squeeze.',
+        childIds: [],
+      },
+    ],
+    rootNodeId: 'n1',
+    isCustom: false,
+    createdAt: 0,
+    updatedAt: 0,
+    referenceLinks: [
+      {
+        url: 'https://en.wikipedia.org/wiki/Rear_naked_choke',
+        label: 'Wikipedia: Rear Naked Choke',
+      },
+    ],
+  },
+  {
+    id: 9002,
+    name: 'Closed Guard to Cross Collar Choke',
+    description:
+      'Gi-focused closed guard attack chain. Scissor sweep is the primary path; if they post and prevent the sweep, attack the cross collar choke from guard.',
+    tags: ['closed-guard', 'gi', 'sweep-to-submit'],
+    nodes: [
+      {
+        id: 'n1',
+        techniqueId: 101,
+        note: 'Break posture and establish a strong cross-collar grip + sleeve grip.',
+        childIds: ['n2', 'n5'],
+      },
+      {
+        id: 'n2',
+        techniqueId: 302,
+        note: 'Hip out, shin across the belly, chop the far leg.',
+        childIds: ['n3'],
+      },
+      {
+        id: 'n3',
+        techniqueId: 701,
+        note: 'Land tight, grapevine if needed, climb up before they bridge.',
+        childIds: ['n4'],
+      },
+      {
+        id: 'n4',
+        techniqueId: 414,
+        note: 'Deep first grip, thumb-in second grip, elbows pinch as you drop the chest.',
+        childIds: [],
+      },
+      {
+        id: 'n5',
+        techniqueId: 414,
+        note: 'If they posture and stop the sweep, the cross collar is right there from guard — drop them in instead.',
+        childIds: [],
+      },
+    ],
+    rootNodeId: 'n1',
+    isCustom: false,
+    createdAt: 0,
+    updatedAt: 0,
+  },
+  {
+    id: 9003,
+    name: 'Half Guard Kimura Sweep to Back Take',
+    description:
+      'Half guard underhook attack with a kimura grip that branches into a sweep to mount or a transition to the back when they roll forward.',
+    tags: ['half-guard', 'kimura', 'sweep-to-back'],
+    nodes: [
+      {
+        id: 'n1',
+        techniqueId: 102,
+        note: 'Get on your side and fight for the underhook before anything else.',
+        childIds: ['n2'],
+      },
+      {
+        id: 'n2',
+        techniqueId: 403,
+        note: 'Trap the wrist on the underhook side, figure-four the kimura grip behind their back.',
+        childIds: ['n3', 'n4'],
+      },
+      {
+        id: 'n3',
+        techniqueId: 312,
+        note: 'Use the kimura grip as a steering wheel to roll them — land in top half or mount.',
+        childIds: [],
+      },
+      {
+        id: 'n4',
+        techniqueId: 703,
+        note: 'If they posture up to defend the kimura, walk the legs out and take the back.',
+        childIds: [],
+      },
+    ],
+    rootNodeId: 'n1',
+    isCustom: false,
+    createdAt: 0,
+    updatedAt: 0,
+  },
 ]

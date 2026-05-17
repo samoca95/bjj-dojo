@@ -8,11 +8,14 @@ import type {
   SessionTap,
   Club,
   DrillPlan,
+  Flow,
+  FlowNode,
 } from '../types'
 import {
   prefilledCategories,
   prefilledTechniques,
   prefilledConnections,
+  prefilledFlows,
 } from './prefilled'
 import { type AppLanguage } from '../i18n'
 import { VALIDATION_LIMITS, isValidYoutubeUrl } from '../utils/validation'
@@ -38,6 +41,7 @@ export class BJJDatabase extends Dexie {
   clubs!: Table<Club, number>
   drillPlans!: Table<DrillPlan, number>
   appState!: Table<AppStateRecord, string>
+  flows!: Table<Flow, number>
 
   constructor(name = 'bjj-dojo') {
     super(name)
@@ -224,12 +228,31 @@ export class BJJDatabase extends Dexie {
       appState: 'key',
     })
 
+    this.version(10)
+      .stores({
+        categories: 'id, name',
+        techniques: 'id, categoryId, name',
+        techniqueConnections:
+          '[fromTechniqueId+toTechniqueId], fromTechniqueId, toTechniqueId',
+        sessions: '++id, date, clubId',
+        sessionTechniques: '[sessionId+techniqueId], sessionId, techniqueId',
+        sessionTaps: '++id, sessionId, techniqueId',
+        clubs: '++id, sortOrder, name',
+        drillPlans: '++id, name, createdAt',
+        appState: 'key',
+        flows: '++id, name, createdAt, updatedAt',
+      })
+      .upgrade(async (tx) => {
+        await tx.table<Flow, number>('flows').bulkAdd(prefilledFlows)
+      })
+
     // Populate on first creation — registered here so every instance gets it
     // (including isolated test instances).
     this.on('populate', async () => {
       await this.categories.bulkAdd(prefilledCategories)
       await this.techniques.bulkAdd(prefilledTechniques)
       await this.techniqueConnections.bulkAdd(prefilledConnections)
+      await this.flows.bulkAdd(prefilledFlows)
     })
   }
 }
@@ -308,6 +331,7 @@ export interface DatabaseBackup {
   sessionTaps: SessionTap[]
   clubs: Club[]
   drillPlans: DrillPlan[]
+  flows: Flow[]
   /** Backed-up `bjj-dojo:`-prefixed localStorage settings (belt, goals, layout, …). */
   preferences?: Record<string, string>
   /** Optional component marker for split auto-backup files. */
@@ -342,6 +366,7 @@ export async function exportDatabaseBackup(
       database.sessionTaps,
       database.clubs,
       database.drillPlans,
+      database.flows,
     ],
     async () => ({
       categories: await database.categories.toArray(),
@@ -352,6 +377,7 @@ export async function exportDatabaseBackup(
       sessionTaps: await database.sessionTaps.toArray(),
       clubs: await database.clubs.toArray(),
       drillPlans: await database.drillPlans.toArray(),
+      flows: await database.flows.toArray(),
     }),
   )
 
@@ -389,6 +415,7 @@ export async function exportDatabaseBackupComponent(
     sessionTaps: [],
     clubs: [],
     drillPlans: [],
+    flows: [],
     preferences: {},
   }
 
@@ -416,10 +443,11 @@ export async function exportDatabaseBackupComponent(
   if (component === 'techniques') {
     const snapshot = await database.transaction(
       'r',
-      [database.categories, database.techniques],
+      [database.categories, database.techniques, database.flows],
       async () => ({
         categories: await database.categories.toArray(),
         techniques: await database.techniques.toArray(),
+        flows: await database.flows.toArray(),
       }),
     )
     return { ...base, ...snapshot }
@@ -743,6 +771,163 @@ function validateDrillPlans(records: unknown[]): DrillPlan[] {
   })
 }
 
+const FLOW_MAX_NODES = 200
+const FLOW_MAX_CHILDREN_PER_NODE = 12
+const FLOW_MAX_TAGS = 20
+
+function validateReferenceLinks(ctx: string, value: unknown) {
+  if (!Array.isArray(value))
+    throw new Error(`${ctx}: 'referenceLinks' must be an array`)
+  for (let j = 0; j < value.length; j++) {
+    const link = value[j] as { url?: unknown; label?: unknown } | null
+    if (!link || typeof link !== 'object')
+      throw new Error(`${ctx}: 'referenceLinks[${j}]' must be an object`)
+    if (typeof link.url !== 'string' || !link.url.trim())
+      throw new Error(
+        `${ctx}: 'referenceLinks[${j}].url' must be a non-empty string`,
+      )
+    if (link.label !== undefined && typeof link.label !== 'string')
+      throw new Error(`${ctx}: 'referenceLinks[${j}].label' must be a string`)
+  }
+}
+
+function validateFlowTreeIntegrity(
+  ctx: string,
+  nodes: FlowNode[],
+  rootNodeId: string,
+) {
+  const byId = new Map<string, FlowNode>()
+  for (const node of nodes) {
+    if (byId.has(node.id))
+      throw new Error(`${ctx}: duplicate node id '${node.id}'`)
+    byId.set(node.id, node)
+  }
+  if (!byId.has(rootNodeId))
+    throw new Error(`${ctx}: 'rootNodeId' '${rootNodeId}' is not in 'nodes'`)
+  const inDegree = new Map<string, number>()
+  for (const node of nodes) inDegree.set(node.id, 0)
+  for (const node of nodes) {
+    for (let k = 0; k < node.childIds.length; k++) {
+      const childId = node.childIds[k]
+      if (!byId.has(childId))
+        throw new Error(
+          `${ctx}: node '${node.id}' references missing child '${childId}'`,
+        )
+      inDegree.set(childId, (inDegree.get(childId) ?? 0) + 1)
+    }
+  }
+  for (const [id, deg] of inDegree) {
+    if (id === rootNodeId) {
+      if (deg !== 0)
+        throw new Error(`${ctx}: root node '${id}' must not be a child`)
+    } else if (deg !== 1) {
+      throw new Error(
+        `${ctx}: node '${id}' must be referenced by exactly one parent (got ${deg})`,
+      )
+    }
+  }
+  // DFS reachability — guarantees tree (no cycles, no orphans).
+  const visited = new Set<string>()
+  const stack: string[] = [rootNodeId]
+  while (stack.length > 0) {
+    const id = stack.pop()!
+    if (visited.has(id))
+      throw new Error(`${ctx}: cycle detected at node '${id}'`)
+    visited.add(id)
+    const node = byId.get(id)!
+    for (const childId of node.childIds) stack.push(childId)
+  }
+  if (visited.size !== nodes.length)
+    throw new Error(
+      `${ctx}: ${nodes.length - visited.size} node(s) unreachable from root`,
+    )
+}
+
+function validateFlows(records: unknown[]): Flow[] {
+  return records.map((r, i) => {
+    const ctx = `flows[${i}]`
+    if (!r || typeof r !== 'object') throw new Error(`${ctx}: not an object`)
+    const rec = r as Record<string, unknown>
+    if (rec.id !== undefined && !isPosInt(rec.id))
+      throw new Error(`${ctx}: 'id' must be a positive integer`)
+    if (typeof rec.name !== 'string' || !rec.name.trim())
+      throw new Error(`${ctx}: 'name' must be a non-empty string`)
+    if (rec.name.length > NAME_MAX_LENGTH)
+      throw new Error(`${ctx}: 'name' exceeds ${NAME_MAX_LENGTH} characters`)
+    if (typeof rec.description !== 'string')
+      throw new Error(`${ctx}: 'description' must be a string`)
+    if (rec.description.length > DESCRIPTION_MAX_LENGTH)
+      throw new Error(
+        `${ctx}: 'description' exceeds ${DESCRIPTION_MAX_LENGTH} characters`,
+      )
+    if (typeof rec.isCustom !== 'boolean')
+      throw new Error(`${ctx}: 'isCustom' must be a boolean`)
+    if (rec.isFavorite !== undefined && typeof rec.isFavorite !== 'boolean')
+      throw new Error(`${ctx}: 'isFavorite' must be a boolean`)
+    if (!isFiniteNum(rec.createdAt))
+      throw new Error(`${ctx}: 'createdAt' must be a finite number`)
+    if (!isFiniteNum(rec.updatedAt))
+      throw new Error(`${ctx}: 'updatedAt' must be a finite number`)
+    if (rec.tags !== undefined) {
+      if (!Array.isArray(rec.tags))
+        throw new Error(`${ctx}: 'tags' must be an array`)
+      if (rec.tags.length > FLOW_MAX_TAGS)
+        throw new Error(`${ctx}: 'tags' exceeds ${FLOW_MAX_TAGS} entries`)
+      for (let j = 0; j < rec.tags.length; j++) {
+        if (typeof rec.tags[j] !== 'string')
+          throw new Error(`${ctx}: 'tags[${j}]' must be a string`)
+        if ((rec.tags[j] as string).length > TAG_MAX_LENGTH)
+          throw new Error(
+            `${ctx}: 'tags[${j}]' exceeds ${TAG_MAX_LENGTH} characters`,
+          )
+      }
+    }
+    if (rec.referenceLinks !== undefined)
+      validateReferenceLinks(ctx, rec.referenceLinks)
+    if (typeof rec.rootNodeId !== 'string' || !rec.rootNodeId)
+      throw new Error(`${ctx}: 'rootNodeId' must be a non-empty string`)
+    if (!Array.isArray(rec.nodes))
+      throw new Error(`${ctx}: 'nodes' must be an array`)
+    if (rec.nodes.length === 0)
+      throw new Error(`${ctx}: 'nodes' must not be empty`)
+    if (rec.nodes.length > FLOW_MAX_NODES)
+      throw new Error(`${ctx}: 'nodes' exceeds ${FLOW_MAX_NODES} entries`)
+    const nodes: FlowNode[] = rec.nodes.map((nRaw, j) => {
+      const nctx = `${ctx}.nodes[${j}]`
+      if (!nRaw || typeof nRaw !== 'object')
+        throw new Error(`${nctx}: not an object`)
+      const n = nRaw as Record<string, unknown>
+      if (typeof n.id !== 'string' || !n.id)
+        throw new Error(`${nctx}: 'id' must be a non-empty string`)
+      if (!isPosInt(n.techniqueId))
+        throw new Error(`${nctx}: 'techniqueId' must be a positive integer`)
+      if (n.note !== undefined) {
+        if (typeof n.note !== 'string')
+          throw new Error(`${nctx}: 'note' must be a string`)
+        if (n.note.length > NOTE_MAX_LENGTH)
+          throw new Error(
+            `${nctx}: 'note' exceeds ${NOTE_MAX_LENGTH} characters`,
+          )
+      }
+      if (!Array.isArray(n.childIds))
+        throw new Error(`${nctx}: 'childIds' must be an array`)
+      if (n.childIds.length > FLOW_MAX_CHILDREN_PER_NODE)
+        throw new Error(
+          `${nctx}: 'childIds' exceeds ${FLOW_MAX_CHILDREN_PER_NODE} entries`,
+        )
+      for (let k = 0; k < n.childIds.length; k++) {
+        if (typeof n.childIds[k] !== 'string' || !(n.childIds[k] as string))
+          throw new Error(
+            `${nctx}: 'childIds[${k}]' must be a non-empty string`,
+          )
+      }
+      return n as unknown as FlowNode
+    })
+    validateFlowTreeIntegrity(ctx, nodes, rec.rootNodeId)
+    return rec as unknown as Flow
+  })
+}
+
 function validateReferentialIntegrity(payload: {
   techniques: Technique[]
   techniqueConnections: TechniqueConnection[]
@@ -751,6 +936,7 @@ function validateReferentialIntegrity(payload: {
   sessionTaps: SessionTap[]
   clubs: Club[]
   drillPlans: DrillPlan[]
+  flows: Flow[]
 }) {
   const techniqueIds = new Set(payload.techniques.map((t) => t.id))
   const sessionIds = new Set(
@@ -810,6 +996,16 @@ function validateReferentialIntegrity(payload: {
         )
     }
   }
+  for (let i = 0; i < payload.flows.length; i++) {
+    const flow = payload.flows[i]
+    for (let j = 0; j < flow.nodes.length; j++) {
+      const node = flow.nodes[j]
+      if (!techniqueIds.has(node.techniqueId))
+        throw new Error(
+          `flows[${i}].nodes[${j}]: 'techniqueId' ${node.techniqueId} does not match any technique`,
+        )
+    }
+  }
 }
 
 export async function importDatabaseBackup(
@@ -864,6 +1060,7 @@ export async function importDatabaseBackup(
   const drillPlans = validateDrillPlans(
     asArrayStrict<unknown>(payload.drillPlans, 'drillPlans'),
   )
+  const flows = validateFlows(asArrayStrict<unknown>(payload.flows, 'flows'))
 
   validateReferentialIntegrity({
     techniques,
@@ -873,6 +1070,7 @@ export async function importDatabaseBackup(
     sessionTaps,
     clubs,
     drillPlans,
+    flows,
   })
 
   await database.transaction(
@@ -886,6 +1084,7 @@ export async function importDatabaseBackup(
       database.sessionTaps,
       database.clubs,
       database.drillPlans,
+      database.flows,
     ],
     async () => {
       await database.sessionTaps.clear()
@@ -893,6 +1092,7 @@ export async function importDatabaseBackup(
       await database.techniqueConnections.clear()
       await database.sessions.clear()
       await database.drillPlans.clear()
+      await database.flows.clear()
       await database.techniques.clear()
       await database.clubs.clear()
       await database.categories.clear()
@@ -907,6 +1107,7 @@ export async function importDatabaseBackup(
       if (sessionTaps.length) await database.sessionTaps.bulkAdd(sessionTaps)
       if (clubs.length) await database.clubs.bulkAdd(clubs)
       if (drillPlans.length) await database.drillPlans.bulkAdd(drillPlans)
+      if (flows.length) await database.flows.bulkAdd(flows)
     },
   )
 

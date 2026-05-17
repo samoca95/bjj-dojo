@@ -1,4 +1,4 @@
-import type { Technique } from '../types'
+import type { Flow, Technique } from '../types'
 
 function normalize(value: string): string {
   return value
@@ -126,4 +126,70 @@ export function techniqueScore(technique: Technique, query: string): number {
 
   // Match only found in description
   return 10
+}
+
+function flowHaystacks(
+  flow: Flow,
+  techniqueNameById: (id: number) => string,
+): {
+  name: string
+  description: string
+  techniqueNames: string
+  notes: string
+  tags: string
+} {
+  const techniqueNames = flow.nodes
+    .map((n) => techniqueNameById(n.techniqueId))
+    .filter(Boolean)
+    .join(' ')
+  const notes = flow.nodes
+    .map((n) => n.note ?? '')
+    .filter(Boolean)
+    .join(' ')
+  return {
+    name: flow.name,
+    description: flow.description,
+    techniqueNames,
+    notes,
+    tags: (flow.tags ?? []).join(' '),
+  }
+}
+
+export function flowMatchesQuery(
+  flow: Flow,
+  techniqueNameById: (id: number) => string,
+  query: string,
+): boolean {
+  if (!query.trim()) return true
+  const h = flowHaystacks(flow, techniqueNameById)
+  const combined = [h.name, h.description, h.techniqueNames, h.notes, h.tags]
+    .filter(Boolean)
+    .join(' ')
+  return fuzzyMatch(combined, query)
+}
+
+export function flowScore(
+  flow: Flow,
+  techniqueNameById: (id: number) => string,
+  query: string,
+): number {
+  if (!query.trim()) return 0
+  const h = flowHaystacks(flow, techniqueNameById)
+  const normName = normalize(h.name)
+  const normQuery = normalize(query)
+
+  if (normName === normQuery) return 100
+  if (normName.startsWith(normQuery)) return 90
+  if (normName.includes(normQuery)) return 70
+  if (isSubsequence(normName, normQuery)) return 50
+
+  const tokens = normQuery.split(/\s+/).filter(Boolean)
+  if (tokens.length > 1 && tokens.every((token) => normName.includes(token)))
+    return 60
+
+  if (fuzzyMatch(h.techniqueNames, query)) return 55
+  if (fuzzyMatch(h.tags, query)) return 35
+  if (fuzzyMatch(h.notes, query)) return 25
+  if (fuzzyMatch(h.description, query)) return 10
+  return 0
 }
