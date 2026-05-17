@@ -80,6 +80,27 @@ export interface DrillPlan {
   createdAt: number
 }
 
+export interface FlowNode {
+  id: string
+  techniqueId: number
+  note?: string
+  childIds: string[]
+}
+
+export interface Flow {
+  id?: number
+  name: string
+  description: string
+  tags?: string[]
+  referenceLinks?: ReferenceLink[]
+  nodes: FlowNode[]
+  rootNodeId: string
+  isFavorite?: boolean
+  isCustom: boolean
+  createdAt: number
+  updatedAt: number
+}
+
 export const SESSION_TYPE_LABELS: Record<SessionType, string> = {
   GI: 'Gi',
   NOGI: 'No-Gi',

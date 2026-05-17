@@ -312,6 +312,7 @@ describe('readLatestBackupPayload', () => {
             sessionTaps: [],
             clubs: [],
             drillPlans: [],
+            flows: [],
             preferences: { 'bjj-dojo:user-name': 'Ana' },
           }
         return {
@@ -326,6 +327,7 @@ describe('readLatestBackupPayload', () => {
           sessionTaps: [],
           clubs: [],
           drillPlans: [],
+          flows: [],
           preferences: {},
         }
       }),

@@ -249,6 +249,7 @@ function mergeBackupPayload(
       language: incoming.language ?? base.language,
       categories: incoming.categories,
       techniques: incoming.techniques,
+      flows: incoming.flows ?? base.flows,
     }
   }
   if (incoming.component === 'flows') {
@@ -280,6 +281,7 @@ function mergeBackupPayload(
     sessionTaps: incoming.sessionTaps ?? base.sessionTaps,
     clubs: incoming.clubs ?? base.clubs,
     drillPlans: incoming.drillPlans ?? base.drillPlans,
+    flows: incoming.flows ?? base.flows,
     preferences: incoming.preferences ?? base.preferences,
   }
 }
@@ -324,6 +326,7 @@ export async function readLatestBackupPayload(
     sessionTaps: [],
     clubs: [],
     drillPlans: [],
+    flows: [],
     preferences: {},
   }
 

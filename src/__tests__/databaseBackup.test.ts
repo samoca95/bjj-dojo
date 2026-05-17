@@ -347,6 +347,7 @@ describe('Referential integrity', () => {
           createdAt: 1_700_000_000_000,
         },
       ],
+      flows: [],
     }
   }
 
