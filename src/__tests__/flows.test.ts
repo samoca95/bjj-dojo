@@ -99,9 +99,7 @@ describe('validateFlows', () => {
 
   it('rejects empty nodes array', async () => {
     await expect(
-      importWithFlows([
-        { ...userFlow(), nodes: [], rootNodeId: 'a' },
-      ]),
+      importWithFlows([{ ...userFlow(), nodes: [], rootNodeId: 'a' }]),
     ).rejects.toThrow(/'nodes' must not be empty/)
   })
 

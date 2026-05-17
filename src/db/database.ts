@@ -1,4 +1,3 @@
-
 import Dexie, { type Table } from 'dexie'
 import type {
   Category,
@@ -788,9 +787,7 @@ function validateReferenceLinks(ctx: string, value: unknown) {
         `${ctx}: 'referenceLinks[${j}].url' must be a non-empty string`,
       )
     if (link.label !== undefined && typeof link.label !== 'string')
-      throw new Error(
-        `${ctx}: 'referenceLinks[${j}].label' must be a string`,
-      )
+      throw new Error(`${ctx}: 'referenceLinks[${j}].label' must be a string`)
   }
 }
 

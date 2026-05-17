@@ -1,9 +1,4 @@
-import type {
-  Category,
-  Flow,
-  Technique,
-  TechniqueConnection,
-} from '../types'
+import type { Category, Flow, Technique, TechniqueConnection } from '../types'
 
 export const prefilledCategories: Category[] = [
   {
