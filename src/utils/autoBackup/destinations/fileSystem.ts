@@ -2,9 +2,12 @@
  * File System Access API destination.
  *
  * The directory handle is opaque to JSON, so it lives in the Dexie `appState`
- * table rather than localStorage. Permissions need a user gesture to upgrade
- * from 'prompt' → 'granted', so the caller is expected to invoke the picker
- * (or the reconnect button) in response to a click.
+ * table rather than localStorage. Permissions can lapse silently across
+ * browser restarts; when that happens we set the `needs-reconnect` flag so
+ * the UI surfaces a clear reconnect CTA instead of failing silently on the
+ * next mutation. Re-granting permission requires a user gesture, so the
+ * caller (button click) must invoke `verifyFolderConnection` /
+ * `pickBackupFolder` from inside the handler.
  *
  * Files are written under per-component subdirectories (preferences/, sessions/,
  * techniques/, flows/). Legacy flat files at the picked-folder root are still
@@ -23,8 +26,11 @@ import type {
 } from '../types'
 import {
   getBackupRetentionCount,
+  getFsNeedsReconnect,
   isFsBackupEnabled,
   setFsFolderName,
+  setFsLastError,
+  setFsNeedsReconnect,
 } from '../settings'
 import {
   BACKUP_COMPONENTS,
@@ -97,12 +103,16 @@ export async function pickBackupFolder(): Promise<DirectoryHandle> {
   })
   await setAppStateValue(HANDLE_KEY, handle as unknown)
   setFsFolderName(handle.name)
+  setFsNeedsReconnect(false)
+  setFsLastError(null)
   return handle
 }
 
 export async function disconnectBackupFolder(): Promise<void> {
   await deleteAppStateValue(HANDLE_KEY)
   setFsFolderName(null)
+  setFsNeedsReconnect(false)
+  setFsLastError(null)
 }
 
 export async function getStoredFolderHandle(): Promise<DirectoryHandle | null> {
@@ -118,6 +128,45 @@ export async function ensureFolderPermission(
   if (current === 'granted') return current
   if (!requestIfNeeded) return current
   return await handle.requestPermission({ mode: 'readwrite' })
+}
+
+/**
+ * Re-acquire permission on the stored handle. Must be called from a user
+ * gesture (button click) — the browser will reject the permission prompt
+ * otherwise. Clears `needs-reconnect` on success.
+ */
+export async function reconnectBackupFolder(): Promise<boolean> {
+  const handle = await getStoredFolderHandle()
+  if (!handle) return false
+  const perm = await ensureFolderPermission(handle, true)
+  if (perm === 'granted') {
+    setFsNeedsReconnect(false)
+    setFsLastError(null)
+    return true
+  }
+  setFsNeedsReconnect(true)
+  return false
+}
+
+/**
+ * Probe the stored handle without prompting. Sets `needs-reconnect` if the
+ * handle exists but permission has lapsed. Safe to call on app start.
+ */
+export async function verifyFolderConnection(): Promise<
+  'no-handle' | 'granted' | 'needs-reconnect'
+> {
+  const handle = await getStoredFolderHandle()
+  if (!handle) {
+    setFsNeedsReconnect(false)
+    return 'no-handle'
+  }
+  const perm = await ensureFolderPermission(handle, false)
+  if (perm === 'granted') {
+    setFsNeedsReconnect(false)
+    return 'granted'
+  }
+  setFsNeedsReconnect(true)
+  return 'needs-reconnect'
 }
 
 async function getSubdirHandle(
@@ -177,10 +226,15 @@ export const fileSystemDestination: BackupDestination = {
 
   async isEnabled() {
     if (!isFsBackupEnabled()) return false
+    if (getFsNeedsReconnect()) return false
     const handle = await getStoredFolderHandle()
     if (!handle) return false
     const perm = await ensureFolderPermission(handle, false)
-    return perm === 'granted'
+    if (perm !== 'granted') {
+      setFsNeedsReconnect(true)
+      return false
+    }
+    return true
   },
 
   async write(
@@ -192,6 +246,7 @@ export const fileSystemDestination: BackupDestination = {
       if (!handle) throw new Error('No backup folder connected.')
       const perm = await ensureFolderPermission(handle, false)
       if (perm !== 'granted') {
+        setFsNeedsReconnect(true)
         throw new Error(
           'Folder permission was revoked. Reconnect the folder in Settings.',
         )
@@ -224,7 +279,10 @@ export const fileSystemDestination: BackupDestination = {
     const handle = await getStoredFolderHandle()
     if (!handle) return []
     const perm = await ensureFolderPermission(handle, false)
-    if (perm !== 'granted') return []
+    if (perm !== 'granted') {
+      setFsNeedsReconnect(true)
+      return []
+    }
     const all = await listAllBackupFiles(handle)
     const results = await Promise.all(
       all.map(async ({ handle: fh, subdir }) => {

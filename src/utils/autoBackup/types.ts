@@ -1,11 +1,18 @@
 import type { DatabaseBackup } from '../../db/database'
 
-export type DestinationId = 'fileSystem' | 'github'
+export type DestinationId = 'fileSystem' | 'googleDrive' | 'dropbox'
 export type BackupComponent =
   | 'preferences'
   | 'sessions'
   | 'techniques'
   | 'flows'
+
+/**
+ * Surface state for a backup destination. `disabled` means the user has not
+ * connected it; `needs-reconnect` means a previously connected destination
+ * lost permission / its token expired and a user action is required.
+ */
+export type DestinationStatus = 'disabled' | 'ok' | 'error' | 'needs-reconnect'
 
 export interface DiscoveredBackup {
   /** Stable identifier the destination understands when restoring. */

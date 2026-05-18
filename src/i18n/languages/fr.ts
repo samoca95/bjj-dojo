@@ -314,57 +314,42 @@ const FR_TRANSLATIONS = {
   'Auto-backup is off — your data only lives in this browser.':
     'La sauvegarde automatique est désactivée — vos données ne vivent que dans ce navigateur.',
   'Back up to a folder': 'Sauvegarder dans un dossier',
-  'Back up to GitHub': 'Sauvegarder sur GitHub',
+  'Back up to Google Drive': 'Sauvegarder sur Google Drive',
+  'Back up to Dropbox': 'Sauvegarder sur Dropbox',
   'Choose folder': 'Choisir un dossier',
   'Reconnect folder': 'Reconnecter le dossier',
   'Disconnect folder': 'Déconnecter le dossier',
+  'Folder needs to be reconnected.': 'Le dossier doit être reconnecté.',
   'Backup now': 'Sauvegarder maintenant',
   'Last backup': 'Dernière sauvegarde',
   Never: 'Jamais',
-  'GitHub token': 'Jeton GitHub',
-  'Personal access token': 'Jeton d’accès personnel',
-  'Repository (owner/repo)': 'Dépôt (utilisateur/dépôt)',
-  'Gist ID': 'ID du gist',
-  'Test connection': 'Tester la connexion',
   'Connected as': 'Connecté en tant que',
   'Folder backup is only available in Chromium-based browsers.':
     'La sauvegarde dossier est disponible uniquement sur les navigateurs Chromium.',
-  'Use a fine-grained token scoped to one repo. Revoke it if your device is lost.':
-    'Utilisez un jeton fine-grained limité à un seul dépôt. Révoquez-le en cas de perte de l’appareil.',
   'Auto-backup failed': 'Échec de la sauvegarde automatique',
   'Could not write backup to the chosen destination.':
     'Impossible d’écrire la sauvegarde dans la destination choisie.',
-  'Connect GitHub': 'Se connecter à GitHub',
+  'Connect Google Drive': 'Connecter Google Drive',
+  'Connect Dropbox': 'Connecter Dropbox',
+  Disconnect: 'Déconnecter',
   'Signed in as': 'Connecté en tant que',
   'Sign out': 'Se déconnecter',
-  'Select a repository': 'Sélectionner un dépôt',
-  'Create new repository': 'Créer un nouveau dépôt',
-  'Repository name': 'Nom du dépôt',
-  'Private repository': 'Dépôt privé',
-  Create: 'Créer',
-  'Loading repositories…': 'Chargement des dépôts…',
-  'No repositories with write access.': 'Aucun dépôt avec accès en écriture.',
   'Backups to keep': 'Sauvegardes à conserver',
   'Older backups are deleted automatically.':
     'Les anciennes sauvegardes sont supprimées automatiquement.',
-  'GitHub login is not configured in this build.':
-    'La connexion GitHub n’est pas configurée dans cette version.',
-  'Enter this code at GitHub': 'Saisissez ce code sur GitHub',
-  'Open GitHub': 'Ouvrir GitHub',
-  'Copy code': 'Copier le code',
-  Copied: 'Copié',
-  'Waiting for authorization…': 'En attente d’autorisation…',
-  'Authorization timed out. Try again.':
-    'Le délai d’autorisation a expiré. Réessayez.',
-  'Authorization was denied.': 'L’autorisation a été refusée.',
+  'Google Drive login is not configured in this build.':
+    'La connexion Google Drive n’est pas configurée dans cette version.',
+  'Dropbox login is not configured in this build.':
+    'La connexion Dropbox n’est pas configurée dans cette version.',
+  'Reconnect required — your session has expired.':
+    'Reconnexion requise — votre session a expiré.',
   // Setup restore prompt
   'Restore from backup': 'Restaurer depuis une sauvegarde',
   'Set up backup': 'Configurer la sauvegarde',
   'Where should we keep your backups?': 'Où conserver vos sauvegardes ?',
   'A folder on your device': 'Un dossier sur votre appareil',
-  'A GitHub repo or gist': 'Un dépôt ou gist GitHub',
-  'You can enable folder and GitHub backups together later in Settings.':
-    'Vous pourrez activer dossier et GitHub ensemble plus tard dans Réglages.',
+  'You can combine destinations later in Settings.':
+    'Vous pourrez combiner plusieurs destinations plus tard dans Réglages.',
   'Omit for now': 'Passer pour le moment',
   'Skip — start fresh in this browser':
     'Passer — repartir de zéro dans ce navigateur',

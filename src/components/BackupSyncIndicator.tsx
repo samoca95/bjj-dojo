@@ -17,7 +17,8 @@ interface OfflineToast {
 
 const DEST_LABELS: Record<DestinationId, string> = {
   fileSystem: 'folder',
-  github: 'GitHub',
+  googleDrive: 'Google Drive',
+  dropbox: 'Dropbox',
 }
 
 const SUCCESS_DURATION_MS = 3000
@@ -121,7 +122,7 @@ export default function BackupSyncIndicator() {
       {activeDestinations.length > 0 && (
         <div className="fixed top-3 left-3 z-50 flex gap-1.5 items-center">
           {activeDestinations.map(([destId, state]) => {
-            const Icon = destId === 'github' ? Cloud : Folder
+            const Icon = destId === 'fileSystem' ? Folder : Cloud
             return (
               <button
                 key={destId}

@@ -51,47 +51,41 @@ import {
   AUTO_BACKUP_UPDATED_EVENT,
   DEFAULT_BACKUP_RETENTION,
   getBackupRetentionCount,
+  getCloudAccountLabel,
+  getCloudLastError,
+  getCloudLastRun,
+  getCloudNeedsReconnect,
   getFsFolderName,
   getFsLastError,
   getFsLastRun,
-  getGithubLastError,
-  getGithubLastRun,
-  getGithubTarget,
-  getGithubToken,
+  getFsNeedsReconnect,
   getLastMutationTime,
+  isCloudBackupEnabled,
   isFsBackupEnabled,
-  isGithubBackupEnabled,
   setBackupRetentionCount,
+  setCloudBackupEnabled,
   setFsBackupEnabled,
-  setGithubBackupEnabled,
-  setGithubTarget,
-  setGithubToken,
 } from '../utils/autoBackup/settings'
 import {
   disconnectBackupFolder,
   fileSystemDestination,
   isFileSystemDestinationSupported,
   pickBackupFolder,
+  reconnectBackupFolder,
 } from '../utils/autoBackup/destinations/fileSystem'
 import {
-  createBackupRepo,
-  githubDestination,
-  listWritableRepos,
-  verifyGithubToken,
-  type GithubRepoSummary,
-} from '../utils/autoBackup/destinations/github'
-import { isDeviceFlowConfigured } from '../utils/autoBackup/githubAuth'
-import DeviceFlowDialog from '../components/DeviceFlowDialog'
+  googleDriveDestination,
+  isGoogleDriveConfigured,
+} from '../utils/autoBackup/destinations/cloud/googleDrive'
+import {
+  dropboxDestination,
+  isDropboxConfigured,
+} from '../utils/autoBackup/destinations/cloud/dropbox'
 import type {
   BackupDestination,
   DestinationId,
   DiscoveredBackup,
 } from '../utils/autoBackup/types'
-import {
-  getPendingGithubWrites,
-  type GithubRetryEntry,
-} from '../utils/autoBackup/destinations/githubRetryQueue'
-import { db as dexieDb } from '../db/database'
 
 const BELT_ABBREV: Record<AppLanguage, Record<BeltColor, string>> = {
   en: { white: 'Wht', blue: 'Blu', purple: 'Pur', brown: 'Brn', black: 'Blk' },
@@ -149,75 +143,80 @@ export default function SettingsPage() {
       window.removeEventListener('storage', sync)
     }
   }, [])
-  // autoBackupTick is intentionally read here to mark this block as
-  // recomputing on every change to the localStorage-backed settings.
   void autoBackupTick
+
   const fsEnabled = isFsBackupEnabled()
   const fsFolderName = getFsFolderName()
   const fsLastRun = getFsLastRun()
   const fsLastError = getFsLastError()
+  const fsNeedsReconnect = getFsNeedsReconnect()
   const fsSupported = isFileSystemDestinationSupported()
-  const ghEnabled = isGithubBackupEnabled()
-  const ghToken = getGithubToken()
-  const ghTarget = getGithubTarget()
-  const ghLastRun = getGithubLastRun()
-  const ghLastError = getGithubLastError()
+
+  const gdriveEnabled = isCloudBackupEnabled('googleDrive')
+  const gdriveAccount = getCloudAccountLabel('googleDrive')
+  const gdriveLastRun = getCloudLastRun('googleDrive')
+  const gdriveLastError = getCloudLastError('googleDrive')
+  const gdriveNeedsReconnect = getCloudNeedsReconnect('googleDrive')
+  const gdriveConfigured = isGoogleDriveConfigured()
+
+  const dropboxEnabled = isCloudBackupEnabled('dropbox')
+  const dropboxAccount = getCloudAccountLabel('dropbox')
+  const dropboxLastRun = getCloudLastRun('dropbox')
+  const dropboxLastError = getCloudLastError('dropbox')
+  const dropboxNeedsReconnect = getCloudNeedsReconnect('dropbox')
+  const dropboxConfigured = isDropboxConfigured()
+
   const lastMutation = getLastMutationTime()
 
-  // Per-destination indicator state ('disabled' | 'ok' | 'error').
-  const [ghRetryQueue, setGhRetryQueue] = useState<GithubRetryEntry[]>([])
-  useEffect(() => {
-    let cancelled = false
-    const refresh = () => {
-      void getPendingGithubWrites(dexieDb).then((entries) => {
-        if (!cancelled) setGhRetryQueue(entries)
-      })
-    }
-    refresh()
-    window.addEventListener(AUTO_BACKUP_UPDATED_EVENT, refresh)
-    return () => {
-      cancelled = true
-      window.removeEventListener(AUTO_BACKUP_UPDATED_EVENT, refresh)
-    }
-  }, [])
+  type IndicatorState = 'disabled' | 'ok' | 'error' | 'needs-reconnect'
+  const indicatorFor = (
+    enabled: boolean,
+    needsReconnect: boolean,
+    lastError: string | null,
+    lastRun: number | null,
+  ): IndicatorState => {
+    if (!enabled) return 'disabled'
+    if (needsReconnect) return 'needs-reconnect'
+    if (lastError) return 'error'
+    if (!lastRun) return 'error'
+    if (lastMutation !== null && lastRun < lastMutation) return 'error'
+    return 'ok'
+  }
+  const fsIndicatorState = indicatorFor(
+    fsEnabled,
+    fsNeedsReconnect,
+    fsLastError,
+    fsLastRun,
+  )
+  const gdriveIndicatorState = indicatorFor(
+    gdriveEnabled,
+    gdriveNeedsReconnect,
+    gdriveLastError,
+    gdriveLastRun,
+  )
+  const dropboxIndicatorState = indicatorFor(
+    dropboxEnabled,
+    dropboxNeedsReconnect,
+    dropboxLastError,
+    dropboxLastRun,
+  )
 
-  const fsIndicatorState: 'disabled' | 'ok' | 'error' = !fsEnabled
-    ? 'disabled'
-    : !!fsLastError ||
-        !fsLastRun ||
-        (lastMutation !== null && fsLastRun < lastMutation)
-      ? 'error'
-      : 'ok'
-  const ghIndicatorState: 'disabled' | 'ok' | 'error' = !ghEnabled
-    ? 'disabled'
-    : !!ghLastError ||
-        ghRetryQueue.length > 0 ||
-        !ghLastRun ||
-        (lastMutation !== null && ghLastRun < lastMutation)
-      ? 'error'
-      : 'ok'
+  const anyEnabled = fsEnabled || gdriveEnabled || dropboxEnabled
+  const overallLastRun =
+    Math.max(fsLastRun ?? 0, gdriveLastRun ?? 0, dropboxLastRun ?? 0) || null
 
   const [queuePopupDestination, setQueuePopupDestination] =
     useState<DestinationId | null>(null)
   const [queuePopupOpen, setQueuePopupOpen] = useState(false)
 
   const [helpTab, setHelpTab] = useState<
-    'overview' | 'folder' | 'github' | null
+    'overview' | 'folder' | 'cloud' | null
   >(null)
   const [pendingRestoreDestination, setPendingRestoreDestination] =
     useState<BackupDestination | null>(null)
   const [pendingRestoreBackup, setPendingRestoreBackup] =
     useState<DiscoveredBackup | null>(null)
-  const [showDeviceFlow, setShowDeviceFlow] = useState(false)
-  const [ghLogin, setGhLogin] = useState<string | null>(null)
-  const [ghRepos, setGhRepos] = useState<GithubRepoSummary[] | null>(null)
-  const [ghReposLoading, setGhReposLoading] = useState(false)
-  const [ghReposError, setGhReposError] = useState<string | null>(null)
-  const [showCreateRepo, setShowCreateRepo] = useState(false)
-  const [newRepoName, setNewRepoName] = useState('bjj-dojo-backups')
-  const [newRepoPrivate, setNewRepoPrivate] = useState(true)
-  const [creatingRepo, setCreatingRepo] = useState(false)
-  const ghConfigured = isDeviceFlowConfigured()
+
   const retentionCount = getBackupRetentionCount()
 
   const handlePickFolder = async () => {
@@ -235,107 +234,44 @@ export default function SettingsPage() {
     }
   }
 
+  const handleReconnectFolder = async () => {
+    try {
+      const ok = await reconnectBackupFolder()
+      if (!ok) {
+        window.alert(t('Folder needs to be reconnected.'))
+      }
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : String(err))
+    }
+  }
+
   const handleDisconnectFolder = async () => {
     await disconnectBackupFolder()
     setFsBackupEnabled(false)
   }
 
-  const handleDisconnectGithub = () => {
-    setGithubBackupEnabled(false)
-    setGithubToken(null)
-    setGithubTarget(null)
-    setGhLogin(null)
-    setGhRepos(null)
-    setGhReposError(null)
-  }
-
-  const loadGhRepos = async (token: string) => {
-    setGhReposLoading(true)
-    setGhReposError(null)
+  const handleConnectCloud = async (
+    destination: typeof googleDriveDestination | typeof dropboxDestination,
+  ) => {
     try {
-      const repos = await listWritableRepos(token)
-      setGhRepos(repos)
-    } catch (err) {
-      setGhReposError(err instanceof Error ? err.message : String(err))
-    } finally {
-      setGhReposLoading(false)
-    }
-  }
-
-  const handleDeviceFlowAuthorized = async (token: string) => {
-    setShowDeviceFlow(false)
-    try {
-      const user = await verifyGithubToken(token)
-      setGithubToken(token)
-      setGhLogin(user.login)
-      await loadGhRepos(token)
-    } catch (err) {
-      window.alert(err instanceof Error ? err.message : String(err))
-    }
-  }
-
-  const handleSelectRepo = async (repo: GithubRepoSummary) => {
-    setGithubTarget({
-      kind: 'repo',
-      owner: repo.owner,
-      repo: repo.name,
-      branch: repo.defaultBranch,
-    })
-    setGithubBackupEnabled(true)
-    try {
-      const backups = await githubDestination.discoverExistingBackups()
+      await destination.connect()
+      setCloudBackupEnabled(destination.id, true)
+      const backups = await destination.discoverExistingBackups()
       if (backups.length > 0) {
-        setPendingRestoreDestination(githubDestination)
+        setPendingRestoreDestination(destination)
         setPendingRestoreBackup(backups[0])
       }
-    } catch {
-      // discovery is best-effort
-    }
-  }
-
-  const handleCreateRepo = async () => {
-    const token = getGithubToken()
-    if (!token || !newRepoName.trim()) return
-    setCreatingRepo(true)
-    try {
-      const repo = await createBackupRepo(token, {
-        name: newRepoName.trim(),
-        private: newRepoPrivate,
-        description: 'Auto-backups from BJJ Dojo',
-      })
-      setShowCreateRepo(false)
-      setGhRepos((prev) => (prev ? [repo, ...prev] : [repo]))
-      await handleSelectRepo(repo)
     } catch (err) {
       window.alert(err instanceof Error ? err.message : String(err))
-    } finally {
-      setCreatingRepo(false)
     }
   }
 
-  // When the user already has a token (PAT or previous OAuth), resolve their
-  // login on mount so the UI shows "Signed in as @x" without re-authorising.
-  useEffect(() => {
-    if (!ghToken || ghLogin) return
-    let cancelled = false
-    void verifyGithubToken(ghToken)
-      .then((u) => {
-        if (!cancelled) setGhLogin(u.login)
-      })
-      .catch(() => {
-        // stale token — surface in the UI via ghLogin staying null
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [ghToken, ghLogin])
-
-  // Load repos when token exists but no repo is selected yet.
-  useEffect(() => {
-    if (!ghToken || ghTarget || ghRepos || ghReposLoading) return
-    void loadGhRepos(ghToken)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ghToken, ghTarget])
+  const handleDisconnectCloud = async (
+    destination: typeof googleDriveDestination | typeof dropboxDestination,
+  ) => {
+    await destination.disconnect()
+    setCloudBackupEnabled(destination.id, false)
+  }
 
   const handleRestoreFromPending = async () => {
     if (!pendingRestoreDestination || !pendingRestoreBackup) return
@@ -753,60 +689,33 @@ export default function SettingsPage() {
               {t('BACKUP & RECOVERY')}
             </h2>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
+              <DestinationIndicator
+                state={fsIndicatorState}
+                kind="folder"
+                label={t('Back up to a folder')}
                 onClick={() => {
                   setQueuePopupDestination('fileSystem')
                   setQueuePopupOpen(true)
                 }}
-                aria-label={
-                  fsIndicatorState === 'ok'
-                    ? `${t('Back up to a folder')} · ${t('Backup up to date')}`
-                    : fsIndicatorState === 'error'
-                      ? `${t('Back up to a folder')} · ${t('Backup out of date')}`
-                      : `${t('Back up to a folder')} · ${t('Auto-backup is off — your data only lives in this browser.')}`
-                }
-                className="p-1 -m-1 flex items-center justify-center active:opacity-70"
-              >
-                {fsIndicatorState === 'ok' ? (
-                  <Folder
-                    size={15}
-                    className="text-green-400"
-                    strokeWidth={2}
-                  />
-                ) : fsIndicatorState === 'error' ? (
-                  <FolderX size={15} className="text-red-400" strokeWidth={2} />
-                ) : (
-                  <Folder size={15} className="text-zinc-600" strokeWidth={2} />
-                )}
-              </button>
-              <button
-                type="button"
+              />
+              <DestinationIndicator
+                state={gdriveIndicatorState}
+                kind="cloud"
+                label={t('Back up to Google Drive')}
                 onClick={() => {
-                  setQueuePopupDestination('github')
+                  setQueuePopupDestination('googleDrive')
                   setQueuePopupOpen(true)
                 }}
-                aria-label={
-                  ghIndicatorState === 'ok'
-                    ? `${t('Back up to GitHub')} · ${t('Backup up to date')}`
-                    : ghIndicatorState === 'error'
-                      ? `${t('Back up to GitHub')} · ${t('Backup out of date')}`
-                      : `${t('Back up to GitHub')} · ${t('Auto-backup is off — your data only lives in this browser.')}`
-                }
-                className="p-1 -m-1 flex items-center justify-center active:opacity-70"
-              >
-                {ghIndicatorState === 'ok' ? (
-                  <Cloud size={15} className="text-green-400" strokeWidth={2} />
-                ) : ghIndicatorState === 'error' ? (
-                  <CloudOff
-                    size={15}
-                    className="text-red-400"
-                    strokeWidth={2}
-                  />
-                ) : (
-                  <Cloud size={15} className="text-zinc-600" strokeWidth={2} />
-                )}
-              </button>
+              />
+              <DestinationIndicator
+                state={dropboxIndicatorState}
+                kind="cloud"
+                label={t('Back up to Dropbox')}
+                onClick={() => {
+                  setQueuePopupDestination('dropbox')
+                  setQueuePopupOpen(true)
+                }}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -843,10 +752,8 @@ export default function SettingsPage() {
           <div className="pt-3 mt-3 border-t border-zinc-800 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="text-xs text-zinc-400 flex-1">
-                {fsEnabled || ghEnabled
-                  ? `${t('Auto-backup')} · ${t('Last backup')}: ${formatLastRun(
-                      Math.max(fsLastRun ?? 0, ghLastRun ?? 0) || null,
-                    )}`
+                {anyEnabled
+                  ? `${t('Auto-backup')} · ${t('Last backup')}: ${formatLastRun(overallLastRun)}`
                   : t(
                       'Auto-backup is off — your data only lives in this browser.',
                     )}
@@ -884,12 +791,17 @@ export default function SettingsPage() {
               ) : fsFolderName ? (
                 <>
                   <p className="text-xs text-zinc-400">📁 {fsFolderName}</p>
-                  {fsLastError && (
+                  {fsNeedsReconnect && (
+                    <p className="text-xs text-amber-300">
+                      {t('Folder needs to be reconnected.')}
+                    </p>
+                  )}
+                  {fsLastError && !fsNeedsReconnect && (
                     <p className="text-xs text-red-300">{fsLastError}</p>
                   )}
                   <div className="grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => void handlePickFolder()}
+                      onClick={() => void handleReconnectFolder()}
                       className="rounded-xl bg-zinc-800 text-zinc-200 text-xs font-semibold py-2 active:bg-zinc-700"
                     >
                       {t('Reconnect folder')}
@@ -912,112 +824,47 @@ export default function SettingsPage() {
               )}
             </div>
 
-            {/* GitHub destination */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => setHelpTab('github')}
-                  className="text-sm font-semibold text-zinc-100 flex items-center gap-1.5 active:text-gold"
-                >
-                  {t('Back up to GitHub')}
-                  <HelpCircle
-                    size={12}
-                    className="text-zinc-500"
-                    strokeWidth={2.5}
-                  />
-                </button>
-              </div>
-
-              {!ghToken ? (
-                ghConfigured ? (
-                  <button
-                    onClick={() => setShowDeviceFlow(true)}
-                    className="w-full rounded-xl bg-zinc-800 text-zinc-200 text-xs font-semibold py-2 active:bg-zinc-700"
-                  >
-                    {t('Connect GitHub')}
-                  </button>
-                ) : (
-                  <p className="text-xs text-zinc-500">
-                    {t('GitHub login is not configured in this build.')}
-                  </p>
-                )
-              ) : (
-                <>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs text-zinc-400">
-                      {t('Signed in as')}{' '}
-                      <span className="text-zinc-200">@{ghLogin ?? '…'}</span>
-                    </p>
-                    <button
-                      onClick={handleDisconnectGithub}
-                      className="rounded-lg bg-zinc-800 text-zinc-300 text-[11px] font-semibold px-2 py-1 active:bg-zinc-700"
-                    >
-                      {t('Sign out')}
-                    </button>
-                  </div>
-
-                  {ghTarget?.kind === 'repo' ? (
-                    <div className="flex items-center justify-between gap-2 rounded-xl bg-zinc-800 px-3 py-2">
-                      <span className="text-xs text-zinc-200">
-                        📦 {ghTarget.owner}/{ghTarget.repo}
-                      </span>
-                      <button
-                        onClick={() => {
-                          setGithubTarget(null)
-                          setGithubBackupEnabled(false)
-                          if (ghToken) void loadGhRepos(ghToken)
-                        }}
-                        className="text-[11px] font-semibold text-zinc-400 active:text-zinc-200"
-                      >
-                        {t('Select a repository')}
-                      </button>
-                    </div>
-                  ) : ghReposLoading ? (
-                    <p className="text-xs text-zinc-500">
-                      {t('Loading repositories…')}
-                    </p>
-                  ) : ghReposError ? (
-                    <p className="text-xs text-red-300">{ghReposError}</p>
-                  ) : ghRepos && ghRepos.length === 0 ? (
-                    <p className="text-xs text-zinc-500">
-                      {t('No repositories with write access.')}
-                    </p>
-                  ) : (
-                    <select
-                      value=""
-                      onChange={(e) => {
-                        const repo = ghRepos?.find(
-                          (r) => r.fullName === e.target.value,
-                        )
-                        if (repo) void handleSelectRepo(repo)
-                      }}
-                      className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
-                    >
-                      <option value="" disabled>
-                        {t('Select a repository')}
-                      </option>
-                      {ghRepos?.map((r) => (
-                        <option key={r.fullName} value={r.fullName}>
-                          {r.fullName}
-                          {r.private ? ' · 🔒' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-
-                  <button
-                    onClick={() => setShowCreateRepo(true)}
-                    className="w-full rounded-xl bg-zinc-800 text-zinc-300 text-xs font-semibold py-2 active:bg-zinc-700"
-                  >
-                    + {t('Create new repository')}
-                  </button>
-
-                  {ghLastError && (
-                    <p className="text-xs text-red-300">{ghLastError}</p>
-                  )}
-                </>
+            {/* Google Drive */}
+            <CloudDestinationBlock
+              title={t('Back up to Google Drive')}
+              configured={gdriveConfigured}
+              configuredOffMessage={t(
+                'Google Drive login is not configured in this build.',
               )}
-            </div>
+              connectLabel={t('Connect Google Drive')}
+              account={gdriveAccount}
+              lastError={gdriveLastError}
+              needsReconnect={gdriveNeedsReconnect}
+              onHelp={() => setHelpTab('cloud')}
+              onConnect={() => void handleConnectCloud(googleDriveDestination)}
+              onDisconnect={() =>
+                void handleDisconnectCloud(googleDriveDestination)
+              }
+              onReconnect={() =>
+                void handleConnectCloud(googleDriveDestination)
+              }
+              t={t}
+            />
+
+            {/* Dropbox */}
+            <CloudDestinationBlock
+              title={t('Back up to Dropbox')}
+              configured={dropboxConfigured}
+              configuredOffMessage={t(
+                'Dropbox login is not configured in this build.',
+              )}
+              connectLabel={t('Connect Dropbox')}
+              account={dropboxAccount}
+              lastError={dropboxLastError}
+              needsReconnect={dropboxNeedsReconnect}
+              onHelp={() => setHelpTab('cloud')}
+              onConnect={() => void handleConnectCloud(dropboxDestination)}
+              onDisconnect={() =>
+                void handleDisconnectCloud(dropboxDestination)
+              }
+              onReconnect={() => void handleConnectCloud(dropboxDestination)}
+              t={t}
+            />
 
             {/* Retention */}
             <div className="flex items-center justify-between gap-2 pt-2">
@@ -1043,7 +890,7 @@ export default function SettingsPage() {
               />
             </div>
 
-            {(fsEnabled || ghEnabled) && (
+            {anyEnabled && (
               <button
                 onClick={() => void handleBackupNow()}
                 className="w-full rounded-xl bg-gold text-black text-xs font-semibold py-2 active:bg-gold-light"
@@ -1096,60 +943,6 @@ export default function SettingsPage() {
         />
       )}
 
-      {showDeviceFlow && (
-        <DeviceFlowDialog
-          onClose={() => setShowDeviceFlow(false)}
-          onAuthorized={(token) => void handleDeviceFlowAuthorized(token)}
-        />
-      )}
-
-      {showCreateRepo && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-zinc-900 p-5 text-zinc-100 space-y-3">
-            <h2 className="text-sm font-semibold">
-              {t('Create new repository')}
-            </h2>
-            <label className="block space-y-1">
-              <span className="text-xs text-zinc-400">
-                {t('Repository name')}
-              </span>
-              <input
-                type="text"
-                value={newRepoName}
-                onChange={(e) => setNewRepoName(e.target.value)}
-                className="w-full bg-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-gold"
-              />
-            </label>
-            <label className="flex items-center justify-between gap-2">
-              <span className="text-xs text-zinc-400">
-                {t('Private repository')}
-              </span>
-              <input
-                type="checkbox"
-                checked={newRepoPrivate}
-                onChange={(e) => setNewRepoPrivate(e.target.checked)}
-                className="h-4 w-4"
-              />
-            </label>
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <button
-                onClick={() => setShowCreateRepo(false)}
-                className="rounded-xl bg-zinc-800 text-zinc-200 text-xs font-semibold py-2 active:bg-zinc-700"
-              >
-                {t('Cancel')}
-              </button>
-              <button
-                onClick={() => void handleCreateRepo()}
-                disabled={creatingRepo || !newRepoName.trim()}
-                className="rounded-xl bg-gold text-black text-xs font-semibold py-2 active:bg-gold-light disabled:opacity-60"
-              >
-                {t('Create')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {pendingRestoreBackup && (
         <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-sm bg-zinc-900 rounded-2xl p-5 space-y-3 border border-zinc-800">
@@ -1185,6 +978,123 @@ export default function SettingsPage() {
           onClose={() => setQueuePopupOpen(false)}
           filterDestination={queuePopupDestination ?? undefined}
         />
+      )}
+    </div>
+  )
+}
+
+interface IndicatorProps {
+  state: 'disabled' | 'ok' | 'error' | 'needs-reconnect'
+  kind: 'folder' | 'cloud'
+  label: string
+  onClick: () => void
+}
+
+function DestinationIndicator({ state, kind, label, onClick }: IndicatorProps) {
+  const IconOk = kind === 'folder' ? Folder : Cloud
+  const IconBad = kind === 'folder' ? FolderX : CloudOff
+  const color =
+    state === 'ok'
+      ? 'text-green-400'
+      : state === 'needs-reconnect'
+        ? 'text-amber-400'
+        : state === 'error'
+          ? 'text-red-400'
+          : 'text-zinc-600'
+  const Icon =
+    state === 'error' || state === 'needs-reconnect' ? IconBad : IconOk
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="p-1 -m-1 flex items-center justify-center active:opacity-70"
+    >
+      <Icon size={15} className={color} strokeWidth={2} />
+    </button>
+  )
+}
+
+interface CloudBlockProps {
+  title: string
+  configured: boolean
+  configuredOffMessage: string
+  connectLabel: string
+  account: string | null
+  lastError: string | null
+  needsReconnect: boolean
+  onHelp: () => void
+  onConnect: () => void
+  onDisconnect: () => void
+  onReconnect: () => void
+  t: (key: Parameters<ReturnType<typeof useI18n>['t']>[0]) => string
+}
+
+function CloudDestinationBlock({
+  title,
+  configured,
+  configuredOffMessage,
+  connectLabel,
+  account,
+  lastError,
+  needsReconnect,
+  onHelp,
+  onConnect,
+  onDisconnect,
+  onReconnect,
+  t,
+}: CloudBlockProps) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={onHelp}
+          className="text-sm font-semibold text-zinc-100 flex items-center gap-1.5 active:text-gold"
+        >
+          {title}
+          <HelpCircle size={12} className="text-zinc-500" strokeWidth={2.5} />
+        </button>
+      </div>
+      {!configured ? (
+        <p className="text-xs text-zinc-500">{configuredOffMessage}</p>
+      ) : account ? (
+        <>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-zinc-400">
+              {t('Signed in as')}{' '}
+              <span className="text-zinc-200">{account}</span>
+            </p>
+            <button
+              onClick={onDisconnect}
+              className="rounded-lg bg-zinc-800 text-zinc-300 text-[11px] font-semibold px-2 py-1 active:bg-zinc-700"
+            >
+              {t('Disconnect')}
+            </button>
+          </div>
+          {needsReconnect && (
+            <>
+              <p className="text-xs text-amber-300">
+                {t('Reconnect required — your session has expired.')}
+              </p>
+              <button
+                onClick={onReconnect}
+                className="w-full rounded-xl bg-zinc-800 text-zinc-200 text-xs font-semibold py-2 active:bg-zinc-700"
+              >
+                {connectLabel}
+              </button>
+            </>
+          )}
+          {lastError && !needsReconnect && (
+            <p className="text-xs text-red-300">{lastError}</p>
+          )}
+        </>
+      ) : (
+        <button
+          onClick={onConnect}
+          className="w-full rounded-xl bg-zinc-800 text-zinc-200 text-xs font-semibold py-2 active:bg-zinc-700"
+        >
+          {connectLabel}
+        </button>
       )}
     </div>
   )

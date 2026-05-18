@@ -5,7 +5,8 @@ import type { DestinationId } from '../utils/autoBackup/types'
 
 const DEST_LABELS: Record<DestinationId, string> = {
   fileSystem: 'folder',
-  github: 'GitHub',
+  googleDrive: 'Google Drive',
+  dropbox: 'Dropbox',
 }
 
 interface BackupQueuePopupProps {

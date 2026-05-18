@@ -13,14 +13,16 @@ describe('BackupSyncIndicator', () => {
       window.dispatchEvent(
         new CustomEvent('bjj-dojo:backup-triggered', {
           detail: {
-            destinationIds: ['github'],
+            destinationIds: ['googleDrive'],
             components: ['sessions'],
           },
         }),
       )
     })
 
-    await user.click(await screen.findByLabelText('Syncing GitHub backup…'))
+    await user.click(
+      await screen.findByLabelText('Syncing Google Drive backup…'),
+    )
 
     expect(screen.getByText('Backup queue')).toBeInTheDocument()
     expect(
@@ -32,7 +34,7 @@ describe('BackupSyncIndicator', () => {
       window.dispatchEvent(
         new CustomEvent('bjj-dojo:backup-file-started', {
           detail: {
-            destinationId: 'github',
+            destinationId: 'googleDrive',
             component: 'sessions',
             filename: 'bjj-dojo-backup-sessions-1715920000000.json',
           },
@@ -57,14 +59,16 @@ describe('BackupSyncIndicator', () => {
       window.dispatchEvent(
         new CustomEvent('bjj-dojo:backup-triggered', {
           detail: {
-            destinationIds: ['github'],
+            destinationIds: ['googleDrive'],
             components: ['sessions'],
           },
         }),
       )
     })
 
-    await user.click(await screen.findByLabelText('Syncing GitHub backup…'))
+    await user.click(
+      await screen.findByLabelText('Syncing Google Drive backup…'),
+    )
     expect(screen.getByText('Backup queue')).toBeInTheDocument()
 
     // Simulate the full sync lifecycle completing.
@@ -72,7 +76,7 @@ describe('BackupSyncIndicator', () => {
       window.dispatchEvent(
         new CustomEvent('bjj-dojo:backup-file-succeeded', {
           detail: {
-            destinationId: 'github',
+            destinationId: 'googleDrive',
             component: 'sessions',
             filename: 'bjj-dojo-backup-sessions-1715920000000.json',
           },
@@ -80,7 +84,7 @@ describe('BackupSyncIndicator', () => {
       )
       window.dispatchEvent(
         new CustomEvent('bjj-dojo:backup-dest-succeeded', {
-          detail: { destinationId: 'github' },
+          detail: { destinationId: 'googleDrive' },
         }),
       )
     })

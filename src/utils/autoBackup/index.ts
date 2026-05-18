@@ -3,6 +3,10 @@
  *
  * Mutations enqueue component-scoped backups. The scheduler drains the queue
  * serially and coalesces rapid updates into the latest pending component set.
+ *
+ * Destinations are independent — a failure on one does not prevent the others
+ * from running. Errors are surfaced via `bjj-dojo:backup-*` events and the
+ * per-destination `lastError` state in settings.
  */
 import {
   exportDatabaseBackupComponent,
@@ -12,13 +16,8 @@ import {
 } from '../../db/database'
 import { telemetry } from '../telemetry'
 import { fileSystemDestination } from './destinations/fileSystem'
-import { githubDestination } from './destinations/github'
-import {
-  enqueueFailedGithubWrite,
-  getPendingGithubWrites,
-  removeGithubRetryEntry,
-  MAX_RETRY_ATTEMPTS,
-} from './destinations/githubRetryQueue'
+import { googleDriveDestination } from './destinations/cloud/googleDrive'
+import { dropboxDestination } from './destinations/cloud/dropbox'
 import {
   BACKUP_COMPONENTS,
   backupFilenameForComponent,
@@ -28,10 +27,10 @@ import {
 } from './files'
 import {
   getOverallLastRun,
+  setCloudLastError,
+  setCloudLastRun,
   setFsLastError,
   setFsLastRun,
-  setGithubLastError,
-  setGithubLastRun,
   setOverallLastRun,
 } from './settings'
 import type {
@@ -47,7 +46,8 @@ let queuedDatabase: BJJDatabase | null = null
 
 const allDestinations: BackupDestination[] = [
   fileSystemDestination,
-  githubDestination,
+  googleDriveDestination,
+  dropboxDestination,
 ]
 
 async function activeDestinations(): Promise<BackupDestination[]> {
@@ -68,82 +68,17 @@ function recordResult(report: RunReport) {
     }
     return
   }
+  // googleDrive | dropbox — same shape.
   if (report.success) {
-    setGithubLastRun(Date.now())
-    setGithubLastError(null)
+    setCloudLastRun(report.destinationId, Date.now())
+    setCloudLastError(report.destinationId, null)
   } else {
-    setGithubLastError(report.error ?? 'Unknown error')
+    setCloudLastError(report.destinationId, report.error ?? 'Unknown error')
   }
 }
 
-/**
- * Replay any previously-failed GitHub writes still sitting in the persistent
- * retry queue. Each entry that succeeds is removed; entries that fail again
- * get their attempts counter bumped (via re-enqueue) and stay queued. Entries
- * past MAX_RETRY_ATTEMPTS are dropped so the queue never grows unbounded.
- */
-async function drainGithubRetryQueue(
-  destination: BackupDestination,
-  database: BJJDatabase,
-): Promise<void> {
-  const pending = await getPendingGithubWrites(database)
-  for (const entry of pending) {
-    if (entry.attempts >= MAX_RETRY_ATTEMPTS) {
-      telemetry.error('backup.github_retry_exhausted', {
-        component: entry.component,
-        attempts: entry.attempts,
-        lastError: entry.lastError,
-      })
-      await removeGithubRetryEntry(entry.id, database)
-      continue
-    }
-    window.dispatchEvent(
-      new CustomEvent('bjj-dojo:backup-file-started', {
-        detail: {
-          destinationId: destination.id,
-          component: entry.component,
-          filename: entry.filename,
-        },
-      }),
-    )
-    try {
-      await destination.write(entry.payload, entry.filename)
-      window.dispatchEvent(
-        new CustomEvent('bjj-dojo:backup-file-succeeded', {
-          detail: {
-            destinationId: destination.id,
-            component: entry.component,
-            filename: entry.filename,
-          },
-        }),
-      )
-      await removeGithubRetryEntry(entry.id, database)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      window.dispatchEvent(
-        new CustomEvent('bjj-dojo:backup-file-failed', {
-          detail: {
-            destinationId: destination.id,
-            component: entry.component,
-            filename: entry.filename,
-            error: message,
-          },
-        }),
-      )
-      await enqueueFailedGithubWrite(
-        {
-          component: entry.component,
-          filename: entry.filename,
-          payload: entry.payload,
-          lastError: message,
-        },
-        database,
-      )
-      // Stop draining on first failure — likely the same underlying problem
-      // will hit the next entry too, and we don't want to spam events.
-      return
-    }
-  }
+function isCloudDestination(id: DestinationId): boolean {
+  return id === 'googleDrive' || id === 'dropbox'
 }
 
 export async function runBackupNow(
@@ -161,7 +96,7 @@ export async function runBackupNow(
     const reports = await Promise.all(
       targets.map(async (destination): Promise<RunReport> => {
         if (
-          destination.id === 'github' &&
+          isCloudDestination(destination.id) &&
           typeof navigator !== 'undefined' &&
           !navigator.onLine
         ) {
@@ -183,11 +118,6 @@ export async function runBackupNow(
         )
         try {
           let lastFilename: string | undefined
-          // GitHub: drain any persisted failed writes first so they get
-          // retried before we add new ones to the in-flight set.
-          if (destination.id === 'github') {
-            await drainGithubRetryQueue(destination, database)
-          }
           for (const component of components) {
             const payload = await exportDatabaseBackupComponent(
               component,
@@ -214,17 +144,6 @@ export async function runBackupNow(
                   },
                 }),
               )
-              if (destination.id === 'github') {
-                await enqueueFailedGithubWrite(
-                  {
-                    component,
-                    filename,
-                    payload,
-                    lastError: message,
-                  },
-                  database,
-                )
-              }
               throw err
             }
             window.dispatchEvent(
@@ -278,9 +197,14 @@ function getEnabledDestinationIds(): DestinationId[] {
     ids.push('fileSystem')
   }
   if (
-    window.localStorage.getItem('bjj-dojo:auto-backup-github-enabled') === '1'
+    window.localStorage.getItem('bjj-dojo:auto-backup-gdrive-enabled') === '1'
   ) {
-    ids.push('github')
+    ids.push('googleDrive')
+  }
+  if (
+    window.localStorage.getItem('bjj-dojo:auto-backup-dropbox-enabled') === '1'
+  ) {
+    ids.push('dropbox')
   }
   return ids
 }
